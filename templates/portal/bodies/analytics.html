@@ -1,0 +1,280 @@
+<!-- Main Wrapper -->
+<main class="pl-64 min-h-screen flex flex-col pt-16">
+<!-- Page Content -->
+<div class="p-8 space-y-8 flex-1">
+<div class="flex justify-between items-end">
+<div>
+<h2 class="text-3xl font-extrabold text-on-surface tracking-tight">Analytics Overview</h2>
+<p class="text-on-surface-variant mt-1">Real-time system performance and fiscal health</p>
+</div>
+<div class="analytics-header-actions">
+<button class="analytics-header-button analytics-period-button" type="button">
+<span class="material-symbols-outlined text-sm" data-icon="calendar_today">calendar_today</span>
+                        Last 3 Months
+                    </button>
+<button class="analytics-header-button analytics-filter-button" type="button">
+<span class="material-symbols-outlined text-sm" data-icon="filter_list">filter_list</span>
+                        Filter Views
+                    </button>
+</div>
+</div>
+<!-- KPI Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 motion-stagger">
+<!-- Card 1 -->
+<div class="bg-surface-container-lowest p-6 rounded-lg shadow-sm border-b-4 border-primary">
+<div class="flex items-center justify-between mb-4">
+<h3 class="text-on-surface-variant text-sm font-medium uppercase tracking-widest">Total Units</h3>
+<div class="kpi-icon-chip kpi-icon-blue">
+<span class="material-symbols-outlined" data-icon="home">home</span>
+</div>
+</div>
+<p class="text-3xl font-black text-on-surface mt-1">5</p>
+</div>
+<!-- Card 2 -->
+<div class="bg-surface-container-lowest p-6 rounded-lg shadow-sm border-b-4 border-secondary">
+<div class="flex items-center justify-between mb-4">
+<h3 class="text-on-surface-variant text-sm font-medium uppercase tracking-widest">Total Subscribers</h3>
+<div class="kpi-icon-chip kpi-icon-green">
+<span class="material-symbols-outlined" data-icon="group">group</span>
+</div>
+</div>
+<p class="text-3xl font-black text-on-surface mt-1">472</p>
+</div>
+<!-- Card 3 -->
+<div class="bg-surface-container-lowest p-6 rounded-lg shadow-sm border-b-4 border-tertiary">
+<div class="flex items-center justify-between mb-4">
+<h3 class="text-on-surface-variant text-sm font-medium uppercase tracking-widest">Total YTD Payments</h3>
+<div class="kpi-icon-chip kpi-icon-amber">
+<span class="material-symbols-outlined" data-icon="payments">payments</span>
+</div>
+</div>
+<p class="text-2xl font-black text-on-surface mt-1">888,442,635 <span class="text-sm font-normal text-on-surface-variant">UZS</span></p>
+</div>
+<!-- Card 4 -->
+<div class="bg-surface-container-lowest p-6 rounded-lg shadow-sm border-b-4 border-error">
+<div class="flex items-center justify-between mb-4">
+<h3 class="text-on-surface-variant text-sm font-medium uppercase tracking-widest">Total Debt Burden</h3>
+<div class="kpi-icon-chip kpi-icon-red">
+<span class="material-symbols-outlined" data-icon="warning">warning</span>
+</div>
+</div>
+<p class="text-2xl font-black text-on-surface mt-1">845,002,060 <span class="text-sm font-normal text-on-surface-variant">UZS</span></p>
+</div>
+</div>
+<!-- Dashboard Analytics Layout -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+<!-- Main Chart Area -->
+<div class="lg:col-span-2 space-y-6">
+<div class="bg-surface-container-lowest p-8 rounded-xl shadow-sm h-full flex flex-col">
+<div class="flex justify-between items-center mb-10">
+<div>
+<h3 class="text-xl font-bold text-primary tracking-tight">Balance (Monthly Distribution)</h3>
+<p class="text-sm text-on-surface-variant">System-wide financial overview across core categories</p>
+</div>
+<div class="flex gap-4">
+<div class="flex items-center gap-1.5">
+<span class="w-3 h-3 rounded-full bg-[#0061FF]"></span>
+<span class="text-[10px] font-bold uppercase tracking-tighter text-on-surface-variant">Debit</span>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="w-3 h-3 rounded-full bg-[#D1E4FF]"></span>
+<span class="text-[10px] font-bold uppercase tracking-tighter text-on-surface-variant">Credit</span>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="w-3 h-3 rounded-full bg-[#FF6B00]"></span>
+<span class="text-[10px] font-bold uppercase tracking-tighter text-on-surface-variant">Accruals</span>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="w-3 h-3 rounded-full bg-[#00C853]"></span>
+<span class="text-[10px] font-bold uppercase tracking-tighter text-on-surface-variant">Receipts</span>
+</div>
+</div>
+</div>
+<div class="chart-canvas-wrap">
+<canvas aria-label="Monthly balance distribution chart" id="analytics-balance-chart" role="img"></canvas>
+</div>
+<!-- High Fidelity Bar Chart -->
+<div class="hidden flex-1 flex-col relative min-h-[400px]">
+<!-- Grid Lines and Y-Axis -->
+<div class="absolute inset-0 flex flex-col justify-between text-[10px] text-slate-400 pb-10 pr-4">
+<div class="flex items-center gap-4"><span>1,000,000,000 UZS</span><div class="chart-grid-line relative"></div></div>
+<div class="flex items-center gap-4"><span>800,000,000 UZS</span><div class="chart-grid-line relative"></div></div>
+<div class="flex items-center gap-4"><span>600,000,000 UZS</span><div class="chart-grid-line relative"></div></div>
+<div class="flex items-center gap-4"><span>400,000,000 UZS</span><div class="chart-grid-line relative"></div></div>
+<div class="flex items-center gap-4"><span>200,000,000 UZS</span><div class="chart-grid-line relative"></div></div>
+<div class="flex items-center gap-4"><span>0 UZS</span><div class="chart-grid-line relative"></div></div>
+</div>
+<!-- Bars Container -->
+<div class="flex-1 flex items-end justify-around pl-28 pr-4 pb-10 z-10 relative">
+<!-- January Group -->
+<div class="flex flex-col items-center flex-1">
+<div class="flex items-end gap-1.5 h-64">
+<div class="w-8 bg-[#0061FF] rounded-t-sm transition-all hover:brightness-110 cursor-pointer" style="height: 90%;"></div>
+<div class="w-8 bg-[#D1E4FF] rounded-t-sm transition-all hover:brightness-110 cursor-pointer" style="height: 10%;"></div>
+<div class="w-8 bg-[#FF6B00] rounded-t-sm transition-all hover:brightness-110 cursor-pointer" style="height: 35%;"></div>
+<div class="w-8 bg-[#00C853] rounded-t-sm transition-all hover:brightness-110 cursor-pointer" style="height: 42%;"></div>
+</div>
+<span class="absolute bottom-2 text-sm font-bold text-on-surface">Jan</span>
+</div>
+<!-- February Group -->
+<div class="flex flex-col items-center flex-1">
+<div class="flex items-end gap-1.5 h-64">
+<div class="w-8 bg-[#0061FF] rounded-t-sm transition-all hover:brightness-110 cursor-pointer" style="height: 98%;"></div>
+<div class="w-8 bg-[#D1E4FF] rounded-t-sm transition-all hover:brightness-110 cursor-pointer" style="height: 12%;"></div>
+<div class="w-8 bg-[#FF6B00] rounded-t-sm transition-all hover:brightness-110 cursor-pointer" style="height: 38%;"></div>
+<div class="w-8 bg-[#00C853] rounded-t-sm transition-all hover:brightness-110 cursor-pointer" style="height: 28%;"></div>
+</div>
+<span class="absolute bottom-2 text-sm font-bold text-on-surface">Feb</span>
+</div>
+<!-- March Group -->
+<div class="flex flex-col items-center flex-1">
+<div class="flex items-end gap-1.5 h-64">
+<div class="w-8 bg-[#0061FF] rounded-t-sm transition-all hover:brightness-110 cursor-pointer" style="height: 85%;"></div>
+<div class="w-8 bg-[#D1E4FF] rounded-t-sm transition-all hover:brightness-110 cursor-pointer" style="height: 18%;"></div>
+<div class="w-8 bg-[#FF6B00] rounded-t-sm transition-all hover:brightness-110 cursor-pointer" style="height: 0%;"></div>
+<div class="w-8 bg-[#00C853] rounded-t-sm transition-all hover:brightness-110 cursor-pointer" style="height: 22%;"></div>
+</div>
+<span class="absolute bottom-2 text-sm font-bold text-on-surface">Mar</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Payment Systems Sidebar -->
+<div class="space-y-6">
+<div class="bg-surface-container-low p-6 rounded-xl border border-surface-container-high">
+<h3 class="text-lg font-bold text-on-surface mb-6 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary" data-icon="account_balance_wallet">account_balance_wallet</span>
+                            Payment Systems
+                        </h3>
+<div class="space-y-4">
+<!-- Click -->
+<div class="bg-surface-container-lowest p-4 rounded-lg flex items-center justify-between border-l-4 border-blue-500 shadow-sm transition-transform hover:scale-[1.02]">
+<div>
+<p class="text-xs font-bold text-on-surface-variant uppercase tracking-tighter">Click</p>
+<p class="text-lg font-bold text-primary">189,377,581 <span class="text-xs font-medium">UZS</span></p>
+</div>
+<span class="material-symbols-outlined text-blue-500" data-icon="touch_app">touch_app</span>
+</div>
+<!-- Munis -->
+<div class="bg-surface-container-lowest p-4 rounded-lg flex items-center justify-between border-l-4 border-amber-500 shadow-sm transition-transform hover:scale-[1.02]">
+<div>
+<p class="text-xs font-bold text-on-surface-variant uppercase tracking-tighter">Munis</p>
+<p class="text-lg font-bold text-primary">41,133,991 <span class="text-xs font-medium">UZS</span></p>
+</div>
+<span class="material-symbols-outlined text-amber-500" data-icon="receipt">receipt</span>
+</div>
+<!-- Transfer -->
+<div class="bg-surface-container-lowest p-4 rounded-lg flex items-center justify-between border-l-4 border-slate-400 shadow-sm transition-transform hover:scale-[1.02]">
+<div>
+<p class="text-xs font-bold text-on-surface-variant uppercase tracking-tighter">Transfer</p>
+<p class="text-lg font-bold text-primary">56,313,766 <span class="text-xs font-medium">UZS</span></p>
+</div>
+<span class="material-symbols-outlined text-slate-400" data-icon="currency_exchange">currency_exchange</span>
+</div>
+<!-- Payme -->
+<div class="bg-surface-container-lowest p-4 rounded-lg flex items-center justify-between border-l-4 border-teal-500 shadow-sm transition-transform hover:scale-[1.02]">
+<div>
+<p class="text-xs font-bold text-on-surface-variant uppercase tracking-tighter">Payme</p>
+<p class="text-lg font-bold text-primary">374,228,911 <span class="text-xs font-medium">UZS</span></p>
+</div>
+<span class="material-symbols-outlined text-teal-500" data-icon="credit_card">credit_card</span>
+</div>
+<!-- Terminal -->
+<div class="bg-surface-container-lowest p-4 rounded-lg flex items-center justify-between border-l-4 border-indigo-600 shadow-sm transition-transform hover:scale-[1.02]">
+<div>
+<p class="text-xs font-bold text-on-surface-variant uppercase tracking-tighter">Terminal</p>
+<p class="text-lg font-bold text-primary">227,388,386 <span class="text-xs font-medium">UZS</span></p>
+</div>
+<span class="material-symbols-outlined text-indigo-600" data-icon="point_of_sale">point_of_sale</span>
+</div>
+</div>
+<div class="mt-8 pt-6 border-t border-surface-container-high text-center">
+<p class="text-xs font-medium text-on-surface-variant">Total Transaction Volume</p>
+<p class="text-xl font-black text-on-surface mt-1">888,442,635.25 UZS</p>
+</div>
+</div>
+<!-- Static Report Readiness Card -->
+<div class="ops-readiness-card">
+<div class="ops-readiness-header">
+<span class="material-symbols-outlined" data-icon="fact_check">fact_check</span>
+<div>
+<h4>Report Readiness</h4>
+<p>Pre-export checklist for finance handoff.</p>
+</div>
+</div>
+<div class="ops-readiness-list">
+<div><span class="material-symbols-outlined">check_circle</span><p>Confirm Payme and Click totals before CSV export.</p></div>
+<div><span class="material-symbols-outlined">check_circle</span><p>Review debt rows marked critical or pending.</p></div>
+<div><span class="material-symbols-outlined">check_circle</span><p>Attach audit note for any manual correction.</p></div>
+</div>
+<div class="ops-readiness-actions">
+<button data-action-key="open checklist" type="button">Open checklist</button>
+<button data-action-key="export" data-export-open data-export-source="Operations Readiness Checklist" type="button">Export template</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Detailed Data Table Section -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden">
+<div class="px-6 py-4 border-b border-surface-container-high flex justify-between items-center">
+<h3 class="font-bold text-on-surface">Recent Transaction Log</h3>
+<button class="text-sm font-semibold text-primary-container hover:underline">View All</button>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left">
+<thead class="bg-surface-container-low text-[10px] font-black uppercase tracking-widest text-on-surface-variant">
+<tr>
+<th class="px-6 py-4">Transaction ID</th>
+<th class="px-6 py-4">Payer</th>
+<th class="px-6 py-4">Provider</th>
+<th class="px-6 py-4">Amount (UZS)</th>
+<th class="px-6 py-4">Status</th>
+<th class="px-6 py-4 text-right">Date</th>
+</tr>
+</thead>
+<tbody class="text-sm">
+<tr class="border-b border-surface-container-low hover:bg-surface-container-low/50 transition-colors">
+<td class="px-6 py-4 font-mono text-xs text-primary font-bold">#WF-284920</td>
+<td class="px-6 py-4 font-semibold text-on-surface">Residential Unit 402B</td>
+<td class="px-6 py-4">Payme</td>
+<td class="px-6 py-4 font-bold text-on-surface">1,240,000</td>
+<td class="px-6 py-4">
+<span class="px-2 py-1 bg-secondary-container text-on-secondary-container text-[10px] font-bold rounded-full uppercase">Success</span>
+</td>
+<td class="px-6 py-4 text-right text-on-surface-variant">24.03.2026</td>
+</tr>
+<tr class="border-b border-surface-container-low hover:bg-surface-container-low/50 transition-colors">
+<td class="px-6 py-4 font-mono text-xs text-primary font-bold">#WF-284918</td>
+<td class="px-6 py-4 font-semibold text-on-surface">Public Sector A1</td>
+<td class="px-6 py-4">Terminal</td>
+<td class="px-6 py-4 font-bold text-on-surface">45,800,000</td>
+<td class="px-6 py-4">
+<span class="px-2 py-1 bg-secondary-container text-on-secondary-container text-[10px] font-bold rounded-full uppercase">Success</span>
+</td>
+<td class="px-6 py-4 text-right text-on-surface-variant">23.03.2026</td>
+</tr>
+<tr class="hover:bg-surface-container-low/50 transition-colors">
+<td class="px-6 py-4 font-mono text-xs text-primary font-bold">#WF-284915</td>
+<td class="px-6 py-4 font-semibold text-on-surface">Residential Unit 12C</td>
+<td class="px-6 py-4">Click</td>
+<td class="px-6 py-4 font-bold text-error">15,400,000</td>
+<td class="px-6 py-4">
+<span class="px-2 py-1 bg-error-container text-on-error-container text-[10px] font-bold rounded-full uppercase">Pending</span>
+</td>
+<td class="px-6 py-4 text-right text-on-surface-variant">23.03.2026</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<footer class="mt-auto py-6 px-8 border-t border-surface-container-high flex justify-between items-center text-on-surface-variant text-xs">
+<p>© 2024 HydroFlow Enterprise v2.4.0 • Infrastructure Utility Protocol</p>
+<div class="flex gap-6">
+<a class="hover:text-primary" href="#">System Logs</a>
+<a class="hover:text-primary" href="#">API Documentation</a>
+<a class="hover:text-primary" href="#">Support</a>
+</div>
+</footer>
+</main>

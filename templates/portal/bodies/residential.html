@@ -1,0 +1,391 @@
+<!-- Main Content Wrapper -->
+<main class="ml-64 min-h-screen pt-16">
+<!-- Main Page Content -->
+<div class="p-8">
+<!-- Header Section -->
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
+<div>
+<h2 class="text-3xl font-extrabold text-on-surface tracking-tight">Residential Units</h2>
+</div>
+<div class="flex items-center gap-3">
+<div class="flex bg-surface-container-low p-1 rounded-lg">
+<button class="px-4 py-2 text-sm font-semibold bg-white text-primary shadow-sm rounded-md transition-all">Table View</button>
+<button class="px-4 py-2 text-sm font-medium text-on-surface-variant hover:text-on-surface transition-all">Map View</button>
+</div>
+<select class="bg-surface-container-low border-none rounded-lg py-2 pl-4 pr-10 text-sm font-semibold text-primary focus:ring-primary">
+<option>All Districts</option>
+<option>North Sector</option>
+<option>Harbor District</option>
+<option>South Ridge</option>
+</select>
+<button class="flex items-center gap-2 bg-primary text-white px-5 py-2.5 rounded-lg font-bold shadow-md hover:brightness-110 active:scale-95 transition-all">
+<span class="material-symbols-outlined text-sm">filter_list</span>
+<span>Filters</span>
+</button>
+</div>
+</div>
+<!-- Bento Grid Summary Cards -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 motion-stagger">
+<!-- Total Complexes -->
+<div class="residential-kpi-card bg-surface-container-lowest p-6 rounded-lg shadow-sm border border-transparent hover:border-primary-container/10 transition-all flex flex-col justify-between">
+<div class="flex justify-between items-start mb-4">
+<p class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Total Complexes</p>
+<div class="kpi-icon-chip kpi-icon-blue">
+<span class="material-symbols-outlined" data-icon="location_city">location_city</span>
+</div>
+</div>
+<div>
+<p class="text-display-sm text-3xl font-black text-on-surface tracking-tight">142</p>
+<div class="kpi-support-row">
+<span>8 districts connected</span>
+<span class="kpi-mini-badge kpi-mini-badge-blue">+5 this month</span>
+</div>
+</div>
+</div>
+<!-- Total Buildings -->
+<div class="residential-kpi-card bg-surface-container-lowest p-6 rounded-lg shadow-sm border border-transparent hover:border-primary-container/10 transition-all flex flex-col justify-between">
+<div class="flex justify-between items-start mb-4">
+<p class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Active Buildings</p>
+<div class="kpi-icon-chip kpi-icon-green">
+<span class="material-symbols-outlined" data-icon="domain">domain</span>
+</div>
+</div>
+<div>
+<p class="text-display-sm text-3xl font-black text-on-surface tracking-tight">856</p>
+<div class="kpi-support-row">
+<span>124 active units</span>
+<span class="kpi-mini-badge kpi-mini-badge-green">Live sync</span>
+</div>
+</div>
+</div>
+<!-- Occupancy Rate -->
+<div class="residential-kpi-card bg-surface-container-lowest p-6 rounded-lg shadow-sm border border-transparent hover:border-primary-container/10 transition-all flex flex-col justify-between">
+<div class="flex justify-between items-start mb-4">
+<p class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Occupancy Rate</p>
+<div class="kpi-icon-chip kpi-icon-amber">
+<span class="material-symbols-outlined" data-icon="groups">groups</span>
+</div>
+</div>
+<div>
+<div class="kpi-value-line">
+<p class="text-display-sm text-3xl font-black text-on-surface tracking-tight">98.4%</p>
+<div aria-label="Occupancy rate 98.4 percent" aria-valuemax="100" aria-valuemin="0" aria-valuenow="98.4" class="kpi-progress-meter kpi-progress-meter-amber kpi-occupancy-meter" role="meter" style="--progress: 98.4%; --occupancy: 98.4%;" data-value="98.4%">
+<span></span>
+</div>
+</div>
+<div class="kpi-support-row">
+<span>Across 856 buildings</span>
+<span class="kpi-mini-badge kpi-mini-badge-amber">Stable</span>
+</div>
+</div>
+</div>
+<!-- Critical Debt -->
+<div class="residential-kpi-card bg-error-container p-6 rounded-lg shadow-sm border border-transparent hover:shadow-lg transition-all flex flex-col justify-between">
+<div class="flex justify-between items-start mb-4">
+<p class="text-xs font-bold uppercase tracking-widest text-on-error-container/70">Critical Debt Units</p>
+<div class="kpi-icon-chip kpi-icon-red">
+<span class="material-symbols-outlined" data-icon="warning">warning</span>
+</div>
+</div>
+<div>
+<p class="text-display-sm text-3xl font-black text-on-error-container tracking-tight">24</p>
+<div class="kpi-support-row">
+<span>3 require field visit</span>
+<span class="kpi-mini-badge kpi-mini-badge-red">High risk</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Main Layout with Sidebar -->
+<div class="grid grid-cols-12 gap-8">
+<!-- Main Table Section -->
+<div class="col-span-12 xl:col-span-9 bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden">
+<div class="px-6 py-5 flex items-center justify-between border-b border-surface-container-low">
+<h3 class="text-lg font-bold text-primary">Complex Performance Overview</h3>
+<button class="text-xs font-bold text-primary flex items-center gap-1 hover:underline" data-export-open data-export-source="Complex Performance Overview" type="button">
+<span>Export CSV</span>
+<span class="material-symbols-outlined text-[14px]">download</span>
+</button>
+</div>
+<div class="overflow-x-auto residential-table-fit">
+<table class="w-full border-collapse text-left residential-performance-table">
+<thead>
+<tr class="bg-surface-container-low/50">
+<th class="px-6 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-wider">Complex Name</th>
+<th class="px-6 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-wider">Infrastructure</th>
+<th class="px-6 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-wider">System Health</th>
+<th class="px-6 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-wider">Finances</th>
+<th class="px-6 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-wider">Debt Status</th>
+<th class="px-6 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-wider text-right">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-surface-container-low">
+<!-- Row 1 -->
+<tr aria-expanded="false" class="hover:bg-surface-container-low/30 transition-colors residential-district-row" data-district-id="skyline" data-drill-row="district" tabindex="0">
+<td class="px-6 py-5">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined residential-drill-chevron" aria-hidden="true">expand_more</span>
+<div class="w-10 h-10 rounded-lg overflow-hidden shrink-0">
+<img class="w-full h-full object-cover" data-alt="modern glass apartment complex skyline at dusk with lights reflecting on facade" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC6gjaUwDckqx_ZQBXv9DP5I-DALk4iq9XXR9g1yUccHYL2_mQ4becIAuAmMDHzZVYnEo8ksk07_OkpiWEIRfRUVytNrJOJxvSCaBStzZDNg9hkhHPRwnYaW_4ICj5y0k0n6Wfw6oemblkMTHqV3fnOU69f40EI_72399c5yrvXNNXe4cxUQCgK-Zmy_xv0NLzgdTZKV6jiLWRwVkB2MM8cqFIwJnJtA8Db0_-xM4kMkr4BKiwYEQx7mhWW87oYN3kMVvUz-S16FU0"/>
+</div>
+<div>
+<p class="font-bold text-primary leading-tight">Skyline Residential North</p>
+<p class="text-xs text-on-surface-variant">North Sector</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-5">
+<div class="space-y-1">
+<p class="text-sm font-bold text-on-surface">12 <span class="text-xs font-normal text-on-surface-variant">Buildings</span></p>
+<p class="text-sm font-bold text-on-surface">240 <span class="text-xs font-normal text-on-surface-variant">Units</span></p>
+</div>
+</td>
+<td class="px-6 py-5">
+<div class="flex flex-col gap-2">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+<span class="text-[10px] font-bold text-secondary uppercase tracking-tight">Water: Optimal</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+<span class="text-[10px] font-bold text-secondary uppercase tracking-tight">Heating: Optimal</span>
+</div>
+</div>
+</td>
+<td class="px-6 py-5">
+<div class="w-24">
+<div class="percent-meter percent-meter-blue percent-meter-compact" style="--progress: 96.5%;" data-value="96.5%">
+<span class="percent-meter-track"><span class="percent-meter-fill"></span></span>
+</div>
+</div>
+</td>
+<td class="px-6 py-5">
+<p class="text-sm font-bold text-on-surface">30,870,000 UZS</p>
+<span class="text-[10px] font-bold text-secondary-container bg-on-secondary-container px-2 py-0.5 rounded uppercase">Low Risk</span>
+</td>
+<td class="px-6 py-5 text-right">
+<div class="residential-action-cell">
+<div class="resident-debt-split is-healthy" aria-label="18 debtors and 222 paid residents">
+<span><b>18</b><small data-i18n-key="Debt">Debt</small></span>
+<span><b>222</b><small data-i18n-key="Paid">Paid</small></span>
+</div>
+<button class="p-2 text-primary hover:bg-primary-container/10 rounded-lg transition-colors" title="Manage Units">
+<span class="material-symbols-outlined">settings_suggest</span>
+</button>
+<button class="px-4 py-2 text-xs font-bold bg-primary text-white rounded-lg hover:brightness-110 active:scale-95 transition-all">Details</button>
+</div>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr aria-expanded="false" class="hover:bg-surface-container-low/30 transition-colors residential-district-row" data-district-id="harbor" data-drill-row="district" tabindex="0">
+<td class="px-6 py-5">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined residential-drill-chevron" aria-hidden="true">expand_more</span>
+<div class="w-10 h-10 rounded-lg overflow-hidden shrink-0">
+<img class="w-full h-full object-cover" data-alt="luxury waterfront apartment buildings with contemporary architecture and glass balconies" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDrwKadnPx036rJEpz7_bQyVLATNSXqrYF9ETMoJ-1LTDBE6mNf7OjNVfKirVkPGvhe7xhY6pxjSSu-_W11TJy_fiIEzdoqZdqwtnyyw6Pz8TfTFtjvluCytnPN4LGPLkJD2ucVbcOJjYZoqjoyHfgxaj7JaDtY9MODEnvj0XLzqYOaWNuwY1sxOY4bWpWB1NxjiketHUGitXFcoetNi2_nJjLdscfQPhDE1fJtU8jqpV65TKWRGJEhkHsGou9vh9UFO-bahYxn77I"/>
+</div>
+<div>
+<p class="font-bold text-primary leading-tight">Harbor View Heights</p>
+<p class="text-xs text-on-surface-variant">Harbor District</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-5">
+<div class="space-y-1">
+<p class="text-sm font-bold text-on-surface">8 <span class="text-xs font-normal text-on-surface-variant">Buildings</span></p>
+<p class="text-sm font-bold text-on-surface">186 <span class="text-xs font-normal text-on-surface-variant">Units</span></p>
+</div>
+</td>
+<td class="px-6 py-5">
+<div class="flex flex-col gap-2">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-error"></span>
+<span class="text-[10px] font-bold text-error uppercase tracking-tight">Water: Leak Alert</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+<span class="text-[10px] font-bold text-secondary uppercase tracking-tight">Heating: Optimal</span>
+</div>
+</div>
+</td>
+<td class="px-6 py-5">
+<div class="w-24">
+<div class="percent-meter percent-meter-red percent-meter-compact" style="--progress: 82.1%;" data-value="82.1%">
+<span class="percent-meter-track"><span class="percent-meter-fill"></span></span>
+</div>
+</div>
+</td>
+<td class="px-6 py-5">
+<p class="text-sm font-bold text-error">186,732,000 UZS</p>
+<span class="text-[10px] font-bold text-on-error-container bg-error-container px-2 py-0.5 rounded uppercase">Critical</span>
+</td>
+<td class="px-6 py-5 text-right">
+<div class="residential-action-cell">
+<div class="resident-debt-split is-healthy" aria-label="47 debtors and 139 paid residents">
+<span><b>47</b><small data-i18n-key="Debt">Debt</small></span>
+<span><b>139</b><small data-i18n-key="Paid">Paid</small></span>
+</div>
+<button class="p-2 text-primary hover:bg-primary-container/10 rounded-lg transition-colors">
+<span class="material-symbols-outlined">settings_suggest</span>
+</button>
+<button class="px-4 py-2 text-xs font-bold bg-primary text-white rounded-lg hover:brightness-110 active:scale-95 transition-all">Details</button>
+</div>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr aria-expanded="false" class="hover:bg-surface-container-low/30 transition-colors residential-district-row" data-district-id="emerald" data-drill-row="district" tabindex="0">
+<td class="px-6 py-5">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined residential-drill-chevron" aria-hidden="true">expand_more</span>
+<div class="w-10 h-10 rounded-lg overflow-hidden shrink-0 text-primary-container bg-surface-container-high flex items-center justify-center">
+<span class="material-symbols-outlined" style="font-size: 20px;">domain</span>
+</div>
+<div>
+<p class="font-bold text-primary leading-tight">Emerald Gardens Ph. II</p>
+<p class="text-xs text-on-surface-variant">West Valley</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-5">
+<div class="space-y-1">
+<p class="text-sm font-bold text-on-surface">5 <span class="text-xs font-normal text-on-surface-variant">Buildings</span></p>
+<p class="text-sm font-bold text-on-surface">64 <span class="text-xs font-normal text-on-surface-variant">Units</span></p>
+</div>
+</td>
+<td class="px-6 py-5">
+<div class="flex flex-col gap-2">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+<span class="text-[10px] font-bold text-secondary uppercase tracking-tight">Water: Optimal</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-[#EAB308]"></span>
+<span class="text-[10px] font-bold text-[#854D0E] uppercase tracking-tight">Heating: Maintenance</span>
+</div>
+</div>
+</td>
+<td class="px-6 py-5">
+<div class="w-24">
+<div class="percent-meter percent-meter-amber percent-meter-compact" style="--progress: 91.4%;" data-value="91.4%">
+<span class="percent-meter-track"><span class="percent-meter-fill"></span></span>
+</div>
+</div>
+</td>
+<td class="px-6 py-5">
+<p class="text-sm font-bold text-on-surface">64,260,000 UZS</p>
+<span class="text-[10px] font-bold text-on-surface-variant bg-surface-container-high px-2 py-0.5 rounded uppercase">Medium Risk</span>
+</td>
+<td class="px-6 py-5 text-right">
+<div class="residential-action-cell">
+<div class="resident-debt-split is-healthy" aria-label="9 debtors and 55 paid residents">
+<span><b>9</b><small data-i18n-key="Debt">Debt</small></span>
+<span><b>55</b><small data-i18n-key="Paid">Paid</small></span>
+</div>
+<button class="p-2 text-primary hover:bg-primary-container/10 rounded-lg transition-colors">
+<span class="material-symbols-outlined">settings_suggest</span>
+</button>
+<button class="px-4 py-2 text-xs font-bold bg-primary text-white rounded-lg hover:brightness-110 active:scale-95 transition-all">Details</button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="px-6 py-4 bg-surface-container-low/20 border-t border-surface-container-low flex justify-between items-center">
+<span class="text-xs font-medium text-on-surface-variant">Showing 1-10 of 142 complexes</span>
+<div class="flex gap-2">
+<button class="p-1.5 rounded-lg border border-outline-variant hover:bg-white transition-colors">
+<span class="material-symbols-outlined text-[18px]">chevron_left</span>
+</button>
+<button class="p-1.5 rounded-lg border border-outline-variant hover:bg-white transition-colors">
+<span class="material-symbols-outlined text-[18px]">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Right Sidebar: Quick Stats & Alerts -->
+<div class="col-span-12 xl:col-span-3 space-y-6">
+<!-- Quick Stats Panel -->
+<div class="bg-surface-container-low rounded-xl p-6" data-liquid-panel="district-insights">
+<h4 class="text-sm font-bold text-primary uppercase tracking-widest mb-6">District Insights</h4>
+<div class="space-y-6">
+<div class="flex items-start gap-4">
+<div class="w-12 h-12 rounded-lg bg-white flex items-center justify-center text-tertiary shadow-sm">
+<span class="material-symbols-outlined">water_drop</span>
+</div>
+<div class="flex-1">
+<p class="text-xs font-bold text-on-surface-variant uppercase tracking-tight mb-1">Water Demand</p>
+<p class="text-lg font-black text-on-surface leading-tight">1.2M <span class="text-xs font-medium">Ltrs/day</span></p>
+<div class="mt-2 flex items-center gap-1 text-[10px] text-error font-bold">
+<span class="material-symbols-outlined text-[12px]">trending_up</span>
+<span>8.4% vs last week</span>
+</div>
+</div>
+</div>
+<div class="flex items-start gap-4">
+<div class="w-12 h-12 rounded-lg bg-white flex items-center justify-center text-primary shadow-sm">
+<span class="material-symbols-outlined">thermostat</span>
+</div>
+<div class="flex-1">
+<p class="text-xs font-bold text-on-surface-variant uppercase tracking-tight mb-1">Avg. Temp Control</p>
+<p class="text-lg font-black text-on-surface leading-tight">21.5°C</p>
+<div class="mt-2 flex items-center gap-1 text-[10px] text-secondary font-bold">
+<span class="material-symbols-outlined text-[12px]">check_circle</span>
+<span>Within Target Range</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Recent Alerts -->
+<div class="bg-surface-container-lowest rounded-xl p-6 shadow-sm border border-surface-container-low" data-liquid-panel="recent-alerts">
+<div class="flex items-center justify-between mb-4">
+<h4 class="text-sm font-bold text-on-surface">Recent Alerts</h4>
+<span class="px-2 py-0.5 bg-error-container text-on-error-container text-[10px] font-black rounded-full">3 New</span>
+</div>
+<div class="space-y-4">
+<div class="p-3 bg-error-container/10 border-l-4 border-error rounded-r-lg" data-liquid-alert-card>
+<p class="text-xs font-bold text-on-surface">Maintenance Due</p>
+<p class="text-[11px] text-on-surface-variant mt-1">Harbor View Bld. 4 Heating Pump overhaul required.</p>
+<p class="text-[10px] text-error font-black mt-2 uppercase tracking-tight">Priority: High</p>
+</div>
+<div class="p-3 bg-primary-container/5 border-l-4 border-primary rounded-r-lg" data-liquid-alert-card>
+<p class="text-xs font-bold text-on-surface">New Connection</p>
+<p class="text-[11px] text-on-surface-variant mt-1">West Valley Complex Ph. II successfully integrated.</p>
+<p class="text-[10px] text-primary font-black mt-2 uppercase tracking-tight">2 hours ago</p>
+</div>
+<div class="p-3 bg-surface-container-low border-l-4 border-outline-variant rounded-r-lg" data-liquid-alert-card>
+<p class="text-xs font-bold text-on-surface">Audit Scheduled</p>
+<p class="text-[11px] text-on-surface-variant mt-1">Annual energy audit for South Ridge scheduled for 24.04.2026.</p>
+<p class="text-[10px] text-on-surface-variant font-black mt-2 uppercase tracking-tight">13.04.2026, 09:00</p>
+</div>
+</div>
+<button class="w-full mt-4 text-xs font-bold text-primary py-2 hover:bg-surface-container-low rounded-lg transition-colors">View All Activities</button>
+</div>
+<!-- Resident Operations Kit -->
+<div class="resident-kit-card">
+<div class="resident-kit-top">
+<span class="material-symbols-outlined" data-icon="folder_managed">folder_managed</span>
+<span>Templates ready</span>
+</div>
+<h5>Resident Operations Kit</h5>
+<p>Quick static templates for handoff, reminders and move-in checks.</p>
+<div class="resident-kit-grid">
+<button data-action-key="open checklist" type="button">
+<span class="material-symbols-outlined">assignment</span>
+<strong>Move-in checklist</strong>
+</button>
+<button data-action-key="send reminder" type="button">
+<span class="material-symbols-outlined">notifications_active</span>
+<strong>Reminder script</strong>
+</button>
+<button data-action-key="export" type="button">
+<span class="material-symbols-outlined">description</span>
+<strong>Contact sheet</strong>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>

@@ -1,0 +1,49 @@
+{# Unified sidebar — design from stitch_/system_overview_standardized_nav #}
+<aside class="h-screen w-64 fixed left-0 top-0 bg-[#eff4f8] dark:bg-slate-900 flex flex-col p-4 space-y-2 z-50 overflow-hidden" data-sidebar>
+<div class="px-2 py-4 mb-4">
+<h1 class="text-lg font-black text-[#004354] dark:text-cyan-500 tracking-tight">HydroFlow</h1>
+<p class="text-xs text-on-surface-variant font-medium">Utility Management</p>
+</div>
+<nav class="relative flex-1 space-y-1">
+<a class="nav-item sidebar-link relative flex items-center gap-3 px-4 py-3 rounded-lg {% if active_page == 'dashboard' %}active is-active font-bold{% else %}dark:text-slate-400{% endif %}" data-nav-link href="{% url 'portal:dashboard' %}">
+<span class="material-symbols-outlined" data-icon="dashboard" {% if active_page == 'dashboard' %}style="font-variation-settings: 'FILL' 1;"{% endif %}>dashboard</span>
+<span class="font-medium">Dashboard</span>
+</a>
+<a class="nav-item sidebar-link relative flex items-center gap-3 px-4 py-3 rounded-lg {% if active_page == 'residential' %}active is-active font-bold{% else %}dark:text-slate-400{% endif %}" data-nav-link href="{% url 'portal:residential' %}">
+<span class="material-symbols-outlined" data-icon="domain" {% if active_page == 'residential' %}style="font-variation-settings: 'FILL' 1;"{% endif %}>domain</span>
+<span class="font-medium">Residential Units</span>
+</a>
+<a class="nav-item sidebar-link relative flex items-center gap-3 px-4 py-3 rounded-lg {% if active_page == 'system_health' %}active is-active font-bold{% else %}dark:text-slate-400{% endif %}" data-nav-link href="{% url 'portal:system_health' %}">
+<span class="material-symbols-outlined" data-icon="monitor_heart" {% if active_page == 'system_health' %}style="font-variation-settings: 'FILL' 1;"{% endif %}>monitor_heart</span>
+<span class="font-medium">System Health</span>
+</a>
+<a class="nav-item sidebar-link relative flex items-center gap-3 px-4 py-3 rounded-lg {% if active_page == 'billing' %}active is-active font-bold{% else %}dark:text-slate-400{% endif %}" data-nav-link href="{% url 'portal:billing' %}">
+<span class="material-symbols-outlined" data-icon="payments" {% if active_page == 'billing' %}style="font-variation-settings: 'FILL' 1;"{% endif %}>payments</span>
+<span class="font-medium">Billing &amp; Debt</span>
+</a>
+<a class="nav-item sidebar-link relative flex items-center gap-3 px-4 py-3 rounded-lg {% if active_page == 'analytics' %}active is-active font-bold{% else %}dark:text-slate-400{% endif %}" data-nav-link href="{% url 'portal:analytics' %}">
+<span class="material-symbols-outlined" data-icon="analytics" {% if active_page == 'analytics' %}style="font-variation-settings: 'FILL' 1;"{% endif %}>analytics</span>
+<span class="font-medium">Analytics</span>
+</a>
+</nav>
+<div class="pt-4 mt-4 border-t border-outline-variant/15 space-y-1">
+<button type="button" class="w-full flex items-center justify-center gap-2 bg-primary text-white py-3 rounded-lg font-bold shadow-sm active:scale-95 transition-transform" data-modal-open="request-modal" data-liquid-action="new-unit-request">
+<span class="material-symbols-outlined text-sm">add_circle</span>
+<span>New Unit Request</span>
+</button>
+<button class="nav-item sidebar-link relative flex items-center gap-3 px-4 py-3 dark:text-slate-400 rounded-lg mt-4 w-full text-left" data-drawer-open="settings-drawer" type="button">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-medium">Settings</span>
+</button>
+<button class="nav-item sidebar-link relative flex items-center gap-3 px-4 py-3 dark:text-slate-400 rounded-lg w-full text-left" data-drawer-open="support-drawer" type="button">
+<span class="material-symbols-outlined" data-icon="contact_support">contact_support</span>
+<span class="font-medium">Support</span>
+</button>
+<div class="sidebar-status-footer">
+<div><span>Local prototype</span><strong>Active</strong></div>
+<div><span>Backend</span><strong>Not connected</strong></div>
+<div><span>Timezone</span><strong>Asia/Tashkent</strong></div>
+<div><span>Last local save</span><strong>13.04.2026, 09:41</strong></div>
+</div>
+</div>
+</aside>

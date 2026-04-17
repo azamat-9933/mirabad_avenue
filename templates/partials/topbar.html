@@ -1,0 +1,98 @@
+<header class="app-topbar fixed top-0 left-64 right-0 z-40 glass-effect flex justify-between items-center px-6 py-3 font-inter tracking-tight">
+<button aria-label="Open navigation" class="app-icon-button md:hidden" data-sidebar-open type="button">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<form class="flex items-center bg-slate-200/50 dark:bg-slate-800/50 rounded-full px-4 py-1.5 w-96 max-w-[42vw] transition-colors" role="search">
+<span class="material-symbols-outlined text-slate-500 mr-2" data-icon="search">search</span>
+<input aria-label="Search data points" autocomplete="off" class="bg-transparent border-none focus:ring-0 text-sm w-full placeholder-slate-500" data-command-open name="q" placeholder="Search data points..." type="search"/>
+</form>
+<div class="hidden xl:flex items-center gap-2 ml-4 mr-auto" data-filter-chips>
+<span class="filter-chip">North Sector</span>
+<span class="filter-chip">Last 90 days</span>
+</div>
+<div class="flex items-center gap-4">
+<button aria-label="Open notifications" class="topbar-action-button p-2 text-slate-500 hover:bg-slate-200/50 rounded-full transition-colors relative" data-drawer-open="notifications-drawer" type="button">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+<span class="critical-dot absolute top-2 right-2 w-2 h-2 bg-error rounded-full" data-notification-dot></span>
+</button>
+<button aria-label="Open filters" class="topbar-action-button filter-trigger p-2 text-slate-500 hover:bg-slate-200/50 rounded-full transition-colors" data-drawer-open="filter-drawer" type="button">
+<span class="material-symbols-outlined" data-icon="filter_list">tune</span>
+<span class="filter-trigger-label">Filters</span>
+<span class="filter-trigger-count">2</span>
+</button>
+<div class="language-menu-wrap" data-lang-menu>
+<button aria-expanded="false" aria-haspopup="menu" aria-label="Switch language" class="app-pill-button lang-toggle" data-lang-toggle type="button">
+<span class="material-symbols-outlined text-sm">language</span>
+<span data-lang-label>EN</span>
+<span class="material-symbols-outlined lang-toggle-chevron" aria-hidden="true">keyboard_arrow_down</span>
+</button>
+<div aria-label="Language selector" class="language-menu-panel hidden" data-lang-menu-panel role="menu">
+<button class="language-menu-option" data-lang-option="en" role="menuitemradio" type="button">
+<span class="language-menu-code">EN</span>
+<span class="language-menu-copy"><strong>English</strong><small>Interface language</small></span>
+<span class="material-symbols-outlined language-menu-check" aria-hidden="true">check</span>
+</button>
+<button class="language-menu-option" data-lang-option="ru" role="menuitemradio" type="button">
+<span class="language-menu-code">RU</span>
+<span class="language-menu-copy"><strong>Русский</strong><small>Язык интерфейса</small></span>
+<span class="material-symbols-outlined language-menu-check" aria-hidden="true">check</span>
+</button>
+<button class="language-menu-option" data-lang-option="uz" role="menuitemradio" type="button">
+<span class="language-menu-code">UZ</span>
+<span class="language-menu-copy"><strong>O'zbek</strong><small>Interfeys tili</small></span>
+<span class="material-symbols-outlined language-menu-check" aria-hidden="true">check</span>
+</button>
+</div>
+</div>
+<button aria-label="Toggle theme" class="theme-toggle" data-theme-toggle type="button">
+<span class="sr-only" data-theme-label>Light</span>
+</button>
+<button aria-label="Open settings" class="p-2 text-slate-500 hover:bg-slate-200/50 rounded-full transition-colors" data-drawer-open="settings-drawer" type="button">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+</button>
+<div class="flex items-center gap-3 pl-4 border-l border-slate-200">
+<div class="text-right hidden sm:block">
+<p class="text-xs font-bold text-teal-950">Admin User</p>
+<p class="text-[10px] text-slate-500 uppercase tracking-widest">Administrator</p>
+</div>
+<div class="relative">
+<button aria-expanded="false" aria-label="Open account menu" class="account-avatar-trigger rounded-full focus:ring-2 focus:ring-primary/30" data-account-toggle type="button">
+<span class="avatar-placeholder">AU</span>
+</button>
+<div aria-label="Account menu" class="account-menu hidden absolute right-0 mt-3 w-80 bg-white rounded-lg shadow-xl border border-outline-variant/20 overflow-hidden" role="menu">
+<div class="account-menu-header">
+<span class="account-menu-avatar">AU</span>
+<div>
+<p>Admin User</p>
+<span>Administrator · HydroFlow</span>
+</div>
+</div>
+<div class="account-menu-group">
+<button class="account-menu-item" data-drawer-open="profile-drawer" role="menuitem" type="button">
+<span class="material-symbols-outlined account-menu-icon">account_circle</span>
+<span><strong>Profile</strong><small>Account, role and access</small></span>
+</button>
+<button class="account-menu-item" data-drawer-open="settings-drawer" role="menuitem" type="button">
+<span class="material-symbols-outlined account-menu-icon">tune</span>
+<span><strong>Preferences</strong><small>Display, language and theme</small></span>
+</button>
+<button class="account-menu-item" data-drawer-open="settings-drawer" role="menuitem" type="button">
+<span class="material-symbols-outlined account-menu-icon">domain</span>
+<span><strong>Organization settings</strong><small>Workspace and permissions</small></span>
+</button>
+<button class="account-menu-item" data-drawer-open="audit-drawer" role="menuitem" type="button">
+<span class="material-symbols-outlined account-menu-icon">history</span>
+<span><strong>Audit log</strong><small>Activity and security trail</small></span>
+</button>
+</div>
+<div class="account-menu-footer">
+<button class="account-menu-item account-menu-danger" data-action-key="Sign out" role="menuitem" type="button">
+<span class="material-symbols-outlined account-menu-icon">logout</span>
+<span><strong>Sign out</strong><small>End local session</small></span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</header>

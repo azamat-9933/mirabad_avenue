@@ -1,0 +1,275 @@
+<!-- Main Content Wrapper -->
+<main class="ml-64 min-h-screen pt-16">
+<!-- Page Content -->
+<div class="p-8">
+<!-- Header & System Health -->
+<header class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-8">
+<div>
+<h1 class="text-3xl font-extrabold tracking-tight text-on-surface mb-1">Overview</h1>
+<p class="text-on-surface-variant body-md">Real-time infrastructure monitoring for North Sector.</p>
+</div>
+<div class="flex items-center gap-3 bg-secondary-container/30 px-4 py-3 rounded-xl border border-secondary-container/20">
+<div class="relative flex h-3 w-3">
+<span class="motion-safe:animate-ping absolute inline-flex h-full w-full rounded-full bg-secondary opacity-75"></span>
+<span class="relative inline-flex rounded-full h-3 w-3 bg-secondary"></span>
+</div>
+<span class="text-sm font-semibold text-on-secondary-container">All Systems Operational</span>
+<div class="h-4 w-px bg-on-secondary-container/20 mx-2"></div>
+<span class="text-xs text-on-secondary-container opacity-80">Last check: 2m ago</span>
+</div>
+</header>
+<!-- Portfolio Analytics Bento -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 motion-stagger">
+<div class="bg-surface-container-lowest p-6 rounded-lg shadow-sm border border-outline-variant/10">
+<div class="flex justify-between items-start mb-4">
+<p class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Total Revenue</p>
+<span class="material-symbols-outlined kpi-icon-chip kpi-icon-blue" data-icon="payments">payments</span>
+</div>
+<div class="flex items-baseline gap-2">
+<h2 class="text-3xl font-extrabold text-primary">53.5B UZS</h2>
+<span class="text-xs font-bold text-secondary">+12.4%</span>
+</div>
+<div class="mt-4 h-1 w-full bg-surface-container-high rounded-full overflow-hidden">
+<div class="h-full bg-primary w-[75%] rounded-full chart-bar"></div>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-6 rounded-lg shadow-sm border border-outline-variant/10">
+<div class="flex justify-between items-start mb-4">
+<p class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Active Subscribers</p>
+<span class="material-symbols-outlined kpi-icon-chip kpi-icon-green" data-icon="group">group</span>
+</div>
+<div class="flex items-baseline gap-2">
+<h2 class="text-3xl font-extrabold text-primary">12,842</h2>
+<span class="text-xs font-bold text-secondary">+2.1%</span>
+</div>
+<div class="mt-4 flex gap-1 items-center text-xs text-on-surface-variant">
+<span class="font-bold text-primary">842</span> new this month
+                </div>
+</div>
+<div class="bg-surface-container-lowest p-6 rounded-lg shadow-sm border border-outline-variant/10">
+<div class="flex justify-between items-start mb-4">
+<p class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Consumption Rate</p>
+<span class="material-symbols-outlined kpi-icon-chip kpi-icon-amber" data-icon="water_drop">water_drop</span>
+</div>
+<div class="flex items-baseline gap-2">
+<h2 class="text-3xl font-extrabold text-primary">89.4k m³</h2>
+<span class="text-xs font-bold text-error">-3.5% vs LY</span>
+</div>
+<div class="mt-4 flex gap-1 items-center text-xs text-on-surface-variant">
+                    Efficient flow across 8 complexes
+                </div>
+</div>
+<div class="bg-surface-container-lowest p-6 rounded-lg shadow-sm border border-outline-variant/10">
+<div class="flex justify-between items-start mb-4">
+<p class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Outstanding Debt</p>
+<span class="material-symbols-outlined kpi-icon-chip kpi-icon-red" data-icon="warning">warning</span>
+</div>
+<div class="flex items-baseline gap-2">
+<h2 class="text-3xl font-extrabold text-on-surface">1.78B UZS</h2>
+</div>
+<div class="mt-4 flex gap-1 items-center">
+<span class="px-2 py-0.5 rounded text-[10px] bg-error-container text-on-error-container font-bold uppercase">Critical</span>
+<span class="text-xs text-on-surface-variant">Requires Action</span>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+<!-- Main Consumption Chart Area -->
+<div class="lg:col-span-2 space-y-8">
+<div class="bg-surface-container-lowest p-8 rounded-xl shadow-sm border border-outline-variant/10">
+<div class="flex justify-between items-center mb-8">
+<div>
+<h3 class="text-lg font-bold text-on-surface">Consumption Trends</h3>
+<p class="text-sm text-on-surface-variant">Seasonal water vs. heating throughput (FY24)</p>
+</div>
+<div class="flex gap-4">
+<div class="flex items-center gap-2">
+<div class="w-3 h-3 rounded-full bg-tertiary"></div>
+<span class="text-xs font-medium">Water</span>
+</div>
+<div class="flex items-center gap-2">
+<div class="w-3 h-3 rounded-full bg-primary-container"></div>
+<span class="text-xs font-medium">Heating</span>
+</div>
+</div>
+</div>
+<div class="chart-canvas-wrap">
+<canvas aria-label="Consumption trends chart" id="consumption-chart" role="img"></canvas>
+</div>
+<!-- Visual representation of a chart -->
+<div class="hidden relative h-64 w-full items-end justify-between gap-2 px-4 mb-4">
+<div class="flex flex-col items-center flex-1 h-full justify-end gap-1">
+<div class="w-full bg-primary-container/20 h-[40%] rounded-t-sm"></div>
+<div class="w-full bg-tertiary/40 h-[60%] rounded-t-sm"></div>
+<span class="text-[10px] mt-2 text-on-surface-variant">JAN</span>
+</div>
+<div class="flex flex-col items-center flex-1 h-full justify-end gap-1">
+<div class="w-full bg-primary-container/20 h-[35%] rounded-t-sm"></div>
+<div class="w-full bg-tertiary/40 h-[65%] rounded-t-sm"></div>
+<span class="text-[10px] mt-2 text-on-surface-variant">FEB</span>
+</div>
+<div class="flex flex-col items-center flex-1 h-full justify-end gap-1">
+<div class="w-full bg-primary-container/20 h-[45%] rounded-t-sm"></div>
+<div class="w-full bg-tertiary/40 h-[50%] rounded-t-sm"></div>
+<span class="text-[10px] mt-2 text-on-surface-variant">MAR</span>
+</div>
+<div class="flex flex-col items-center flex-1 h-full justify-end gap-1">
+<div class="w-full bg-primary-container/20 h-[55%] rounded-t-sm"></div>
+<div class="w-full bg-tertiary/40 h-[40%] rounded-t-sm"></div>
+<span class="text-[10px] mt-2 text-on-surface-variant">APR</span>
+</div>
+<div class="flex flex-col items-center flex-1 h-full justify-end gap-1">
+<div class="w-full bg-primary-container/20 h-[70%] rounded-t-sm"></div>
+<div class="w-full bg-tertiary/40 h-[30%] rounded-t-sm"></div>
+<span class="text-[10px] mt-2 text-on-surface-variant">MAY</span>
+</div>
+<div class="flex flex-col items-center flex-1 h-full justify-end gap-1">
+<div class="w-full bg-primary-container/20 h-[85%] rounded-t-sm"></div>
+<div class="w-full bg-tertiary/40 h-[25%] rounded-t-sm"></div>
+<span class="text-[10px] mt-2 text-on-surface-variant">JUN</span>
+</div>
+</div>
+</div>
+<!-- Complex Status Widget -->
+<div class="bg-surface-container-lowest p-8 rounded-xl shadow-sm border border-outline-variant/10">
+<h3 class="text-lg font-bold text-on-surface mb-6">Complex Status Health Scores</h3>
+<div class="space-y-4">
+<div class="flex items-center justify-between p-4 bg-surface-container rounded-lg">
+<div class="flex items-center gap-4">
+<div class="p-2 bg-white rounded-md shadow-sm text-primary">
+<span class="material-symbols-outlined" data-icon="apartment">apartment</span>
+</div>
+<div>
+<p class="font-bold text-sm">Skyline Residential North</p>
+<p class="text-xs text-on-surface-variant">242 Units • Vancouver District</p>
+</div>
+</div>
+<div class="text-right">
+<div class="percent-meter percent-meter-green percent-meter-mini ml-auto" style="--progress: 98%;" data-value="98%">
+<span class="percent-meter-track"><span class="percent-meter-fill"></span></span>
+</div>
+<p class="text-[10px] text-on-surface-variant uppercase">Optimal</p>
+</div>
+</div>
+<div class="flex items-center justify-between p-4 bg-surface-container rounded-lg">
+<div class="flex items-center gap-4">
+<div class="p-2 bg-white rounded-md shadow-sm text-primary">
+<span class="material-symbols-outlined" data-icon="domain">domain</span>
+</div>
+<div>
+<p class="font-bold text-sm">Harbor Commercial Hub</p>
+<p class="text-xs text-on-surface-variant">12 Enterprise Suites • Waterfront</p>
+</div>
+</div>
+<div class="text-right">
+<div class="percent-meter percent-meter-amber percent-meter-mini ml-auto" style="--progress: 84%;" data-value="84%">
+<span class="percent-meter-track"><span class="percent-meter-fill"></span></span>
+</div>
+<p class="text-[10px] text-on-surface-variant uppercase">Maintenance Pending</p>
+</div>
+</div>
+<div class="flex items-center justify-between p-4 bg-surface-container rounded-lg">
+<div class="flex items-center gap-4">
+<div class="p-2 bg-white rounded-md shadow-sm text-primary">
+<span class="material-symbols-outlined" data-icon="location_city">location_city</span>
+</div>
+<div>
+<p class="font-bold text-sm">Evergreen Heights</p>
+<p class="text-xs text-on-surface-variant">512 Units • East District</p>
+</div>
+</div>
+<div class="text-right">
+<div class="percent-meter percent-meter-red percent-meter-mini ml-auto" style="--progress: 62%;" data-value="62%">
+<span class="percent-meter-track"><span class="percent-meter-fill"></span></span>
+</div>
+<p class="text-[10px] text-on-surface-variant uppercase">Critical Alert</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Sidebar Widgets -->
+<div class="space-y-8">
+<!-- Quick Actions -->
+<div class="quick-actions-card bg-primary text-white p-8 rounded-xl shadow-lg relative overflow-hidden" data-card="quick-actions">
+<h3 class="text-lg font-bold mb-6 relative z-10">
+<span>Quick Actions</span>
+<span class="material-symbols-outlined quick-actions-title-icon" data-icon="bolt" aria-hidden="true">bolt</span>
+</h3>
+<div class="space-y-3 relative z-10">
+<button class="w-full flex items-center justify-between bg-white/10 hover:bg-white/20 transition-all p-4 rounded-lg text-sm font-medium">
+<span>Generate Usage Report</span>
+<span class="material-symbols-outlined" data-icon="description">description</span>
+</button>
+<button class="w-full flex items-center justify-between bg-white/10 hover:bg-white/20 transition-all p-4 rounded-lg text-sm font-medium">
+<span>Add New Resident Profile</span>
+<span class="material-symbols-outlined" data-icon="person_add">person_add</span>
+</button>
+<button class="w-full flex items-center justify-between bg-white/10 hover:bg-white/20 transition-all p-4 rounded-lg text-sm font-medium">
+<span>Configure System Alerts</span>
+<span class="material-symbols-outlined" data-icon="notifications_active">notifications_active</span>
+</button>
+</div>
+</div>
+<!-- Debtor Trends & Alerts -->
+<div class="debtor-trends-card bg-surface-container-lowest p-8 rounded-xl shadow-sm border border-outline-variant/10">
+<div class="debtor-trends-head flex justify-between items-start mb-6">
+<h3 class="text-lg font-bold text-on-surface">Debtor Trends</h3>
+<span class="debtor-risk-badge text-[10px] font-bold text-error uppercase bg-error-container/20 px-2 py-0.5 rounded">High Risk</span>
+</div>
+<!-- Mini Chart Area -->
+<div class="debtor-trend-chart flex items-end justify-between h-24 gap-1 mb-8" aria-label="Debt trend by month">
+<div class="debtor-trend-bar flex-1 bg-surface-container-high h-[60%] rounded-t-sm group relative" data-label="Jan" data-value="1.38B">
+<div class="debtor-trend-tooltip absolute -top-6 left-1/2 -translate-x-1/2 bg-on-surface text-white text-[10px] py-0.5 px-1.5 rounded opacity-0 group-hover:opacity-100 transition-opacity">1.38B UZS</div>
+</div>
+<div class="debtor-trend-bar flex-1 bg-surface-container-high h-[75%] rounded-t-sm group relative" data-label="Feb" data-value="1.56B">
+<div class="debtor-trend-tooltip absolute -top-6 left-1/2 -translate-x-1/2 bg-on-surface text-white text-[10px] py-0.5 px-1.5 rounded opacity-0 group-hover:opacity-100 transition-opacity">1.56B UZS</div>
+</div>
+<div class="debtor-trend-bar flex-1 bg-surface-container-high h-[65%] rounded-t-sm group relative" data-label="Mar" data-value="1.49B">
+<div class="debtor-trend-tooltip absolute -top-6 left-1/2 -translate-x-1/2 bg-on-surface text-white text-[10px] py-0.5 px-1.5 rounded opacity-0 group-hover:opacity-100 transition-opacity">1.49B UZS</div>
+</div>
+<div class="debtor-trend-bar flex-1 bg-surface-container-high h-[80%] rounded-t-sm group relative" data-label="Apr" data-value="1.64B">
+<div class="debtor-trend-tooltip absolute -top-6 left-1/2 -translate-x-1/2 bg-on-surface text-white text-[10px] py-0.5 px-1.5 rounded opacity-0 group-hover:opacity-100 transition-opacity">1.64B UZS</div>
+</div>
+<div class="debtor-trend-bar flex-1 bg-surface-container-high h-[90%] rounded-t-sm group relative" data-label="May" data-value="1.74B">
+<div class="debtor-trend-tooltip absolute -top-6 left-1/2 -translate-x-1/2 bg-on-surface text-white text-[10px] py-0.5 px-1.5 rounded opacity-0 group-hover:opacity-100 transition-opacity">1.74B UZS</div>
+</div>
+<div class="debtor-trend-bar debtor-trend-bar-risk flex-1 bg-error/40 h-[100%] rounded-t-sm group relative" data-label="Jun" data-value="1.78B">
+<div class="debtor-trend-tooltip absolute -top-6 left-1/2 -translate-x-1/2 bg-on-surface text-white text-[10px] py-0.5 px-1.5 rounded opacity-0 group-hover:opacity-100 transition-opacity">1.78B UZS</div>
+</div>
+</div>
+<div class="debtor-list space-y-4 mb-8">
+<p class="debtor-list-title text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Critical Debtors (Top 3 Δ)</p>
+<div class="space-y-2">
+<div class="debtor-row flex items-center justify-between p-2.5 bg-surface-container-low rounded-lg border border-outline-variant/5">
+<span class="text-xs font-semibold">Evergreen Heights</span>
+<div class="percent-meter percent-meter-red percent-meter-row" style="--progress: 18.2%;" data-value="+18.2%">
+<span class="percent-meter-track"><span class="percent-meter-fill"></span></span>
+</div>
+</div>
+<div class="debtor-row flex items-center justify-between p-2.5 bg-surface-container-low rounded-lg border border-outline-variant/5">
+<span class="text-xs font-semibold">Park View Tower</span>
+<div class="percent-meter percent-meter-red percent-meter-row" style="--progress: 12.5%;" data-value="+12.5%">
+<span class="percent-meter-track"><span class="percent-meter-fill"></span></span>
+</div>
+</div>
+<div class="debtor-row flex items-center justify-between p-2.5 bg-surface-container-low rounded-lg border border-outline-variant/5">
+<span class="text-xs font-semibold">River Side Flats</span>
+<div class="percent-meter percent-meter-red percent-meter-row" style="--progress: 9.8%;" data-value="+9.8%">
+<span class="percent-meter-track"><span class="percent-meter-fill"></span></span>
+</div>
+</div>
+</div>
+</div>
+<button class="debtor-primary-action w-full py-3 bg-surface-container-highest hover:bg-surface-variant transition-colors rounded-lg flex items-center justify-center gap-2 text-sm font-bold text-primary">
+<span class="material-symbols-outlined text-sm" data-icon="mail">mail</span>
+<span>Generate Debt Letters</span>
+</button>
+<button class="debtor-secondary-action w-full mt-2 py-2 text-xs font-semibold text-on-surface-variant hover:text-primary transition-colors">
+                        View All Debtors
+                    </button>
+</div>
+</div>
+</div>
+</div>
+</main>
