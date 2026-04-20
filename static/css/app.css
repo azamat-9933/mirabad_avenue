@@ -1930,6 +1930,99 @@ html.dark [data-modal-open="request-modal"] .material-symbols-outlined {
     background: transparent !important;
 }
 
+.resident-create-modal {
+    max-height: min(88vh, 760px);
+    overflow: hidden;
+}
+
+.resident-create-modal form {
+    max-height: calc(88vh - 92px);
+    overflow-y: auto;
+}
+
+.resident-create-field {
+    display: grid;
+    gap: 8px;
+}
+
+.resident-create-field > span {
+    color: var(--on-surface-variant);
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+}
+
+.resident-create-field input,
+.resident-create-field select {
+    width: 100%;
+    min-height: 42px;
+    border: 1px solid rgba(96, 111, 132, 0.18);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.72);
+    color: var(--on-surface);
+    padding: 0 14px;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+}
+
+.resident-create-field input:focus,
+.resident-create-field select:focus {
+    border-color: rgba(79, 142, 247, 0.62);
+    background: rgba(255, 255, 255, 0.92);
+    box-shadow: 0 0 0 4px rgba(79, 142, 247, 0.12);
+}
+
+.resident-create-preview,
+.resident-create-status {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    border: 1px solid rgba(79, 142, 247, 0.16);
+    border-radius: 14px;
+    background: rgba(79, 142, 247, 0.07);
+    color: var(--on-surface-variant);
+    padding: 14px 16px;
+    font-size: 13px;
+}
+
+.resident-create-status.hidden {
+    display: none;
+}
+
+.resident-create-status.is-error {
+    border-color: rgba(247, 95, 95, 0.26);
+    background: rgba(247, 95, 95, 0.08);
+    color: #b4232a;
+}
+
+.resident-create-status.is-success {
+    border-color: rgba(61, 214, 140, 0.26);
+    background: rgba(61, 214, 140, 0.08);
+    color: #087443;
+}
+
+html.dark .resident-create-field input,
+html.dark .resident-create-field select {
+    border-color: rgba(255, 255, 255, 0.10);
+    background: rgba(255, 255, 255, 0.055);
+    color: var(--on-surface);
+}
+
+html.dark .resident-create-field input:focus,
+html.dark .resident-create-field select:focus {
+    border-color: rgba(79, 142, 247, 0.58);
+    background: rgba(79, 142, 247, 0.08);
+    box-shadow: 0 0 0 4px rgba(79, 142, 247, 0.12);
+}
+
+html.dark .resident-create-preview,
+html.dark .resident-create-status {
+    border-color: rgba(79, 142, 247, 0.18);
+    background: rgba(79, 142, 247, 0.09);
+}
+
 html.dark .avatar-placeholder {
     background: linear-gradient(135deg, #4F8EF7, #7B5FF7) !important;
     border: 1px solid rgba(255, 255, 255, 0.18) !important;
@@ -13498,6 +13591,133 @@ html.dark .notification-group-label[data-notification-group="pinned"],
     padding-left: 10px !important;
     padding-right: 10px !important;
     white-space: nowrap;
+}
+
+/* System maintenance table uses live backend rows, so keep it compact and non-scrollable. */
+.maintenance-table-fit,
+.maintenance-table-fit.table-workspace {
+    overflow-x: hidden !important;
+    max-width: 100% !important;
+}
+
+.maintenance-log-table {
+    width: 100% !important;
+    min-width: 0 !important;
+    table-layout: fixed !important;
+}
+
+.maintenance-log-table th,
+.maintenance-log-table td {
+    overflow: hidden !important;
+    vertical-align: middle !important;
+}
+
+.maintenance-log-table th:first-child,
+.maintenance-log-table td:first-child {
+    width: 3.5rem !important;
+    padding-left: 0.75rem !important;
+    padding-right: 0.35rem !important;
+}
+
+.maintenance-log-table th:not(:first-child),
+.maintenance-log-table td:not(:first-child) {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+}
+
+.maintenance-log-table .table-filter-heading-inner {
+    width: 100% !important;
+    min-width: 0 !important;
+    justify-content: center !important;
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
+}
+
+.maintenance-log-table .table-filter-heading-text {
+    min-width: 0 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    font-size: 10px !important;
+    letter-spacing: 0.08em !important;
+}
+
+.maintenance-task-icon {
+    width: 2rem;
+    height: 2rem;
+    flex: 0 0 2rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.7rem;
+    background: rgba(42, 191, 191, 0.10);
+    color: #006A7A;
+}
+
+.maintenance-task-icon .material-symbols-outlined {
+    font-size: 1rem;
+    line-height: 1;
+    color: currentColor;
+}
+
+.maintenance-task-title {
+    min-width: 0;
+    display: block;
+    color: var(--hf-primary, #004354);
+    font-size: 0.875rem;
+    font-weight: 850;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+}
+
+.maintenance-log-table td:nth-child(3),
+.maintenance-log-table td:nth-child(5) {
+    overflow-wrap: anywhere;
+}
+
+.maintenance-action-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    max-width: 100%;
+    min-height: 2.15rem;
+    padding: 0.45rem 0.8rem;
+    border-radius: 999px;
+    color: var(--hf-primary, #004354);
+    background: rgba(42, 191, 191, 0.08);
+    border: 1px solid rgba(42, 191, 191, 0.18);
+    font-size: 0.75rem;
+    font-weight: 800;
+    line-height: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition: all 0.18s ease;
+}
+
+.maintenance-action-button:hover {
+    color: #4F8EF7;
+    border-color: rgba(79, 142, 247, 0.32);
+    background: rgba(79, 142, 247, 0.12);
+    transform: translateY(-1px);
+}
+
+html.dark .maintenance-task-icon,
+[data-theme="dark"] .maintenance-task-icon {
+    background: rgba(79, 142, 247, 0.13);
+    color: #4F8EF7;
+}
+
+html.dark .maintenance-task-title,
+[data-theme="dark"] .maintenance-task-title {
+    color: #DDE6F6;
+}
+
+html.dark .maintenance-action-button,
+[data-theme="dark"] .maintenance-action-button {
+    color: #DDE6F6;
+    background: rgba(255, 255, 255, 0.055);
+    border-color: rgba(255, 255, 255, 0.08);
 }
 
 .residential-action-cell {

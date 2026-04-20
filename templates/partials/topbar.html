@@ -52,19 +52,19 @@
 </button>
 <div class="flex items-center gap-3 pl-4 border-l border-slate-200">
 <div class="text-right hidden sm:block">
-<p class="text-xs font-bold text-teal-950">Admin User</p>
-<p class="text-[10px] text-slate-500 uppercase tracking-widest">Administrator</p>
+<p class="text-xs font-bold text-teal-950" data-profile-field="name">Admin User</p>
+<p class="text-[10px] text-slate-500 uppercase tracking-widest" data-profile-field="role">Administrator</p>
 </div>
 <div class="relative">
 <button aria-expanded="false" aria-label="Open account menu" class="account-avatar-trigger rounded-full focus:ring-2 focus:ring-primary/30" data-account-toggle type="button">
-<span class="avatar-placeholder">AU</span>
+<span class="avatar-placeholder" data-profile-field="initials">AU</span>
 </button>
 <div aria-label="Account menu" class="account-menu hidden absolute right-0 mt-3 w-80 bg-white rounded-lg shadow-xl border border-outline-variant/20 overflow-hidden" role="menu">
 <div class="account-menu-header">
-<span class="account-menu-avatar">AU</span>
+<span class="account-menu-avatar" data-profile-field="initials">AU</span>
 <div>
-<p>Admin User</p>
-<span>Administrator · HydroFlow</span>
+<p data-profile-field="name">Admin User</p>
+<span><span data-profile-field="role">Administrator</span> · <span data-profile-field="workspace">HydroFlow</span></span>
 </div>
 </div>
 <div class="account-menu-group">

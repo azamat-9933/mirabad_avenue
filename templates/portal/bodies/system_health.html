@@ -13,7 +13,7 @@
 <span class="material-symbols-outlined text-lg">download</span>
                         Export Logs
                     </button>
-<button class="flex items-center gap-2 px-4 py-2 bg-primary text-on-primary hover:opacity-90 transition-opacity rounded-lg text-sm font-semibold shadow-md">
+<button class="flex items-center gap-2 px-4 py-2 bg-primary text-on-primary hover:opacity-90 transition-opacity rounded-lg text-sm font-semibold shadow-md" data-deploy-maintenance type="button">
 <span class="material-symbols-outlined text-lg">build</span>
                         Deploy Maintenance
                     </button>
@@ -298,8 +298,17 @@
 <button class="px-3 py-1.5 border border-primary/35 rounded text-xs font-bold text-primary hover:bg-primary/10 transition-colors" data-export-open data-export-context="maintenance" data-export-source="System Maintenance Log" type="button">Export report</button>
 </div>
 </div>
-<div class="overflow-x-auto">
-<table class="w-full text-left border-collapse">
+<div class="overflow-hidden maintenance-table-fit" data-maintenance-workspace>
+<table class="w-full text-left border-collapse maintenance-log-table" data-maintenance-table>
+<colgroup>
+<col class="w-[3.5%]">
+<col class="w-[17%]">
+<col class="w-[21.5%]">
+<col class="w-[13%]">
+<col class="w-[16%]">
+<col class="w-[14%]">
+<col class="w-[15%]">
+</colgroup>
 <thead>
 <tr class="bg-surface-container-low">
 <th class="px-6 py-4 text-[10px] font-black text-on-surface-variant uppercase tracking-widest">Asset / Task</th>
@@ -310,75 +319,9 @@
 <th class="px-6 py-4 text-[10px] font-black text-on-surface-variant uppercase tracking-widest text-right">Action</th>
 </tr>
 </thead>
-<tbody class="divide-y divide-surface-container">
-<tr class="hover:bg-surface-container-low transition-colors group">
-<td class="px-6 py-5">
-<div class="flex items-center gap-3">
-<div class="w-8 h-8 rounded bg-primary/10 flex items-center justify-center text-primary">
-<span class="material-symbols-outlined text-lg">settings_input_component</span>
-</div>
-<span class="text-sm font-bold text-primary">Pump Replacement</span>
-</div>
-</td>
-<td class="px-6 py-5 text-sm text-on-surface-variant">Central Hub - Pump #4</td>
-<td class="px-6 py-5">
-<span class="px-2 py-0.5 bg-error-container text-error text-[10px] font-bold rounded uppercase">High</span>
-</td>
-<td class="px-6 py-5 text-sm text-on-surface">21.04.2026 | 04:30</td>
-<td class="px-6 py-5">
-<span class="flex items-center gap-1.5 text-secondary text-xs font-bold">
-<span class="material-symbols-outlined text-sm">check_circle</span> COMPLETED
-                                    </span>
-</td>
-<td class="px-6 py-5 text-right">
-<button class="text-on-primary-fixed-variant text-xs font-bold hover:underline">View Report</button>
-</td>
-</tr>
-<tr class="hover:bg-surface-container-low transition-colors group">
-<td class="px-6 py-5">
-<div class="flex items-center gap-3">
-<div class="w-8 h-8 rounded bg-primary/10 flex items-center justify-center text-primary">
-<span class="material-symbols-outlined text-lg">radar</span>
-</div>
-<span class="text-sm font-bold text-primary">Sensor Calibration</span>
-</div>
-</td>
-<td class="px-6 py-5 text-sm text-on-surface-variant">Vista Towers - Main Inlet</td>
-<td class="px-6 py-5">
-<span class="px-2 py-0.5 bg-secondary-container text-on-secondary-container text-[10px] font-bold rounded uppercase">Medium</span>
-</td>
-<td class="px-6 py-5 text-sm text-on-surface">24.04.2026 | 09:00</td>
-<td class="px-6 py-5">
-<span class="flex items-center gap-1.5 text-tertiary text-xs font-bold">
-<span class="material-symbols-outlined text-sm">schedule</span> UPCOMING
-                                    </span>
-</td>
-<td class="px-6 py-5 text-right">
-<button class="text-on-primary-fixed-variant text-xs font-bold hover:underline">Reschedule</button>
-</td>
-</tr>
-<tr class="hover:bg-surface-container-low transition-colors group">
-<td class="px-6 py-5">
-<div class="flex items-center gap-3">
-<div class="w-8 h-8 rounded bg-primary/10 flex items-center justify-center text-primary">
-<span class="material-symbols-outlined text-lg">filter_alt</span>
-</div>
-<span class="text-sm font-bold text-primary">Filter Cleaning</span>
-</div>
-</td>
-<td class="px-6 py-5 text-sm text-on-surface-variant">Harbor West - System 2</td>
-<td class="px-6 py-5">
-<span class="px-2 py-0.5 bg-surface-container text-on-surface-variant text-[10px] font-bold rounded uppercase">Low</span>
-</td>
-<td class="px-6 py-5 text-sm text-on-surface">19.04.2026 | 11:15</td>
-<td class="px-6 py-5">
-<span class="flex items-center gap-1.5 text-secondary text-xs font-bold">
-<span class="material-symbols-outlined text-sm">check_circle</span> COMPLETED
-                                    </span>
-</td>
-<td class="px-6 py-5 text-right">
-<button class="text-on-primary-fixed-variant text-xs font-bold hover:underline">View Report</button>
-</td>
+<tbody class="divide-y divide-surface-container" data-maintenance-body>
+<tr>
+<td class="px-6 py-8 text-sm text-on-surface-variant" colspan="7">Loading maintenance tasks...</td>
 </tr>
 </tbody>
 </table>

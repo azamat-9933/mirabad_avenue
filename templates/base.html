@@ -667,6 +667,75 @@
         });
         table.querySelectorAll("[data-row-select]").forEach((checkbox) => checkbox.addEventListener("change", updateSelection));
         updateSelection();
+        const semanticSortValue = (row, index, label) => {
+            const labelKey = String(label || "").toLowerCase();
+            const text = String(row.cells[index]?.textContent || "").trim();
+            const key = text.toLowerCase();
+            const datasetNumber = (name) => {
+                const value = Number(row.dataset[name]);
+                return Number.isFinite(value) ? { type: "number", value } : null;
+            };
+            const datasetText = (name) => row.dataset[name]
+                ? { type: "text", value: String(row.dataset[name]).toLowerCase() }
+                : null;
+            if (row.classList.contains("residential-district-row") || row.classList.contains("residential-building-row")) {
+                if (labelKey.includes("complex") || labelKey.includes("комплекс") || labelKey.includes("kompleks")) {
+                    const value = datasetText("sortName");
+                    if (value) return value;
+                }
+                if (labelKey.includes("infra") || labelKey.includes("инфра")) {
+                    const value = datasetNumber("sortUnits") || datasetNumber("sortBuildings");
+                    if (value) return value;
+                }
+                if (labelKey.includes("system") || labelKey.includes("систем") || labelKey.includes("tizim")) {
+                    const value = datasetNumber("sortSystemRank") || datasetNumber("sortHealth");
+                    if (value) return value;
+                }
+                if (labelKey.includes("finance") || labelKey.includes("фина") || labelKey.includes("moliya")) {
+                    const value = datasetNumber("sortHealth") || datasetNumber("sortFinance");
+                    if (value) return value;
+                }
+                if (labelKey.includes("debt") || labelKey.includes("долг") || labelKey.includes("qarz")) {
+                    const value = datasetNumber("sortDebt");
+                    if (value) return value;
+                }
+                if (labelKey.includes("action") || labelKey.includes("действ") || labelKey.includes("amal")) {
+                    const value = datasetNumber("sortDebtors") || datasetNumber("sortPaid");
+                    if (value) return value;
+                }
+            }
+            if (labelKey.includes("priority") || labelKey.includes("приоритет") || labelKey.includes("ustuvor")) {
+                const priority = row.dataset.priority || key;
+                if (priority.includes("high") || priority.includes("высок") || priority.includes("yuqori")) return { type: "rank", value: 3 };
+                if (priority.includes("medium") || priority.includes("сред") || priority.includes("o'rta")) return { type: "rank", value: 2 };
+                if (priority.includes("low") || priority.includes("низ") || priority.includes("past")) return { type: "rank", value: 1 };
+            }
+            if (labelKey.includes("status") || labelKey.includes("статус") || labelKey.includes("holat")) {
+                const status = row.dataset.statusKey || key;
+                if (status.includes("critical") || status.includes("overdue") || status.includes("критич")) return { type: "rank", value: 5 };
+                if (status.includes("progress") || status.includes("active") || status.includes("актив")) return { type: "rank", value: 4 };
+                if (status.includes("pending") || status.includes("planned") || status.includes("warning") || status.includes("ожид")) return { type: "rank", value: 3 };
+                if (status.includes("scheduled") || status.includes("upcoming") || status.includes("заплан")) return { type: "rank", value: 2 };
+                if (status.includes("completed") || status.includes("success") || status.includes("paid") || status.includes("заверш")) return { type: "rank", value: 1 };
+            }
+            if (labelKey.includes("date") || labelKey.includes("time") || labelKey.includes("дата") || labelKey.includes("время")) {
+                const [day, month, year] = text.split("|")[0].trim().split(".").map(Number);
+                return { type: "date", value: new Date(year || 1970, (month || 1) - 1, day || 1).getTime() };
+            }
+            const numeric = Number(text.replace(/[^\d.-]/g, ""));
+            if (Number.isFinite(numeric) && /\d/.test(text) && !/[a-zа-я]/i.test(text.replace(/uzs/ig, ""))) {
+                return { type: "number", value: numeric };
+            }
+            return { type: "text", value: key };
+        };
+        const compareSemanticRows = (a, b, index, direction, label) => {
+            const av = semanticSortValue(a, index, label);
+            const bv = semanticSortValue(b, index, label);
+            const result = av.type === "text" || bv.type === "text"
+                ? String(av.value).localeCompare(String(bv.value), undefined, { numeric: true, sensitivity: "base" })
+                : av.value - bv.value;
+            return direction === "asc" ? result : -result;
+        };
         Array.from(headRow.cells).forEach((header, index) => {
             if (index === 0) {
                 header.classList.add("table-select-heading");
@@ -697,11 +766,7 @@
                 header.dataset.sortDirection = direction;
                 const icon = header.querySelector(".table-sort-heading-icon");
                 if (icon) icon.textContent = direction === "asc" ? "arrow_upward" : "arrow_downward";
-                rows.sort((a, b) => {
-                    const av = a.cells[index]?.textContent.trim() || "";
-                    const bv = b.cells[index]?.textContent.trim() || "";
-                    return direction === "asc" ? av.localeCompare(bv, undefined, { numeric: true }) : bv.localeCompare(av, undefined, { numeric: true });
-                });
+                rows.sort((a, b) => compareSemanticRows(a, b, index, direction, label));
                 rows.forEach((row) => body.appendChild(row));
                 filteredRows = rows.filter((row) => row.textContent.toLowerCase().includes(search.value.trim().toLowerCase()));
                 updateVisibleRows();

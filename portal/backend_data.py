@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import timedelta
 from decimal import Decimal
 
+from django.contrib.auth import get_user_model
 from django.db.models import Prefetch, Sum
 from django.utils import timezone
 
@@ -17,6 +18,7 @@ from portal.models import (
     SystemAlert,
     TelemetryNode,
     TelemetrySample,
+    WorkspaceProfile,
 )
 
 
@@ -47,6 +49,73 @@ def _datetime(value) -> str:
 
 def _slug(prefix: str, pk: int) -> str:
     return f"{prefix}-{pk}"
+
+
+def _initials(name: str) -> str:
+    parts = [part for part in str(name or "").replace("_", " ").split() if part]
+    if not parts:
+        return "AU"
+    if len(parts) == 1:
+        return parts[0][:2].upper()
+    return f"{parts[0][0]}{parts[-1][0]}".upper()
+
+
+def _display_name(user) -> str:
+    if not user:
+        return "Admin"
+    full_name = user.get_full_name().strip()
+    return full_name or user.get_username()
+
+
+def _role_for_user(user, profile: WorkspaceProfile | None) -> str:
+    if profile and profile.role_label:
+        return profile.role_label
+    if user and user.is_superuser:
+        return "Administrator"
+    if user and user.is_staff:
+        return "Staff"
+    return "Operator"
+
+
+def _serialize_profile(user=None) -> dict:
+    User = get_user_model()
+    selected_user = user if getattr(user, "is_authenticated", False) else None
+    if selected_user is None:
+        selected_user = (
+            User.objects.filter(is_superuser=True, is_active=True).order_by("id").first()
+            or User.objects.filter(is_staff=True, is_active=True).order_by("id").first()
+            or User.objects.filter(is_active=True).order_by("id").first()
+        )
+
+    profile = None
+    if selected_user:
+        profile, _ = WorkspaceProfile.objects.get_or_create(user=selected_user)
+
+    name = _display_name(selected_user)
+    role = _role_for_user(selected_user, profile)
+    last_active = selected_user.last_login if selected_user else timezone.now()
+    return {
+        "id": selected_user.id if selected_user else None,
+        "username": selected_user.get_username() if selected_user else "",
+        "name": name,
+        "initials": _initials(name),
+        "email": selected_user.email if selected_user else "",
+        "role": role,
+        "status": profile.get_status_display() if profile else "Active",
+        "statusKey": profile.status if profile else WorkspaceProfile.STATUS_ACTIVE,
+        "workspace": profile.workspace_name if profile else "HydroFlow",
+        "organization": profile.organization if profile else "HydroFlow Utility Management",
+        "accessLevel": profile.access_level if profile else "Full operations access",
+        "timezone": profile.timezone_name if profile else "Asia/Tashkent",
+        "lastActive": _datetime(last_active),
+        "twoFactor": "Enabled" if (profile.two_factor_enabled if profile else True) else "Disabled",
+        "sessionStatus": profile.get_session_status_display() if profile else "Active",
+        "note": profile.note if profile else "Profile data is loaded from Django admin.",
+        "adminUrl": f"/admin/portal/workspaceprofile/{profile.id}/change/" if profile else "/admin/portal/workspaceprofile/",
+        "isAuthenticated": bool(selected_user),
+        "isStaff": bool(selected_user and selected_user.is_staff),
+        "isSuperuser": bool(selected_user and selected_user.is_superuser),
+    }
 
 
 def _date_section(value) -> str:
@@ -81,10 +150,15 @@ def _alert_icon(alert: SystemAlert) -> str:
 
 def _risk_from_split(debtors: int, paid: int, debt_total: float) -> str:
     total = debtors + paid
-    ratio = debtors / total if total else 0
-    if debtors and (ratio >= 0.25 or debt_total >= 50_000_000):
+    if not debtors or not total:
+        return "Low Risk"
+
+    debtor_share = debtors / total
+    debt_per_debtor = debt_total / max(debtors, 1)
+
+    if debtor_share >= 0.55 or debt_total >= 20_000_000 or debt_per_debtor >= 5_000_000:
         return "Critical"
-    if debtors and (ratio >= 0.10 or debt_total > 0):
+    if debtor_share >= 0.30 or debt_total >= 6_000_000 or debt_per_debtor >= 1_500_000:
         return "Medium Risk"
     return "Low Risk"
 
@@ -294,7 +368,7 @@ def _serialize_pressure_series() -> list[dict]:
     return rows
 
 
-def build_portal_data() -> dict:
+def build_portal_data(user=None) -> dict:
     """Return the exact data shape consumed by the current HydroFlow UI.
 
     The source of truth is the Mirabad Avenue backend schema copied into this
@@ -384,9 +458,14 @@ def build_portal_data() -> dict:
                 resident_id = _slug("owner", owner.id) if owner else _slug("apartment", apartment.id)
                 resident = {
                     "id": resident_id,
+                    "backendId": owner.id if owner else None,
+                    "ownerBackendId": owner.id if owner else None,
                     "complexId": _slug("complex", complex_obj.id),
+                    "complexBackendId": complex_obj.id,
                     "buildingId": _slug("building", building.id),
+                    "buildingBackendId": building.id,
                     "apartmentId": _slug("apartment", apartment.id),
+                    "apartmentBackendId": apartment.id,
                     "name": owner.fio if owner else "Unassigned owner",
                     "apartment": f"Apartment {apartment.number}",
                     "apartmentNumber": apartment.number,
@@ -406,6 +485,13 @@ def build_portal_data() -> dict:
 
                 apartment_rows.append({
                     "id": resident_id,
+                    "backendId": apartment.id,
+                    "apartmentBackendId": apartment.id,
+                    "ownerBackendId": owner.id if owner else None,
+                    "complexId": _slug("complex", complex_obj.id),
+                    "complexBackendId": complex_obj.id,
+                    "buildingId": _slug("building", building.id),
+                    "buildingBackendId": building.id,
                     "unit": apartment.number,
                     "owner": {
                         "name": resident["name"],
@@ -423,11 +509,14 @@ def build_portal_data() -> dict:
                     "visit": "",
                     "lastPayment": resident["lastPayment"],
                     "occupancy": "Resident" if owner else "Vacant",
+                    "isOccupied": bool(owner),
                 })
 
             building_risk = _risk_from_split(building_debtors, building_paid, building_debt)
             building_rows.append({
                 "id": _slug("building", building.id),
+                "backendId": building.id,
+                "complexBackendId": complex_obj.id,
                 "name": f"House {building.number}",
                 "number": building.number,
                 "address": building.address,
@@ -497,6 +586,7 @@ def build_portal_data() -> dict:
     return {
         "source": "mirabad_avenue_backend",
         "generatedAt": timezone.localtime().isoformat(),
+        "profile": _serialize_profile(user),
         "complexes": complex_rows,
         "residents": resident_rows,
         "transactions": transaction_rows,

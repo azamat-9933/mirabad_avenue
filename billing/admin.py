@@ -18,6 +18,10 @@ from .models import (
 )
 
 
+def admin_number(value, places=0):
+    return format(value or 0, f",.{places}f")
+
+
 # ══════════════════════════════════════════════════════
 #  INLINES  (BillingPeriod ichiga joylashadi)
 # ══════════════════════════════════════════════════════
@@ -127,7 +131,7 @@ class BillingPeriodAdmin(admin.ModelAdmin):
     def total_expenses_display(self, obj):
         total = obj.expenses.aggregate(s=Sum("amount"))["s"] or 0
         return format_html(
-            '<span style="font-weight:600;">{:,.0f} so\'m</span>', total
+            '<span style="font-weight:600;">{} so\'m</span>', admin_number(total)
         )
 
     # ── Deystviya ────────────────────────────────────
@@ -194,7 +198,7 @@ class ExpenseAdmin(admin.ModelAdmin):
     @admin.display(description="Summa")
     def amount_display(self, obj):
         return format_html(
-            '<span style="font-weight:600;">{:,.0f} so\'m</span>', obj.amount
+            '<span style="font-weight:600;">{} so\'m</span>', admin_number(obj.amount)
         )
 
 
@@ -236,14 +240,14 @@ class GasMeterReadingAdmin(admin.ModelAdmin):
     @admin.display(description="Sarf (kub)")
     def consumption_display(self, obj):
         return format_html(
-            "<strong>{:,.2f}</strong> kub", obj.consumption
+            "<strong>{}</strong> kub", admin_number(obj.consumption, 2)
         )
 
     @admin.display(description="Gaz xarajati (so'm)")
     def total_gas_cost_display(self, obj):
         return format_html(
-            '<span style="color:#e74c3c;font-weight:600;">{:,.0f} so\'m</span>',
-            obj.total_gas_cost,
+            '<span style="color:#e74c3c;font-weight:600;">{} so\'m</span>',
+            admin_number(obj.total_gas_cost),
         )
 
 
@@ -339,7 +343,7 @@ class HeatingRecordAdmin(admin.ModelAdmin):
     @admin.display(description="Qizdirilgan maydon (m²·kun)")
     def heated_area_display(self, obj):
         return format_html(
-            "<strong>{:,.2f}</strong> m²·kun", obj.heated_area
+            "<strong>{}</strong> m²·kun", admin_number(obj.heated_area, 2)
         )
 
 
@@ -405,7 +409,7 @@ class HotWaterMeterReadingAdmin(admin.ModelAdmin):
         if c == 0:
             return format_html('<span style="color:#95a5a6;">0 kub</span>')
         return format_html(
-            '<span style="color:#2980b9;font-weight:600;">{:,.2f} kub</span>', c
+            '<span style="color:#2980b9;font-weight:600;">{} kub</span>', admin_number(c, 2)
         )
 
 
@@ -507,8 +511,8 @@ class InvoiceAdmin(admin.ModelAdmin):
         if not obj.heating_amount:
             return format_html('<span style="color:#bdc3c7;">—</span>')
         return format_html(
-            '<span style="color:#e67e22;">{:,.0f} so\'m</span>',
-            obj.heating_amount,
+            '<span style="color:#e67e22;">{} so\'m</span>',
+            admin_number(obj.heating_amount),
         )
 
     @admin.display(description="💧 GVS")
@@ -516,15 +520,15 @@ class InvoiceAdmin(admin.ModelAdmin):
         if not obj.hot_water_amount:
             return format_html('<span style="color:#bdc3c7;">—</span>')
         return format_html(
-            '<span style="color:#2980b9;">{:,.0f} so\'m</span>',
-            obj.hot_water_amount,
+            '<span style="color:#2980b9;">{} so\'m</span>',
+            admin_number(obj.hot_water_amount),
         )
 
     @admin.display(description="Jami summa")
     def total_amount_display(self, obj):
         return format_html(
-            '<span style="font-weight:700;font-size:14px;">{:,.0f} so\'m</span>',
-            obj.total_amount,
+            '<span style="font-weight:700;font-size:14px;">{} so\'m</span>',
+            admin_number(obj.total_amount),
         )
 
 
@@ -557,15 +561,15 @@ class HeatingCalculationSummaryAdmin(admin.ModelAdmin):
     @admin.display(description="Umumiy xarajat")
     def total_expenses_display(self, obj):
         return format_html(
-            '<span style="color:#e74c3c;font-weight:600;">{:,.0f} so\'m</span>',
-            obj.total_expenses,
+            '<span style="color:#e74c3c;font-weight:600;">{} so\'m</span>',
+            admin_number(obj.total_expenses),
         )
 
     @admin.display(description="1 m²·kun narxi")
     def cost_per_sqm_display(self, obj):
         return format_html(
-            '<span style="font-weight:700;color:#4e73df;">{:,.4f} so\'m</span>',
-            obj.cost_per_sqm,
+            '<span style="font-weight:700;color:#4e73df;">{} so\'m</span>',
+            admin_number(obj.cost_per_sqm, 4),
         )
 
 
@@ -598,13 +602,13 @@ class HotWaterCalculationSummaryAdmin(admin.ModelAdmin):
     @admin.display(description="Umumiy xarajat")
     def total_expenses_display(self, obj):
         return format_html(
-            '<span style="color:#e74c3c;font-weight:600;">{:,.0f} so\'m</span>',
-            obj.total_expenses,
+            '<span style="color:#e74c3c;font-weight:600;">{} so\'m</span>',
+            admin_number(obj.total_expenses),
         )
 
     @admin.display(description="1 kub tarifi")
     def tariff_per_m3_display(self, obj):
         return format_html(
-            '<span style="font-weight:700;color:#27ae60;">{:,.4f} so\'m</span>',
-            obj.tariff_per_m3,
+            '<span style="font-weight:700;color:#27ae60;">{} so\'m</span>',
+            admin_number(obj.tariff_per_m3, 4),
         )

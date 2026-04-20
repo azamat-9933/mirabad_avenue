@@ -5,6 +5,51 @@ from django.utils import timezone
 from main_app.models import Apartment, Building, Complex, Owner
 
 
+class WorkspaceProfile(models.Model):
+    """Admin-controlled profile data shown in the portal account drawer."""
+
+    STATUS_ACTIVE = "active"
+    STATUS_INACTIVE = "inactive"
+    STATUS_CHOICES = [
+        (STATUS_ACTIVE, "Active"),
+        (STATUS_INACTIVE, "Inactive"),
+    ]
+
+    SESSION_ACTIVE = "active"
+    SESSION_EXPIRED = "expired"
+    SESSION_CHOICES = [
+        (SESSION_ACTIVE, "Active"),
+        (SESSION_EXPIRED, "Expired"),
+    ]
+
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="workspace_profile",
+    )
+    workspace_name = models.CharField(max_length=120, default="HydroFlow")
+    organization = models.CharField(max_length=180, default="HydroFlow Utility Management")
+    access_level = models.CharField(max_length=180, default="Full operations access")
+    role_label = models.CharField(max_length=120, blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_ACTIVE)
+    timezone_name = models.CharField(max_length=80, default="Asia/Tashkent")
+    two_factor_enabled = models.BooleanField(default=True)
+    session_status = models.CharField(max_length=20, choices=SESSION_CHOICES, default=SESSION_ACTIVE)
+    note = models.CharField(
+        max_length=240,
+        default="Profile data is loaded from Django admin and the active backend session.",
+    )
+    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Workspace profile"
+        verbose_name_plural = "Workspace profiles"
+
+    def __str__(self):
+        return f"{self.user.get_username()} | {self.workspace_name}"
+
+
 class PortalNotification(models.Model):
     """Operational notification shown in the HydroFlow notifications center."""
 

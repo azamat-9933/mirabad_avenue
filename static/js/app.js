@@ -186,6 +186,19 @@
         "Residential Complex Management": { ru: "Управление жилым комплексом", uz: "Turar joy kompleksini boshqarish" },
         "Managing 124 active residents across 48 units.": { ru: "124 активных жильца в 48 объектах.", uz: "48 obyekt bo'yicha 124 faol yashovchi." },
         "Add New Resident": { ru: "Добавить жильца", uz: "Yangi yashovchi qo'shish" },
+        "Resident admin form": { ru: "Форма admin panel", uz: "Admin panel formasi" },
+        "This form writes directly to Django admin and database.": { ru: "Эта форма напрямую записывает данные в Django admin и DB.", uz: "Bu forma ma'lumotlarni Django admin va DB ga to'g'ridan-to'g'ri yozadi." },
+        "Full name": { ru: "Полное имя", uz: "To'liq ism" },
+        "Phone": { ru: "Телефон", uz: "Telefon" },
+        "Complex": { ru: "ЖК", uz: "Kompleks" },
+        "Building": { ru: "Дом", uz: "Uy" },
+        "Section": { ru: "Секция", uz: "Seksiya" },
+        "Apartment": { ru: "Квартира", uz: "Kvartira" },
+        "Telegram status": { ru: "Статус Telegram", uz: "Telegram holati" },
+        "Telegram id": { ru: "Telegram ID", uz: "Telegram ID" },
+        "Telegram user": { ru: "Telegram user", uz: "Telegram foydalanuvchi" },
+        "Only free apartments are shown. Occupied apartments must be edited in admin.": { ru: "Показаны только свободные квартиры. Занятые квартиры редактируются в admin.", uz: "Faqat bo'sh kvartiralar ko'rsatiladi. Band kvartiralar adminda tahrirlanadi." },
+        "Create resident": { ru: "Создать жильца", uz: "Yashovchi yaratish" },
         "Consumption & Collections Overview": { ru: "Потребление и сборы", uz: "Iste'mol va tushumlar sharhi" },
         "Active Debtors": { ru: "Активные должники", uz: "Faol qarzdorlar" },
         "Total Outstanding": { ru: "Общая задолженность", uz: "Jami qarzdorlik" },
@@ -712,6 +725,7 @@
         checklistItems: [],
         telemetryNodes: [],
         pressureSeries: [],
+        profile: {},
     };
 
     const applyBackendBillingData = (payload) => {
@@ -724,6 +738,7 @@
         ["notifications", "systemAlerts", "maintenanceTasks", "auditEvents", "checklistItems", "telemetryNodes", "pressureSeries"].forEach((key) => {
             billingData[key] = Array.isArray(payload[key]) ? payload[key] : [];
         });
+        billingData.profile = payload.profile && typeof payload.profile === "object" ? payload.profile : {};
         billingData.source = payload.source || "backend";
         billingData.generatedAt = payload.generatedAt || "";
         return true;
@@ -732,14 +747,46 @@
     applyBackendBillingData(window.HydroFlowBackendData);
     window.HydroFlowApplyBackendData = applyBackendBillingData;
 
+    const renderBackendProfile = () => {
+        const profile = billingData.profile || {};
+        const fallbackName = profile.username || "Admin";
+        const values = {
+            name: profile.name || fallbackName,
+            initials: profile.initials || fallbackName.slice(0, 2).toUpperCase(),
+            role: profile.role || "Operator",
+            email: profile.email || "No email in admin",
+            status: profile.status || "Active",
+            workspace: profile.workspace || "HydroFlow",
+            organization: profile.organization || "HydroFlow",
+            accessLevel: profile.accessLevel || "Staff access",
+            timezone: profile.timezone || "Asia/Tashkent",
+            lastActive: profile.lastActive || billingData.generatedAt || "Backend session",
+            twoFactor: profile.twoFactor || "Disabled",
+            sessionStatus: profile.sessionStatus || "Active",
+            note: profile.note || "Profile data is loaded from Django admin.",
+        };
+        document.querySelectorAll("[data-profile-field]").forEach((node) => {
+            const key = node.dataset.profileField;
+            if (!Object.prototype.hasOwnProperty.call(values, key)) return;
+            node.textContent = values[key];
+        });
+        document.querySelectorAll(".status-dot").forEach((dot) => {
+            if (!dot.closest("#profile-drawer")) return;
+            dot.classList.toggle("dot-operational", (profile.statusKey || "active") === "active");
+            dot.classList.toggle("dot-critical", profile.statusKey === "inactive");
+        });
+    };
+
+    renderBackendProfile();
+
     const getResidentById = (id) => billingData.residents.find((resident) => resident.id === id);
     const getComplexById = (id) => billingData.complexes.find((complex) => complex.id === id);
     const getResidentTransactions = (residentId) => billingData.transactions.filter((transaction) => transaction.residentId === residentId);
     const dateValue = (date) => {
-        const [day, month, year] = String(date || "").split(".").map(Number);
+        const [day, month, year] = String(date || "").split("|")[0].trim().split(".").map(Number);
         return new Date(year || 1970, (month || 1) - 1, day || 1).getTime();
     };
-    const riskForHealth = (health) => health < 86 ? "Critical" : health < 94 ? "Medium Risk" : "Low Risk";
+    const riskForHealth = (health) => health < 55 ? "Critical" : health < 80 ? "Medium Risk" : "Low Risk";
     const toneForRisk = (risk) => risk === "Critical" ? "red" : risk === "Medium Risk" ? "amber" : "blue";
     const getComplexStats = () => billingData.complexes.map((complex) => {
         const isBackend = Boolean(billingData.source);
@@ -1807,6 +1854,8 @@
             const tasks = [];
             if (complex.water !== "Optimal") {
                 tasks.push({
+                    id: `${complex.id}-water-maintenance`,
+                    complexId: complex.id,
                     task: "Water leak inspection",
                     location: `${complex.name} · main line`,
                     priority: "High",
@@ -1821,6 +1870,8 @@
             }
             if (complex.heating !== "Optimal") {
                 tasks.push({
+                    id: `${complex.id}-heating-maintenance`,
+                    complexId: complex.id,
                     task: "Heating loop service",
                     location: `${complex.name} · heating core`,
                     priority: "Medium",
@@ -1835,6 +1886,8 @@
             }
             if (index < 2 && complex.water === "Optimal" && complex.heating === "Optimal") {
                 tasks.push({
+                    id: `${complex.id}-audit-maintenance`,
+                    complexId: complex.id,
                     task: "Preventive system audit",
                     location: `${complex.name} · ${complex.sector}`,
                     priority: "Low",
@@ -1922,28 +1975,47 @@
             }
         }
 
-        const maintenanceTable = Array.from(document.querySelectorAll("table")).find((table) => (
-            table.closest("section")?.querySelector("h4")?.textContent.trim().toLowerCase().includes("system maintenance log")
-        ));
-        const maintenanceBody = maintenanceTable?.querySelector("tbody");
+        const maintenanceBody = document.querySelector("[data-maintenance-body]");
         if (maintenanceBody) {
-            maintenanceBody.innerHTML = maintenanceTasks.map((task) => `
-                <tr class="hover:bg-surface-container-low transition-colors group">
-                    <td class="px-6 py-5">
+            const priorityKey = (task) => String(task.priorityKey || task.priority || "").toLowerCase();
+            const statusKey = (task) => String(task.statusKey || task.status || "").toLowerCase();
+            const statusClass = (task) => {
+                const key = statusKey(task);
+                if (key.includes("planned") || key.includes("pending")) return "is-warning";
+                if (key.includes("progress") || key.includes("scheduled") || key.includes("upcoming")) return "is-info";
+                if (key.includes("complete") || key.includes("done")) return "is-success";
+                return "is-success";
+            };
+            maintenanceBody.innerHTML = maintenanceTasks.length ? maintenanceTasks.map((task) => `
+                <tr class="maintenance-log-row hover:bg-surface-container-low transition-colors group"
+                    data-maintenance-row
+                    data-maintenance-id="${escapeHtml(task.id || task.backendId || task.task)}"
+                    data-complex-id="${escapeHtml(task.complexId || "")}"
+                    data-building-id="${escapeHtml(task.buildingId || "")}"
+                    data-priority="${escapeHtml(priorityKey(task))}"
+                    data-status-key="${escapeHtml(statusKey(task))}"
+                    data-date="${escapeHtml(task.date || "")}">
+                    <td class="px-5 py-4">
                         <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 rounded bg-primary/10 flex items-center justify-center text-primary">
-                                <span class="material-symbols-outlined text-lg">${escapeHtml(task.icon)}</span>
+                            <div class="maintenance-task-icon">
+                                <span class="material-symbols-outlined">${escapeHtml(task.icon)}</span>
                             </div>
-                            <span class="text-sm font-bold text-primary">${escapeHtml(task.task)}</span>
+                            <span class="maintenance-task-title">${escapeHtml(task.task)}</span>
                         </div>
                     </td>
-                    <td class="px-6 py-5 text-sm text-on-surface-variant">${escapeHtml(task.location)}</td>
-                    <td class="px-6 py-5"><span class="table-assigned-status ${task.priority === "High" ? "is-critical" : task.priority === "Medium" ? "is-warning" : "is-success"}">${escapeHtml(task.priority)}</span></td>
-                    <td class="px-6 py-5 text-sm text-on-surface">${escapeHtml(task.date)}</td>
-                    <td class="px-6 py-5"><span class="table-assigned-status ${task.status === "Planned" ? "is-warning" : "is-success"}">${escapeHtml(task.status)}</span></td>
-                    <td class="px-6 py-5 text-right"><button class="text-primary text-xs font-bold hover:underline" type="button">${escapeHtml(task.action)}</button></td>
+                    <td class="px-5 py-4 text-sm text-on-surface-variant">${escapeHtml(task.location)}</td>
+                    <td class="px-5 py-4 whitespace-nowrap"><span class="table-assigned-status ${priorityKey(task) === "high" ? "is-critical" : priorityKey(task) === "medium" ? "is-warning" : "is-success"}">${escapeHtml(task.priority)}</span></td>
+                    <td class="px-5 py-4 text-sm text-on-surface whitespace-nowrap">${escapeHtml(task.date)}</td>
+                    <td class="px-5 py-4 whitespace-nowrap"><span class="table-assigned-status ${statusClass(task)}">${escapeHtml(task.status)}</span></td>
+                    <td class="px-5 py-4 text-right whitespace-nowrap"><button class="maintenance-action-button" type="button">${escapeHtml(task.action)}</button></td>
                 </tr>
-            `).join("");
+            `).join("") : `
+                <tr data-smart-empty="true">
+                    <td class="px-6 py-8 text-sm text-on-surface-variant" colspan="7">No maintenance tasks found.</td>
+                </tr>
+            `;
+            const maintenanceTable = maintenanceBody.closest("table");
+            maintenanceTable?.HydroFlowRefreshTableControls?.();
         }
 
         const networkMap = document.querySelector("[data-network-map]");
@@ -2430,13 +2502,25 @@
         }
 
         const repairEnhancedTableControls = (table) => {
-            if (!table || table.dataset.billingControlsReady === "true") return;
+            if (!table) return;
+            if (table.dataset.billingControlsReady === "true") {
+                table.HydroFlowRefreshTableControls?.();
+                return;
+            }
             const body = table.querySelector("tbody");
             const workspace = table.closest(".table-workspace") || table.closest(".overflow-x-auto") || table;
-            const tools = workspace.previousElementSibling?.classList?.contains("table-tools") ? workspace.previousElementSibling : null;
-            const pagination = workspace.nextElementSibling?.classList?.contains("table-pagination") ? workspace.nextElementSibling : null;
-            const search = tools?.querySelector(".table-search");
+            let tools = workspace.previousElementSibling?.classList?.contains("table-tools") ? workspace.previousElementSibling : null;
+            let pagination = workspace.nextElementSibling?.classList?.contains("table-pagination") ? workspace.nextElementSibling : null;
             if (!body || !tools) return;
+            const cleanTools = tools.cloneNode(true);
+            tools.replaceWith(cleanTools);
+            tools = cleanTools;
+            if (pagination) {
+                const cleanPagination = pagination.cloneNode(true);
+                pagination.replaceWith(cleanPagination);
+                pagination = cleanPagination;
+            }
+            const search = tools.querySelector(".table-search");
             const tableHead = table.querySelector("thead");
             if (tableHead) {
                 const cleanHead = tableHead.cloneNode(true);
@@ -2484,6 +2568,9 @@
                 page = 1;
                 updateVisibleRows();
             });
+            tools.querySelector("[data-table-action='reminders']")?.addEventListener("click", () => {
+                document.querySelector("[data-drawer-open='notifications-drawer']")?.click();
+            });
             selectAll?.addEventListener("change", (event) => {
                 currentRows().forEach((row) => {
                     if (row.classList.contains("hidden")) return;
@@ -2495,13 +2582,80 @@
             body.addEventListener("change", (event) => {
                 if (event.target.matches("[data-row-select]")) updateSelection();
             });
+            const semanticSortValue = (row, index, label) => {
+                const labelKey = String(label || "").toLowerCase();
+                const text = String(row.cells[index]?.textContent || "").trim();
+                const key = text.toLowerCase();
+                const datasetNumber = (name) => {
+                    const value = Number(row.dataset[name]);
+                    return Number.isFinite(value) ? { type: "number", value } : null;
+                };
+                const datasetText = (name) => row.dataset[name]
+                    ? { type: "text", value: String(row.dataset[name]).toLowerCase() }
+                    : null;
+                if (row.classList.contains("residential-district-row") || row.classList.contains("residential-building-row")) {
+                    if (labelKey.includes("complex") || labelKey.includes("комплекс") || labelKey.includes("kompleks")) {
+                        const value = datasetText("sortName");
+                        if (value) return value;
+                    }
+                    if (labelKey.includes("infra") || labelKey.includes("инфра")) {
+                        const value = datasetNumber("sortUnits") || datasetNumber("sortBuildings");
+                        if (value) return value;
+                    }
+                    if (labelKey.includes("system") || labelKey.includes("систем") || labelKey.includes("tizim")) {
+                        const value = datasetNumber("sortSystemRank") || datasetNumber("sortHealth");
+                        if (value) return value;
+                    }
+                    if (labelKey.includes("finance") || labelKey.includes("фина") || labelKey.includes("moliya")) {
+                        const value = datasetNumber("sortHealth") || datasetNumber("sortFinance");
+                        if (value) return value;
+                    }
+                    if (labelKey.includes("debt") || labelKey.includes("долг") || labelKey.includes("qarz")) {
+                        const value = datasetNumber("sortDebt");
+                        if (value) return value;
+                    }
+                    if (labelKey.includes("action") || labelKey.includes("действ") || labelKey.includes("amal")) {
+                        const value = datasetNumber("sortDebtors") || datasetNumber("sortPaid");
+                        if (value) return value;
+                    }
+                }
+                if (labelKey.includes("priority") || labelKey.includes("приоритет") || labelKey.includes("ustuvor")) {
+                    const priority = row.dataset.priority || key;
+                    if (priority.includes("high") || priority.includes("высок") || priority.includes("yuqori")) return { type: "rank", value: 3 };
+                    if (priority.includes("medium") || priority.includes("сред") || priority.includes("o'rta")) return { type: "rank", value: 2 };
+                    if (priority.includes("low") || priority.includes("низ") || priority.includes("past")) return { type: "rank", value: 1 };
+                }
+                if (labelKey.includes("status") || labelKey.includes("статус") || labelKey.includes("holat")) {
+                    const status = row.dataset.statusKey || key;
+                    if (status.includes("critical") || status.includes("overdue") || status.includes("критич")) return { type: "rank", value: 5 };
+                    if (status.includes("progress") || status.includes("active") || status.includes("актив")) return { type: "rank", value: 4 };
+                    if (status.includes("pending") || status.includes("planned") || status.includes("warning") || status.includes("ожид")) return { type: "rank", value: 3 };
+                    if (status.includes("scheduled") || status.includes("upcoming") || status.includes("заплан")) return { type: "rank", value: 2 };
+                    if (status.includes("completed") || status.includes("success") || status.includes("paid") || status.includes("заверш")) return { type: "rank", value: 1 };
+                }
+                if (labelKey.includes("date") || labelKey.includes("time") || labelKey.includes("дата") || labelKey.includes("время")) {
+                    return { type: "date", value: dateValue(text) };
+                }
+                const numeric = Number(text.replace(/[^\d.-]/g, ""));
+                if (Number.isFinite(numeric) && /\d/.test(text) && !/[a-zа-я]/i.test(text.replace(/uzs/ig, ""))) {
+                    return { type: "number", value: numeric };
+                }
+                return { type: "text", value: key };
+            };
+            const compareSemanticRows = (a, b, index, direction, label) => {
+                const av = semanticSortValue(a, index, label);
+                const bv = semanticSortValue(b, index, label);
+                const result = av.type === "text" || bv.type === "text"
+                    ? String(av.value).localeCompare(String(bv.value), undefined, { numeric: true, sensitivity: "base" })
+                    : av.value - bv.value;
+                return direction === "asc" ? result : -result;
+            };
             const setupCleanSort = () => {
                 const headRow = table.querySelector("thead tr");
                 if (!headRow) return;
                 Array.from(headRow.cells).forEach((header, index) => {
                     if (header.querySelector("[data-select-all]")) return;
                     const label = header.querySelector(".table-filter-heading-text")?.textContent.trim() || header.textContent.trim();
-                    if (/actions/i.test(label)) return;
                     header.classList.add("table-filter-heading");
                     header.setAttribute("role", "button");
                     header.setAttribute("tabindex", "0");
@@ -2524,13 +2678,7 @@
                             row.setAttribute("aria-expanded", "false");
                         });
                         const rows = currentRows();
-                        rows.sort((a, b) => {
-                            const av = a.cells[index]?.textContent.trim() || "";
-                            const bv = b.cells[index]?.textContent.trim() || "";
-                            return direction === "asc"
-                                ? av.localeCompare(bv, undefined, { numeric: true, sensitivity: "base" })
-                                : bv.localeCompare(av, undefined, { numeric: true, sensitivity: "base" });
-                        });
+                        rows.sort((a, b) => compareSemanticRows(a, b, index, direction, label));
                         rows.forEach((row) => body.appendChild(row));
                         page = 1;
                         updateVisibleRows();
@@ -2553,6 +2701,10 @@
                 page += 1;
                 updateVisibleRows();
             });
+            table.HydroFlowRefreshTableControls = () => {
+                ensureCheckboxes();
+                updateVisibleRows();
+            };
             updateVisibleRows();
         };
 
@@ -2652,7 +2804,19 @@
                 const riskTextClass = complex.risk === "Critical" ? "text-error" : "text-on-surface";
                 const splitTone = debtSplitTone(complex.debtorResidents, complex.paidResidents);
                 return `
-                    <tr aria-expanded="false" class="hover:bg-surface-container-low/30 transition-colors residential-district-row" data-district-id="${escapeHtml(complex.id)}" data-drill-row="district" tabindex="0">
+                    <tr aria-expanded="false" class="hover:bg-surface-container-low/30 transition-colors residential-district-row"
+                        data-district-id="${escapeHtml(complex.id)}"
+                        data-drill-row="district"
+                        data-sort-name="${escapeHtml(complex.name)}"
+                        data-sort-buildings="${Number(complex.buildings) || 0}"
+                        data-sort-units="${Number(complex.units) || 0}"
+                        data-sort-health="${Number(complex.health) || 0}"
+                        data-sort-system-rank="${complex.risk === "Critical" ? 3 : complex.risk === "Medium Risk" ? 2 : 1}"
+                        data-sort-finance="${Number(complex.finances) || 0}"
+                        data-sort-debt="${Number(complex.debt) || 0}"
+                        data-sort-debtors="${Number(complex.debtorResidents) || 0}"
+                        data-sort-paid="${Number(complex.paidResidents) || 0}"
+                        tabindex="0">
                         ${selectCell(`Select ${complex.name}`)}
                         <td class="px-6 py-5">
                             <div class="flex items-center gap-4">
@@ -2708,6 +2872,8 @@
         }
 
         syncSiteStatistics();
+        const maintenanceTable = document.querySelector("[data-maintenance-body]")?.closest("table");
+        repairEnhancedTableControls(maintenanceTable);
         window.HydroFlowSyncLocale?.();
     };
 
@@ -2788,6 +2954,20 @@
             row.dataset.globalFilterHidden = visible ? "false" : "true";
             row.classList.toggle("hidden", !visible);
         };
+        const filterMatchesMaintenanceRow = (row, state) => {
+            const complexId = row.dataset.complexId || "";
+            const priority = String(row.dataset.priority || "").toLowerCase();
+            const taskStatus = String(row.dataset.statusKey || "").toLowerCase();
+            if (complexId && !filterMatchesComplex(complexId, { ...state, status: ["paid", "debtor"].includes(state.status) ? state.status : "all" })) return false;
+            if (!complexId && state.district !== "all") return false;
+            if (state.status === "critical" && priority !== "high") return false;
+            if (state.status === "medium" && priority !== "medium") return false;
+            if (state.status === "low" && priority !== "low") return false;
+            if (state.status === "paid" && taskStatus !== "completed" && complexId && !filterMatchesComplex(complexId, state)) return false;
+            if (state.status === "debtor" && complexId && !filterMatchesComplex(complexId, state)) return false;
+            if (!withinFilterPeriod(row.dataset.date || "", state.period)) return false;
+            return true;
+        };
         const updateEmptyState = (visibleRows) => {
             const empty = document.querySelector("[data-filter-empty]");
             if (!empty) return;
@@ -2815,6 +2995,10 @@
             document.querySelectorAll("[data-transaction-id]").forEach((row) => {
                 const transaction = billingData.transactions.find((item) => item.id === row.dataset.transactionId);
                 const visible = filterMatchesTransaction(transaction, normalized);
+                setRowFilterState(row, visible);
+            });
+            document.querySelectorAll("[data-maintenance-row]").forEach((row) => {
+                const visible = filterMatchesMaintenanceRow(row, normalized);
                 setRowFilterState(row, visible);
             });
             document.querySelectorAll(".revenue-debt-item, .debtor-complex-item, .debtor-row, .complex-health-row, .network-node").forEach((item) => {
@@ -3313,6 +3497,15 @@
             row.dataset.parentDistrict = districtId;
             row.dataset.buildingId = `${districtId}-${index}`;
             row.dataset.buildingIndex = String(index);
+            row.dataset.sortName = buildingName(district, index);
+            row.dataset.sortBuildings = "1";
+            row.dataset.sortUnits = String(unitCount);
+            row.dataset.sortHealth = String(completion);
+            row.dataset.sortSystemRank = buildingRisk === "Critical" ? "3" : buildingRisk === "Medium Risk" || buildingRisk === "Review" ? "2" : "1";
+            row.dataset.sortFinance = String(debt);
+            row.dataset.sortDebt = String(debt);
+            row.dataset.sortDebtors = String(debtorCount);
+            row.dataset.sortPaid = String(paidCount);
             row.setAttribute("aria-expanded", "false");
             row.tabIndex = 0;
             row.innerHTML = `
@@ -3736,8 +3929,11 @@
             if (!response.ok) return;
             const payload = await response.json();
             if (!applyBackendBillingData(payload)) return;
+            delete document.body.dataset.billingDataSynced;
+            setupBillingDataSync();
             document.querySelector("[data-notification-list]")?.removeAttribute("data-backend-notifications-rendered");
             document.querySelector("[data-audit-timeline]")?.removeAttribute("data-backend-audit-rendered");
+            renderBackendProfile();
             renderBackendNotifications();
             renderBackendAuditEvents();
             syncSiteStatistics();
@@ -3789,6 +3985,236 @@
             window.setTimeout(() => backdrop?.classList.add("hidden"), 140);
         }
     };
+
+    const csrfToken = () => {
+        const tokenInput = document.querySelector("input[name='csrfmiddlewaretoken']");
+        if (tokenInput?.value) return tokenInput.value;
+        return document.cookie
+            .split(";")
+            .map((part) => part.trim())
+            .find((part) => part.startsWith("csrftoken="))
+            ?.split("=")[1] || "";
+    };
+
+    const rehydrateFromPortalData = (portalData) => {
+        if (!applyBackendBillingData(portalData)) return false;
+        delete document.body.dataset.billingDataSynced;
+        setupBillingDataSync();
+        document.querySelector("[data-notification-list]")?.removeAttribute("data-backend-notifications-rendered");
+        document.querySelector("[data-audit-timeline]")?.removeAttribute("data-backend-audit-rendered");
+        renderBackendProfile();
+        renderBackendNotifications();
+        renderBackendAuditEvents();
+        syncSiteStatistics();
+        window.HydroFlowApplyFilters?.();
+        window.HydroFlowSyncLocale?.();
+        document.dispatchEvent(new CustomEvent("hydroflow:backend-refreshed"));
+        return true;
+    };
+
+    const postPortalJson = async (url, payload) => {
+        const response = await fetch(url, {
+            method: "POST",
+            credentials: "same-origin",
+            headers: {
+                Accept: "application/json",
+                "Content-Type": "application/json",
+                "X-CSRFToken": csrfToken(),
+            },
+            body: JSON.stringify(payload),
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok || data.ok === false) {
+            throw new Error(data.error || `Request failed (${response.status})`);
+        }
+        return data;
+    };
+
+    const setupResidentCreateForm = () => {
+        const form = document.querySelector("[data-resident-create-form]");
+        if (!form || form.dataset.residentCreateReady === "true") return;
+        form.dataset.residentCreateReady = "true";
+        const complexSelect = form.querySelector("[data-resident-create-complex]");
+        const buildingSelect = form.querySelector("[data-resident-create-building]");
+        const sectionSelect = form.querySelector("[data-resident-create-section]");
+        const apartmentSelect = form.querySelector("[data-resident-create-apartment]");
+        const status = form.querySelector("[data-resident-create-status]");
+        const submit = form.querySelector("[data-resident-create-submit]");
+
+        const setStatus = (message, kind = "info") => {
+            if (!status) return;
+            status.textContent = message;
+            status.classList.remove("hidden", "is-error", "is-success");
+            if (kind === "error") status.classList.add("is-error");
+            if (kind === "success") status.classList.add("is-success");
+        };
+
+        const allFreeApartments = () => billingData.complexes.flatMap((complex) => (
+            (complex.buildingItems || []).flatMap((building) => (
+                (building.apartments || [])
+                    .filter((apartment) => !apartment.isOccupied && apartment.apartmentBackendId)
+                    .map((apartment) => ({
+                        complexId: complex.id,
+                        complexBackendId: complex.backendId || apartment.complexBackendId,
+                        complexName: complex.name,
+                        buildingId: building.id,
+                        buildingBackendId: building.backendId || apartment.buildingBackendId,
+                        buildingName: building.name,
+                        section: apartment.meter || "No section",
+                        apartmentBackendId: apartment.apartmentBackendId,
+                        unit: apartment.unit,
+                        label: `${complex.name} / ${building.name} / ${apartment.meter || "No section"} / Apt. ${apartment.unit}`,
+                    }))
+            ))
+        ));
+
+        const fillSelect = (select, rows, getValue, getLabel, emptyLabel) => {
+            if (!select) return;
+            select.innerHTML = "";
+            if (!rows.length) {
+                select.innerHTML = `<option value="">${emptyLabel}</option>`;
+                select.disabled = true;
+                return;
+            }
+            select.disabled = false;
+            rows.forEach((row) => {
+                const option = document.createElement("option");
+                option.value = getValue(row);
+                option.textContent = getLabel(row);
+                select.appendChild(option);
+            });
+        };
+
+        const uniqueBy = (rows, key) => {
+            const seen = new Set();
+            return rows.filter((row) => {
+                const value = row[key];
+                if (seen.has(value)) return false;
+                seen.add(value);
+                return true;
+            });
+        };
+
+        const syncOptions = () => {
+            const free = allFreeApartments();
+            const selectedComplex = complexSelect?.value || "";
+            const selectedBuilding = buildingSelect?.value || "";
+            const selectedSection = sectionSelect?.value || "";
+
+            fillSelect(
+                complexSelect,
+                uniqueBy(free, "complexBackendId"),
+                (row) => row.complexBackendId,
+                (row) => row.complexName,
+                "No free apartments",
+            );
+            if (selectedComplex && Array.from(complexSelect.options).some((option) => option.value === selectedComplex)) {
+                complexSelect.value = selectedComplex;
+            }
+
+            const complexRows = free.filter((row) => String(row.complexBackendId) === String(complexSelect?.value || ""));
+            fillSelect(
+                buildingSelect,
+                uniqueBy(complexRows, "buildingBackendId"),
+                (row) => row.buildingBackendId,
+                (row) => row.buildingName,
+                "No buildings",
+            );
+            if (selectedBuilding && Array.from(buildingSelect.options).some((option) => option.value === selectedBuilding)) {
+                buildingSelect.value = selectedBuilding;
+            }
+
+            const buildingRows = complexRows.filter((row) => String(row.buildingBackendId) === String(buildingSelect?.value || ""));
+            fillSelect(
+                sectionSelect,
+                uniqueBy(buildingRows, "section"),
+                (row) => row.section,
+                (row) => row.section,
+                "No sections",
+            );
+            if (selectedSection && Array.from(sectionSelect.options).some((option) => option.value === selectedSection)) {
+                sectionSelect.value = selectedSection;
+            }
+
+            const apartmentRows = buildingRows.filter((row) => String(row.section) === String(sectionSelect?.value || ""));
+            fillSelect(
+                apartmentSelect,
+                apartmentRows,
+                (row) => row.apartmentBackendId,
+                (row) => row.label,
+                "No free apartments",
+            );
+        };
+
+        [complexSelect, buildingSelect, sectionSelect].forEach((select) => {
+            select?.addEventListener("change", syncOptions);
+        });
+        document.addEventListener("hydroflow:backend-refreshed", syncOptions);
+        syncOptions();
+
+        form.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            if (!apartmentSelect?.value) {
+                setStatus("Select a free apartment first.", "error");
+                return;
+            }
+            const formData = new FormData(form);
+            submit.disabled = true;
+            setStatus("Creating resident in Django admin and database...");
+            try {
+                const payload = await postPortalJson("/api/residents/create/", {
+                    fio: formData.get("fio"),
+                    phone: formData.get("phone"),
+                    apartment_id: formData.get("apartment_id"),
+                    balance: formData.get("balance"),
+                    telegram_id: formData.get("telegram_id"),
+                    telegram_user: formData.get("telegram_user"),
+                    telegram_status: formData.get("telegram_status"),
+                });
+                rehydrateFromPortalData(payload.portalData);
+                form.reset();
+                syncOptions();
+                setStatus("Resident created and synced with admin.", "success");
+                toast("Resident created", "Django admin and portal data were updated.", "success");
+                window.setTimeout(() => closeOverlayById("request-modal"), 500);
+            } catch (error) {
+                setStatus(error.message || "Could not create resident.", "error");
+                toast("Resident was not created", error.message || "Check the selected apartment.", "warning");
+            } finally {
+                submit.disabled = false;
+            }
+        });
+    };
+
+    const setupMaintenanceDeploy = () => {
+        document.querySelectorAll("[data-deploy-maintenance]").forEach((button) => {
+            if (button.dataset.deployReady === "true") return;
+            button.dataset.deployReady = "true";
+            button.addEventListener("click", async () => {
+                const original = button.innerHTML;
+                button.disabled = true;
+                button.innerHTML = '<span class="material-symbols-outlined text-lg">sync</span> Deploying...';
+                try {
+                    const target = billingData.complexes.slice().sort((a, b) => (b.extraDebt || 0) - (a.extraDebt || 0))[0];
+                    const payload = await postPortalJson("/api/maintenance/deploy/", {
+                        complex_id: target?.backendId || null,
+                        title: "Preventive maintenance deployment",
+                        priority: target?.risk === "Critical" ? "high" : "medium",
+                    });
+                    rehydrateFromPortalData(payload.portalData);
+                    toast("Maintenance deployed", "Task was created in Django admin and database.", "success");
+                } catch (error) {
+                    toast("Maintenance not deployed", error.message || "Check backend data.", "warning");
+                } finally {
+                    button.innerHTML = original;
+                    button.disabled = false;
+                }
+            });
+        });
+    };
+
+    setupResidentCreateForm();
+    setupMaintenanceDeploy();
 
     const checklistStorageKey = "hydroflow-operations-checklist";
     const checklistNotesStorageKey = "hydroflow-operations-checklist-notes";
@@ -5203,7 +5629,7 @@ ${sheets}
     const assignStatusNote = assignStatusModal?.querySelector("[data-assign-status-note]");
     const assignStatusApply = assignStatusModal?.querySelector("[data-assign-status-apply]");
     let pendingStatusAssignment = { rows: [], button: null, context: "default", value: "" };
-    const assignedStatusStorageKey = "hydroflow-assigned-statuses-v2";
+    const assignedStatusStorageKey = "hydroflow-assigned-statuses-v3";
     const statusLabel = (labels) => labels?.[exportLang()] || labels?.en || "";
     const readAssignedStatusStore = () => {
         try {
@@ -5721,12 +6147,8 @@ ${sheets}
             window.HydroFlowOpenChecklist?.("Operations");
         }
         if (label.includes("edit profile")) {
-            const message = {
-                en: "Profile editor will connect to the backend admin panel later.",
-                ru: "Редактор профиля подключится после добавления backend admin panel.",
-                uz: "Profil muharriri keyin backend admin panelga ulanadi.",
-            };
-            toast(translateValue("Profile update queued", lang), message[lang] || message.en, "info");
+            const adminUrl = billingData.profile?.adminUrl || "/admin/portal/workspaceprofile/";
+            window.location.assign(adminUrl);
         }
         if (label.includes("sign out")) {
             const message = {

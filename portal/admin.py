@@ -10,6 +10,7 @@ from .models import (
     SystemAlert,
     TelemetryNode,
     TelemetrySample,
+    WorkspaceProfile,
 )
 
 
@@ -31,6 +32,20 @@ class SeverityBadgeMixin:
             fg,
             obj.get_severity_display(),
         )
+
+
+@admin.register(WorkspaceProfile)
+class WorkspaceProfileAdmin(admin.ModelAdmin):
+    list_display = ("user", "workspace_name", "role_label", "status", "organization", "updated_at")
+    list_filter = ("status", "session_status", "two_factor_enabled", "workspace_name")
+    search_fields = ("user__username", "user__email", "user__first_name", "user__last_name", "workspace_name", "organization")
+    autocomplete_fields = ("user",)
+    fieldsets = (
+        ("User", {"fields": ("user", "role_label", "status")}),
+        ("Workspace", {"fields": ("workspace_name", "organization", "access_level", "timezone_name")}),
+        ("Security", {"fields": ("two_factor_enabled", "session_status")}),
+        ("Portal note", {"fields": ("note",)}),
+    )
 
 
 @admin.register(PortalNotification)

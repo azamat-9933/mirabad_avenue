@@ -4,6 +4,10 @@ from django.utils.html import format_html
 from .models import PaymeTransaction, Transaction
 
 
+def admin_number(value, places=0):
+    return format(value or 0, f",.{places}f")
+
+
 # ══════════════════════════════════════════════════════
 #  TRANSACTION  (Barcha to'lov va echishlar)
 # ══════════════════════════════════════════════════════
@@ -117,28 +121,28 @@ class TransactionAdmin(admin.ModelAdmin):
     def amount_display(self, obj):
         if obj.amount > 0:
             return format_html(
-                '<span style="color:#27ae60;font-weight:700;">+{:,.0f}</span>',
-                obj.amount,
+                '<span style="color:#27ae60;font-weight:700;">+{}</span>',
+                admin_number(obj.amount),
             )
         return format_html(
-            '<span style="color:#e74c3c;font-weight:700;">{:,.0f}</span>',
-            obj.amount,
+            '<span style="color:#e74c3c;font-weight:700;">{}</span>',
+            admin_number(obj.amount),
         )
 
     @admin.display(description="Balans (oldin)")
     def balance_before_display(self, obj):
         return format_html(
-            '<span style="color:#7f8c8d;">{:,.0f} so\'m</span>',
-            obj.balance_before,
+            '<span style="color:#7f8c8d;">{} so\'m</span>',
+            admin_number(obj.balance_before),
         )
 
     @admin.display(description="Balans (keyin)")
     def balance_after_display(self, obj):
         color = "#27ae60" if obj.balance_after >= 0 else "#e74c3c"
         return format_html(
-            '<span style="color:{};font-weight:600;">{:,.0f} so\'m</span>',
+            '<span style="color:{};font-weight:600;">{} so\'m</span>',
             color,
-            obj.balance_after,
+            admin_number(obj.balance_after),
         )
 
 
@@ -179,7 +183,7 @@ class PaymeTransactionAdmin(admin.ModelAdmin):
     def amount_sum_display(self, obj):
         sum_uzs = obj.amount_tiyin / 100
         return format_html(
-            '<span style="font-weight:600;">{:,.0f} so\'m</span>', sum_uzs
+            '<span style="font-weight:600;">{} so\'m</span>', admin_number(sum_uzs)
         )
 
     @admin.display(description="Holat")

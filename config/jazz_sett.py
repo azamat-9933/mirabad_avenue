@@ -2,22 +2,20 @@ JAZZ_SETTINGS = {
     # ── Sayt ma'lumoti ──────────────────────────────
     "site_title":        "Mirabad Billing",
     "site_header":       "Mirabad Billing",
-    "site_brand":        "Mirabad Avenue",
-    "site_logo":         "logo.jpg",          # logo fayl qo'shsangiz: "img/logo.png"
-    "welcome_sign":      "Mirabad Avenue — Kommunal xizmatlar boshqaruvi",
-    "copyright":         "Mirabad Avenue",
+    "site_brand":        "Mirabad Billing",
+    "site_logo":         None,
+    "welcome_sign":      "Mirabad Billing — Operations admin",
+    "copyright":         "Mirabad Billing",
 
     # ── Top menyu ────────────────────────────────────
     "topmenu_links": [
         {"name": "Sayt",  "url": "/",        "new_window": True},
-        {"name": "API",   "url": "/api/",     "new_window": True},
-        {"name": "Swagger", "url": "/swagger/", "new_window": True},
+        {"name": "API",   "url": "/api/schema/", "new_window": True},
+        {"name": "Swagger", "url": "/api/docs/", "new_window": True},
     ],
 
     # ── Foydalanuvchi menyu ───────────────────────────
-    "usermenu_links": [
-        {"name": "Profil", "url": "account:profile", "icon": "fas fa-user"},
-    ],
+    "usermenu_links": [],
 
     # ── Asosiy navigatsiya (chap menyu) ─────────────────
     "navigation_expanded": True,
@@ -74,9 +72,9 @@ JAZZ_SETTINGS = {
     # bootstrap bilan keladi, o'zgartirish mumkin
     "theme": "flatly",
 
-    # Custom CSS / JS (optional)
-    # "custom_css": "css/admin_custom.css",
-    # "custom_js":  "js/admin_custom.js",
+    # Custom CSS / JS
+    "custom_css": "css/admin_custom.css",
+    "custom_js":  "js/admin_custom.js",
 }
 
 # ── Ilovalarni Sidebar da guruhlash ─────────────────
@@ -101,10 +99,10 @@ JAZZ_UI_TWEAKS = {
     "sidebar_nav_legacy_style":      False,
     "sidebar_nav_flat_style":        False,
     "theme":                         "flatly",
-    "dark_mode_theme":               None,
+    "default_theme_mode":            "dark",
     "button_classes": {
-        "primary":   "btn-outline-primary",
-        "secondary": "btn-outline-secondary",
+        "primary":   "btn-primary",
+        "secondary": "btn-secondary",
         "info":      "btn-info",
         "warning":   "btn-warning",
         "danger":    "btn-danger",

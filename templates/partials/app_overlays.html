@@ -469,55 +469,55 @@
 <button aria-label="Close profile" class="profile-drawer-close" data-close-overlay type="button">
 <span class="material-symbols-outlined">close</span>
 </button>
-<div class="profile-avatar-xl">AU</div>
+<div class="profile-avatar-xl" data-profile-field="initials">AU</div>
 <div>
-<p class="profile-kicker">Workspace profile</p>
-<h2 id="profile-title">Admin User</h2>
-<span class="profile-role-pill">Administrator</span>
+<p class="profile-kicker" data-i18n-key="Workspace profile">Workspace profile</p>
+<h2 id="profile-title" data-profile-field="name">Admin User</h2>
+<span class="profile-role-pill" data-profile-field="role">Administrator</span>
 </div>
 </div>
 <div class="profile-drawer-body">
 <section class="profile-summary-card">
 <div>
-<span class="profile-summary-label">Status</span>
-<strong><span class="status-dot dot-operational"></span>Active</strong>
+<span class="profile-summary-label" data-i18n-key="Status">Status</span>
+<strong><span class="status-dot dot-operational"></span><span data-profile-field="status">Active</span></strong>
 </div>
 <div>
-<span class="profile-summary-label">Workspace</span>
-<strong>HydroFlow</strong>
+<span class="profile-summary-label" data-i18n-key="Workspace">Workspace</span>
+<strong data-profile-field="workspace">HydroFlow</strong>
 </div>
 <div>
-<span class="profile-summary-label">Time zone</span>
-<strong>Asia/Tashkent</strong>
+<span class="profile-summary-label" data-i18n-key="Time zone">Time zone</span>
+<strong data-profile-field="timezone">Asia/Tashkent</strong>
 </div>
 <div>
-<span class="profile-summary-label">Last active</span>
-<strong>14 Apr 2026, 09:41</strong>
+<span class="profile-summary-label" data-i18n-key="Last active">Last active</span>
+<strong data-profile-field="lastActive">Backend session</strong>
 </div>
 </section>
 <section class="profile-info-section">
 <div class="profile-section-heading">
 <span class="material-symbols-outlined">badge</span>
-<h3>Profile details</h3>
+<h3 data-i18n-key="Profile details">Profile details</h3>
 </div>
 <div class="profile-info-list">
-<div><span>Email</span><strong>admin@hydroflow.uz</strong></div>
-<div><span>Role</span><strong>Administrator</strong></div>
-<div><span>Organization</span><strong>HydroFlow Utility Management</strong></div>
-<div><span>Access level</span><strong>Full operations access</strong></div>
+<div><span data-i18n-key="Email">Email</span><strong data-profile-field="email">admin@hydroflow.uz</strong></div>
+<div><span data-i18n-key="Role">Role</span><strong data-profile-field="role">Administrator</strong></div>
+<div><span data-i18n-key="Organization">Organization</span><strong data-profile-field="organization">HydroFlow Utility Management</strong></div>
+<div><span data-i18n-key="Access level">Access level</span><strong data-profile-field="accessLevel">Full operations access</strong></div>
 </div>
 </section>
 <section class="profile-info-section">
 <div class="profile-section-heading">
 <span class="material-symbols-outlined">shield</span>
-<h3>Security</h3>
+<h3 data-i18n-key="Security">Security</h3>
 </div>
 <div class="profile-security-grid">
-<div><span>Two-factor authentication</span><strong>Enabled</strong></div>
-<div><span>Session status</span><strong>Active</strong></div>
+<div><span data-i18n-key="Two-factor authentication">Two-factor authentication</span><strong data-profile-field="twoFactor">Enabled</strong></div>
+<div><span data-i18n-key="Session status">Session status</span><strong data-profile-field="sessionStatus">Active</strong></div>
 </div>
 </section>
-<p class="profile-note">This profile preview is local until the backend admin panel is connected.</p>
+<p class="profile-note" data-profile-field="note">Profile data is loaded from Django admin and the active backend session.</p>
 </div>
 <div class="profile-drawer-actions">
 <button class="profile-action-primary" data-action-key="Edit profile" type="button">
@@ -769,24 +769,78 @@
 </div>
 
 <div aria-labelledby="request-modal-title" aria-hidden="true" class="app-modal fixed inset-0 z-[80] hidden items-center justify-center p-6" id="request-modal" role="dialog">
-<div class="modal-panel w-full max-w-lg bg-white rounded-lg shadow-2xl border border-outline-variant/20">
+<div class="modal-panel resident-create-modal w-full max-w-3xl bg-white rounded-lg shadow-2xl border border-outline-variant/20">
 <div class="px-6 py-5 border-b border-surface-container flex items-center justify-between">
-<h2 class="text-lg font-black text-on-surface" id="request-modal-title">New Unit Request</h2>
+<div>
+<p class="text-[11px] font-black uppercase tracking-[0.18em] text-primary" data-i18n-key="Resident admin form">Resident admin form</p>
+<h2 class="text-lg font-black text-on-surface" id="request-modal-title" data-i18n-key="Add New Resident">Add New Resident</h2>
+</div>
 <button aria-label="Close modal" class="p-2 rounded-lg hover:bg-surface-container transition-colors" data-close-overlay type="button">
 <span class="material-symbols-outlined">close</span>
 </button>
 </div>
-<div class="p-6 space-y-5">
-<p class="text-sm text-on-surface-variant">Capture the request first. Details can be assigned after validation.</p>
-<div class="grid gap-3">
-<input aria-label="Resident name" class="rounded-lg border-outline-variant text-sm" placeholder="Resident name" type="text"/>
-<input aria-label="Unit identifier" class="rounded-lg border-outline-variant text-sm" placeholder="Unit identifier" type="text"/>
+<form class="p-6 space-y-5" data-resident-create-form>
+{% csrf_token %}
+<p class="text-sm text-on-surface-variant" data-i18n-key="This form writes directly to Django admin and database.">
+This form writes directly to Django admin and database.
+</p>
+<div class="resident-create-status hidden" data-resident-create-status role="status"></div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<label class="resident-create-field">
+<span data-i18n-key="Full name">Full name</span>
+<input name="fio" required autocomplete="name" placeholder="Sarah Jenkins" type="text"/>
+</label>
+<label class="resident-create-field">
+<span data-i18n-key="Phone">Phone</span>
+<input name="phone" required autocomplete="tel" placeholder="+998 90 555 0988" maxlength="20" type="tel"/>
+</label>
+<label class="resident-create-field">
+<span data-i18n-key="Complex">Complex</span>
+<select name="complex_selector" data-resident-create-complex></select>
+</label>
+<label class="resident-create-field">
+<span data-i18n-key="Building">Building</span>
+<select name="building_selector" data-resident-create-building></select>
+</label>
+<label class="resident-create-field">
+<span data-i18n-key="Section">Section</span>
+<select name="section_selector" data-resident-create-section></select>
+</label>
+<label class="resident-create-field">
+<span data-i18n-key="Apartment">Apartment</span>
+<select name="apartment_id" required data-resident-create-apartment></select>
+</label>
+<label class="resident-create-field">
+<span data-i18n-key="Balance">Balance</span>
+<input name="balance" inputmode="decimal" placeholder="0" type="number" step="0.01"/>
+</label>
+<label class="resident-create-field">
+<span data-i18n-key="Telegram status">Telegram status</span>
+<select name="telegram_status">
+<option value="pending">pending</option>
+<option value="connected">connected</option>
+</select>
+</label>
+<label class="resident-create-field">
+<span data-i18n-key="Telegram id">Telegram id</span>
+<input name="telegram_id" placeholder="Optional" type="text"/>
+</label>
+<label class="resident-create-field">
+<span data-i18n-key="Telegram user">Telegram user</span>
+<input name="telegram_user" placeholder="@username" type="text"/>
+</label>
+</div>
+<div class="resident-create-preview" data-resident-create-preview>
+<span class="material-symbols-outlined">info</span>
+<p data-i18n-key="Only free apartments are shown. Occupied apartments must be edited in admin.">Only free apartments are shown. Occupied apartments must be edited in admin.</p>
 </div>
 <div class="flex justify-end gap-3">
-<button class="px-4 py-2 rounded-lg bg-surface-container text-sm font-bold" data-close-overlay type="button">Cancel</button>
-<button class="px-4 py-2 rounded-lg bg-primary text-white text-sm font-bold" type="button">Create request</button>
+<button class="px-4 py-2 rounded-lg bg-surface-container text-sm font-bold" data-close-overlay type="button" data-i18n-key="Cancel">Cancel</button>
+<button class="px-5 py-2 rounded-lg bg-primary text-white text-sm font-bold" data-resident-create-submit type="submit">
+<span data-i18n-key="Create resident">Create resident</span>
+</button>
 </div>
-</div>
+</form>
 </div>
 </div>
 
