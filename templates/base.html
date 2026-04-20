@@ -1,6 +1,6 @@
 {% load static %}
 <!DOCTYPE html>
-<html class="light" lang="en">
+<html class="light backend-hydrating" lang="en">
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
@@ -9,13 +9,14 @@
     (() => {
         const theme = localStorage.getItem("hydroflow-theme");
         if (theme === "dark") document.documentElement.classList.replace("light", "dark");
+        window.setTimeout(() => document.documentElement.classList.remove("backend-hydrating"), 1600);
     })();
 </script>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<link href="{% static 'css/app.css' %}?v=assigned-status-persist-20260416" rel="stylesheet"/>
+<link href="{% static 'css/app.css' %}?v=backend-hydration-20260420" rel="stylesheet"/>
 <script id="tailwind-config">
         tailwind.config = {
             darkMode: "class",
@@ -646,7 +647,7 @@
         search.addEventListener("input", () => {
             setTableLoading();
             const query = search.value.trim().toLowerCase();
-            filteredRows = rows.filter((row) => row.textContent.toLowerCase().includes(query));
+            filteredRows = rows.filter((row) => row.dataset.globalFilterHidden !== "true" && row.textContent.toLowerCase().includes(query));
             page = 1;
             updateVisibleRows();
         });
@@ -901,35 +902,12 @@
         button.addEventListener("click", () => document.querySelector("[data-drawer-open='details-drawer']")?.click());
     });
 
-    const updateFilterChips = () => {
-        const values = Array.from(document.querySelectorAll("[data-filter-field]")).map((field) => field.value);
-        const chips = values.filter((value) => !/^all/i.test(value)).map((value) => `<span class="filter-chip">${value}</span>`).join("");
-        document.querySelectorAll("[data-filter-chips], [data-filter-drawer-chips]").forEach((target) => {
-            target.innerHTML = chips || '<span class="filter-chip">No filters</span>';
-        });
-        window.HydroFlowSyncLocale?.();
-    };
-    document.querySelectorAll("[data-filter-field]").forEach((field) => field.addEventListener("change", updateFilterChips));
-    document.querySelector("[data-reset-filters]")?.addEventListener("click", () => {
-        const button = document.querySelector("[data-reset-filters]");
-        if (button?.dataset.needsConfirm === "true" && button.dataset.confirmed !== "true") return;
-        if (button) button.dataset.confirmed = "false";
-        document.querySelectorAll("[data-filter-field]").forEach((field, index) => {
-            field.selectedIndex = index === 1 ? 0 : 0;
-        });
-        document.querySelector("[data-filter-empty]")?.classList.add("hidden");
-        document.querySelector("[data-filter-error]")?.classList.add("hidden");
-        updateFilterChips();
-    });
-    document.querySelector("[data-apply-filters]")?.addEventListener("click", () => {
-        const status = document.getElementById("filter-status")?.value;
-        document.querySelector("[data-filter-empty]")?.classList.toggle("hidden", status !== "Critical");
-        document.querySelector("[data-filter-error]")?.classList.add("hidden");
-        updateFilterChips();
-    });
-    updateFilterChips();
+    window.HydroFlowFiltersBootstrapped = true;
 })();
 </script>
-<script src="{% static 'js/app.js' %}?v=real-stats-sync-20260418"></script>
+<script>
+    window.HydroFlowBackendData = JSON.parse("{{ backend_billing_data_json|default:'{}'|escapejs }}");
+</script>
+<script src="{% static 'js/app.js' %}?v=backend-hydration-20260420"></script>
 </body>
 </html>

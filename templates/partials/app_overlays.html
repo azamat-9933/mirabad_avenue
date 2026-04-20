@@ -1,6 +1,10 @@
 <div class="fixed inset-0 z-[60] hidden overlay-backdrop" data-overlay-backdrop></div>
 <button class="hidden" data-drawer-open="details-drawer" type="button">Open details</button>
 <button class="hidden" data-drawer-open="apartment-details-drawer" type="button">Open apartment details</button>
+<button aria-label="Open checklist" class="checklist-floating-button" data-checklist-fab type="button">
+<span class="material-symbols-outlined">fact_check</span>
+<span class="checklist-floating-copy"><strong data-i18n-key="Checklist">Checklist</strong><small data-checklist-fab-text><b data-checklist-fab-count>5</b> tasks left</small></span>
+</button>
 
 <aside aria-labelledby="notifications-title" aria-hidden="true" class="app-drawer fixed top-0 right-0 z-[70] h-screen w-full max-w-md bg-white shadow-2xl border-l border-outline-variant/20 translate-x-full" id="notifications-drawer" role="dialog">
 <div class="h-full flex flex-col">
@@ -97,7 +101,7 @@
 <div class="px-6 py-5 border-b border-surface-container flex items-center justify-between">
 <div>
 <h2 class="text-lg font-black text-on-surface" id="filter-title">Filters</h2>
-<p class="text-xs text-on-surface-variant mt-1">Static preview filters. Backend wiring can replace these later.</p>
+<p class="text-xs text-on-surface-variant mt-1">Filters apply to the current local data set and saved view state.</p>
 </div>
 <button aria-label="Close filters" class="p-2 rounded-lg hover:bg-surface-container transition-colors" data-close-overlay type="button">
 <span class="material-symbols-outlined">close</span>
@@ -106,41 +110,42 @@
 <div class="p-6 space-y-6 overflow-y-auto">
 <div>
 <label class="drawer-label" for="filter-district">District</label>
-<select class="drawer-field" id="filter-district" data-filter-field>
-<option>North Sector</option>
-<option>Harbor District</option>
-<option>South Ridge</option>
+<select class="drawer-field" id="filter-district" data-filter-field data-filter-kind="district">
+<option value="all">All Districts</option>
 </select>
 </div>
 <div>
 <label class="drawer-label" for="filter-status">Status</label>
-<select class="drawer-field" id="filter-status" data-filter-field>
-<option>All statuses</option>
-<option>Critical</option>
-<option>Maintenance</option>
-<option>Operational</option>
+<select class="drawer-field" id="filter-status" data-filter-field data-filter-kind="status">
+<option value="all">All statuses</option>
+<option value="low">Low Risk</option>
+<option value="medium">Medium Risk</option>
+<option value="critical">Critical</option>
+<option value="paid">Paid</option>
+<option value="debtor">Debtors</option>
 </select>
 </div>
 <div>
 <label class="drawer-label" for="filter-period">Period</label>
-<select class="drawer-field" id="filter-period" data-filter-field>
-<option>Last 90 days</option>
-<option>Last 30 days</option>
-<option>Current month</option>
+<select class="drawer-field" id="filter-period" data-filter-field data-filter-kind="period">
+<option value="90">Last 90 days</option>
+<option value="30">Last 30 days</option>
+<option value="month">Current month</option>
+<option value="all">All time</option>
 </select>
 </div>
 <div class="space-y-2">
 <p class="drawer-label">Selected filters</p>
 <div class="flex flex-wrap gap-2" data-filter-drawer-chips>
-<span class="filter-chip">North Sector</span>
+<span class="filter-chip">All Districts</span>
 <span class="filter-chip">Last 90 days</span>
 </div>
 </div>
 <div class="empty-state hidden" data-filter-empty>
 <span class="material-symbols-outlined">filter_alt_off</span>
 <div>
-<p>Нет объектов по этим фильтрам</p>
-<span>Измените район, статус или период, чтобы вернуть данные.</span>
+<p data-i18n-key="No objects match these filters">No objects match these filters</p>
+<span data-i18n-key="Change district, status or period to restore data.">Change district, status or period to restore data.</span>
 </div>
 </div>
 <div class="error-state hidden" data-filter-error>
@@ -381,6 +386,79 @@
 <div><span>Prototype mode</span><strong>Active</strong></div>
 <div><span>Timezone</span><strong>Asia/Tashkent</strong></div>
 </div>
+</div>
+</div>
+</aside>
+
+<aside aria-labelledby="checklist-title" aria-hidden="true" class="app-drawer checklist-drawer fixed top-0 right-0 z-[70] h-screen w-full max-w-lg bg-white shadow-2xl border-l border-outline-variant/20 translate-x-full" id="checklist-drawer" role="dialog">
+<div class="h-full flex flex-col">
+<div class="checklist-hero">
+<button aria-label="Close checklist" class="profile-drawer-close" data-close-overlay type="button">
+<span class="material-symbols-outlined">close</span>
+</button>
+<div class="checklist-hero-top">
+<span class="checklist-hero-icon material-symbols-outlined">fact_check</span>
+<div>
+<p class="profile-kicker" data-i18n-key="Operations checklist">Operations checklist</p>
+<h2 id="checklist-title" data-i18n-key="Readiness checklist">Readiness checklist</h2>
+<span data-checklist-subtitle data-i18n-key="Local workflow with saved progress.">Local workflow with saved progress.</span>
+</div>
+</div>
+<div class="checklist-progress-card">
+<div>
+<span data-i18n-key="Completion">Completion</span>
+<strong data-checklist-progress-label>0%</strong>
+</div>
+<div class="checklist-progress-bar" aria-label="Checklist completion" role="meter" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+<span data-checklist-progress-fill></span>
+</div>
+</div>
+</div>
+<div class="checklist-body">
+<div class="checklist-context-grid">
+<div><span data-i18n-key="Scope">Scope</span><strong data-checklist-scope data-i18n-key="Current workspace">Current workspace</strong></div>
+<div><span data-i18n-key="Owner">Owner</span><strong data-i18n-key="Operations Team">Operations Team</strong></div>
+<div><span data-i18n-key="Saved">Saved</span><strong data-checklist-saved data-i18n-key="Local">Local</strong></div>
+<div><span data-i18n-key="Timezone">Timezone</span><strong>Asia/Tashkent</strong></div>
+</div>
+<div class="checklist-toolbar">
+<button data-checklist-action="complete-visible" type="button"><span class="material-symbols-outlined">done_all</span><span data-i18n-key="Complete visible">Complete visible</span></button>
+<button data-checklist-action="reset" type="button"><span class="material-symbols-outlined">restart_alt</span><span data-i18n-key="Reset">Reset</span></button>
+<button data-checklist-action="copy" type="button"><span class="material-symbols-outlined">content_copy</span><span data-i18n-key="Copy summary">Copy summary</span></button>
+</div>
+<button class="checklist-add-note-main" data-checklist-action="toggle-note" type="button">
+<span class="material-symbols-outlined">add_notes</span>
+<span data-i18n-key="Add note">Add note</span>
+</button>
+<section class="checklist-note-composer hidden" data-checklist-note-composer>
+<div class="checklist-note-template-row">
+<label>
+<span data-i18n-key="Template">Template</span>
+<select data-checklist-note-template>
+<option value="" data-i18n-key="Custom note">Custom note</option>
+<option value="Reviewed filters and visible rows." data-template-text-key="Reviewed filters and visible rows." data-i18n-key="Filters reviewed">Filters reviewed</option>
+<option value="Critical alerts reviewed and technician ownership checked." data-template-text-key="Critical alerts reviewed and technician ownership checked." data-i18n-key="Critical alerts reviewed">Critical alerts reviewed</option>
+<option value="Export package checked for current visible data." data-template-text-key="Export package checked for current visible data." data-i18n-key="Export package checked">Export package checked</option>
+<option value="Resident balances and billing history checked." data-template-text-key="Resident balances and billing history checked." data-i18n-key="Resident balances checked">Resident balances checked</option>
+</select>
+</label>
+</div>
+<textarea data-checklist-note-input data-i18n-placeholder="Write a checklist note..." placeholder="Write a checklist note..."></textarea>
+<div class="checklist-note-actions">
+<button data-checklist-action="cancel-note" data-i18n-key="Cancel" type="button">Cancel</button>
+<button data-checklist-action="save-note" type="button"><span class="material-symbols-outlined">add</span><span data-i18n-key="Add note">Add note</span></button>
+</div>
+</section>
+<div class="checklist-list" data-checklist-list></div>
+<div class="checklist-notes-list hidden" data-checklist-notes-list></div>
+<div class="checklist-note">
+<span class="material-symbols-outlined">verified</span>
+<p data-i18n-key="This checklist is connected to local UI actions now. Backend tasks can replace the storage layer later without changing the interface.">This checklist is connected to local UI actions now. Backend tasks can replace the storage layer later without changing the interface.</p>
+</div>
+</div>
+<div class="checklist-footer">
+<button data-checklist-action="open-audit" type="button"><span class="material-symbols-outlined">history</span><span data-i18n-key="Open audit log">Open audit log</span></button>
+<button data-checklist-action="mark-reviewed" type="button"><span class="material-symbols-outlined">task_alt</span><span data-i18n-key="Mark reviewed">Mark reviewed</span></button>
 </div>
 </div>
 </aside>

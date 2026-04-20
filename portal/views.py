@@ -1,5 +1,24 @@
+import json
+
+from django.core.exceptions import ImproperlyConfigured
+from django.db import DatabaseError, OperationalError
 from django.http import JsonResponse
 from django.views.generic import TemplateView
+
+from .backend_data import build_portal_data
+
+
+def safe_portal_data():
+    try:
+        return build_portal_data()
+    except (DatabaseError, OperationalError, ImproperlyConfigured) as exc:
+        return {
+            "source": "backend_unavailable",
+            "error": str(exc),
+            "complexes": [],
+            "residents": [],
+            "transactions": [],
+        }
 
 
 class PortalPageView(TemplateView):
@@ -10,6 +29,7 @@ class PortalPageView(TemplateView):
         ctx = super().get_context_data(**kwargs)
         ctx["page_title"] = self.page_title
         ctx["active_page"] = self.active_page
+        ctx["backend_billing_data_json"] = json.dumps(safe_portal_data(), ensure_ascii=False)
         return ctx
 
 
@@ -45,3 +65,7 @@ class AnalyticsView(PortalPageView):
 
 def api_health(request):
     return JsonResponse({"status": "ok"})
+
+
+def api_portal_data(request):
+    return JsonResponse(safe_portal_data())

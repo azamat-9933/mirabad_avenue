@@ -11,4 +11,5 @@ urlpatterns = [
     path("billing/", views.BillingView.as_view(), name="billing"),
     path("analytics/", views.AnalyticsView.as_view(), name="analytics"),
     path("api/health/", views.api_health, name="api_health"),
+    path("api/portal-data/", views.api_portal_data, name="api_portal_data"),
 ]

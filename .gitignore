@@ -1,0 +1,7 @@
+.env
+*.log
+__pycache__/
+*.py[cod]
+.idea/
+static_collected/
+media/

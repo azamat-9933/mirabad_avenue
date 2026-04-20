@@ -72,16 +72,25 @@
         "Selected filters": { ru: "Выбранные фильтры", uz: "Tanlangan filtrlar" },
         "Reset filters": { ru: "Сбросить", uz: "Tozalash" },
         "Apply filters": { ru: "Применить", uz: "Qo'llash" },
+        "No objects match these filters": { ru: "Нет объектов по этим фильтрам", uz: "Bu filtrlarga mos obyektlar yo'q" },
+        "Change district, status or period to restore data.": { ru: "Измените район, статус или период, чтобы вернуть данные.", uz: "Ma'lumotlarni qaytarish uchun tuman, holat yoki davrni o'zgartiring." },
+        "All Districts": { ru: "Все районы", uz: "Barcha tumanlar" },
         "North Sector": { ru: "Северный сектор", uz: "Shimoliy sektor" },
         "Harbor District": { ru: "Портовый район", uz: "Harbor tumani" },
         "South Ridge": { ru: "Южный хребет", uz: "Janubiy Ridge" },
+        "West Valley": { ru: "Западная долина", uz: "G'arbiy vodiy" },
+        "Central District": { ru: "Центральный район", uz: "Markaziy tuman" },
         "All statuses": { ru: "Все статусы", uz: "Barcha holatlar" },
+        "Low Risk": { ru: "Низкий риск", uz: "Past xavf" },
+        "Medium Risk": { ru: "Средний риск", uz: "O'rta xavf" },
+        "Debtors": { ru: "Должники", uz: "Qarzdorlar" },
         "Maintenance": { ru: "Обслуживание", uz: "Texnik xizmat" },
         "Operational": { ru: "Работает", uz: "Ishlamoqda" },
         "Last 90 days": { ru: "Последние 90 дней", uz: "So'nggi 90 kun" },
         "Last 30 days": { ru: "Последние 30 дней", uz: "So'nggi 30 kun" },
         "Last 30 Days": { ru: "Последние 30 дней", uz: "So'nggi 30 kun" },
         "Current month": { ru: "Текущий месяц", uz: "Joriy oy" },
+        "All time": { ru: "Всё время", uz: "Butun davr" },
         "Recent payments": { ru: "Последние платежи", uz: "So'nggi to'lovlar" },
         "System alerts": { ru: "Системные уведомления", uz: "Tizim ogohlantirishlari" },
         "Debt": { ru: "Долг", uz: "Qarz" },
@@ -400,6 +409,58 @@
         "Review debt rows marked critical or pending.": { ru: "Проверить долги со статусом critical или pending.", uz: "Critical yoki pending qarz qatorlarini tekshirish." },
         "Attach audit note for any manual correction.": { ru: "Добавить audit note для любой ручной корректировки.", uz: "Har bir qo'lda tuzatish uchun audit izohi qo'shish." },
         "Open checklist": { ru: "Открыть чеклист", uz: "Ro'yxatni ochish" },
+        "Checklist": { ru: "Чеклист", uz: "Ro'yxat" },
+        "Operations checklist": { ru: "Операционный чеклист", uz: "Operatsion ro'yxat" },
+        "Readiness checklist": { ru: "Чеклист готовности", uz: "Tayyorlik ro'yxati" },
+        "Local workflow with saved progress.": { ru: "Локальный процесс с сохранённым прогрессом.", uz: "Saqlangan jarayonli lokal ish oqimi." },
+        "Completion": { ru: "Готовность", uz: "Bajarilish" },
+        "Scope": { ru: "Область", uz: "Qamrov" },
+        "Current workspace": { ru: "Текущая область", uz: "Joriy ish maydoni" },
+        "Operations Team": { ru: "Операционная команда", uz: "Operatsion jamoa" },
+        "Saved": { ru: "Сохранено", uz: "Saqlangan" },
+        "Local": { ru: "Локально", uz: "Lokal" },
+        "Saved locally": { ru: "Сохранено локально", uz: "Lokal saqlandi" },
+        "Complete visible": { ru: "Выполнить видимые", uz: "Ko'rinadiganlarni bajarish" },
+        "Reset": { ru: "Сбросить", uz: "Tozalash" },
+        "Copy summary": { ru: "Копировать сводку", uz: "Xulosani nusxalash" },
+        "Add note": { ru: "Добавить заметку", uz: "Izoh qo'shish" },
+        "Template": { ru: "Шаблон", uz: "Shablon" },
+        "Custom note": { ru: "Своя заметка", uz: "Maxsus izoh" },
+        "Write a checklist note...": { ru: "Напишите заметку чеклиста...", uz: "Ro'yxat izohini yozing..." },
+        "Cancel": { ru: "Отмена", uz: "Bekor qilish" },
+        "Open audit log": { ru: "Открыть audit log", uz: "Audit jurnalini ochish" },
+        "Mark reviewed": { ru: "Отметить проверенным", uz: "Tekshirildi deb belgilash" },
+        "This checklist is connected to local UI actions now. Backend tasks can replace the storage layer later without changing the interface.": { ru: "Чеклист уже связан с локальными действиями интерфейса. Backend позже сможет заменить слой хранения без изменения UI.", uz: "Ro'yxat lokal UI amallariga ulangan. Backend keyin saqlash qatlamini UI o'zgarmasdan almashtirishi mumkin." },
+        "Filters reviewed": { ru: "Фильтры проверены", uz: "Filtrlar tekshirildi" },
+        "Critical alerts reviewed": { ru: "Критичные alerts проверены", uz: "Jiddiy ogohlantirishlar tekshirildi" },
+        "Export package checked": { ru: "Экспорт проверен", uz: "Eksport paketi tekshirildi" },
+        "Resident balances checked": { ru: "Балансы жильцов проверены", uz: "Rezident balanslari tekshirildi" },
+        "Reviewed filters and visible rows.": { ru: "Проверены фильтры и видимые строки.", uz: "Filtrlar va ko'rinadigan qatorlar tekshirildi." },
+        "Critical alerts reviewed and technician ownership checked.": { ru: "Критичные alerts проверены, ответственный техник назначен.", uz: "Jiddiy ogohlantirishlar tekshirildi, mas'ul texnik belgilandi." },
+        "Export package checked for current visible data.": { ru: "Экспортный пакет проверен по текущим видимым данным.", uz: "Eksport paketi joriy ko'rinadigan ma'lumotlar bo'yicha tekshirildi." },
+        "Resident balances and billing history checked.": { ru: "Балансы жильцов и история платежей проверены.", uz: "Rezident balanslari va to'lov tarixi tekshirildi." },
+        "Validate active filters": { ru: "Проверить активные фильтры", uz: "Faol filtrlarni tekshirish" },
+        "Confirm district, status and period filters match the current operation scope.": { ru: "Убедиться, что район, статус и период совпадают с текущей задачей.", uz: "Tuman, holat va davr joriy vazifa qamroviga mosligini tekshirish." },
+        "Review residents and balances": { ru: "Проверить жильцов и балансы", uz: "Rezidentlar va balanslarni tekshirish" },
+        "Check debtor/paid split, resident cards and billing history before handoff.": { ru: "Проверить должников/оплаченных, карточки жильцов и историю платежей перед передачей.", uz: "Topshirishdan oldin qarzdor/to'langan bo'linishi, rezident kartalari va billing tarixini tekshirish." },
+        "Resolve visible critical alerts": { ru: "Разобрать видимые critical alerts", uz: "Ko'rinadigan jiddiy ogohlantirishlarni hal qilish" },
+        "Open notification center and confirm critical items have an owner or technician.": { ru: "Открыть уведомления и убедиться, что у критичных задач есть ответственный или техник.", uz: "Bildirishnomalarni ochib, jiddiy vazifalarda mas'ul yoki texnik borligini tekshirish." },
+        "Prepare export package": { ru: "Подготовить экспорт", uz: "Eksport paketini tayyorlash" },
+        "Verify CSV/XLSX/PDF preview includes current visible data and local timestamp.": { ru: "Проверить, что CSV/XLSX/PDF содержит текущие видимые данные и локальное время.", uz: "CSV/XLSX/PDF joriy ko'rinadigan ma'lumotlar va lokal vaqtni o'z ichiga olganini tekshirish." },
+        "Attach audit note": { ru: "Добавить audit note", uz: "Audit izohini qo'shish" },
+        "Record manual changes or review comments in the local audit trail.": { ru: "Записать ручные изменения или комментарии проверки в локальный audit trail.", uz: "Qo'lda kiritilgan o'zgarishlar yoki tekshiruv izohlarini lokal audit tarixiga yozish." },
+        "Mark done": { ru: "Выполнить", uz: "Bajarildi" },
+        "Completed": { ru: "Выполнено", uz: "Bajarilgan" },
+        "Note": { ru: "Заметка", uz: "Izoh" },
+        "Delete": { ru: "Удалить", uz: "O'chirish" },
+        "Checklist item removed": { ru: "Пункт чеклиста удалён", uz: "Ro'yxat bandi o'chirildi" },
+        "Checklist note removed": { ru: "Заметка чеклиста удалена", uz: "Ro'yxat izohi o'chirildi" },
+        "Removed locally.": { ru: "Удалено локально.", uz: "Lokal o'chirildi." },
+        "Data view": { ru: "Данные", uz: "Ma'lumot" },
+        "Billing": { ru: "Биллинг", uz: "Billing" },
+        "Safety": { ru: "Безопасность", uz: "Xavfsizlik" },
+        "Export": { ru: "Экспорт", uz: "Eksport" },
+        "Audit": { ru: "Аудит", uz: "Audit" },
         "Export template": { ru: "Экспорт шаблона", uz: "Shablonni eksport qilish" },
         "Resident Operations Kit": { ru: "Операционный набор жильцов", uz: "Rezidentlar operatsion to'plami" },
         "Templates ready": { ru: "Шаблоны готовы", uz: "Shablonlar tayyor" },
@@ -644,7 +705,32 @@
             { id: "inv-98240", residentId: "kamila", complexId: "harbor", type: "Late Penalty", method: "Click", date: "27.03.2026", amount: 390000, status: "Pending" },
             { id: "inv-98241", residentId: "james", complexId: "emerald", type: "Utility Payment", method: "Terminal", date: "28.03.2026", amount: 1120000, status: "Success" },
         ],
+        notifications: [],
+        systemAlerts: [],
+        maintenanceTasks: [],
+        auditEvents: [],
+        checklistItems: [],
+        telemetryNodes: [],
+        pressureSeries: [],
     };
+
+    const applyBackendBillingData = (payload) => {
+        if (!payload || !Array.isArray(payload.complexes) || !Array.isArray(payload.residents) || !Array.isArray(payload.transactions)) {
+            return false;
+        }
+        billingData.complexes.splice(0, billingData.complexes.length, ...payload.complexes);
+        billingData.residents.splice(0, billingData.residents.length, ...payload.residents);
+        billingData.transactions.splice(0, billingData.transactions.length, ...payload.transactions);
+        ["notifications", "systemAlerts", "maintenanceTasks", "auditEvents", "checklistItems", "telemetryNodes", "pressureSeries"].forEach((key) => {
+            billingData[key] = Array.isArray(payload[key]) ? payload[key] : [];
+        });
+        billingData.source = payload.source || "backend";
+        billingData.generatedAt = payload.generatedAt || "";
+        return true;
+    };
+
+    applyBackendBillingData(window.HydroFlowBackendData);
+    window.HydroFlowApplyBackendData = applyBackendBillingData;
 
     const getResidentById = (id) => billingData.residents.find((resident) => resident.id === id);
     const getComplexById = (id) => billingData.complexes.find((complex) => complex.id === id);
@@ -656,30 +742,31 @@
     const riskForHealth = (health) => health < 86 ? "Critical" : health < 94 ? "Medium Risk" : "Low Risk";
     const toneForRisk = (risk) => risk === "Critical" ? "red" : risk === "Medium Risk" ? "amber" : "blue";
     const getComplexStats = () => billingData.complexes.map((complex) => {
+        const isBackend = Boolean(billingData.source);
         const residents = billingData.residents.filter((resident) => resident.complexId === complex.id);
         const transactions = billingData.transactions.filter((transaction) => transaction.complexId === complex.id);
-        const paidResidents = residents.filter((resident) => resident.status === "paid").length;
-        const debtorResidents = residents.filter((resident) => resident.status === "debtor").length;
+        const paidResidents = Number.isFinite(Number(complex.paidResidents)) ? Number(complex.paidResidents) : residents.filter((resident) => resident.status === "paid").length;
+        const debtorResidents = Number.isFinite(Number(complex.debtorResidents)) ? Number(complex.debtorResidents) : residents.filter((resident) => resident.status === "debtor").length;
         const residentDebt = residents.reduce((total, resident) => total + (resident.balance < 0 ? Math.abs(resident.balance) : 0), 0);
-        const collected = complex.baselineCollected + transactions
+        const collected = (Number(complex.baselineCollected) || 0) + (isBackend ? 0 : transactions
             .filter((transaction) => transaction.status === "Success")
-            .reduce((total, transaction) => total + transaction.amount, 0);
-        const debt = complex.extraDebt + residentDebt;
-        const health = complex.health;
-        const risk = riskForHealth(health);
+            .reduce((total, transaction) => total + transaction.amount, 0));
+        const debt = (Number(complex.extraDebt) || 0) + (isBackend ? 0 : residentDebt);
+        const health = Number.isFinite(Number(complex.health)) ? Number(complex.health) : (residents.length ? Math.round((paidResidents / residents.length) * 1000) / 10 : 100);
+        const risk = complex.risk || riskForHealth(health);
         const issueEvery = risk === "Critical" ? 3 : risk === "Medium Risk" ? 4 : 0;
         return {
             ...complex,
             residents,
             transactions,
-            paidResidents: Math.max(complex.units - Math.max(debtorResidents, Math.round(complex.units * ((100 - health) / 100))), paidResidents),
-            debtorResidents: Math.max(debtorResidents, Math.round(complex.units * ((100 - health) / 100))),
+            paidResidents,
+            debtorResidents,
             collected,
             debt,
             finances: collected + debt,
             health,
             risk,
-            tone: toneForRisk(risk),
+            tone: complex.tone || toneForRisk(risk),
             issueEvery,
         };
     });
@@ -726,7 +813,13 @@
         const collectionRate = (totalCollected / Math.max(totalCollected + totalDebt, 1)) * 100;
         const criticalComplexes = complexes.filter((complex) => complex.risk === "Critical");
         const warningComplexes = complexes.filter((complex) => complex.risk === "Medium Risk");
-        const activeAlerts = billingData.complexes.filter((complex) => complex.water !== "Optimal" || complex.heating !== "Optimal").length;
+        const backendAlerts = Array.isArray(billingData.systemAlerts)
+            ? billingData.systemAlerts.filter((alert) => !["resolved", "archived"].includes(String(alert.status || "").toLowerCase()))
+            : [];
+        const activeAlerts = backendAlerts.length || billingData.complexes.filter((complex) => complex.water !== "Optimal" || complex.heating !== "Optimal").length;
+        const criticalAlertCount = backendAlerts.length
+            ? backendAlerts.filter((alert) => alert.severity === "critical").length
+            : criticalComplexes.length;
         const criticalDebtUnits = criticalComplexes.reduce((total, complex) => total + complex.debtorResidents, 0);
         const totalDebtorUnits = complexes.reduce((total, complex) => total + complex.debtorResidents, 0);
         const totalPaidUnits = complexes.reduce((total, complex) => total + complex.paidResidents, 0);
@@ -751,7 +844,7 @@
             criticalComplexes,
             warningComplexes,
             activeAlerts,
-            criticalAlerts: criticalComplexes.length,
+            criticalAlerts: criticalAlertCount,
             criticalDebtUnits,
             totalDebtorUnits,
             totalPaidUnits,
@@ -762,6 +855,69 @@
             successfulTransactions: billingData.transactions.filter((transaction) => transaction.status === "Success").length,
             sectors: new Set(billingData.complexes.map((complex) => complex.sector)).size,
         };
+    };
+
+    const filterStorageKey = "hydroflow-global-filters";
+    const defaultFilterState = { district: "all", status: "all", period: "90" };
+    const readFilterState = () => {
+        try {
+            return { ...defaultFilterState, ...(JSON.parse(storage.getItem(filterStorageKey) || "{}") || {}) };
+        } catch {
+            return { ...defaultFilterState };
+        }
+    };
+    const writeFilterState = (state) => {
+        storage.setItem(filterStorageKey, JSON.stringify({ ...defaultFilterState, ...state }));
+    };
+    const filterPeriodLabel = (period) => ({
+        "30": "Last 30 days",
+        "90": "Last 90 days",
+        month: "Current month",
+        all: "All time",
+    }[period] || "Last 90 days");
+    const filterStatusLabel = (status) => ({
+        all: "All statuses",
+        low: "Low Risk",
+        medium: "Medium Risk",
+        critical: "Critical",
+        paid: "Paid",
+        debtor: "Debtors",
+    }[status] || "All statuses");
+    const filterStatusValueForComplex = (complex) => {
+        if (complex.risk === "Critical") return "critical";
+        if (complex.risk === "Medium Risk") return "medium";
+        return "low";
+    };
+    const withinFilterPeriod = (date, period) => {
+        if (!date || period === "all") return true;
+        const timestamp = dateValue(date);
+        const latest = Math.max(...billingData.transactions.map((transaction) => dateValue(transaction.date)), Date.now());
+        const days = period === "30" ? 30 : period === "month" ? 31 : 90;
+        return timestamp >= latest - days * 24 * 60 * 60 * 1000;
+    };
+    const filterMatchesComplex = (complexId, state = readFilterState()) => {
+        const complex = getComplexStats().find((item) => item.id === complexId) || getComplexById(complexId);
+        if (!complex) return true;
+        if (state.district !== "all" && complex.sector !== state.district) return false;
+        if (["low", "medium", "critical"].includes(state.status) && filterStatusValueForComplex(complex) !== state.status) return false;
+        if (state.status === "paid" && (complex.paidResidents || 0) <= 0) return false;
+        if (state.status === "debtor" && (complex.debtorResidents || 0) <= 0) return false;
+        return true;
+    };
+    const filterMatchesResident = (resident, state = readFilterState()) => {
+        if (!resident || !filterMatchesComplex(resident.complexId, { ...state, status: ["paid", "debtor"].includes(state.status) ? "all" : state.status })) return false;
+        if (state.status === "paid" && resident.status !== "paid") return false;
+        if (state.status === "debtor" && resident.status !== "debtor") return false;
+        return true;
+    };
+    const filterMatchesTransaction = (transaction, state = readFilterState()) => {
+        const resident = getResidentById(transaction.residentId);
+        if (!filterMatchesResident(resident, state)) return false;
+        if (!withinFilterPeriod(transaction.date, state.period)) return false;
+        if (state.status === "low" || state.status === "medium" || state.status === "critical") {
+            return filterMatchesComplex(transaction.complexId, state);
+        }
+        return true;
     };
 
     const fakeData = {
@@ -1394,6 +1550,64 @@
         anchor.insertAdjacentElement("afterend", item);
     };
 
+    const renderBackendNotifications = () => {
+        const list = document.querySelector("[data-notification-list]");
+        const notifications = Array.isArray(billingData.notifications) ? billingData.notifications : [];
+        if (!list || list.dataset.backendNotificationsRendered === "true") return;
+        if (!notifications.length && !billingData.source) return;
+        const groupLabel = (key, label, hidden = false) => `<div class="notification-group-label ${hidden ? "hidden" : ""}" data-notification-group="${key}">${label}</div>`;
+        const severityLabel = (severity) => severity === "critical" ? "Critical" : severity === "warning" ? "Warning" : "Info";
+        const actionButtons = (item) => {
+            const primary = item.actionPrimary || (item.severity === "critical" ? "Assign technician" : "Details");
+            const secondary = item.actionSecondary || (item.severity === "critical" ? "Close alert" : "");
+            return `
+                <div class="mt-3 flex gap-2">
+                    <button class="drawer-action ${item.severity === "critical" ? "bg-error" : "bg-primary"} text-white" data-notification-action="${escapeHtml(item.actionState || `${primary} queued`)}" type="button">${escapeHtml(primary)}</button>
+                    ${secondary ? `<button class="drawer-action bg-surface-container text-primary" ${item.severity === "critical" ? 'data-confirm-action="close-critical-alert"' : `data-notification-action="${escapeHtml(`${secondary} queued`)}"`} type="button">${escapeHtml(secondary)}</button>` : ""}
+                </div>
+            `;
+        };
+        const renderItem = (item) => {
+            const severity = ["critical", "warning", "info"].includes(item.severity) ? item.severity : "info";
+            return `
+                <div class="notification-item ${severity === "critical" ? "critical-pulse" : ""}"
+                    data-notification-id="${escapeHtml(item.id)}"
+                    data-notification-section="${escapeHtml(item.section || "today")}"
+                    data-read="${item.read ? "true" : "false"}"
+                    data-pinned="${item.pinned ? "true" : "false"}"
+                    data-severity="${escapeHtml(severity)}">
+                    <div class="notification-card-head">
+                        <p class="severity-badge severity-${escapeHtml(severity)}"><span class="status-dot dot-${severity === "critical" ? "critical" : severity === "warning" ? "warning" : "info"}"></span>${severityLabel(severity)}</p>
+                        <div class="notification-card-meta">
+                            <time class="text-[10px] text-on-surface-variant">${escapeHtml(item.eventAt || "")}</time>
+                            <button aria-label="Pin notification" aria-pressed="${item.pinned ? "true" : "false"}" class="notification-pin" data-notification-pin type="button"><span class="material-symbols-outlined">${item.pinned ? "keep_off" : "keep"}</span><span class="notification-pin-label">${item.pinned ? "Pinned" : "Pin"}</span></button>
+                        </div>
+                    </div>
+                    <p class="text-sm font-bold text-on-surface mt-2">${escapeHtml(item.title)}</p>
+                    <p class="text-xs text-on-surface-variant mt-1">${escapeHtml(item.message || "")}</p>
+                    <p class="notification-action-state ${item.actionState ? "" : "hidden"}" data-notification-state>${escapeHtml(item.actionState || "")}</p>
+                    ${actionButtons(item)}
+                </div>
+            `;
+        };
+        const pinned = notifications.filter((item) => item.pinned);
+        const today = notifications.filter((item) => !item.pinned && (item.section || "today") === "today");
+        const yesterday = notifications.filter((item) => !item.pinned && item.section === "yesterday");
+        const older = notifications.filter((item) => !item.pinned && !["today", "yesterday"].includes(item.section || "today"));
+        list.innerHTML = [
+            groupLabel("pinned", "Pinned", !pinned.length),
+            pinned.map(renderItem).join(""),
+            groupLabel("today", "Today", !today.length),
+            today.map(renderItem).join(""),
+            groupLabel("yesterday", "Yesterday", !yesterday.length),
+            yesterday.map(renderItem).join(""),
+            groupLabel("older", "Older", !older.length),
+            older.map(renderItem).join(""),
+            `<div class="empty-state ${notifications.length ? "hidden" : ""}" data-notification-empty><span class="material-symbols-outlined">notifications_off</span><div><p>No hidden alerts</p><span>Resolved notifications are moved to the activity log.</span></div></div>`,
+        ].join("");
+        list.dataset.backendNotificationsRendered = "true";
+    };
+
     const updateNotifications = () => {
         const items = Array.from(document.querySelectorAll("[data-notification-list] .notification-item"));
         const list = document.querySelector("[data-notification-list]");
@@ -1547,10 +1761,376 @@
         document.querySelectorAll(".network-filter").forEach((button) => {
             const strong = button.querySelector("strong");
             if (!strong) return;
-            if (button.dataset.networkFilter === "all") strong.textContent = stats.totalBuildings;
-            if (button.dataset.networkFilter === "online") strong.textContent = Math.max(0, stats.totalBuildings - stats.activeAlerts);
-            if (button.dataset.networkFilter === "issue") strong.textContent = stats.activeAlerts;
+            const backendNodes = Array.isArray(billingData.telemetryNodes) ? billingData.telemetryNodes : [];
+            const nodeTotal = backendNodes.length || stats.totalComplexes;
+            const nodeIssues = backendNodes.length ? backendNodes.filter((node) => ["issue", "offline"].includes(node.status)).length : stats.activeAlerts;
+            if (button.dataset.networkFilter === "all") strong.textContent = nodeTotal;
+            if (button.dataset.networkFilter === "online") strong.textContent = Math.max(0, nodeTotal - nodeIssues);
+            if (button.dataset.networkFilter === "issue") strong.textContent = nodeIssues;
         });
+
+        const backendIssueAlerts = Array.isArray(billingData.systemAlerts)
+            ? billingData.systemAlerts.filter((alert) => !["resolved", "archived"].includes(String(alert.status || "").toLowerCase()))
+            : [];
+        const issueAlerts = backendIssueAlerts.length ? backendIssueAlerts.map((alert) => ({
+            id: alert.id,
+            severity: alert.severity || "warning",
+            icon: alert.icon || "warning",
+            title: alert.title,
+            subtitle: alert.subtitle || alert.message || "",
+            meta: alert.meta || alert.detectedAt || "",
+        })) : stats.complexes.flatMap((complex) => {
+            const alerts = [];
+            if (complex.water !== "Optimal") {
+                alerts.push({
+                    id: `${complex.id}-water`,
+                    severity: "critical",
+                    icon: "leak_add",
+                    title: "Water issue detected",
+                    subtitle: `${complex.name} · ${complex.sector}`,
+                    meta: `${complex.water} · ${moneyFormatter.format(complex.pressurePsi)} PSI`,
+                });
+            }
+            if (complex.heating !== "Optimal") {
+                alerts.push({
+                    id: `${complex.id}-heating`,
+                    severity: complex.heating === "Maintenance" ? "warning" : "critical",
+                    icon: "device_thermostat",
+                    title: "Heating maintenance required",
+                    subtitle: `${complex.name} · ${complex.sector}`,
+                    meta: `${complex.heating} · ${moneyFormatter.format(complex.heatingM3)} m³/day`,
+                });
+            }
+            return alerts;
+        });
+        const derivedMaintenanceTasks = stats.complexes.flatMap((complex, index) => {
+            const tasks = [];
+            if (complex.water !== "Optimal") {
+                tasks.push({
+                    task: "Water leak inspection",
+                    location: `${complex.name} · main line`,
+                    priority: "High",
+                    date: "20.04.2026 | 10:30",
+                    status: "Upcoming",
+                    action: "Assign technician",
+                    icon: "plumbing",
+                    day: "20",
+                    month: "APR",
+                    tone: "error",
+                });
+            }
+            if (complex.heating !== "Optimal") {
+                tasks.push({
+                    task: "Heating loop service",
+                    location: `${complex.name} · heating core`,
+                    priority: "Medium",
+                    date: "24.04.2026 | 09:00",
+                    status: "Scheduled",
+                    action: "Open checklist",
+                    icon: "device_thermostat",
+                    day: "24",
+                    month: "APR",
+                    tone: "tertiary",
+                });
+            }
+            if (index < 2 && complex.water === "Optimal" && complex.heating === "Optimal") {
+                tasks.push({
+                    task: "Preventive system audit",
+                    location: `${complex.name} · ${complex.sector}`,
+                    priority: "Low",
+                    date: `${String(26 + index).padStart(2, "0")}.04.2026 | ${index ? "14:00" : "11:15"}`,
+                    status: "Planned",
+                    action: "View plan",
+                    icon: "fact_check",
+                    day: String(26 + index),
+                    month: "APR",
+                    tone: "secondary",
+                });
+            }
+            return tasks;
+        }).slice(0, 5);
+        const backendMaintenanceTasks = Array.isArray(billingData.maintenanceTasks)
+            ? billingData.maintenanceTasks.filter((task) => task.statusKey !== "completed")
+            : [];
+        const maintenanceTasks = backendMaintenanceTasks.length ? backendMaintenanceTasks : derivedMaintenanceTasks;
+        const badgeClass = (tone) => tone === "error"
+            ? "bg-error-container text-error"
+            : tone === "tertiary"
+            ? "bg-tertiary-fixed text-on-tertiary-fixed"
+            : "bg-secondary-container text-on-secondary-container";
+
+        const systemCriticalSection = Array.from(document.querySelectorAll("section"))
+            .find((section) => section.querySelector("h4")?.textContent.toLowerCase().includes("critical alerts"));
+        if (systemCriticalSection) {
+            const alertBody = systemCriticalSection.querySelector(".divide-y");
+            const actionBadge = systemCriticalSection.querySelector("h4 + span");
+            if (actionBadge) actionBadge.textContent = issueAlerts.length ? "ACT NOW" : "CLEAR";
+            if (alertBody) {
+                alertBody.innerHTML = issueAlerts.length
+                    ? issueAlerts.slice(0, 3).map((alert) => {
+                        const tone = alert.severity === "critical" ? "error" : "tertiary";
+                        return `
+                            <div class="p-4 flex gap-3" data-system-alert="${escapeHtml(alert.id)}">
+                                <div class="w-8 h-8 rounded-full bg-${tone}-container flex-shrink-0 flex items-center justify-center text-${tone}">
+                                    <span class="material-symbols-outlined text-base">${escapeHtml(alert.icon)}</span>
+                                </div>
+                                <div>
+                                    <p class="text-xs font-bold text-on-surface">${escapeHtml(alert.title)}</p>
+                                    <p class="text-[10px] text-on-surface-variant">${escapeHtml(alert.subtitle)}</p>
+                                    <p class="text-[10px] text-${tone} font-semibold mt-1">${escapeHtml(alert.meta)}</p>
+                                </div>
+                            </div>
+                        `;
+                    }).join("")
+                    : `
+                        <div class="p-4 flex gap-3">
+                            <div class="w-8 h-8 rounded-full bg-secondary-container flex-shrink-0 flex items-center justify-center text-secondary">
+                                <span class="material-symbols-outlined text-base">check_circle</span>
+                            </div>
+                            <div>
+                                <p class="text-xs font-bold text-on-surface">No critical alerts</p>
+                                <p class="text-[10px] text-on-surface-variant">All complexes are operating inside the current local telemetry range.</p>
+                            </div>
+                        </div>
+                    `;
+            }
+            const viewAlertsButton = systemCriticalSection.querySelector("button");
+            if (viewAlertsButton) {
+                viewAlertsButton.type = "button";
+                viewAlertsButton.dataset.drawerOpen = "notifications-drawer";
+            }
+        }
+
+        const maintenancePanel = document.querySelector("[data-card='upcoming-maintenance']");
+        if (maintenancePanel) {
+            const list = maintenancePanel.querySelector(".space-y-6");
+            if (list) {
+                list.innerHTML = maintenanceTasks.slice(0, 3).map((task, index) => `
+                    <div class="flex gap-4">
+                        <div class="flex flex-col items-center ${index > 0 ? "opacity-70" : ""}">
+                            <span class="text-[10px] font-bold text-on-surface-variant uppercase">${escapeHtml(task.month)}</span>
+                            <span class="text-lg font-black text-primary leading-none">${escapeHtml(task.day)}</span>
+                        </div>
+                        <div class="h-10 w-[2px] bg-primary/${index ? "10" : "20"}"></div>
+                        <div>
+                            <p class="text-xs font-bold text-on-surface">${escapeHtml(task.task)}</p>
+                            <p class="text-[10px] text-on-surface-variant">${escapeHtml(task.location)} · ${escapeHtml(task.date.split("|")[1]?.trim() || "")}</p>
+                            <span class="text-[9px] px-2 py-0.5 ${badgeClass(task.tone)} font-bold rounded mt-1 inline-block uppercase" data-status="${escapeHtml(task.status.toLowerCase())}">${escapeHtml(task.status)}</span>
+                        </div>
+                    </div>
+                `).join("");
+            }
+        }
+
+        const maintenanceTable = Array.from(document.querySelectorAll("table")).find((table) => (
+            table.closest("section")?.querySelector("h4")?.textContent.trim().toLowerCase().includes("system maintenance log")
+        ));
+        const maintenanceBody = maintenanceTable?.querySelector("tbody");
+        if (maintenanceBody) {
+            maintenanceBody.innerHTML = maintenanceTasks.map((task) => `
+                <tr class="hover:bg-surface-container-low transition-colors group">
+                    <td class="px-6 py-5">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded bg-primary/10 flex items-center justify-center text-primary">
+                                <span class="material-symbols-outlined text-lg">${escapeHtml(task.icon)}</span>
+                            </div>
+                            <span class="text-sm font-bold text-primary">${escapeHtml(task.task)}</span>
+                        </div>
+                    </td>
+                    <td class="px-6 py-5 text-sm text-on-surface-variant">${escapeHtml(task.location)}</td>
+                    <td class="px-6 py-5"><span class="table-assigned-status ${task.priority === "High" ? "is-critical" : task.priority === "Medium" ? "is-warning" : "is-success"}">${escapeHtml(task.priority)}</span></td>
+                    <td class="px-6 py-5 text-sm text-on-surface">${escapeHtml(task.date)}</td>
+                    <td class="px-6 py-5"><span class="table-assigned-status ${task.status === "Planned" ? "is-warning" : "is-success"}">${escapeHtml(task.status)}</span></td>
+                    <td class="px-6 py-5 text-right"><button class="text-primary text-xs font-bold hover:underline" type="button">${escapeHtml(task.action)}</button></td>
+                </tr>
+            `).join("");
+        }
+
+        const networkMap = document.querySelector("[data-network-map]");
+        const networkLayer = networkMap?.querySelector("[data-network-layer]");
+        if (networkMap && networkLayer) {
+            const positions = [
+                { x: 20, y: 22 },
+                { x: 47, y: 38 },
+                { x: 13, y: 61 },
+                { x: 68, y: 69 },
+                { x: 88, y: 35 },
+                { x: 35, y: 73 },
+                { x: 78, y: 20 },
+            ];
+            const activeFilter = networkMap.querySelector("[data-network-filter].is-active")?.dataset.networkFilter || "all";
+            const backendNodes = Array.isArray(billingData.telemetryNodes) ? billingData.telemetryNodes : [];
+            const nodeData = backendNodes.length ? backendNodes.map((node, index) => {
+                const status = ["issue", "offline"].includes(node.status) ? "issue" : "online";
+                return {
+                    complex: {
+                        id: node.id,
+                        name: node.title,
+                        sector: node.subtitle,
+                        units: node.units || 0,
+                        icon: node.icon || "apartment",
+                        pressurePsi: Number(node.pressurePsi) || 0,
+                        waterM3: (Number(node.flowLitersDay) || 0) / 1000,
+                        heatingM3: 0,
+                        health: Number(node.uptimePercent) || 100,
+                        nodeTelemetry: node,
+                    },
+                    status,
+                    pos: { x: Number(node.x) || positions[index % positions.length].x, y: Number(node.y) || positions[index % positions.length].y },
+                };
+            }) : stats.complexes.map((complex, index) => {
+                const status = complex.water !== "Optimal" || complex.heating !== "Optimal" ? "issue" : "online";
+                const pos = positions[index % positions.length];
+                return { complex, status, pos };
+            });
+            const pipePath = (a, b) => {
+                const cx = ((a.x + b.x) / 2).toFixed(1);
+                return `M${a.x} ${a.y} C${cx} ${a.y} ${cx} ${b.y} ${b.x} ${b.y}`;
+            };
+            const pipesMarkup = nodeData.slice(1).map((item, index) => {
+                const previous = nodeData[index];
+                const issue = item.status === "issue" || previous.status === "issue";
+                return `<path class="network-pipe ${issue ? "is-issue" : "is-online"}" data-route="${escapeHtml(previous.complex.id)}-${escapeHtml(item.complex.id)}" d="${pipePath(previous.pos, item.pos)}"></path>`;
+            }).join("");
+            networkLayer.innerHTML = `
+                <svg class="network-pipes" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">${pipesMarkup}</svg>
+                ${nodeData.map((item, index) => {
+                    const { complex, status, pos } = item;
+                    const routes = [
+                        index > 0 ? `${nodeData[index - 1].complex.id}-${complex.id}` : "",
+                        index < nodeData.length - 1 ? `${complex.id}-${nodeData[index + 1].complex.id}` : "",
+                    ].filter(Boolean).join(" ");
+                    const telemetry = complex.nodeTelemetry;
+                    const flow = telemetry?.flow || `${compactNumber((complex.waterM3 + complex.heatingM3) * 1000)} l/day`;
+                    const uptime = telemetry?.uptime || percentValue(Math.min(99.99, 94 + complex.health / 20));
+                    const hidden = activeFilter === "issue" ? status !== "issue" : activeFilter === "online" ? status === "issue" : false;
+                    return `
+                        <button class="network-node ${status === "issue" ? "is-issue" : "is-online"} ${index === 0 ? "is-selected" : ""} ${hidden ? "is-hidden" : ""}"
+                            style="--x:${pos.x}%; --y:${pos.y}%;"
+                            data-node="${escapeHtml(complex.id)}"
+                            data-status="${escapeHtml(status)}"
+                            data-route="${escapeHtml(routes)}"
+                            data-title="${escapeHtml(complex.name)}"
+                            data-subtitle="${escapeHtml(telemetry?.subtitle || `${complex.sector} · ${moneyFormatter.format(complex.units)} units`)}"
+                            data-pressure="${escapeHtml(telemetry?.pressure || `${moneyFormatter.format(complex.pressurePsi)} PSI`)}"
+                            data-flow="${escapeHtml(flow)}"
+                            data-latency="${escapeHtml(telemetry?.latency || `${moneyFormatter.format(Math.max(12, Math.round(95 - complex.health)))}ms`)}"
+                            data-uptime="${escapeHtml(uptime)}"
+                            type="button"
+                            aria-label="${escapeHtml(complex.name)} network node">
+                            <span class="network-node-icon material-symbols-outlined">${escapeHtml(complex.icon || "apartment")}</span>
+                            <span class="network-node-label">${escapeHtml(complex.name.replace(/\s+(Residential|Gardens|Towers|Heights|Metropolitan).*/i, ""))}</span>
+                        </button>
+                    `;
+                }).join("")}
+            `;
+            const detail = {
+                status: networkMap.querySelector("[data-network-detail-status]"),
+                time: networkMap.querySelector(".network-detail-time"),
+                title: networkMap.querySelector("[data-network-detail-title]"),
+                subtitle: networkMap.querySelector("[data-network-detail-subtitle]"),
+                pressure: networkMap.querySelector("[data-network-detail-pressure]"),
+                flow: networkMap.querySelector("[data-network-detail-flow]"),
+                latency: networkMap.querySelector("[data-network-detail-latency]"),
+                uptime: networkMap.querySelector("[data-network-detail-uptime]"),
+                uptimeMeter: networkMap.querySelector("[data-network-detail-uptime-meter]"),
+                action: networkMap.querySelector(".network-detail-action"),
+            };
+            const clearNetworkDetail = (title = "No telemetry nodes") => {
+                if (detail.status) {
+                    detail.status.textContent = "No data";
+                    detail.status.classList.remove("is-issue");
+                }
+                if (detail.time) detail.time.textContent = "Backend empty";
+                if (detail.title) detail.title.textContent = title;
+                if (detail.subtitle) detail.subtitle.textContent = "Add telemetry nodes in Django admin to show live network data.";
+                if (detail.pressure) detail.pressure.textContent = "—";
+                if (detail.flow) detail.flow.textContent = "—";
+                if (detail.latency) detail.latency.textContent = "—";
+                if (detail.uptime) detail.uptime.textContent = "—";
+                if (detail.uptimeMeter) {
+                    detail.uptimeMeter.dataset.value = "0%";
+                    detail.uptimeMeter.style.setProperty("--progress", "0%");
+                }
+                if (detail.action) {
+                    detail.action.disabled = true;
+                    detail.action.textContent = "No node selected";
+                }
+            };
+            const selectNetworkNode = (node) => {
+                const nodes = Array.from(networkLayer.querySelectorAll(".network-node"));
+                const pipes = Array.from(networkLayer.querySelectorAll(".network-pipe"));
+                nodes.forEach((item) => item.classList.toggle("is-selected", item === node));
+                const routes = (node.dataset.route || "").split(/\s+/).filter(Boolean);
+                pipes.forEach((pipe) => {
+                    const active = routes.includes(pipe.dataset.route);
+                    pipe.classList.toggle("is-highlighted", active);
+                    pipe.classList.toggle("is-dimmed", !active);
+                });
+                const isIssue = node.dataset.status === "issue";
+                if (detail.status) {
+                    detail.status.textContent = isIssue ? "Issue" : "Online";
+                    detail.status.classList.toggle("is-issue", isIssue);
+                }
+                if (detail.time) detail.time.textContent = "Updated from backend";
+                if (detail.title) detail.title.textContent = node.dataset.title || "";
+                if (detail.subtitle) detail.subtitle.textContent = node.dataset.subtitle || "";
+                if (detail.pressure) detail.pressure.textContent = node.dataset.pressure || "";
+                if (detail.flow) detail.flow.textContent = node.dataset.flow || "";
+                if (detail.latency) detail.latency.textContent = node.dataset.latency || "";
+                if (detail.uptime) detail.uptime.textContent = node.dataset.uptime || "";
+                if (detail.uptimeMeter) {
+                    detail.uptimeMeter.dataset.value = node.dataset.uptime || "0%";
+                    detail.uptimeMeter.style.setProperty("--progress", node.dataset.uptime || "0%");
+                }
+                if (detail.action) {
+                    detail.action.disabled = false;
+                    detail.action.textContent = "Open node details";
+                }
+            };
+            networkLayer.querySelectorAll(".network-node").forEach((node) => {
+                node.addEventListener("click", () => selectNetworkNode(node));
+            });
+            const firstVisibleNode = Array.from(networkLayer.querySelectorAll(".network-node")).find((node) => !node.classList.contains("is-hidden"));
+            if (firstVisibleNode) selectNetworkNode(firstVisibleNode);
+            else clearNetworkDetail();
+            networkMap.querySelectorAll("[data-network-filter]").forEach((button) => {
+                if (button.dataset.dynamicNetworkFilterReady === "true") return;
+                button.dataset.dynamicNetworkFilterReady = "true";
+                button.addEventListener("click", () => {
+                    networkMap.querySelectorAll("[data-network-filter]").forEach((item) => item.classList.toggle("is-active", item === button));
+                    const filter = button.dataset.networkFilter || "all";
+                    networkLayer.querySelectorAll(".network-node").forEach((node) => {
+                        const hidden = filter === "issue" ? node.dataset.status !== "issue" : filter === "online" ? node.dataset.status === "issue" : false;
+                        node.classList.toggle("is-hidden", hidden);
+                    });
+                    const nextNode = Array.from(networkLayer.querySelectorAll(".network-node")).find((node) => !node.classList.contains("is-hidden"));
+                    if (nextNode) selectNetworkNode(nextNode);
+                    else clearNetworkDetail("No matching telemetry nodes");
+                });
+            });
+        }
+
+        const pressureBars = document.querySelector(".pressure-bars");
+        if (pressureBars) {
+            const backendPressure = Array.isArray(billingData.pressureSeries)
+                ? billingData.pressureSeries.map((sample) => Number(sample.pressurePsi)).filter((value) => Number.isFinite(value) && value > 0)
+                : [];
+            const source = backendPressure.length ? backendPressure.slice(-20) : stats.complexes.flatMap((complex) => [
+                complex.pressurePsi,
+                Math.max(35, complex.pressurePsi + (complex.risk === "Critical" ? -8 : 1)),
+                Math.min(62, complex.pressurePsi + (complex.risk === "Low Risk" ? 2 : -1)),
+                complex.pressurePsi,
+            ]).slice(0, 20);
+            const maxPressure = Math.max(...source, 60);
+            pressureBars.querySelectorAll(".flex-1").forEach((bar, index) => {
+                const value = source[index] || stats.avgPressure;
+                const ratio = Math.max(28, Math.round((value / maxPressure) * 100));
+                bar.style.height = `${ratio}%`;
+                bar.className = `flex-1 ${value < 48 ? "bg-error/30" : value >= stats.avgPressure ? "bg-secondary/30" : "bg-tertiary/20"} rounded-t-sm hover:bg-tertiary/40 transition-colors cursor-pointer group relative`;
+                bar.innerHTML = `<div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-on-surface text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">${moneyFormatter.format(value)} PSI</div>`;
+            });
+        }
 
         const readiness = exactText("Total Transaction Volume")?.closest(".bg-surface-container-low");
         const readinessValue = readiness?.querySelector(".text-xl.font-black");
@@ -1581,22 +2161,30 @@
 
         const healthList = exactText("Complex Status Health Scores", "h3")?.nextElementSibling;
         if (healthList) {
-            healthList.innerHTML = stats.complexes.slice(0, 3).map((complex) => `
-                <div class="flex items-center justify-between p-4 bg-surface-container rounded-lg">
+            const riskClass = (risk) => risk === "Critical" ? "risk-critical" : risk === "Medium Risk" ? "risk-medium" : "risk-low";
+            healthList.innerHTML = stats.complexes.map((complex) => `
+                <div class="complex-health-row flex items-center justify-between gap-4 p-4 bg-surface-container rounded-lg border border-outline-variant/10 transition-all hover:bg-surface-container-high/45" data-complex-id="${escapeHtml(complex.id)}">
                     <div class="flex items-center gap-4">
-                        <div class="p-2 bg-white rounded-md shadow-sm text-primary">
-                            <span class="material-symbols-outlined" data-icon="${complex.icon || "apartment"}">${complex.icon || "apartment"}</span>
+                        <div class="kpi-icon-chip kpi-icon-${escapeHtml(complex.tone === "red" ? "red" : complex.tone === "amber" ? "amber" : "blue")}">
+                            <span class="material-symbols-outlined" data-icon="${escapeHtml(complex.icon || "apartment")}">${escapeHtml(complex.icon || "apartment")}</span>
                         </div>
-                        <div>
+                        <div class="min-w-0">
                             <p class="font-bold text-sm">${escapeHtml(complex.name)}</p>
-                            <p class="text-xs text-on-surface-variant">${complex.units} Units · ${escapeHtml(complex.sector)}</p>
+                            <p class="text-xs text-on-surface-variant">${moneyFormatter.format(complex.units)} Units · ${moneyFormatter.format(complex.buildings)} Buildings · ${escapeHtml(complex.sector)}</p>
                         </div>
                     </div>
-                    <div class="text-right">
-                        <div class="percent-meter percent-meter-${escapeHtml(complex.tone)} percent-meter-mini ml-auto" style="--progress: ${complex.health}%;" data-value="${complex.health}%">
-                            <span class="percent-meter-track"><span class="percent-meter-fill"></span></span>
+                    <div class="flex items-center justify-end gap-4 shrink-0">
+                        <div class="text-right hidden sm:block">
+                            <p class="text-xs font-black text-on-surface">${formatBillingUzs(complex.debt)}</p>
+                            <p class="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">${complex.debtorResidents} Debt · ${complex.paidResidents} Paid</p>
                         </div>
-                        <p class="text-[10px] text-on-surface-variant uppercase" data-i18n-key="${escapeHtml(complex.risk)}">${escapeHtml(complex.risk)}</p>
+                        <div class="text-right min-w-[112px]">
+                            <div class="percent-meter percent-meter-${escapeHtml(complex.tone)} percent-meter-mini ml-auto" style="--progress: ${complex.health}%;" data-value="${percentValue(complex.health)}" aria-label="${escapeHtml(complex.name)} health ${percentValue(complex.health)}">
+                                <span class="percent-meter-track"><span class="percent-meter-fill"></span></span>
+                            </div>
+                            <p class="text-[10px] font-black text-on-surface-variant mt-1">${percentValue(complex.health)}</p>
+                        </div>
+                        <span class="risk-badge ${riskClass(complex.risk)}" data-i18n-key="${escapeHtml(complex.risk)}">${escapeHtml(complex.risk)}</span>
                     </div>
                 </div>
             `).join("");
@@ -1604,15 +2192,21 @@
 
         const debtorList = document.querySelector(".debtor-list .space-y-2");
         if (debtorList) {
-            debtorList.innerHTML = stats.complexes.slice()
+            const topDebtors = stats.complexes.slice()
                 .sort((a, b) => b.debt - a.debt)
-                .slice(0, 3)
+                .slice(0, 3);
+            const debtorTitle = debtorList.closest(".debtor-list")?.querySelector(".debtor-list-title");
+            if (debtorTitle) debtorTitle.textContent = `Critical Debtors (Top ${topDebtors.length})`;
+            debtorList.innerHTML = topDebtors
                 .map((complex) => {
                     const share = (complex.debt / Math.max(stats.totalDebt, 1)) * 100;
                     return `
-                        <div class="debtor-row flex items-center justify-between p-2.5 bg-surface-container-low rounded-lg border border-outline-variant/5">
-                            <span class="text-xs font-semibold">${escapeHtml(complex.name)}</span>
-                            <div class="percent-meter percent-meter-red percent-meter-row" style="--progress: ${Math.min(100, share)}%;" data-value="${percentValue(share)}">
+                        <div class="debtor-row flex items-center justify-between gap-3 p-2.5 bg-surface-container-low rounded-lg border border-outline-variant/5" data-complex-id="${escapeHtml(complex.id)}">
+                            <div class="min-w-0">
+                                <span class="block text-xs font-semibold truncate">${escapeHtml(complex.name)}</span>
+                                <span class="block text-[10px] font-bold text-on-surface-variant">${formatBillingUzs(complex.debt)} · ${complex.debtorResidents} debt units</span>
+                            </div>
+                            <div class="percent-meter percent-meter-${escapeHtml(complex.tone)} percent-meter-row shrink-0" style="--progress: ${Math.min(100, share)}%;" data-value="${percentValue(share)}" aria-label="${escapeHtml(complex.name)} debt share ${percentValue(share)}">
                                 <span class="percent-meter-track"><span class="percent-meter-fill"></span></span>
                             </div>
                         </div>
@@ -1620,17 +2214,141 @@
                 }).join("");
         }
 
+        const riskBadge = document.querySelector(".debtor-risk-badge");
+        if (riskBadge) {
+            const isHighRisk = stats.criticalAlerts > 0 || stats.criticalDebtUnits > 0;
+            riskBadge.textContent = isHighRisk ? "High Risk" : stats.activeAlerts ? "Review" : "Stable";
+            riskBadge.className = `debtor-risk-badge text-[10px] font-bold uppercase px-2 py-0.5 rounded ${isHighRisk ? "text-error bg-error-container/20" : stats.activeAlerts ? "text-tertiary bg-tertiary-container/20" : "text-secondary bg-secondary-container/20"}`;
+        }
+
         const trendBars = document.querySelectorAll(".debtor-trend-chart .debtor-trend-bar");
         if (trendBars.length) {
-            const factors = [0.72, 0.78, 0.83, 0.88, 0.94, 1];
+            const pendingDebt = billingData.transactions
+                .filter((transaction) => transaction.status !== "Success")
+                .reduce((total, transaction) => total + transaction.amount, 0);
+            const factors = [0.78, 0.82, 0.86, 0.91, 0.96, 1];
+            const values = factors.map((factor, index) => Math.max(0, (stats.totalDebt * factor) + (pendingDebt * (index / Math.max(factors.length - 1, 1)) * 0.08)));
+            const maxValue = Math.max(...values, 1);
             trendBars.forEach((bar, index) => {
-                const value = stats.totalDebt * (factors[index] || 1);
-                const height = Math.max(34, Math.round((value / stats.totalDebt) * 100));
+                const value = values[index] || stats.totalDebt;
+                const height = Math.max(24, Math.round((value / maxValue) * 100));
                 bar.style.height = `${height}%`;
                 bar.dataset.value = formatCompactUzs(value);
                 const tooltip = bar.querySelector(".debtor-trend-tooltip");
                 if (tooltip) tooltip.textContent = formatBillingUzs(value);
+                bar.classList.toggle("debtor-trend-bar-risk", index === trendBars.length - 1 && (stats.criticalAlerts > 0 || stats.criticalDebtUnits > 0));
             });
+        }
+
+        const debtorAction = document.querySelector(".debtor-primary-action");
+        if (debtorAction) {
+            debtorAction.dataset.exportOpen = "";
+            debtorAction.dataset.exportSource = "Debt Letters";
+            debtorAction.dataset.exportContext = "debt-letters";
+        }
+        const debtorSecondaryAction = document.querySelector(".debtor-secondary-action");
+        if (debtorSecondaryAction) {
+            debtorSecondaryAction.type = "button";
+            debtorSecondaryAction.dataset.viewDebtors = "true";
+        }
+
+        const districtInsights = document.querySelector("[data-liquid-panel='district-insights']");
+        if (districtInsights) {
+            const insightRows = districtInsights.querySelector(".space-y-6");
+            if (insightRows) {
+                const demandLiters = stats.totalWaterM3 * 1000;
+                const heatingLoad = stats.totalHeatingM3;
+                const pressureState = stats.avgPressure < 50 ? "Needs review" : "Within target range";
+                const pressureClass = stats.avgPressure < 50 ? "text-error" : "text-secondary";
+                const maintenanceZones = stats.warningComplexes.length;
+                insightRows.innerHTML = `
+                    <div class="flex items-start gap-4">
+                        <div class="w-12 h-12 rounded-lg bg-primary-container/40 flex items-center justify-center text-primary shadow-sm border border-outline-variant/10">
+                            <span class="material-symbols-outlined">water_drop</span>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-xs font-bold text-on-surface-variant uppercase tracking-tight mb-1">Water Demand</p>
+                            <p class="text-lg font-black text-on-surface leading-tight">${compactNumber(demandLiters)} <span class="text-xs font-medium">Ltrs/day</span></p>
+                            <div class="mt-2 flex items-center gap-1 text-[10px] ${pressureClass} font-bold">
+                                <span class="material-symbols-outlined text-[12px]">${stats.avgPressure < 50 ? "warning" : "check_circle"}</span>
+                                <span>${moneyFormatter.format(stats.avgPressure)} PSI avg · ${pressureState}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-4">
+                        <div class="w-12 h-12 rounded-lg bg-tertiary-container/35 flex items-center justify-center text-tertiary shadow-sm border border-outline-variant/10">
+                            <span class="material-symbols-outlined">device_thermostat</span>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-xs font-bold text-on-surface-variant uppercase tracking-tight mb-1">Heating Load</p>
+                            <p class="text-lg font-black text-on-surface leading-tight">${compactNumber(heatingLoad)} <span class="text-xs font-medium">m³/day</span></p>
+                            <div class="mt-2 flex items-center gap-1 text-[10px] ${maintenanceZones ? "text-tertiary" : "text-secondary"} font-bold">
+                                <span class="material-symbols-outlined text-[12px]">${maintenanceZones ? "build" : "check_circle"}</span>
+                                <span>${maintenanceZones ? `${maintenanceZones} zones need maintenance` : "All heating zones stable"}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        const recentAlertsPanel = document.querySelector("[data-liquid-panel='recent-alerts']");
+        if (recentAlertsPanel) {
+            const backendRecentItems = Array.isArray(billingData.notifications)
+                ? billingData.notifications.filter((item) => !item.read)
+                : [];
+            const alertItems = backendRecentItems.length ? backendRecentItems.map((item) => ({
+                severity: item.severity || "info",
+                title: item.title,
+                message: item.message || item.eventAt || "",
+                meta: item.severity === "critical" ? "Priority: High" : item.eventAt || "Backend event",
+            })) : stats.complexes.flatMap((complex) => {
+                const items = [];
+                if (complex.water !== "Optimal") {
+                    items.push({
+                        severity: "critical",
+                        title: "Water issue detected",
+                        message: `${complex.name}: ${complex.water}. ${formatBillingUzs(complex.debt)} outstanding.`,
+                        meta: "Priority: High",
+                    });
+                }
+                if (complex.heating !== "Optimal") {
+                    items.push({
+                        severity: complex.heating === "Maintenance" ? "warning" : "critical",
+                        title: "Heating maintenance required",
+                        message: `${complex.name}: ${complex.heating}. ${complex.debtorResidents} debt units.`,
+                        meta: complex.heating === "Maintenance" ? "Maintenance queue" : "Priority: High",
+                    });
+                }
+                return items;
+            });
+            const countBadge = recentAlertsPanel.querySelector(".flex.items-center.justify-between span");
+            if (countBadge) countBadge.textContent = `${alertItems.length} New`;
+            const list = recentAlertsPanel.querySelector(".space-y-4");
+            if (list) {
+                list.innerHTML = alertItems.length
+                    ? alertItems.slice(0, 3).map((alert) => {
+                        const tone = alert.severity === "critical" ? "error" : "tertiary";
+                        return `
+                            <div class="p-3 bg-${tone}-container/10 border-l-4 border-${tone} rounded-r-lg" data-liquid-alert-card data-alert-severity="${escapeHtml(alert.severity)}">
+                                <p class="text-xs font-bold text-on-surface">${escapeHtml(alert.title)}</p>
+                                <p class="text-[11px] text-on-surface-variant mt-1">${escapeHtml(alert.message)}</p>
+                                <p class="text-[10px] text-${tone} font-black mt-2 uppercase tracking-tight">${escapeHtml(alert.meta)}</p>
+                            </div>
+                        `;
+                    }).join("")
+                    : `
+                        <div class="p-4 bg-secondary-container/10 border border-secondary/15 rounded-lg" data-liquid-alert-card>
+                            <p class="text-xs font-bold text-on-surface">No active alerts</p>
+                            <p class="text-[11px] text-on-surface-variant mt-1">All residential systems are synced with current local data.</p>
+                        </div>
+                    `;
+            }
+            const viewActivitiesButton = recentAlertsPanel.querySelector("button");
+            if (viewActivitiesButton) {
+                viewActivitiesButton.type = "button";
+                viewActivitiesButton.dataset.viewActivities = "true";
+            }
         }
 
         document.querySelectorAll("[data-value]").forEach((meter) => {
@@ -1717,9 +2435,14 @@
             const workspace = table.closest(".table-workspace") || table.closest(".overflow-x-auto") || table;
             const tools = workspace.previousElementSibling?.classList?.contains("table-tools") ? workspace.previousElementSibling : null;
             const pagination = workspace.nextElementSibling?.classList?.contains("table-pagination") ? workspace.nextElementSibling : null;
-            const selectAll = table.querySelector("[data-select-all]");
             const search = tools?.querySelector(".table-search");
             if (!body || !tools) return;
+            const tableHead = table.querySelector("thead");
+            if (tableHead) {
+                const cleanHead = tableHead.cloneNode(true);
+                tableHead.replaceWith(cleanHead);
+            }
+            const selectAll = table.querySelector("[data-select-all]");
             table.dataset.billingControlsReady = "true";
             let page = 1;
             const pageSize = 6;
@@ -1743,7 +2466,7 @@
             const updateVisibleRows = () => {
                 const rows = currentRows();
                 const query = search?.value.trim().toLowerCase() || "";
-                filteredRows = rows.filter((row) => !query || row.textContent.toLowerCase().includes(query));
+                filteredRows = rows.filter((row) => row.dataset.globalFilterHidden !== "true" && (!query || row.textContent.toLowerCase().includes(query)));
                 const maxPage = Math.max(1, Math.ceil(filteredRows.length / pageSize));
                 page = Math.min(page, maxPage);
                 rows.forEach((row) => row.classList.add("hidden"));
@@ -1772,6 +2495,56 @@
             body.addEventListener("change", (event) => {
                 if (event.target.matches("[data-row-select]")) updateSelection();
             });
+            const setupCleanSort = () => {
+                const headRow = table.querySelector("thead tr");
+                if (!headRow) return;
+                Array.from(headRow.cells).forEach((header, index) => {
+                    if (header.querySelector("[data-select-all]")) return;
+                    const label = header.querySelector(".table-filter-heading-text")?.textContent.trim() || header.textContent.trim();
+                    if (/actions/i.test(label)) return;
+                    header.classList.add("table-filter-heading");
+                    header.setAttribute("role", "button");
+                    header.setAttribute("tabindex", "0");
+                    header.setAttribute("aria-label", `Sort by ${label}`);
+                    const sortIcon = header.querySelector(".table-sort-heading-icon");
+                    const applySort = () => {
+                        const direction = header.dataset.sortDirection === "asc" ? "desc" : "asc";
+                        Array.from(headRow.cells).forEach((cell) => {
+                            if (cell !== header) {
+                                delete cell.dataset.sortDirection;
+                                const icon = cell.querySelector(".table-sort-heading-icon");
+                                if (icon) icon.textContent = "unfold_more";
+                            }
+                        });
+                        header.dataset.sortDirection = direction;
+                        if (sortIcon) sortIcon.textContent = direction === "asc" ? "arrow_upward" : "arrow_downward";
+                        body.querySelectorAll(".residential-drill-row:not([data-drill-row='district'])").forEach((row) => row.remove());
+                        body.querySelectorAll("[data-drill-row='district']").forEach((row) => {
+                            row.classList.remove("is-expanded");
+                            row.setAttribute("aria-expanded", "false");
+                        });
+                        const rows = currentRows();
+                        rows.sort((a, b) => {
+                            const av = a.cells[index]?.textContent.trim() || "";
+                            const bv = b.cells[index]?.textContent.trim() || "";
+                            return direction === "asc"
+                                ? av.localeCompare(bv, undefined, { numeric: true, sensitivity: "base" })
+                                : bv.localeCompare(av, undefined, { numeric: true, sensitivity: "base" });
+                        });
+                        rows.forEach((row) => body.appendChild(row));
+                        page = 1;
+                        updateVisibleRows();
+                    };
+                    header.addEventListener("click", applySort);
+                    header.addEventListener("keydown", (event) => {
+                        if (event.key === "Enter" || event.key === " ") {
+                            event.preventDefault();
+                            applySort();
+                        }
+                    });
+                });
+            };
+            setupCleanSort();
             pagination?.querySelector("[data-prev-page]")?.addEventListener("click", () => {
                 page = Math.max(1, page - 1);
                 updateVisibleRows();
@@ -1793,7 +2566,7 @@
             const hasSelect = Boolean(recentTable.querySelector("[data-select-all]"));
             const usesAnalyticsColumns = headers.some((label) => label.includes("transaction id") || label.includes("provider") || label.includes("payer"));
             const selectCell = (label) => hasSelect ? `<td class="px-4 py-4"><input aria-label="${escapeHtml(label)}" data-row-select type="checkbox"></td>` : "";
-            const statusBadge = (status) => `<span class="px-2 py-1 ${statusPillClass(status)} text-[10px] font-black uppercase rounded-full" data-i18n-key="${escapeHtml(status)}">${escapeHtml(status)}</span>`;
+            const statusBadge = (status) => `<span class="table-assigned-status ${status === "Success" ? "is-success" : "is-warning"}" data-i18n-key="${escapeHtml(status)}">${escapeHtml(status)}</span>`;
             const rows = billingData.transactions.slice()
                 .sort((a, b) => dateValue(b.date) - dateValue(a.date))
                 .map((transaction) => {
@@ -1863,7 +2636,7 @@
         const performanceBody = performanceTable?.querySelector("tbody");
         if (performanceBody) {
             const hasSelect = Boolean(performanceTable.querySelector("[data-select-all]"));
-            const selectCell = (label) => hasSelect ? `<td class="px-4 py-5"><input aria-label="${escapeHtml(label)}" type="checkbox"></td>` : "";
+            const selectCell = (label) => hasSelect ? `<td class="px-4 py-5"><input aria-label="${escapeHtml(label)}" data-row-select type="checkbox"></td>` : "";
             const iconMarkup = (complex) => complex.image
                 ? `<div class="w-10 h-10 rounded-lg overflow-hidden shrink-0"><img class="w-full h-full object-cover" src="${escapeHtml(complex.image)}" alt=""></div>`
                 : `<div class="w-10 h-10 rounded-lg overflow-hidden shrink-0 text-primary-container bg-surface-container-high flex items-center justify-center"><span class="material-symbols-outlined" style="font-size: 20px;">${escapeHtml(complex.icon || "domain")}</span></div>`;
@@ -1931,10 +2704,178 @@
             }).join("");
             const footerText = performanceTable.closest(".bg-surface-container-lowest")?.querySelector(".border-t span.text-xs");
             if (footerText) footerText.textContent = `Showing 1-${getComplexStats().length} of ${getComplexStats().length} complexes`;
+            repairEnhancedTableControls(performanceTable);
         }
 
         syncSiteStatistics();
         window.HydroFlowSyncLocale?.();
+    };
+
+    const setupGlobalFilters = () => {
+        if (document.body.dataset.globalFiltersReady === "true") return;
+        document.body.dataset.globalFiltersReady = "true";
+
+        const districtOptions = [
+            ["all", "All Districts"],
+            ...Array.from(new Set(billingData.complexes.map((complex) => complex.sector))).map((sector) => [sector, sector]),
+        ];
+        const statusOptions = [
+            ["all", "All statuses"],
+            ["low", "Low Risk"],
+            ["medium", "Medium Risk"],
+            ["critical", "Critical"],
+            ["paid", "Paid"],
+            ["debtor", "Debtors"],
+        ];
+        const periodOptions = [
+            ["90", "Last 90 days"],
+            ["30", "Last 30 days"],
+            ["month", "Current month"],
+            ["all", "All time"],
+        ];
+        const optionMarkup = (options) => options
+            .map(([value, label]) => `<option value="${escapeHtml(value)}" data-i18n-key="${escapeHtml(label)}">${escapeHtml(label)}</option>`)
+            .join("");
+        const districtFields = () => Array.from(document.querySelectorAll("#filter-district, [data-global-district-filter]"));
+        const statusFields = () => Array.from(document.querySelectorAll("#filter-status"));
+        const periodFields = () => Array.from(document.querySelectorAll("#filter-period"));
+        const setFieldOptions = (fields, options) => fields.forEach((field) => {
+            const current = field.value || readFilterState()[field.dataset.filterKind] || "all";
+            field.innerHTML = optionMarkup(options);
+            field.value = options.some(([value]) => value === current) ? current : options[0][0];
+        });
+        const visibleLabel = (value, fallback) => {
+            const state = readFilterState();
+            if (fallback === "district") return value === "all" ? "All Districts" : value;
+            if (fallback === "status") return filterStatusLabel(value || state.status);
+            return filterPeriodLabel(value || state.period);
+        };
+        const syncFields = (state = readFilterState()) => {
+            setFieldOptions(districtFields(), districtOptions);
+            setFieldOptions(statusFields(), statusOptions);
+            setFieldOptions(periodFields(), periodOptions);
+            districtFields().forEach((field) => { field.value = state.district; });
+            statusFields().forEach((field) => { field.value = state.status; });
+            periodFields().forEach((field) => { field.value = state.period; });
+        };
+        const updateChips = (state = readFilterState()) => {
+            const chips = [
+                ["district", visibleLabel(state.district, "district")],
+                ["period", filterPeriodLabel(state.period)],
+            ];
+            if (state.status !== "all") chips.splice(1, 0, ["status", filterStatusLabel(state.status)]);
+            const html = chips.map(([kind, label]) => `
+                <button class="filter-chip" type="button" data-filter-chip-remove="${escapeHtml(kind)}">
+                    <span data-i18n-key="${escapeHtml(label)}">${escapeHtml(label)}</span>
+                </button>
+            `).join("");
+            document.querySelectorAll("[data-filter-chips], [data-filter-drawer-chips]").forEach((target) => {
+                target.innerHTML = html;
+            });
+            document.querySelectorAll(".filter-trigger-count").forEach((target) => {
+                target.textContent = String(chips.length);
+            });
+            window.HydroFlowSyncLocale?.();
+        };
+        const clearGeneratedRows = () => {
+            document.querySelectorAll("[data-drill-child='true'], [data-smart-empty='true']").forEach((row) => row.remove());
+            document.querySelectorAll("[data-drill-row='district'], [data-drill-row='building']").forEach((row) => {
+                row.classList.remove("is-expanded");
+                row.setAttribute("aria-expanded", "false");
+            });
+        };
+        const setRowFilterState = (row, visible) => {
+            row.dataset.globalFilterHidden = visible ? "false" : "true";
+            row.classList.toggle("hidden", !visible);
+        };
+        const updateEmptyState = (visibleRows) => {
+            const empty = document.querySelector("[data-filter-empty]");
+            if (!empty) return;
+            empty.classList.toggle("hidden", visibleRows > 0);
+        };
+        const applyFilters = (state = readFilterState(), options = {}) => {
+            const normalized = { ...defaultFilterState, ...state };
+            writeFilterState(normalized);
+            syncFields(normalized);
+            updateChips(normalized);
+            clearGeneratedRows();
+
+            let visibleRows = 0;
+            document.querySelectorAll("[data-drill-row='district']").forEach((row) => {
+                const visible = filterMatchesComplex(row.dataset.districtId, normalized);
+                if (visible) visibleRows += 1;
+                setRowFilterState(row, visible);
+            });
+            document.querySelectorAll("[data-resident-card]").forEach((card) => {
+                const resident = billingData.residents.find((item) => item.id === card.dataset.residentId);
+                const visible = filterMatchesResident(resident, normalized);
+                card.dataset.globalFilterHidden = visible ? "false" : "true";
+                card.classList.toggle("hidden", !visible);
+            });
+            document.querySelectorAll("[data-transaction-id]").forEach((row) => {
+                const transaction = billingData.transactions.find((item) => item.id === row.dataset.transactionId);
+                const visible = filterMatchesTransaction(transaction, normalized);
+                setRowFilterState(row, visible);
+            });
+            document.querySelectorAll(".revenue-debt-item, .debtor-complex-item, .debtor-row, .complex-health-row, .network-node").forEach((item) => {
+                const visible = filterMatchesComplex(item.dataset.complexId || item.dataset.node, normalized);
+                item.classList.toggle("hidden", !visible);
+                item.classList.toggle("is-hidden", !visible && item.classList.contains("network-node"));
+                item.dataset.globalFilterHidden = visible ? "false" : "true";
+            });
+            document.querySelectorAll(".table-search").forEach((input) => {
+                input.dispatchEvent(new Event("input", { bubbles: true }));
+            });
+            document.dispatchEvent(new CustomEvent("hydroflow:filters-applied", { detail: normalized }));
+            updateEmptyState(visibleRows);
+            if (options.toast !== false) {
+                toast(translateValue("Filters applied", storage.getItem("hydroflow-lang") || "en"), `${visibleRows} complexes visible`, "success");
+            }
+        };
+
+        syncFields();
+        updateChips();
+        Array.from(document.querySelectorAll("[data-global-district-filter]")).forEach((field) => field.addEventListener("change", () => {
+            const state = { ...readFilterState(), district: field.value || "all" };
+            applyFilters(state, { toast: false });
+        }));
+        document.querySelectorAll("[data-filter-field]").forEach((field) => field.addEventListener("change", () => {
+            const state = {
+                ...readFilterState(),
+                district: document.getElementById("filter-district")?.value || readFilterState().district,
+                status: document.getElementById("filter-status")?.value || readFilterState().status,
+                period: document.getElementById("filter-period")?.value || readFilterState().period,
+            };
+            syncFields(state);
+            updateChips(state);
+        }));
+        document.querySelector("[data-apply-filters]")?.addEventListener("click", () => {
+            applyFilters({
+                district: document.getElementById("filter-district")?.value || "all",
+                status: document.getElementById("filter-status")?.value || "all",
+                period: document.getElementById("filter-period")?.value || "90",
+            });
+        });
+        document.querySelector("[data-reset-filters]")?.addEventListener("click", () => {
+            const button = document.querySelector("[data-reset-filters]");
+            if (button?.dataset.needsConfirm === "true" && button.dataset.confirmed !== "true") return;
+            if (button) button.dataset.confirmed = "false";
+            applyFilters({ ...defaultFilterState });
+            document.querySelector("[data-filter-error]")?.classList.add("hidden");
+        });
+        document.addEventListener("click", (event) => {
+            const chip = event.target.closest("[data-filter-chip-remove]");
+            if (!chip) return;
+            const state = readFilterState();
+            const kind = chip.dataset.filterChipRemove;
+            if (kind === "district") state.district = "all";
+            if (kind === "status") state.status = "all";
+            if (kind === "period") state.period = "90";
+            applyFilters(state);
+        });
+        document.addEventListener("hydroflow:data-rendered", () => applyFilters(readFilterState(), { toast: false }));
+        window.HydroFlowApplyFilters = (nextState = readFilterState()) => applyFilters(nextState, { toast: false });
+        applyFilters(readFilterState(), { toast: false });
     };
 
     document.querySelectorAll("[data-notification-filter]").forEach((button) => button.addEventListener("click", () => {
@@ -1963,7 +2904,12 @@
         const count = group.querySelector("[data-resident-filter-count]");
         const empty = document.querySelector("[data-resident-filter-empty]");
         const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        const requestedFilter = storage.getItem("hydroflow-requested-billing-filter");
         let activeFilter = buttons.find((button) => button.classList.contains("is-active"))?.dataset.residentFilter || "all";
+        if (requestedFilter && buttons.some((button) => button.dataset.residentFilter === requestedFilter)) {
+            activeFilter = requestedFilter;
+            storage.removeItem("hydroflow-requested-billing-filter");
+        }
 
         const countLabel = (visible) => {
             const lang = storage.getItem("hydroflow-lang") || "en";
@@ -1984,9 +2930,10 @@
             let visible = 0;
             let matched = 0;
             cards.forEach((card, index) => {
+                const globalMatch = card.dataset.globalFilterHidden !== "true";
                 const statusMatch = filter === "all" || card.dataset.residentStatus === filter;
                 const queryMatch = !query || card.textContent.toLowerCase().includes(query);
-                const matchedCard = statusMatch && queryMatch;
+                const matchedCard = globalMatch && statusMatch && queryMatch;
                 if (matchedCard) matched += 1;
                 const show = matchedCard && matched <= 8;
                 window.clearTimeout(card._residentFilterTimer);
@@ -2075,6 +3022,7 @@
                 balance,
                 status,
                 statusValue,
+                globalVisible: sourceCard.dataset.globalFilterHidden !== "true",
                 avatarSrc: avatarImage?.getAttribute("src") || "",
                 avatarInitials,
                 searchText: `${name} ${apartment} ${phone} ${lastPayment} ${balance} ${status}`.toLowerCase(),
@@ -2111,7 +3059,7 @@
             const filtered = residents.filter((resident) => {
                 const statusMatch = activeFilter === "all" || resident.statusValue === activeFilter;
                 const queryMatch = !query || resident.searchText.includes(query);
-                return statusMatch && queryMatch;
+                return resident.globalVisible && statusMatch && queryMatch;
             });
             list.innerHTML = filtered.map(buildResidentCard).join("");
             const visibleCount = filtered.length;
@@ -2238,6 +3186,7 @@
             tone: complex.tone,
             debt: complex.finances,
             issueEvery: complex.issueEvery,
+            buildingItems: complex.buildingItems || [],
         }]));
 
         const escapeHtml = (value) => String(value ?? "").replace(/[&<>"']/g, (char) => ({
@@ -2251,17 +3200,45 @@
         const formatUzs = (value) => `${Number(value || 0).toLocaleString("en-US")} UZS`;
         const initialFor = (name) => name.split(" ").map((part) => part[0]).join("").slice(0, 2).toUpperCase();
         const unitsForBuilding = (district, index) => {
+            const realBuilding = district.buildingItems?.[index - 1];
+            if (realBuilding) return realBuilding.apartments?.length || realBuilding.units || 0;
             const base = Math.floor(district.units / district.count);
             const remainder = district.units % district.count;
             return base + (index <= remainder ? 1 : 0);
         };
         const buildingName = (district, index) => {
+            const realBuilding = district.buildingItems?.[index - 1];
+            if (realBuilding) return realBuilding.name || `House ${realBuilding.number || index}`;
             const suffix = String.fromCharCode(64 + index);
             return `${district.prefix} ${suffix}`;
         };
-        const ownerFor = (buildingIndex, unitIndex) => ownerPool[(buildingIndex + unitIndex) % ownerPool.length];
+        const ownerFor = (buildingIndex, unitIndex) => ownerPool.length
+            ? ownerPool[(buildingIndex + unitIndex) % ownerPool.length]
+            : { name: "Unassigned owner", phone: "", email: "", photo: "" };
         const apartmentFor = (districtId, buildingIndex, unitIndex) => {
             const district = districts[districtId];
+            const realApartment = district?.buildingItems?.[buildingIndex - 1]?.apartments?.[unitIndex - 1];
+            if (realApartment) {
+                return {
+                    unit: realApartment.unit,
+                    owner: {
+                        name: realApartment.owner?.name || "Unassigned owner",
+                        phone: realApartment.owner?.phone || "",
+                        email: realApartment.owner?.email || "",
+                        photo: realApartment.owner?.photo || "",
+                    },
+                    balance: Number(realApartment.balance || 0),
+                    status: realApartment.status || "Paid",
+                    rooms: realApartment.rooms || "Apartment",
+                    area: realApartment.area || "",
+                    charge: realApartment.charge ? String(realApartment.charge) : "",
+                    meter: realApartment.meter || "",
+                    contract: realApartment.contract || "",
+                    visit: realApartment.visit || "",
+                    lastPayment: realApartment.lastPayment || "",
+                    occupancy: realApartment.occupancy || "Resident",
+                };
+            }
             const owner = ownerFor(buildingIndex, unitIndex);
             const floor = Math.floor((unitIndex - 1) / 4) + 2;
             const door = ((unitIndex - 1) % 4) + 1;
@@ -2318,14 +3295,17 @@
 
         const renderBuildingRow = (districtId, index) => {
             const district = districts[districtId];
+            const realBuilding = district.buildingItems?.[index - 1];
             const unitCount = unitsForBuilding(district, index);
-            const healthIssue = district.issueEvery && index % district.issueEvery === 0;
-            const completion = Math.max(78, Math.min(99, 93 + (index % 6) - (healthIssue ? 9 : 0)));
-            const debt = Math.round(district.debt / district.count) + (healthIssue ? 4200000 : index * 175000);
-            const debtorCount = Math.max(1, Math.round(unitCount * (healthIssue ? 0.24 : districtId === "harbor" ? 0.17 : 0.07)));
-            const paidCount = Math.max(0, unitCount - debtorCount);
+            const healthIssue = realBuilding ? realBuilding.risk === "Critical" : district.issueEvery && index % district.issueEvery === 0;
+            const completion = realBuilding ? realBuilding.health : Math.max(78, Math.min(99, 93 + (index % 6) - (healthIssue ? 9 : 0)));
+            const debt = realBuilding ? realBuilding.debt : Math.round(district.debt / district.count) + (healthIssue ? 4200000 : index * 175000);
+            const debtorCount = realBuilding ? realBuilding.debtorResidents : Math.max(1, Math.round(unitCount * (healthIssue ? 0.24 : districtId === "harbor" ? 0.17 : 0.07)));
+            const paidCount = realBuilding ? realBuilding.paidResidents : Math.max(0, unitCount - debtorCount);
             const splitRatio = paidCount === 0 ? Infinity : debtorCount / paidCount;
             const splitTone = splitRatio > 1 ? "is-danger" : splitRatio >= 0.75 ? "is-caution" : "is-healthy";
+            const buildingRisk = realBuilding?.risk || (healthIssue ? "Review" : district.risk);
+            const buildingRiskClass = buildingRisk === "Critical" ? "is-critical" : buildingRisk === "Medium Risk" ? "is-medium" : "";
             const row = document.createElement("tr");
             row.className = "residential-drill-row residential-building-row";
             row.dataset.drillChild = "true";
@@ -2350,7 +3330,7 @@
                 <td class="px-6 py-4">
                     <div class="space-y-1">
                         <p class="text-sm font-bold text-on-surface">${unitCount} <span class="text-xs font-normal text-on-surface-variant" data-i18n-key="Apartments">Apartments</span></p>
-                        <p class="text-xs text-on-surface-variant">${8 + (index % 5)} <span data-i18n-key="floors">floors</span> · ${index % 2 ? "A" : "B"} <span data-i18n-key="entrance">entrance</span></p>
+                        <p class="text-xs text-on-surface-variant">${realBuilding?.address ? escapeHtml(realBuilding.address) : `${8 + (index % 5)} <span data-i18n-key="floors">floors</span> · ${index % 2 ? "A" : "B"} <span data-i18n-key="entrance">entrance</span>`}</p>
                     </div>
                 </td>
                 <td class="px-6 py-4">
@@ -2364,7 +3344,7 @@
                 </td>
                 <td class="px-6 py-4">
                     <p class="text-sm font-bold ${healthIssue ? "text-error" : "text-on-surface"}">${formatUzs(debt)}</p>
-                    <span class="residential-risk-pill ${healthIssue ? "is-critical" : ""}" data-i18n-key="${healthIssue ? "Review" : district.risk}">${healthIssue ? "Review" : district.risk}</span>
+                    <span class="residential-risk-pill ${buildingRiskClass}" data-i18n-key="${buildingRisk}">${buildingRisk}</span>
                 </td>
                 <td class="px-6 py-4 text-right">
                     <div class="residential-action-cell">
@@ -2505,7 +3485,8 @@
             table.classList.remove("residential-smart-search-active");
             removeRows("[data-drill-child='true'], [data-smart-empty='true']");
             getDistrictRows().forEach((row) => {
-                row.classList.remove("hidden", "is-expanded", "residential-smart-match");
+                row.classList.remove("is-expanded", "residential-smart-match");
+                row.classList.toggle("hidden", row.dataset.globalFilterHidden === "true");
                 row.setAttribute("aria-expanded", "false");
             });
         };
@@ -2520,6 +3501,10 @@
 
             getDistrictRows().forEach((districtRow) => {
                 const districtId = districtRow.dataset.districtId;
+                if (districtRow.dataset.globalFilterHidden === "true") {
+                    districtRow.classList.add("hidden");
+                    return;
+                }
                 const district = districts[districtId];
                 if (!district) return;
                 const districtText = searchableText(district.complex, district.sector, district.prefix);
@@ -2707,9 +3692,10 @@
             "critical": "critical",
             "medium risk": "medium",
         };
-        document.querySelectorAll("span").forEach((element) => {
+        document.querySelectorAll("span, p, small").forEach((element) => {
             const key = element.textContent.trim().toLowerCase();
             if (!riskMap[key]) return;
+            element.classList.remove("risk-low", "risk-medium", "risk-critical");
             element.classList.add("risk-badge", `risk-${riskMap[key]}`);
         });
     };
@@ -2731,7 +3717,45 @@
     setupResidentViewer();
     setupResidentBillingHistory();
     setupResidentialHierarchy();
+    setupGlobalFilters();
+    renderBackendNotifications();
     updateNotifications();
+    window.requestAnimationFrame(() => {
+        root.classList.remove("backend-hydrating");
+        root.classList.add("backend-ready");
+    });
+    const refreshBackendData = async () => {
+        if (document.body.dataset.backendRefreshRunning === "true") return;
+        document.body.dataset.backendRefreshRunning = "true";
+        try {
+            const response = await fetch("/api/portal-data/", {
+                cache: "no-store",
+                credentials: "same-origin",
+                headers: { Accept: "application/json" },
+            });
+            if (!response.ok) return;
+            const payload = await response.json();
+            if (!applyBackendBillingData(payload)) return;
+            document.querySelector("[data-notification-list]")?.removeAttribute("data-backend-notifications-rendered");
+            document.querySelector("[data-audit-timeline]")?.removeAttribute("data-backend-audit-rendered");
+            renderBackendNotifications();
+            renderBackendAuditEvents();
+            syncSiteStatistics();
+            window.HydroFlowApplyFilters?.();
+            document.dispatchEvent(new CustomEvent("hydroflow:backend-refreshed"));
+        } catch {
+            // The UI keeps the last successful payload when the local backend is temporarily unavailable.
+        } finally {
+            document.body.dataset.backendRefreshRunning = "false";
+        }
+    };
+    if (!document.body.dataset.liveStatsTimer) {
+        document.body.dataset.liveStatsTimer = "true";
+        window.setInterval(() => {
+            if (document.hidden) return;
+            refreshBackendData();
+        }, 15000);
+    }
 
     const openOverlayById = (id) => {
         const overlay = document.getElementById(id);
@@ -2764,6 +3788,267 @@
             backdrop?.classList.remove("is-visible");
             window.setTimeout(() => backdrop?.classList.add("hidden"), 140);
         }
+    };
+
+    const checklistStorageKey = "hydroflow-operations-checklist";
+    const checklistNotesStorageKey = "hydroflow-operations-checklist-notes";
+    const checklistItems = [
+        { id: "filters", title: "Validate active filters", detail: "Confirm district, status and period filters match the current operation scope.", tag: "Data view", icon: "tune" },
+        { id: "residents", title: "Review residents and balances", detail: "Check debtor/paid split, resident cards and billing history before handoff.", tag: "Billing", icon: "group" },
+        { id: "alerts", title: "Resolve visible critical alerts", detail: "Open notification center and confirm critical items have an owner or technician.", tag: "Safety", icon: "notification_important" },
+        { id: "exports", title: "Prepare export package", detail: "Verify CSV/XLSX/PDF preview includes current visible data and local timestamp.", tag: "Export", icon: "ios_share" },
+        { id: "audit", title: "Attach audit note", detail: "Record manual changes or review comments in the local audit trail.", tag: "Audit", icon: "history" },
+    ];
+    if (Array.isArray(billingData.checklistItems) && billingData.checklistItems.length) {
+        checklistItems.splice(0, checklistItems.length, ...billingData.checklistItems.map((item) => ({
+            id: item.id,
+            title: item.title,
+            detail: item.detail,
+            tag: item.tag || "Operations",
+            icon: item.icon || "fact_check",
+        })));
+    }
+
+    const setupChecklist = () => {
+        const drawer = document.getElementById("checklist-drawer");
+        const list = drawer?.querySelector("[data-checklist-list]");
+        if (!drawer || !list || drawer.dataset.checklistReady === "true") return;
+        drawer.dataset.checklistReady = "true";
+        const notesList = drawer.querySelector("[data-checklist-notes-list]");
+        const composer = drawer.querySelector("[data-checklist-note-composer]");
+        const noteTemplate = drawer.querySelector("[data-checklist-note-template]");
+        const noteInput = drawer.querySelector("[data-checklist-note-input]");
+        const readState = () => {
+            try {
+                return JSON.parse(storage.getItem(checklistStorageKey) || "{}") || {};
+            } catch {
+                return {};
+            }
+        };
+        const writeState = (state) => storage.setItem(checklistStorageKey, JSON.stringify(state));
+        const deletedKey = "__deleted";
+        const getDeletedItems = (state = readState()) => Array.isArray(state[deletedKey]) ? state[deletedKey] : [];
+        const visibleChecklistItems = (state = readState()) => {
+            const deleted = new Set(getDeletedItems(state));
+            return checklistItems.filter((item) => !deleted.has(item.id));
+        };
+        const readNotes = () => {
+            try {
+                const notes = JSON.parse(storage.getItem(checklistNotesStorageKey) || "[]") || [];
+                let changed = false;
+                const normalized = notes.map((note, index) => {
+                    if (note.id) return note;
+                    changed = true;
+                    return { ...note, id: `note-${Date.now()}-${index}`, done: Boolean(note.done) };
+                });
+                if (changed) writeNotes(normalized);
+                return normalized;
+            } catch {
+                return [];
+            }
+        };
+        const writeNotes = (notes) => storage.setItem(checklistNotesStorageKey, JSON.stringify(notes.slice(0, 12)));
+        const allChecklistEntries = (state = readState(), notes = readNotes()) => [
+            ...visibleChecklistItems(state).map((item) => ({ ...item, done: Boolean(state[item.id]), custom: false })),
+            ...notes.map((note) => ({
+                id: note.id,
+                title: note.text,
+                detail: note.time,
+                tag: "Note",
+                icon: "edit_note",
+                done: Boolean(note.done),
+                custom: true,
+            })),
+        ];
+        const updateFab = (state = readState()) => {
+            const left = allChecklistEntries(state).filter((item) => !item.done).length;
+            const lang = storage.getItem("hydroflow-lang") || "en";
+            const suffix = lang === "ru" ? "не выполнено" : lang === "uz" ? "qoldi" : left === 1 ? "task left" : "tasks left";
+            document.querySelectorAll("[data-checklist-fab] small").forEach((target) => {
+                target.innerHTML = `<b data-checklist-fab-count>${left}</b> ${suffix}`;
+            });
+            document.querySelectorAll("[data-checklist-fab]").forEach((button) => {
+                button.classList.toggle("is-complete", left === 0);
+                button.setAttribute("aria-label", `Open checklist, ${left} tasks left`);
+            });
+        };
+        const render = () => {
+            const state = readState();
+            const notes = readNotes();
+            const entries = allChecklistEntries(state, notes);
+            list.innerHTML = entries.map((item) => {
+                const done = Boolean(item.done);
+                const isCustom = Boolean(item.custom);
+                const id = escapeHtml(item.id);
+                const title = escapeHtml(item.title);
+                const detail = escapeHtml(item.detail || "");
+                const tag = escapeHtml(item.tag || "Note");
+                const itemAttr = isCustom ? `data-checklist-note-toggle="${id}"` : `data-checklist-item="${id}"`;
+                const deleteAttr = isCustom ? `data-checklist-note-delete="${id}"` : `data-checklist-item-delete="${id}"`;
+                const titleKey = isCustom ? "" : ` data-i18n-key="${title}"`;
+                const detailKey = isCustom ? "" : ` data-i18n-key="${detail}"`;
+                return `
+                    <article class="checklist-item ${isCustom ? "checklist-custom-item" : ""} ${done ? "is-done" : ""}" ${itemAttr} role="button" tabindex="0" aria-pressed="${done}">
+                        <span class="checklist-check material-symbols-outlined">${done ? "check" : escapeHtml(item.icon)}</span>
+                        <span>
+                            <h3${titleKey}>${title}</h3>
+                            <p${detailKey}>${detail}</p>
+                        </span>
+                        <span class="checklist-node-actions">
+                            <span class="checklist-pill" data-i18n-key="${tag}">${tag}</span>
+                            <button class="checklist-delete-node" ${deleteAttr} type="button" aria-label="${translateValue("Delete", storage.getItem("hydroflow-lang") || "en")}">
+                                <span class="material-symbols-outlined">delete</span>
+                            </button>
+                        </span>
+                    </article>
+                `;
+            }).join("");
+            if (notesList) {
+                notesList.innerHTML = "";
+                notesList.classList.add("hidden");
+            }
+            const completed = entries.filter((item) => item.done).length;
+            const percent = Math.round((completed / Math.max(entries.length, 1)) * 100);
+            drawer.style.setProperty("--checklist-progress", `${percent}%`);
+            drawer.querySelector("[data-checklist-progress-label]").textContent = `${percent}%`;
+            const saved = drawer.querySelector("[data-checklist-saved]");
+            if (saved) {
+                saved.textContent = "Saved locally";
+                saved.dataset.i18nKey = "Saved locally";
+            }
+            drawer.querySelector(".checklist-progress-bar")?.setAttribute("aria-valuenow", String(percent));
+            updateFab(state);
+            window.HydroFlowSyncLocale?.();
+        };
+        const openChecklist = (scope = "Current workspace") => {
+            drawer.querySelector("[data-checklist-scope]").textContent = scope;
+            drawer.querySelector("[data-checklist-subtitle]").textContent = `${scope} readiness flow with saved progress.`;
+            render();
+            openOverlayById("checklist-drawer");
+            toast(translateValue("Checklist opened", storage.getItem("hydroflow-lang") || "en"), `${scope} checklist is ready.`, "info");
+        };
+        list.addEventListener("click", (event) => {
+            const itemDelete = event.target.closest("[data-checklist-item-delete]");
+            const noteDelete = event.target.closest("[data-checklist-note-delete]");
+            if (itemDelete || noteDelete) {
+                event.preventDefault();
+                event.stopPropagation();
+                if (itemDelete) {
+                    const state = readState();
+                    const id = itemDelete.dataset.checklistItemDelete;
+                    const deleted = new Set(getDeletedItems(state));
+                    deleted.add(id);
+                    delete state[id];
+                    state[deletedKey] = [...deleted];
+                    writeState(state);
+                    toast(translateValue("Checklist item removed", storage.getItem("hydroflow-lang") || "en"), translateValue("Removed locally.", storage.getItem("hydroflow-lang") || "en"), "info");
+                }
+                if (noteDelete) {
+                    const id = noteDelete.dataset.checklistNoteDelete;
+                    writeNotes(readNotes().filter((item) => item.id !== id));
+                    toast(translateValue("Checklist note removed", storage.getItem("hydroflow-lang") || "en"), translateValue("Removed locally.", storage.getItem("hydroflow-lang") || "en"), "info");
+                }
+                render();
+                playSound("click");
+                return;
+            }
+            const note = event.target.closest("[data-checklist-note-toggle]");
+            if (note) {
+                const notes = readNotes();
+                const targetNote = notes.find((item) => item.id === note.dataset.checklistNoteToggle);
+                if (targetNote) targetNote.done = !targetNote.done;
+                writeNotes(notes);
+                render();
+                playSound("toggle");
+                return;
+            }
+            const item = event.target.closest("[data-checklist-item]");
+            if (!item) return;
+            const state = readState();
+            state[item.dataset.checklistItem] = !state[item.dataset.checklistItem];
+            writeState(state);
+            render();
+            playSound("toggle");
+        });
+        drawer.querySelector("[data-checklist-action='complete-visible']")?.addEventListener("click", () => {
+            const state = readState();
+            visibleChecklistItems(state).forEach((item) => {
+                state[item.id] = true;
+            });
+            writeState(state);
+            writeNotes(readNotes().map((note) => ({ ...note, done: true })));
+            render();
+            toast("Checklist completed", "All visible checklist items are marked complete.", "success");
+        });
+        drawer.querySelector("[data-checklist-action='reset']")?.addEventListener("click", () => {
+            writeState({});
+            writeNotes(readNotes().map((note) => ({ ...note, done: false })));
+            render();
+            toast("Checklist reset", "Progress was cleared locally.", "warning");
+        });
+        drawer.querySelector("[data-checklist-action='copy']")?.addEventListener("click", async () => {
+            const state = readState();
+            const notes = readNotes();
+            const noteText = notes.length ? `\n\nNotes\n${notes.map((note) => `${note.done ? "[x]" : "[ ]"} ${note.time}: ${note.text}`).join("\n")}` : "";
+            const text = `HydroFlow checklist\n${visibleChecklistItems(state).map((item) => `${state[item.id] ? "[x]" : "[ ]"} ${item.title} - ${item.tag}`).join("\n")}${noteText}`;
+            try {
+                await navigator.clipboard?.writeText(text);
+                toast("Checklist copied", "Summary copied to clipboard.", "success");
+            } catch {
+                toast("Checklist summary", text, "info");
+            }
+        });
+        drawer.querySelector("[data-checklist-action='toggle-note']")?.addEventListener("click", () => {
+            composer?.classList.toggle("hidden");
+            noteInput?.focus();
+        });
+        drawer.querySelector("[data-checklist-action='cancel-note']")?.addEventListener("click", () => {
+            composer?.classList.add("hidden");
+            if (noteInput) noteInput.value = "";
+            if (noteTemplate) noteTemplate.value = "";
+        });
+        noteTemplate?.addEventListener("change", () => {
+            const selected = noteTemplate.selectedOptions?.[0];
+            const key = selected?.dataset.templateTextKey || noteTemplate.value;
+            if (noteInput && key) {
+                noteInput.value = translateValue(key, storage.getItem("hydroflow-lang") || "en");
+            }
+        });
+        drawer.querySelector("[data-checklist-action='save-note']")?.addEventListener("click", () => {
+            const text = noteInput?.value.trim() || "";
+            if (!text) {
+                toast("Checklist note required", "Choose a template or write a custom note.", "warning");
+                noteInput?.focus();
+                return;
+            }
+            const notes = readNotes();
+            const now = new Date();
+            const time = now.toLocaleString("en-GB", {
+                day: "2-digit",
+                month: "short",
+                year: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+                timeZone: "Asia/Tashkent",
+            }).replace(",", "");
+            notes.unshift({ id: `note-${Date.now()}`, text, time, done: false });
+            writeNotes(notes);
+            if (noteInput) noteInput.value = "";
+            if (noteTemplate) noteTemplate.value = "";
+            composer?.classList.add("hidden");
+            render();
+            toast("Checklist note added", "Saved locally and attached to checklist summary.", "success");
+        });
+        drawer.querySelector("[data-checklist-action='open-audit']")?.addEventListener("click", () => openOverlayById("audit-drawer"));
+        drawer.querySelector("[data-checklist-action='mark-reviewed']")?.addEventListener("click", () => {
+            document.querySelector("[data-audit-action='add-note']")?.click();
+            toast("Review recorded", "A local audit note was added.", "success");
+        });
+        document.querySelectorAll("[data-checklist-fab]").forEach((button) => {
+            button.addEventListener("click", () => openChecklist("Operations"));
+        });
+        window.HydroFlowOpenChecklist = openChecklist;
+        render();
     };
 
     document.addEventListener("click", (event) => {
@@ -2998,6 +4283,7 @@
         "Rows": { ru: "Строки", uz: "Qatorlar" },
         "Billing rows": { ru: "Строк платежей", uz: "To'lov qatorlari" },
         "Debt rows": { ru: "Строк долга", uz: "Qarz qatorlari" },
+        "Total debt": { ru: "Общий долг", uz: "Jami qarz" },
         "Maintenance rows": { ru: "Строк обслуживания", uz: "Texnik qatorlar" },
         "Visible table rows": { ru: "Видимые строки таблицы", uz: "Ko'rinadigan jadval qatorlari" },
         "Complex": { ru: "ЖК", uz: "Kompleks" },
@@ -3072,6 +4358,7 @@
         "Долг дома": { en: "House debt", uz: "Uy qarzi" },
         "Этажей": { en: "Floors", uz: "Qavatlar" },
         "Должников": { en: "Debtors", uz: "Qarzdorlar" },
+        "Действие": { en: "Action", uz: "Amal" },
         "Complexes": { ru: "ЖК", uz: "Komplekslar" },
         "Generated": { ru: "Дата выгрузки", uz: "Yuklab olish vaqti" },
         "Export date": { ru: "Дата выгрузки", uz: "Yuklab olish sanasi" },
@@ -3339,14 +4626,77 @@
             report,
         };
     };
+    const buildRealBillingRows = () => billingData.transactions.slice()
+        .sort((a, b) => dateValue(b.date) - dateValue(a.date))
+        .map((transaction) => ({
+            "Резидент": transaction.resident,
+            "Счет": transaction.invoice,
+            "Тип": transaction.type,
+            "Дата": transaction.date,
+            "Сумма": formatBillingUzs(transaction.amount),
+            "Статус": transaction.status,
+        }));
+    const buildRealDebtRows = () => getComplexStats().slice()
+        .sort((a, b) => b.debt - a.debt)
+        .map((complex) => ({
+            "Объект": complex.name,
+            "Состояние": complex.risk,
+            "Процент": percentValue(complex.health),
+            "Долг": formatBillingUzs(complex.debt),
+            "Должников": complex.debtorResidents,
+        }));
+    const buildRealDebtorRows = () => billingData.residents
+        .filter((resident) => resident.balance < 0)
+        .sort((a, b) => Math.abs(b.balance) - Math.abs(a.balance))
+        .map((resident) => {
+            const complex = billingData.complexes.find((item) => item.id === resident.complexId);
+            return {
+                "Резидент": resident.name,
+                "ЖК": complex?.name || "",
+                "Квартира": resident.apartment,
+                "Баланс": formatBillingUzs(resident.balance),
+                "Телефон": resident.phone,
+                "Последний платеж": resident.lastPayment,
+                "Действие": "Send reminder",
+            };
+        });
+    const buildDebtLettersExportData = () => {
+        const exportedAt = new Date();
+        const exportedAtIso = exportedAt.toISOString();
+        const exportedAtLocal = exportedAt.toLocaleString("en-GB", { timeZone: "Asia/Tashkent", hour12: false });
+        const debtors = buildRealDebtorRows();
+        const debt = buildRealDebtRows();
+        const report = [{
+            "Источник": lastExportSource || "Debt Letters",
+            "Формат": selectedExportFormat,
+            "Таймзона": "Asia/Tashkent",
+            "Дата выгрузки (локально)": exportedAtLocal,
+            "Дата выгрузки (ISO)": exportedAtIso,
+            "Debtors": debtors.length,
+            "Debt rows": debt.length,
+            "Total debt": formatBillingUzs(getSiteStats().totalDebt),
+        }];
+        return {
+            complexes: [],
+            houses: [],
+            apartments: [],
+            residents: debtors,
+            debt,
+            debtLetters: true,
+            report,
+        };
+    };
     const buildBillingDebtExportData = () => {
         const exportedAt = new Date();
         const exportedAtIso = exportedAt.toISOString();
         const exportedAtLocal = exportedAt.toLocaleString("en-GB", { timeZone: "Asia/Tashkent", hour12: false });
-        const billing = parseBillingTransactions();
+        const parsedBilling = parseBillingTransactions();
+        const billing = parsedBilling.length ? parsedBilling : buildRealBillingRows();
         const isTransactionLog = lastExportContext === "transactions" || (lastExportSource || "").toLowerCase().includes("transaction");
-        const debt = parseDebtHealth();
-        const debtors = parseDebtorResidents();
+        const parsedDebt = parseDebtHealth();
+        const parsedDebtors = parseDebtorResidents();
+        const debt = parsedDebt.length ? parsedDebt : buildRealDebtRows();
+        const debtors = parsedDebtors.length ? parsedDebtors : buildRealDebtorRows();
         const report = [{
             "Источник": lastExportSource,
             "Формат": selectedExportFormat,
@@ -3381,6 +4731,9 @@
         const source = (lastExportSource || "").toLowerCase();
         const path = window.location.pathname.toLowerCase();
 
+        if (lastExportContext === "debt-letters" || source.includes("debt letters")) {
+            return buildDebtLettersExportData();
+        }
         if (lastExportContext === "maintenance" || source.includes("system maintenance log") || source.includes("maintenance log")) {
             return buildSystemMaintenanceExportData();
         }
@@ -3446,6 +4799,10 @@ ${sheetXml("Report", datasets.report)}`
             : datasets.transactionLog
             ? `${sheetXml("Transactions", datasets.apartments)}
 ${sheetXml("Report", datasets.report)}`
+            : datasets.debtLetters
+            ? `${sheetXml("Debtors", datasets.residents)}
+${sheetXml("Debt", datasets.debt)}
+${sheetXml("Report", datasets.report)}`
             : `${sheetXml("ЖК", datasets.complexes)}
 ${sheetXml("Дома", datasets.houses)}
 ${sheetXml(datasets.debt ? "Billing" : "Квартиры", datasets.apartments)}
@@ -3503,6 +4860,25 @@ ${sheets}
                     [row["Резидент"], row["Счет"], row["Тип"], row["Дата"], row["Сумма"], row["Статус"]],
                     [16, 12, 14, 12, 16, 10]
                 ));
+            });
+            return lines;
+        }
+        if (datasets.debtLetters) {
+            lines.push(`${exportLabel("Debtors")}: ${report["Debtors"] || 0}, ${exportLabel("Total debt")}: ${report["Total debt"] || "-"}`);
+            lines.push(...sectionLine(exportLabel("Debtors")));
+            lines.push(formatRow(["Resident", "Complex", "Apartment", "Balance", "Phone", "Last payment"].map(exportLabel), [18, 18, 14, 16, 14, 12]));
+            lines.push("------------------------------------------------------------");
+            datasets.residents.forEach((row) => {
+                lines.push(formatRow(
+                    [row["Резидент"], row["ЖК"], row["Квартира"], row["Баланс"], row["Телефон"], row["Последний платеж"]],
+                    [18, 18, 14, 16, 14, 12]
+                ));
+            });
+            lines.push(...sectionLine(exportLabel("Debt")));
+            lines.push(formatRow(["Object", "Health status", "Percent", "Debt", "Debtors"].map(exportLabel), [20, 14, 10, 16, 8]));
+            lines.push("------------------------------------------------------------");
+            datasets.debt.forEach((row) => {
+                lines.push(formatRow([row["Объект"], row["Состояние"], row["Процент"], row["Долг"], row["Должников"]], [20, 14, 10, 16, 8]));
             });
             return lines;
         }
@@ -3678,6 +5054,12 @@ ${sheets}
                 { title: "REPORT", rows: datasets.report },
                 { title: "RECENT_TRANSACTION_LOG", rows: datasets.apartments },
             ]
+            : datasets.debtLetters
+            ? [
+                { title: "REPORT", rows: datasets.report },
+                { title: "DEBTORS", rows: datasets.residents },
+                { title: "DEBT", rows: datasets.debt },
+            ]
             : datasets.debt
             ? [
                 { title: "REPORT", rows: datasets.report },
@@ -3716,9 +5098,14 @@ ${sheets}
         const visibleRows = getVisibleTableRows(getExportHostFromButton(sourceButton)).length || getVisibleTableRows().length;
         const isTransactionLog = lastExportContext === "transactions" || source.toLowerCase().includes("transaction");
         const isMaintenanceLog = lastExportContext === "maintenance" || source.toLowerCase().includes("maintenance log");
+        const isDebtLetters = lastExportContext === "debt-letters" || source.toLowerCase().includes("debt letters");
         exportModal?.querySelector("[data-export-source-label]")?.replaceChildren(document.createTextNode(source));
-        exportModal?.querySelector("[data-export-rows]")?.replaceChildren(document.createTextNode(visibleRows ? `${visibleRows} visible rows` : "Current page summary"));
-        exportModal?.querySelector("[data-export-summary]")?.replaceChildren(document.createTextNode(isMaintenanceLog
+        exportModal?.querySelector("[data-export-rows]")?.replaceChildren(document.createTextNode(isDebtLetters
+            ? `${buildRealDebtorRows().length} debtor rows`
+            : visibleRows ? `${visibleRows} visible rows` : "Current page summary"));
+        exportModal?.querySelector("[data-export-summary]")?.replaceChildren(document.createTextNode(isDebtLetters
+            ? `${selectedExportFormat} preview includes debtor residents, balances, phones, complex debt summary and Asia/Tashkent timestamp.`
+            : isMaintenanceLog
             ? `${selectedExportFormat} preview includes maintenance tasks, location, priority, status, Asia/Tashkent timestamp and local prototype metadata.`
             : isTransactionLog
             ? `${selectedExportFormat} preview includes visible transaction rows, invoice numbers, payment status, Asia/Tashkent timestamp and local prototype metadata.`
@@ -3731,7 +5118,10 @@ ${sheets}
         document.querySelectorAll("[data-export-format] button").forEach((item) => item.classList.toggle("is-active", (item.dataset.format || "CSV") === selectedExportFormat));
         const isTransactionLog = lastExportContext === "transactions" || (lastExportSource || "").toLowerCase().includes("transaction");
         const isMaintenanceLog = lastExportContext === "maintenance" || (lastExportSource || "").toLowerCase().includes("maintenance log");
-        exportModal?.querySelector("[data-export-summary]")?.replaceChildren(document.createTextNode(isMaintenanceLog
+        const isDebtLetters = lastExportContext === "debt-letters" || (lastExportSource || "").toLowerCase().includes("debt letters");
+        exportModal?.querySelector("[data-export-summary]")?.replaceChildren(document.createTextNode(isDebtLetters
+            ? `${selectedExportFormat} preview includes debtor residents, balances, phones, complex debt summary and Asia/Tashkent timestamp.`
+            : isMaintenanceLog
             ? `${selectedExportFormat} preview includes maintenance tasks, location, priority, status, Asia/Tashkent timestamp and local prototype metadata.`
             : isTransactionLog
             ? `${selectedExportFormat} preview includes visible transaction rows, invoice numbers, payment status, Asia/Tashkent timestamp and local prototype metadata.`
@@ -3742,6 +5132,28 @@ ${sheets}
         if (!exportButton) return;
         event.preventDefault();
         openExportPreview(exportButton);
+    }, true);
+    document.addEventListener("click", (event) => {
+        const viewDebtors = event.target.closest("[data-view-debtors]");
+        if (viewDebtors) {
+            event.preventDefault();
+            storage.setItem("hydroflow-requested-billing-filter", "debtors");
+            toast("Debtors view ready", "Opening Billing & Debt with current debtor data.", "info");
+            window.setTimeout(() => {
+                window.location.href = "/billing/";
+            }, 120);
+            return;
+        }
+        const viewActivities = event.target.closest("[data-view-activities]");
+        if (viewActivities) {
+            event.preventDefault();
+            const auditTrigger = document.querySelector("[data-drawer-open='audit-drawer']");
+            if (auditTrigger) {
+                auditTrigger.click();
+            } else {
+                toast("Activity timeline", "Audit log is available from the account menu.", "info");
+            }
+        }
     }, true);
     document.querySelector("[data-export-copy]")?.addEventListener("click", async () => {
         const summary = exportModal?.querySelector("[data-export-summary]")?.textContent || "HydroFlow export preview";
@@ -3758,6 +5170,8 @@ ${sheets}
             ? "hydroflow-system-maintenance-log"
             : datasets.transactionLog
             ? "hydroflow-recent-transactions"
+            : datasets.debtLetters
+            ? "hydroflow-debt-letters"
             : "hydroflow-report";
         if (selectedExportFormat === "XLSX") {
             const workbookXml = createExcelXmlWorkbook(datasets);
@@ -4119,7 +5533,9 @@ ${sheets}
         input?.focus();
     });
 
-    document.querySelectorAll("[data-notification-pin]").forEach((button) => button.addEventListener("click", (event) => {
+    document.addEventListener("click", (event) => {
+        const button = event.target.closest("[data-notification-pin]");
+        if (!button) return;
         event.stopPropagation();
         const item = button.closest(".notification-item");
         if (!item) return;
@@ -4129,8 +5545,10 @@ ${sheets}
         setNotificationPinnedState(item, pinned);
         updateNotifications();
         toast(pinned ? "Notification pinned" : "Notification unpinned", item.querySelector("p.text-sm")?.textContent || "", "info");
-    }));
-    document.querySelectorAll("[data-notification-action]").forEach((button) => button.addEventListener("click", () => {
+    });
+    document.addEventListener("click", (event) => {
+        const button = event.target.closest("[data-notification-action]");
+        if (!button) return;
         const item = button.closest(".notification-item");
         const state = item?.querySelector("[data-notification-state]");
         if (state) {
@@ -4139,7 +5557,7 @@ ${sheets}
         }
         if (item) item.dataset.read = "true";
         updateNotifications();
-    }));
+    });
     document.querySelector("[data-clear-read]")?.addEventListener("click", () => {
         document.querySelectorAll("[data-notification-list] .notification-item[data-read='true']").forEach((item) => {
             if (item.dataset.pinned !== "true") item.remove();
@@ -4147,6 +5565,33 @@ ${sheets}
         updateNotifications();
         toast("Read notifications cleared", "Pinned items stay visible.", "info");
     });
+
+    const renderBackendAuditEvents = () => {
+        const timeline = document.querySelector("[data-audit-timeline]");
+        const events = Array.isArray(billingData.auditEvents) ? billingData.auditEvents : [];
+        if (!timeline || timeline.dataset.backendAuditRendered === "true") return;
+        if (!events.length && !billingData.source) return;
+        const iconForType = (type) => ({
+            export: "ios_share",
+            reminder: "notifications_active",
+            alert: "warning",
+            balance: "account_balance_wallet",
+            note: "edit_note",
+            status: "sell",
+            system: "settings_suggest",
+        }[type] || "history");
+        timeline.innerHTML = events.map((event) => `
+            <div class="audit-event" data-audit-event data-type="${escapeHtml(event.type || "system")}">
+                <span class="audit-event-icon material-symbols-outlined">${escapeHtml(iconForType(event.type))}</span>
+                <div>
+                    <time>${escapeHtml(event.time || "")}</time>
+                    <p>${escapeHtml(event.message || event.title || "")}</p>
+                    <span>${escapeHtml(event.label || event.type || "System")}</span>
+                </div>
+            </div>
+        `).join("");
+        timeline.dataset.backendAuditRendered = "true";
+    };
 
     const setupAuditTools = () => {
         const drawer = document.getElementById("audit-drawer");
@@ -4243,7 +5688,9 @@ ${sheets}
                 }
             }
             if (action === "open-checklist") {
-                toast("Support checklist opened", "Verify theme, language, filters, export preview and audit log.", "info");
+                event.preventDefault();
+                event.stopPropagation();
+                window.HydroFlowOpenChecklist?.("Support workspace");
             }
             if (action === "report-ui") {
                 document.querySelector("[data-audit-action='add-note']")?.click();
@@ -4252,6 +5699,8 @@ ${sheets}
         }));
     };
 
+    renderBackendAuditEvents();
+    setupChecklist();
     setupAuditTools();
     setupSupportTools();
 
@@ -4264,10 +5713,13 @@ ${sheets}
         if (label === "export") toast(translateValue("Export started", lang), "A static report preview is being prepared.");
         if (label.includes("send reminder")) toast(translateValue("Reminder queued", lang), "This will connect to backend messaging later.");
         if (label.includes("assign technician")) toast(translateValue("Technician assignment queued", lang), "A future backend task will own this action.", "info");
-        if (label.includes("apply filters")) toast(translateValue("Filters applied", lang), "Static preview filters updated.");
-        if (label.includes("reset filters")) toast(translateValue("Filters reset", lang), "Default filter chips restored.");
+        if (label.includes("apply filters")) toast(translateValue("Filters applied", lang), "Current data view updated.");
+        if (label.includes("reset filters")) toast(translateValue("Filters reset", lang), "Default data view restored.");
         if (label.includes("create request")) toast(translateValue("Request created", lang), "Saved locally for this prototype session.");
-        if (label.includes("open checklist")) toast(translateValue("Checklist opened", lang), "Static operations checklist is ready for review.", "info");
+        if (label.includes("open checklist")) {
+            event.preventDefault();
+            window.HydroFlowOpenChecklist?.("Operations");
+        }
         if (label.includes("edit profile")) {
             const message = {
                 en: "Profile editor will connect to the backend admin panel later.",
