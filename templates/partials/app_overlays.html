@@ -613,6 +613,194 @@
 </div>
 </div>
 
+<div aria-labelledby="resident-kit-title" aria-hidden="true" class="app-modal fixed inset-0 z-[86] hidden items-center justify-center p-6" id="resident-kit-modal" role="dialog">
+<div class="modal-panel export-preview-panel resident-kit-modal-panel w-full max-w-2xl bg-white rounded-lg shadow-2xl border border-outline-variant/20 overflow-hidden">
+<div class="export-preview-hero">
+<span class="material-symbols-outlined">folder_managed</span>
+<div>
+<p class="profile-kicker" data-i18n-key="Templates ready">Templates ready</p>
+<h2 data-i18n-key="Resident template preview" id="resident-kit-title">Resident template preview</h2>
+<small data-resident-kit-subtitle data-i18n-key="Generated from current backend residents and balances.">Generated from current backend residents and balances.</small>
+</div>
+<button aria-label="Close resident kit preview" class="profile-drawer-close" data-close-overlay type="button">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<div class="export-preview-body resident-kit-modal-body">
+<div class="export-summary-grid">
+<div><span data-i18n-key="Action">Action</span><strong data-resident-kit-action-label>Reminder script</strong></div>
+<div><span data-i18n-key="Residents in scope">Residents in scope</span><strong data-resident-kit-visible-count>0</strong></div>
+<div><span data-i18n-key="Debtors in scope">Debtors in scope</span><strong data-resident-kit-debtor-count>0</strong></div>
+<div><span data-i18n-key="Time zone">Time zone</span><strong>Asia/Tashkent</strong></div>
+</div>
+<label class="resident-create-field">
+<span data-resident-kit-content-label data-i18n-key="Reminder script">Reminder script</span>
+<textarea class="resident-kit-textarea" data-resident-kit-content spellcheck="false"></textarea>
+</label>
+<div class="export-preview-note" data-resident-kit-note>
+<span class="material-symbols-outlined">info</span>
+<p data-i18n-key="Preview generated from current residents visible on this page.">Preview generated from current residents visible on this page.</p>
+</div>
+</div>
+<div class="export-preview-actions">
+<button data-close-overlay type="button"><span class="material-symbols-outlined">close</span><span data-i18n-key="Close">Close</span></button>
+<button data-resident-kit-copy type="button"><span class="material-symbols-outlined">content_copy</span><span data-i18n-key="Copy script">Copy script</span></button>
+</div>
+</div>
+</div>
+
+<div aria-labelledby="deploy-maintenance-title" aria-hidden="true" class="app-modal fixed inset-0 z-[86] hidden items-center justify-center p-6" id="deploy-maintenance-modal" role="dialog">
+<div class="modal-panel deploy-maintenance-panel w-full max-w-2xl bg-white rounded-lg shadow-2xl border border-outline-variant/20 overflow-hidden">
+<div class="export-preview-hero">
+<span class="material-symbols-outlined">build</span>
+<div>
+<p class="profile-kicker">Backend maintenance</p>
+<h2 id="deploy-maintenance-title">Deploy maintenance</h2>
+<small>Create a maintenance task directly in Django admin and database.</small>
+</div>
+<button aria-label="Close deploy maintenance" class="profile-drawer-close" data-close-overlay type="button">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<form class="deploy-maintenance-form" data-deploy-maintenance-form>
+{% csrf_token %}
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<label class="resident-create-field">
+<span>Complex</span>
+<select name="complex_id" data-maintenance-complex required></select>
+</label>
+<label class="resident-create-field">
+<span>Building</span>
+<select name="building_id" data-maintenance-building></select>
+</label>
+<label class="resident-create-field md:col-span-2">
+<span>Task title</span>
+<input name="title" placeholder="Pressure audit, sensor calibration, emergency inspection..." required type="text" value="Preventive maintenance deployment"/>
+</label>
+<label class="resident-create-field">
+<span>Priority</span>
+<select name="priority">
+<option value="medium">Medium</option>
+<option value="high">High</option>
+<option value="low">Low</option>
+</select>
+</label>
+<label class="resident-create-field">
+<span>Scheduled time</span>
+<input name="scheduled_at" data-maintenance-scheduled type="datetime-local"/>
+</label>
+<label class="resident-create-field">
+<span>Assigned to</span>
+<input name="assigned_to" placeholder="Operations Team" type="text" value="Operations Team"/>
+</label>
+<label class="resident-create-field">
+<span>Action</span>
+<select name="action_label">
+<option value="Open checklist">Open checklist</option>
+<option value="Open route">Open route</option>
+<option value="Review meters">Review meters</option>
+<option value="View scope">View scope</option>
+<option value="Assign technician">Assign technician</option>
+</select>
+</label>
+<label class="resident-create-field md:col-span-2">
+<span>Notes</span>
+<textarea name="notes" placeholder="Add work scope, route details or technician notes."></textarea>
+</label>
+</div>
+<div class="resident-create-status hidden" data-deploy-maintenance-status>
+<span class="material-symbols-outlined">info</span>
+<p>Ready to create a maintenance task.</p>
+</div>
+<div class="deploy-maintenance-actions">
+<button data-close-overlay type="button">Cancel</button>
+<button data-deploy-maintenance-submit type="submit"><span class="material-symbols-outlined">build</span><span>Create task</span></button>
+</div>
+</form>
+</div>
+</div>
+
+<div aria-labelledby="system-alerts-config-title" aria-hidden="true" class="app-modal fixed inset-0 z-[87] hidden items-start justify-center overflow-y-auto p-4 md:p-6" id="system-alerts-config-modal" role="dialog">
+<div class="modal-panel system-alerts-config-panel w-full max-w-4xl bg-white rounded-lg shadow-2xl border border-outline-variant/20 overflow-hidden">
+<div class="export-preview-hero">
+<span class="material-symbols-outlined">notifications_active</span>
+<div>
+<p class="profile-kicker" data-i18n-key="Backend system alerts">Backend system alerts</p>
+<h2 data-i18n-key="Configure system alerts" id="system-alerts-config-title">Configure system alerts</h2>
+<small data-i18n-key="Create and manage live alerts stored in Django admin and database.">Create and manage live alerts stored in Django admin and database.</small>
+</div>
+<button aria-label="Close system alerts" class="profile-drawer-close" data-close-overlay type="button">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<div class="system-alerts-config-layout">
+<form class="system-alerts-config-form" data-system-alert-form>
+{% csrf_token %}
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<label class="resident-create-field md:col-span-2">
+<span data-i18n-key="Alert title">Alert title</span>
+<input data-i18n-placeholder="Pressure drop detected, payment sync delayed..." name="title" placeholder="Pressure drop detected, payment sync delayed..." required type="text"/>
+</label>
+<label class="resident-create-field">
+<span data-i18n-key="Severity">Severity</span>
+<select name="severity">
+<option data-i18n-key="Warning" value="warning">Warning</option>
+<option data-i18n-key="Critical" value="critical">Critical</option>
+<option data-i18n-key="Info" value="info">Info</option>
+</select>
+</label>
+<label class="resident-create-field">
+<span data-i18n-key="Category">Category</span>
+<select name="category">
+<option data-i18n-key="Pressure" value="pressure">Pressure</option>
+<option data-i18n-key="Water" value="water">Water</option>
+<option data-i18n-key="Heating" value="heating">Heating</option>
+<option data-i18n-key="Payment" value="payment">Payment</option>
+<option data-i18n-key="Security" value="security">Security</option>
+<option data-i18n-key="Other" value="other">Other</option>
+</select>
+</label>
+<label class="resident-create-field">
+<span data-i18n-key="Complex">Complex</span>
+<select name="complex_id" data-system-alert-complex></select>
+</label>
+<label class="resident-create-field">
+<span data-i18n-key="Building">Building</span>
+<select name="building_id" data-system-alert-building></select>
+</label>
+<label class="resident-create-field">
+<span data-i18n-key="Assigned to">Assigned to</span>
+<input data-i18n-placeholder="Operations Team" name="assigned_to" placeholder="Operations Team" type="text" value="Operations Team"/>
+</label>
+<label class="resident-create-field">
+<span data-i18n-key="Action label">Action label</span>
+<input data-i18n-placeholder="Review alert" name="action_label" placeholder="Review alert" type="text" value="Review alert"/>
+</label>
+<label class="resident-create-field md:col-span-2">
+<span data-i18n-key="Message">Message</span>
+<textarea data-i18n-placeholder="Explain the issue, scope and next action." name="message" placeholder="Explain the issue, scope and next action."></textarea>
+</label>
+</div>
+<div class="resident-create-status hidden" data-system-alert-status>
+<span class="material-symbols-outlined">info</span>
+<p data-i18n-key="Ready to create a live system alert.">Ready to create a live system alert.</p>
+</div>
+<div class="system-alerts-config-actions">
+<button data-close-overlay data-i18n-key="Cancel" type="button">Cancel</button>
+<button data-system-alert-submit type="submit"><span class="material-symbols-outlined">add_alert</span><span data-i18n-key="Create alert">Create alert</span></button>
+</div>
+</form>
+<div class="system-alerts-config-sidebar">
+<div class="system-alerts-config-head">
+<h3 data-i18n-key="Active alerts">Active alerts</h3>
+<span data-system-alert-count>0 live</span>
+</div>
+<div class="system-alerts-config-list" data-system-alert-list></div>
+</div>
+</div>
+</div>
+</div>
+
 <div aria-labelledby="assign-status-title" aria-hidden="true" class="app-modal fixed inset-0 z-[86] hidden items-center justify-center p-6" id="assign-status-modal" role="dialog">
 <div class="modal-panel assign-status-panel w-full max-w-md bg-white rounded-lg shadow-2xl border border-outline-variant/20 overflow-hidden">
 <div class="assign-status-hero">

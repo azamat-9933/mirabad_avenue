@@ -243,10 +243,12 @@ def _serialize_system_alerts() -> list[dict]:
             "subtitle": location,
             "message": alert.message,
             "meta": alert.assigned_to or alert.get_category_display(),
+            "assignedTo": alert.assigned_to,
             "action": alert.action_label,
             "detectedAt": _datetime(alert.detected_at),
             "complexId": _slug("complex", related.id) if related else "",
             "buildingId": _slug("building", alert.building_id) if alert.building_id else "",
+            "adminUrl": f"/admin/portal/systemalert/{alert.id}/change/",
         })
     return rows
 
@@ -275,6 +277,7 @@ def _serialize_maintenance_tasks() -> list[dict]:
             "tone": _tone_for_priority(task.priority),
             "complexId": _slug("complex", task.complex_id) if task.complex_id else "",
             "buildingId": _slug("building", task.building_id) if task.building_id else "",
+            "adminUrl": f"/admin/portal/maintenancetask/{task.id}/change/",
         })
     return rows
 

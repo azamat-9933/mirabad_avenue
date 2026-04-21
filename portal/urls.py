@@ -13,5 +13,8 @@ urlpatterns = [
     path("api/health/", views.api_health, name="api_health"),
     path("api/portal-data/", views.api_portal_data, name="api_portal_data"),
     path("api/residents/create/", views.api_create_resident, name="api_create_resident"),
+    path("api/resident-kit/action/", views.api_resident_kit_action, name="api_resident_kit_action"),
     path("api/maintenance/deploy/", views.api_deploy_maintenance, name="api_deploy_maintenance"),
+    path("api/usage-report/export/", views.api_usage_report_export, name="api_usage_report_export"),
+    path("api/system-alerts/configure/", views.api_system_alerts_configure, name="api_system_alerts_configure"),
 ]

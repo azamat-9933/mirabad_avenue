@@ -9,11 +9,11 @@
 <p class="text-on-surface-variant text-sm mt-1">Real-time status of water distribution and thermal cores across all zones.</p>
 </div>
 <div class="flex items-center gap-3">
-<button class="flex items-center gap-2 px-4 py-2 bg-surface-container-high hover:bg-surface-container-highest transition-colors rounded-lg text-sm font-semibold">
+<button class="flex items-center gap-2 px-4 py-2 bg-surface-container-high hover:bg-surface-container-highest transition-colors rounded-lg text-sm font-semibold" data-export-context="maintenance" data-export-open data-export-source="System Maintenance Log" type="button">
 <span class="material-symbols-outlined text-lg">download</span>
                         Export Logs
                     </button>
-<button class="flex items-center gap-2 px-4 py-2 bg-primary text-on-primary hover:opacity-90 transition-opacity rounded-lg text-sm font-semibold shadow-md" data-deploy-maintenance type="button">
+<button class="flex items-center gap-2 px-4 py-2 bg-primary text-on-primary hover:opacity-90 transition-opacity rounded-lg text-sm font-semibold shadow-md" data-deploy-maintenance-open data-modal-open="deploy-maintenance-modal" type="button">
 <span class="material-symbols-outlined text-lg">build</span>
                         Deploy Maintenance
                     </button>
@@ -210,7 +210,7 @@
 <span class="material-symbols-outlined text-lg">error</span>
                                 CRITICAL ALERTS
                             </h4>
-<span class="text-[10px] font-bold px-2 py-0.5 bg-error text-white rounded">ACT NOW</span>
+<button class="text-[10px] font-bold px-2 py-0.5 bg-error text-white rounded transition-colors hover:brightness-110" data-modal-open="system-alerts-config-modal" type="button">ACT NOW</button>
 </div>
 <div class="divide-y divide-surface-container">
 <div class="p-4 flex gap-3">
@@ -234,7 +234,7 @@
 </div>
 </div>
 </div>
-<button class="w-full py-3 text-[10px] font-black text-on-surface-variant hover:bg-surface-container transition-colors uppercase tracking-widest border-t border-surface-container">
+<button class="w-full py-3 text-[10px] font-black text-on-surface-variant hover:bg-surface-container transition-colors uppercase tracking-widest border-t border-surface-container" data-drawer-open="notifications-drawer" type="button">
                             View All Active Alerts
                         </button>
 </section>
