@@ -93,9 +93,29 @@
 <div class="grid grid-cols-12 gap-8">
 <!-- Main Table Section -->
 <div class="col-span-12 xl:col-span-9 bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden">
-<div class="px-6 py-5 flex items-center justify-between border-b border-surface-container-low">
+<div class="px-6 py-5 flex flex-col gap-4 border-b border-surface-container-low xl:flex-row xl:items-center xl:justify-between">
+<div class="flex flex-col gap-3">
 <h3 class="text-lg font-bold text-primary">Complex Performance Overview</h3>
-<button class="text-xs font-bold text-primary flex items-center gap-1 hover:underline" data-export-open data-export-source="Complex Performance Overview" type="button">
+<div class="residential-admin-actions" data-structure-create-actions>
+<button class="residential-admin-action" data-modal-open="create-complex-modal" type="button">
+<span class="material-symbols-outlined">location_on</span>
+<span data-i18n-key="Add district">Add district</span>
+</button>
+<button class="residential-admin-action" data-modal-open="create-building-modal" type="button">
+<span class="material-symbols-outlined">home_work</span>
+<span data-i18n-key="Add house">Add house</span>
+</button>
+<button class="residential-admin-action" data-modal-open="create-apartment-modal" type="button">
+<span class="material-symbols-outlined">door_front</span>
+<span data-i18n-key="Add apartment">Add apartment</span>
+</button>
+<button class="residential-admin-action is-primary" data-modal-open="request-modal" type="button">
+<span class="material-symbols-outlined">person_add</span>
+<span data-i18n-key="Add resident">Add resident</span>
+</button>
+</div>
+</div>
+<button class="text-xs font-bold text-primary flex items-center gap-1 hover:underline shrink-0" data-export-open data-export-source="Complex Performance Overview" type="button">
 <span>Export CSV</span>
 <span class="material-symbols-outlined text-[14px]">download</span>
 </button>

@@ -241,6 +241,32 @@ class ChecklistItem(models.Model):
         return self.title
 
 
+class ChecklistNote(models.Model):
+    """Persistent checklist note created from the portal UI."""
+
+    text = models.TextField()
+    template_key = models.CharField(max_length=120, blank=True)
+    scope = models.CharField(max_length=120, blank=True, default="Operations")
+    done = models.BooleanField(default=False)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="checklist_notes",
+    )
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = "Checklist note"
+        verbose_name_plural = "Checklist notes"
+
+    def __str__(self):
+        return self.text[:72]
+
+
 class AuditEvent(models.Model):
     """Backend audit timeline entry for admin and portal actions."""
 
@@ -279,6 +305,117 @@ class AuditEvent(models.Model):
 
     def __str__(self):
         return f"{self.get_event_type_display()} | {self.title}"
+
+
+class PortalStatusOverride(models.Model):
+    """Persistent portal-side status override for UI tables without native status fields."""
+
+    CONTEXT_RESIDENTIAL = "residential"
+    CONTEXT_TRANSACTIONS = "transactions"
+    CONTEXT_MAINTENANCE = "maintenance"
+    CONTEXT_CHOICES = [
+        (CONTEXT_RESIDENTIAL, "Residential"),
+        (CONTEXT_TRANSACTIONS, "Transactions"),
+        (CONTEXT_MAINTENANCE, "Maintenance"),
+    ]
+
+    TARGET_COMPLEX = "complex"
+    TARGET_BUILDING = "building"
+    TARGET_APARTMENT = "apartment"
+    TARGET_TRANSACTION = "transaction"
+    TARGET_MAINTENANCE = "maintenance"
+    TARGET_CHOICES = [
+        (TARGET_COMPLEX, "Complex"),
+        (TARGET_BUILDING, "Building"),
+        (TARGET_APARTMENT, "Apartment"),
+        (TARGET_TRANSACTION, "Transaction"),
+        (TARGET_MAINTENANCE, "Maintenance"),
+    ]
+
+    context = models.CharField(max_length=24, choices=CONTEXT_CHOICES)
+    target_type = models.CharField(max_length=24, choices=TARGET_CHOICES)
+    target_id = models.PositiveIntegerField()
+    status_value = models.CharField(max_length=80)
+    note = models.TextField(blank=True)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="portal_status_overrides",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-updated_at"]
+        unique_together = ("context", "target_type", "target_id")
+        verbose_name = "Portal status override"
+        verbose_name_plural = "Portal status overrides"
+
+    def __str__(self):
+        return f"{self.context}:{self.target_type}:{self.target_id} -> {self.status_value}"
+
+
+class SupportTicket(models.Model):
+    """Lightweight helpdesk ticket for the portal support drawer."""
+
+    CATEGORY_UI = "ui"
+    CATEGORY_DATA = "data"
+    CATEGORY_ACCESS = "access"
+    CATEGORY_OTHER = "other"
+    CATEGORY_CHOICES = [
+        (CATEGORY_UI, "UI"),
+        (CATEGORY_DATA, "Data"),
+        (CATEGORY_ACCESS, "Access"),
+        (CATEGORY_OTHER, "Other"),
+    ]
+
+    PRIORITY_HIGH = "high"
+    PRIORITY_MEDIUM = "medium"
+    PRIORITY_LOW = "low"
+    PRIORITY_CHOICES = [
+        (PRIORITY_HIGH, "High"),
+        (PRIORITY_MEDIUM, "Medium"),
+        (PRIORITY_LOW, "Low"),
+    ]
+
+    STATUS_OPEN = "open"
+    STATUS_IN_PROGRESS = "in_progress"
+    STATUS_RESOLVED = "resolved"
+    STATUS_CHOICES = [
+        (STATUS_OPEN, "Open"),
+        (STATUS_IN_PROGRESS, "In Progress"),
+        (STATUS_RESOLVED, "Resolved"),
+    ]
+
+    title = models.CharField(max_length=180)
+    message = models.TextField(blank=True)
+    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default=CATEGORY_OTHER)
+    priority = models.CharField(max_length=20, choices=PRIORITY_CHOICES, default=PRIORITY_MEDIUM)
+    status = models.CharField(max_length=24, choices=STATUS_CHOICES, default=STATUS_OPEN)
+    source = models.CharField(max_length=120, blank=True, default="portal")
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="support_tickets",
+    )
+    complex = models.ForeignKey(Complex, on_delete=models.SET_NULL, null=True, blank=True, related_name="support_tickets")
+    building = models.ForeignKey(Building, on_delete=models.SET_NULL, null=True, blank=True, related_name="support_tickets")
+    apartment = models.ForeignKey(Apartment, on_delete=models.SET_NULL, null=True, blank=True, related_name="support_tickets")
+    owner = models.ForeignKey(Owner, on_delete=models.SET_NULL, null=True, blank=True, related_name="support_tickets")
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["status", "-updated_at"]
+        verbose_name = "Support ticket"
+        verbose_name_plural = "Support tickets"
+
+    def __str__(self):
+        return self.title
 
 
 class TelemetryNode(models.Model):

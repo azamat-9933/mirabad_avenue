@@ -101,7 +101,7 @@
 <div class="px-6 py-5 border-b border-surface-container flex items-center justify-between">
 <div>
 <h2 class="text-lg font-black text-on-surface" id="filter-title">Filters</h2>
-<p class="text-xs text-on-surface-variant mt-1">Filters apply to the current local data set and saved view state.</p>
+<p class="text-xs text-on-surface-variant mt-1">Filters apply to the current backend data set and saved view state.</p>
 </div>
 <button aria-label="Close filters" class="p-2 rounded-lg hover:bg-surface-container transition-colors" data-close-overlay type="button">
 <span class="material-symbols-outlined">close</span>
@@ -152,7 +152,7 @@
 <span class="material-symbols-outlined">error</span>
 <div>
 <p>Не удалось загрузить данные</p>
-<span>Это демо-состояние для будущей backend-интеграции.</span>
+<span>Проверьте подключение к backend и повторите попытку.</span>
 </div>
 </div>
 </div>
@@ -196,7 +196,7 @@
 <section class="space-y-3">
 <div class="flex items-center justify-between">
 <h3 class="text-sm font-black text-on-surface">Recent payments</h3>
-<button class="text-xs font-bold text-primary hover:underline" type="button">Export</button>
+<button class="text-xs font-bold text-primary hover:underline" data-export-open data-export-context="transactions" data-export-source="Selected record payments" type="button">Export</button>
 </div>
 <div data-detail-payments>
 <div class="mini-row"><span>Payme</span><strong>4,320,000 UZS</strong><time>13 Apr 2026</time></div>
@@ -222,9 +222,9 @@
 </section>
 </div>
 <div class="p-6 border-t border-surface-container grid grid-cols-3 gap-3">
-<button class="drawer-action bg-error text-white" type="button">Send reminder</button>
-<button class="drawer-action bg-surface-container text-primary" type="button">Export</button>
-<button class="drawer-action bg-primary text-white" type="button">Assign technician</button>
+<button class="drawer-action bg-error text-white" data-reminder-action type="button">Send reminder</button>
+<button class="drawer-action bg-surface-container text-primary" data-export-open data-export-context="transactions" data-export-source="Selected record payments" type="button">Export</button>
+<button class="drawer-action bg-primary text-white" data-assign-technician type="button">Assign technician</button>
 </div>
 </div>
 </aside>
@@ -296,9 +296,9 @@
 </section>
 </div>
 <div class="apartment-details-actions">
-<button class="drawer-action bg-error text-white" type="button">Send reminder</button>
-<button class="drawer-action bg-surface-container text-primary" type="button">Export</button>
-<button class="drawer-action bg-primary text-white" type="button">Assign technician</button>
+<button class="drawer-action bg-error text-white" data-reminder-action type="button">Send reminder</button>
+<button class="drawer-action bg-surface-container text-primary" data-export-open data-export-context="transactions" data-export-source="Apartment resident payments" type="button">Export</button>
+<button class="drawer-action bg-primary text-white" data-assign-technician type="button">Assign technician</button>
 </div>
 </div>
 </aside>
@@ -308,7 +308,7 @@
 <div class="px-6 py-5 border-b border-surface-container flex items-center justify-between">
 <div>
 <h2 class="text-lg font-black text-on-surface" id="audit-title">Audit log</h2>
-<p class="text-xs text-on-surface-variant mt-1">Static activity trail for future backend events.</p>
+<p class="text-xs text-on-surface-variant mt-1">Live backend activity trail synced from Django admin and portal actions.</p>
 </div>
 <button aria-label="Close audit log" class="p-2 rounded-lg hover:bg-surface-container transition-colors" data-close-overlay type="button">
 <span class="material-symbols-outlined">close</span>
@@ -318,8 +318,8 @@
 <div class="audit-summary-grid">
 <div><span>Total events</span><strong data-audit-total>4</strong></div>
 <div><span>Visible</span><strong data-audit-visible>4</strong></div>
-<div><span>Mode</span><strong>Local</strong></div>
-<div><span>Backend</span><strong>Pending</strong></div>
+<div><span>Mode</span><strong>Backend</strong></div>
+<div><span>Backend</span><strong>Connected</strong></div>
 </div>
 <div class="audit-toolbox">
 <label class="audit-search-shell">
@@ -334,7 +334,7 @@
 <button data-audit-filter="balance" type="button">Balance</button>
 </div>
 <div class="audit-action-row">
-<button data-audit-action="add-note" type="button"><span class="material-symbols-outlined">note_add</span><span>Add local note</span></button>
+<button data-audit-action="add-note" type="button"><span class="material-symbols-outlined">note_add</span><span>Add audit note</span></button>
 <button data-audit-action="copy-latest" type="button"><span class="material-symbols-outlined">content_copy</span><span>Copy latest</span></button>
 <button data-audit-action="export" type="button"><span class="material-symbols-outlined">download</span><span>Export log</span></button>
 </div>
@@ -362,29 +362,34 @@
 </button>
 <span class="support-hero-icon material-symbols-outlined">support_agent</span>
 <div>
-<p class="profile-kicker">Prototype support</p>
+<p class="profile-kicker">Operations helpdesk</p>
 <h2 id="support-title">Support</h2>
-<span>Backend helpdesk is not connected yet.</span>
+<span data-support-headline>Backend helpdesk is connected to portal support tickets.</span>
 </div>
 </div>
 <div class="support-drawer-body">
 <section class="support-placeholder-card">
 <span class="material-symbols-outlined">construction</span>
 <div>
-<h3>Temporary support workspace</h3>
-<p>Use these local tools while the real admin panel and ticket backend are being prepared.</p>
+<h3>Support workspace</h3>
+<p>Use these tools to open tickets, copy live system summary and jump into the audit trail.</p>
 </div>
 </section>
 <div class="support-tool-grid">
-<button data-support-action="copy-summary" type="button"><span class="material-symbols-outlined">content_copy</span><strong>Copy system summary</strong><small>Local prototype status</small></button>
-<button data-support-action="open-checklist" type="button"><span class="material-symbols-outlined">fact_check</span><strong>Open checklist</strong><small>Demo operations flow</small></button>
-<button data-support-action="report-ui" type="button"><span class="material-symbols-outlined">bug_report</span><strong>Report UI issue</strong><small>Create local note</small></button>
-<button data-drawer-open="audit-drawer" type="button"><span class="material-symbols-outlined">history</span><strong>View audit trail</strong><small>Recent local events</small></button>
+<button data-support-action="copy-summary" type="button"><span class="material-symbols-outlined">content_copy</span><strong>Copy system summary</strong><small data-support-summary-caption>Live backend status</small></button>
+<button data-support-action="open-checklist" type="button"><span class="material-symbols-outlined">fact_check</span><strong>Open checklist</strong><small>Operations readiness flow</small></button>
+<button data-support-action="report-ui" type="button"><span class="material-symbols-outlined">bug_report</span><strong>Report UI issue</strong><small>Create backend support ticket</small></button>
+<button data-drawer-open="audit-drawer" type="button"><span class="material-symbols-outlined">history</span><strong>View audit trail</strong><small>Recent backend events</small></button>
 </div>
 <div class="support-status-list">
-<div><span>Helpdesk</span><strong>Not connected</strong></div>
-<div><span>Prototype mode</span><strong>Active</strong></div>
+<div><span>Helpdesk</span><strong data-support-helpdesk>Status pending</strong></div>
+<div><span>Open tickets</span><strong data-support-open-tickets>0</strong></div>
 <div><span>Timezone</span><strong>Asia/Tashkent</strong></div>
+</div>
+<div class="support-status-list mt-4">
+<div><span>In progress</span><strong data-support-in-progress>0</strong></div>
+<div><span>Resolved</span><strong data-support-resolved>0</strong></div>
+<div><span>Last update</span><strong data-support-updated>--</strong></div>
 </div>
 </div>
 </div>
@@ -401,7 +406,7 @@
 <div>
 <p class="profile-kicker" data-i18n-key="Operations checklist">Operations checklist</p>
 <h2 id="checklist-title" data-i18n-key="Readiness checklist">Readiness checklist</h2>
-<span data-checklist-subtitle data-i18n-key="Local workflow with saved progress.">Local workflow with saved progress.</span>
+                    <span data-checklist-subtitle data-i18n-key="Backend workflow with saved progress.">Backend workflow with saved progress.</span>
 </div>
 </div>
 <div class="checklist-progress-card">
@@ -418,7 +423,7 @@
 <div class="checklist-context-grid">
 <div><span data-i18n-key="Scope">Scope</span><strong data-checklist-scope data-i18n-key="Current workspace">Current workspace</strong></div>
 <div><span data-i18n-key="Owner">Owner</span><strong data-i18n-key="Operations Team">Operations Team</strong></div>
-<div><span data-i18n-key="Saved">Saved</span><strong data-checklist-saved data-i18n-key="Local">Local</strong></div>
+                            <div><span data-i18n-key="Saved">Saved</span><strong data-checklist-saved data-i18n-key="Connected">Connected</strong></div>
 <div><span data-i18n-key="Timezone">Timezone</span><strong>Asia/Tashkent</strong></div>
 </div>
 <div class="checklist-toolbar">
@@ -453,7 +458,7 @@
 <div class="checklist-notes-list hidden" data-checklist-notes-list></div>
 <div class="checklist-note">
 <span class="material-symbols-outlined">verified</span>
-<p data-i18n-key="This checklist is connected to local UI actions now. Backend tasks can replace the storage layer later without changing the interface.">This checklist is connected to local UI actions now. Backend tasks can replace the storage layer later without changing the interface.</p>
+                        <p data-i18n-key="This checklist is connected to backend checklist notes and audit events.">This checklist is connected to backend checklist notes and audit events.</p>
 </div>
 </div>
 <div class="checklist-footer">
@@ -578,9 +583,9 @@
 <div class="export-preview-hero">
 <span class="material-symbols-outlined">ios_share</span>
 <div>
-<p class="profile-kicker">Local export preview</p>
+<p class="profile-kicker">Backend export</p>
 <h2 id="export-preview-title">Export report</h2>
-<small data-export-subtitle>Static preview. Backend export can replace this later.</small>
+<small data-export-subtitle>Live export generated from Django data.</small>
 </div>
 <button aria-label="Close export preview" class="profile-drawer-close" data-close-overlay type="button">
 <span class="material-symbols-outlined">close</span>
@@ -591,7 +596,7 @@
 <div><span>Source</span><strong data-export-source-label>Current page</strong></div>
 <div><span>Period</span><strong>Last 90 days</strong></div>
 <div><span>Timezone</span><strong>Asia/Tashkent</strong></div>
-<div><span>Rows</span><strong data-export-rows>Static preview</strong></div>
+<div><span>Rows</span><strong data-export-rows>0 visible rows</strong></div>
 </div>
 <div>
 <p class="drawer-label">Format</p>
@@ -603,12 +608,12 @@
 </div>
 <div class="export-preview-note">
 <span class="material-symbols-outlined">info</span>
-<p data-export-summary>Export includes visible table rows, selected filters and local timestamp.</p>
+<p data-export-summary>Current backend data and visible filters will be exported.</p>
 </div>
 </div>
 <div class="export-preview-actions">
 <button data-export-copy type="button"><span class="material-symbols-outlined">content_copy</span><span>Copy summary</span></button>
-<button data-export-download type="button"><span class="material-symbols-outlined">download</span><span>Download preview</span></button>
+<button data-export-download type="button"><span class="material-symbols-outlined">download</span><span>Download file</span></button>
 </div>
 </div>
 </div>
@@ -822,12 +827,51 @@
 <div class="assign-status-options" data-assign-status-options></div>
 <div class="assign-status-note">
 <span class="material-symbols-outlined">info</span>
-<p data-assign-status-note>Status changes are stored locally in this prototype session.</p>
+<p data-assign-status-note>Status changes are saved in Django database and synced back into the portal.</p>
 </div>
 </div>
 <div class="assign-status-actions">
 <button data-close-overlay type="button">Cancel</button>
 <button data-assign-status-apply type="button"><span class="material-symbols-outlined">check</span><span>Apply status</span></button>
+</div>
+</div>
+</div>
+
+<div aria-labelledby="assign-technician-title" aria-hidden="true" class="app-modal fixed inset-0 z-[86] hidden items-center justify-center p-6" id="assign-technician-modal" role="dialog">
+<div class="modal-panel assign-status-panel w-full max-w-md bg-white rounded-lg shadow-2xl border border-outline-variant/20 overflow-hidden">
+<div class="assign-status-hero">
+<span class="material-symbols-outlined">engineering</span>
+<div>
+<p class="profile-kicker">Backend assignment</p>
+<h2 id="assign-technician-title">Assign technician</h2>
+<small data-assign-technician-summary>Select technician and sync directly to database.</small>
+</div>
+<button aria-label="Close assign technician" class="profile-drawer-close" data-close-overlay type="button">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<div class="assign-status-body">
+<div class="assign-status-context">
+<span>Target</span>
+<strong data-assign-technician-target>Current item</strong>
+</div>
+<label class="resident-create-field">
+<span>Technician</span>
+<select data-assign-technician-select>
+<option value="Field Team A">Field Team A</option>
+<option value="Field Team B">Field Team B</option>
+<option value="Maintenance Desk">Maintenance Desk</option>
+<option value="Billing Team">Billing Team</option>
+</select>
+</label>
+<label class="resident-create-field">
+<span>Note</span>
+<textarea data-assign-technician-note placeholder="Optional assignment note..."></textarea>
+</label>
+</div>
+<div class="assign-status-actions">
+<button data-close-overlay type="button">Cancel</button>
+<button data-assign-technician-apply type="button"><span class="material-symbols-outlined">check</span><span>Assign technician</span></button>
 </div>
 </div>
 </div>
@@ -853,7 +897,7 @@
 <p>Settings sync is offline</p>
 <span>Offline</span>
 </div>
-<span>Local changes remain available and will retry on reconnect.</span>
+                            <span>Backend sync will retry on reconnect and keep current changes queued.</span>
 </div>
 </div>
 <div class="settings-section">
@@ -908,10 +952,10 @@
 <span>Open request modal</span>
 </button>
 <div class="system-status-card">
-<div><span>Local prototype</span><strong>Active</strong></div>
-<div><span>Backend</span><strong>Not connected</strong></div>
+                        <div><span>Portal mode</span><strong>Active</strong></div>
+                        <div><span>Backend</span><strong>Connected</strong></div>
 <div><span>Timezone</span><strong>Asia/Tashkent</strong></div>
-<div><span>Last local save</span><strong>13.04.2026, 09:41</strong></div>
+                        <div><span>Last sync</span><strong>13.04.2026, 09:41</strong></div>
 </div>
 </div>
 </div>
@@ -953,6 +997,127 @@
 <strong data-i18n-key="No residents available">No residents available</strong>
 </div>
 </div>
+</div>
+</div>
+
+<div aria-labelledby="create-complex-title" aria-hidden="true" class="app-modal fixed inset-0 z-[80] hidden items-center justify-center p-6" id="create-complex-modal" role="dialog">
+<div class="modal-panel resident-create-modal structure-create-modal w-full max-w-2xl bg-white rounded-lg shadow-2xl border border-outline-variant/20">
+<div class="px-6 py-5 border-b border-surface-container flex items-center justify-between">
+<div>
+<p class="text-[11px] font-black uppercase tracking-[0.18em] text-primary" data-i18n-key="Structure admin form">Structure admin form</p>
+<h2 class="text-lg font-black text-on-surface" id="create-complex-title" data-i18n-key="Add district">Add district</h2>
+</div>
+<button aria-label="Close modal" class="p-2 rounded-lg hover:bg-surface-container transition-colors" data-close-overlay type="button">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<form class="p-6 space-y-5" data-complex-create-form>
+{% csrf_token %}
+<p class="text-sm text-on-surface-variant" data-i18n-key="This form writes a new district directly to Django admin and database.">This form writes a new district directly to Django admin and database.</p>
+<div class="resident-create-status hidden" data-complex-create-status role="status"></div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<label class="resident-create-field md:col-span-2">
+<span data-i18n-key="District name">District name</span>
+<input name="title" required placeholder="North Sector" type="text"/>
+</label>
+<label class="resident-create-field md:col-span-2">
+<span data-i18n-key="Address">Address</span>
+<input name="address" required placeholder="Mirabad Avenue" type="text"/>
+</label>
+</div>
+<div class="flex justify-end gap-3">
+<button class="px-4 py-2 rounded-lg bg-surface-container text-sm font-bold" data-close-overlay type="button" data-i18n-key="Cancel">Cancel</button>
+<button class="px-5 py-2 rounded-lg bg-primary text-white text-sm font-bold" data-complex-create-submit type="submit">
+<span data-i18n-key="Create district">Create district</span>
+</button>
+</div>
+</form>
+</div>
+</div>
+
+<div aria-labelledby="create-building-title" aria-hidden="true" class="app-modal fixed inset-0 z-[80] hidden items-center justify-center p-6" id="create-building-modal" role="dialog">
+<div class="modal-panel resident-create-modal structure-create-modal w-full max-w-2xl bg-white rounded-lg shadow-2xl border border-outline-variant/20">
+<div class="px-6 py-5 border-b border-surface-container flex items-center justify-between">
+<div>
+<p class="text-[11px] font-black uppercase tracking-[0.18em] text-primary" data-i18n-key="Structure admin form">Structure admin form</p>
+<h2 class="text-lg font-black text-on-surface" id="create-building-title" data-i18n-key="Add house">Add house</h2>
+</div>
+<button aria-label="Close modal" class="p-2 rounded-lg hover:bg-surface-container transition-colors" data-close-overlay type="button">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<form class="p-6 space-y-5" data-building-create-form>
+{% csrf_token %}
+<p class="text-sm text-on-surface-variant" data-i18n-key="This form writes a new house directly to Django admin and database.">This form writes a new house directly to Django admin and database.</p>
+<div class="resident-create-status hidden" data-building-create-status role="status"></div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<label class="resident-create-field md:col-span-2">
+<span data-i18n-key="District">District</span>
+<select name="complex_id" required data-building-create-complex></select>
+</label>
+<label class="resident-create-field">
+<span data-i18n-key="House number">House number</span>
+<input name="number" required placeholder="Tower A" type="text"/>
+</label>
+<label class="resident-create-field">
+<span data-i18n-key="Address">Address</span>
+<input name="address" placeholder="North Sector, Block A" type="text"/>
+</label>
+</div>
+<div class="flex justify-end gap-3">
+<button class="px-4 py-2 rounded-lg bg-surface-container text-sm font-bold" data-close-overlay type="button" data-i18n-key="Cancel">Cancel</button>
+<button class="px-5 py-2 rounded-lg bg-primary text-white text-sm font-bold" data-building-create-submit type="submit">
+<span data-i18n-key="Create house">Create house</span>
+</button>
+</div>
+</form>
+</div>
+</div>
+
+<div aria-labelledby="create-apartment-title" aria-hidden="true" class="app-modal fixed inset-0 z-[80] hidden items-center justify-center p-6" id="create-apartment-modal" role="dialog">
+<div class="modal-panel resident-create-modal structure-create-modal w-full max-w-2xl bg-white rounded-lg shadow-2xl border border-outline-variant/20">
+<div class="px-6 py-5 border-b border-surface-container flex items-center justify-between">
+<div>
+<p class="text-[11px] font-black uppercase tracking-[0.18em] text-primary" data-i18n-key="Structure admin form">Structure admin form</p>
+<h2 class="text-lg font-black text-on-surface" id="create-apartment-title" data-i18n-key="Add apartment">Add apartment</h2>
+</div>
+<button aria-label="Close modal" class="p-2 rounded-lg hover:bg-surface-container transition-colors" data-close-overlay type="button">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<form class="p-6 space-y-5" data-apartment-create-form>
+{% csrf_token %}
+<p class="text-sm text-on-surface-variant" data-i18n-key="This form writes a new apartment directly to Django admin and database.">This form writes a new apartment directly to Django admin and database.</p>
+<div class="resident-create-status hidden" data-apartment-create-status role="status"></div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<label class="resident-create-field">
+<span data-i18n-key="District">District</span>
+<select name="complex_id" required data-apartment-create-complex></select>
+</label>
+<label class="resident-create-field">
+<span data-i18n-key="House">House</span>
+<select name="building_id" required data-apartment-create-building></select>
+</label>
+<label class="resident-create-field">
+<span data-i18n-key="Section">Section</span>
+<input name="section_name" placeholder="A" type="text"/>
+</label>
+<label class="resident-create-field">
+<span data-i18n-key="Apartment number">Apartment number</span>
+<input name="number" required placeholder="402-A" type="text"/>
+</label>
+<label class="resident-create-field md:col-span-2">
+<span data-i18n-key="Area (m²)">Area (m²)</span>
+<input name="area" required min="1" placeholder="84" step="0.01" type="number"/>
+</label>
+</div>
+<div class="flex justify-end gap-3">
+<button class="px-4 py-2 rounded-lg bg-surface-container text-sm font-bold" data-close-overlay type="button" data-i18n-key="Cancel">Cancel</button>
+<button class="px-5 py-2 rounded-lg bg-primary text-white text-sm font-bold" data-apartment-create-submit type="submit">
+<span data-i18n-key="Create apartment">Create apartment</span>
+</button>
+</div>
+</form>
 </div>
 </div>
 

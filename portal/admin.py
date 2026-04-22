@@ -5,8 +5,11 @@ from django.utils.html import format_html
 from .models import (
     AuditEvent,
     ChecklistItem,
+    ChecklistNote,
     MaintenanceTask,
     PortalNotification,
+    PortalStatusOverride,
+    SupportTicket,
     SystemAlert,
     TelemetryNode,
     TelemetrySample,
@@ -126,6 +129,24 @@ class ChecklistItemAdmin(admin.ModelAdmin):
     search_fields = ("title", "detail", "tag")
 
 
+@admin.register(ChecklistNote)
+class ChecklistNoteAdmin(admin.ModelAdmin):
+    list_display = ("created_at", "short_text", "scope", "done", "created_by")
+    list_filter = ("done", "scope", "created_by")
+    list_editable = ("done",)
+    search_fields = ("text", "template_key", "scope", "created_by__username")
+    autocomplete_fields = ("created_by",)
+    readonly_fields = ("created_at", "updated_at")
+    fieldsets = (
+        ("Note", {"fields": ("text", "template_key", "scope", "done", "created_by")}),
+        ("Timeline", {"fields": ("created_at", "updated_at")}),
+    )
+
+    @admin.display(description="Text")
+    def short_text(self, obj):
+        return obj.text[:90]
+
+
 @admin.register(AuditEvent)
 class AuditEventAdmin(admin.ModelAdmin):
     list_display = ("created_at", "event_type", "title", "actor", "complex", "building")
@@ -137,6 +158,51 @@ class AuditEventAdmin(admin.ModelAdmin):
         ("Event", {"fields": ("event_type", "title", "message", "actor", "created_at")}),
         ("Relations", {"fields": ("complex", "building", "apartment", "owner")}),
         ("Metadata", {"fields": ("metadata",), "classes": ("collapse",)}),
+    )
+
+
+@admin.register(SupportTicket)
+class SupportTicketAdmin(admin.ModelAdmin):
+    list_display = ("title", "priority_badge", "status", "category", "source", "created_by", "updated_at")
+    list_filter = ("status", "priority", "category", "source")
+    list_editable = ("status",)
+    search_fields = ("title", "message", "source", "created_by__username", "complex__title", "building__number")
+    autocomplete_fields = ("created_by", "complex", "building", "apartment", "owner")
+    readonly_fields = ("created_at", "updated_at")
+    fieldsets = (
+        ("Ticket", {"fields": ("title", "message", "category", "priority", "status", "source", "created_by")}),
+        ("Relations", {"fields": ("complex", "building", "apartment", "owner")}),
+        ("Timeline", {"fields": ("created_at", "updated_at")}),
+    )
+
+    @admin.display(description="Priority")
+    def priority_badge(self, obj):
+        colors = {
+            "high": ("#F75F5F", "rgba(247,95,95,.14)"),
+            "medium": ("#F5A623", "rgba(245,166,35,.16)"),
+            "low": ("#3DD68C", "rgba(61,214,140,.14)"),
+        }
+        fg, bg = colors.get(obj.priority, ("#8B90A0", "rgba(139,144,160,.14)"))
+        return format_html(
+            '<span style="padding:3px 10px;border-radius:999px;background:{};color:{};'
+            'font-weight:700;font-size:11px;text-transform:uppercase;">{}</span>',
+            bg,
+            fg,
+            obj.get_priority_display(),
+        )
+
+
+@admin.register(PortalStatusOverride)
+class PortalStatusOverrideAdmin(admin.ModelAdmin):
+    list_display = ("context", "target_type", "target_id", "status_value", "created_by", "updated_at")
+    list_filter = ("context", "target_type", "status_value")
+    search_fields = ("status_value", "note")
+    autocomplete_fields = ("created_by",)
+    readonly_fields = ("created_at", "updated_at")
+    fieldsets = (
+        ("Target", {"fields": ("context", "target_type", "target_id", "status_value")}),
+        ("Details", {"fields": ("note", "created_by")}),
+        ("Timeline", {"fields": ("created_at", "updated_at")}),
     )
 
 

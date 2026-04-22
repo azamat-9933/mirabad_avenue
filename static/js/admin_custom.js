@@ -503,7 +503,7 @@
     const shouldSkipNode = (node) => {
         const parent = node.parentElement;
         if (!parent) return true;
-        return Boolean(parent.closest("script, style, textarea, pre, code, .admin-lang-switcher, .select2-search"));
+        return Boolean(parent.closest("script, style, textarea, pre, code, .admin-lang-switcher, .select2-search, .select2-container, .select2-results, .related-widget-wrapper"));
     };
 
     const translateTextNode = (node, lang) => {
@@ -519,6 +519,7 @@
 
     const translateAttributes = (root, lang) => {
         root.querySelectorAll("input, textarea, select, option, button, a, label, th, span, div").forEach((element) => {
+            if (element.closest(".select2-container, .select2-results, .related-widget-wrapper")) return;
             ["placeholder", "title", "aria-label", "data-original-title"].forEach((attr) => {
                 if (!element.hasAttribute(attr)) return;
                 const current = element.getAttribute(attr);
@@ -528,6 +529,24 @@
             if ((element.matches("input[type='submit'], input[type='button'], input[type='reset']")) && element.value) {
                 const translated = translateValue(element.value, lang);
                 if (translated !== element.value) element.value = translated;
+            }
+        });
+    };
+
+    const bindAdminActionSubmit = () => {
+        const changelist = document.getElementById("changelist-form");
+        if (!changelist || changelist.dataset.actionBound === "true") return;
+        changelist.dataset.actionBound = "true";
+        changelist.addEventListener("click", (event) => {
+            const button = event.target.closest(".actions button, .actions input[type='submit'], .actions input[type='button']");
+            if (!button || button.disabled) return;
+            event.preventDefault();
+            const form = button.form || changelist;
+            if (!form) return;
+            if (typeof form.requestSubmit === "function") {
+                form.requestSubmit(button);
+            } else {
+                form.submit();
             }
         });
     };
@@ -573,6 +592,7 @@
     const boot = () => {
         mountLanguageSwitcher();
         initOwnerApartmentFilters();
+        bindAdminActionSubmit();
         translatePage(selectedLanguage());
         if ("MutationObserver" in window) {
             let scheduled = false;
@@ -583,6 +603,7 @@
                     scheduled = false;
                     mountLanguageSwitcher();
                     initOwnerApartmentFilters();
+                    bindAdminActionSubmit();
                     translatePage(selectedLanguage());
                 });
             });

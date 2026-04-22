@@ -67,7 +67,7 @@ class BuildingSection(models.Model):
 class Apartment(models.Model):
     """Kvartira — har bir uydagi ayrim xona"""
     number = models.CharField(max_length=50, verbose_name="Kvartira raqami")
-    area = models.FloatField(verbose_name="Maydon (m²)")
+    area = models.DecimalField(max_digits=12, decimal_places=2, verbose_name="Maydon (m²)")
     building = models.ForeignKey(
         Building,
         on_delete=models.CASCADE,
