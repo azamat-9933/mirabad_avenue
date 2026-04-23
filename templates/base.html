@@ -1,0 +1,978 @@
+{% load static %}
+<!DOCTYPE html>
+<html class="light backend-hydrating" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>{% block title %}HydroFlow Enterprise{% endblock %}</title>
+<script>
+    (() => {
+        const theme = localStorage.getItem("hydroflow-theme");
+        if (theme === "dark") document.documentElement.classList.replace("light", "dark");
+        window.setTimeout(() => document.documentElement.classList.remove("backend-hydrating"), 1600);
+    })();
+</script>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="{% static 'css/app.css' %}?v=backend-hydration-20260420" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary-fixed": "#b7eaff",
+                        "surface-dim": "#d5dbde",
+                        "primary-container": "#005c72",
+                        "surface-tint": "#18667d",
+                        "on-tertiary-fixed": "#001356",
+                        "on-error": "#ffffff",
+                        "on-background": "#171c1f",
+                        "on-primary-fixed-variant": "#004e61",
+                        "outline-variant": "#bfc8cc",
+                        "surface-variant": "#dee3e7",
+                        "on-secondary-container": "#3a6c71",
+                        "on-secondary": "#ffffff",
+                        "inverse-primary": "#8dd0e9",
+                        "secondary-container": "#b8ecf1",
+                        "tertiary-fixed-dim": "#b8c3ff",
+                        "on-tertiary-container": "#bbc5ff",
+                        "on-primary-fixed": "#001f28",
+                        "on-primary": "#ffffff",
+                        "secondary-fixed": "#b8ecf1",
+                        "outline": "#70787d",
+                        "on-surface-variant": "#3f484c",
+                        "surface-container": "#e9eff2",
+                        "on-tertiary": "#ffffff",
+                        "tertiary": "#002da6",
+                        "on-surface": "#171c1f",
+                        "secondary": "#33666b",
+                        "primary-fixed-dim": "#8dd0e9",
+                        "surface-container-low": "#eff4f8",
+                        "surface-container-high": "#e3e9ec",
+                        "on-secondary-fixed": "#002022",
+                        "inverse-on-surface": "#ecf1f5",
+                        "surface-bright": "#f5fafe",
+                        "secondary-fixed-dim": "#9ccfd5",
+                        "inverse-surface": "#2b3134",
+                        "on-primary-container": "#8fd2ec",
+                        "primary": "#004354",
+                        "on-secondary-fixed-variant": "#184e53",
+                        "surface": "#f5fafe",
+                        "error": "#ba1a1a",
+                        "error-container": "#ffdad6",
+                        "on-error-container": "#93000a",
+                        "surface-container-lowest": "#ffffff",
+                        "on-tertiary-fixed-variant": "#0035be",
+                        "tertiary-container": "#003fde",
+                        "tertiary-fixed": "#dde1ff",
+                        "background": "#f5fafe",
+                        "surface-container-highest": "#dee3e7"
+                    },
+                    borderRadius: {
+                        DEFAULT: "0.5rem",
+                        lg: "1rem",
+                        xl: "1.25rem",
+                        full: "9999px"
+                    },
+                    fontFamily: {
+                        headline: ["Inter", "sans-serif"],
+                        body: ["Inter", "sans-serif"],
+                        label: ["Inter", "sans-serif"],
+                        inter: ["Inter", "sans-serif"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined {
+            font-family: 'Material Symbols Outlined';
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            font-weight: normal;
+            font-style: normal;
+            font-size: 24px;
+            line-height: 1;
+            letter-spacing: normal;
+            text-transform: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 1em;
+            min-width: 1em;
+            height: 1em;
+            overflow: hidden;
+            white-space: nowrap;
+            direction: ltr;
+            -webkit-font-feature-settings: 'liga';
+            -webkit-font-smoothing: antialiased;
+            font-feature-settings: 'liga';
+            transition: color 0.2s ease, opacity 0.15s ease;
+            vertical-align: middle;
+        }
+        html:not(.symbols-ready) .material-symbols-outlined {
+            color: transparent !important;
+            opacity: 0;
+        }
+        .glass-panel {
+            background: rgba(245, 250, 254, 0.8);
+            backdrop-filter: blur(20px);
+        }
+        .glass-effect {
+            background: rgba(245, 250, 254, 0.8);
+            backdrop-filter: blur(20px);
+        }
+        .chart-grid-line {
+            border-bottom: 1px solid #e5e7eb;
+            width: 100%;
+            height: 0;
+            position: absolute;
+        }
+        .sidebar-link {
+            color: #3f484c;
+            overflow: hidden;
+            transition: transform 0.2s ease, background-color 0.2s ease, border-color 0.25s ease, color 0.2s ease;
+        }
+        .sidebar-link:hover {
+            transform: translateX(4px);
+            background: rgba(0, 92, 114, 0.08);
+            color: #005c72;
+        }
+        .sidebar-link:hover .material-symbols-outlined,
+        .sidebar-link.is-active .material-symbols-outlined {
+            color: #005c72;
+        }
+        .sidebar-link.is-active {
+            background: rgba(0, 92, 114, 0.10);
+            color: #005c72;
+            box-shadow: none;
+        }
+        .sidebar-link .material-symbols-outlined {
+            transition: color 0.2s ease, font-variation-settings 0.2s ease;
+        }
+        .filter-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            border-radius: 9999px;
+            background: rgba(0, 92, 114, 0.10);
+            color: #005c72;
+            padding: 0.35rem 0.65rem;
+            font-size: 0.72rem;
+            font-weight: 800;
+        }
+        .account-menu {
+            transform-origin: top right;
+        }
+        .command-item {
+            display: flex;
+            width: 100%;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            padding: 0.8rem 1rem;
+            text-align: left;
+            font-size: 0.875rem;
+            font-weight: 800;
+            color: #171c1f;
+            transition: background-color 0.18s ease, color 0.18s ease;
+        }
+        .command-item:hover {
+            background: rgba(0, 92, 114, 0.08);
+            color: #005c72;
+        }
+        .account-menu-item {
+            justify-content: flex-start;
+        }
+        .command-item small {
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: #70787d;
+        }
+        .drawer-label {
+            display: block;
+            margin-bottom: 0.45rem;
+            font-size: 0.72rem;
+            font-weight: 900;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #3f484c;
+        }
+        .drawer-field {
+            width: 100%;
+            border: 1px solid rgba(112, 120, 125, 0.25);
+            border-radius: 0.5rem;
+            background: #f5fafe;
+            padding: 0.7rem 0.8rem;
+            font-size: 0.875rem;
+            font-weight: 700;
+            color: #171c1f;
+        }
+        .drawer-action {
+            border-radius: 0.5rem;
+            padding: 0.65rem 0.8rem;
+            font-size: 0.76rem;
+            font-weight: 900;
+            transition: transform 0.18s ease, filter 0.18s ease;
+        }
+        .drawer-action:hover {
+            transform: translateY(-1px);
+            filter: brightness(1.04);
+        }
+        .notification-item {
+            border-radius: 0.5rem;
+            border: 1px solid rgba(191, 200, 204, 0.40);
+            background: #f5fafe;
+            padding: 1rem;
+        }
+        .notification-item[data-severity="critical"] {
+            border-color: rgba(186, 26, 26, 0.24);
+            background: rgba(255, 218, 214, 0.35);
+        }
+        .severity-badge {
+            display: inline-flex;
+            border-radius: 9999px;
+            padding: 0.2rem 0.5rem;
+            font-size: 0.65rem;
+            font-weight: 900;
+            text-transform: uppercase;
+        }
+        .severity-critical {
+            background: #ffdad6;
+            color: #93000a;
+        }
+        .severity-warning {
+            background: rgba(234, 179, 8, 0.18);
+            color: #854d0e;
+        }
+        .severity-info {
+            background: rgba(0, 92, 114, 0.10);
+            color: #005c72;
+        }
+        .detail-metric {
+            border-radius: 0.5rem;
+            background: #eff4f8;
+            padding: 1rem;
+        }
+        .detail-metric span,
+        .mini-row time,
+        .audit-event time {
+            display: block;
+            font-size: 0.68rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            color: #70787d;
+        }
+        .detail-metric strong {
+            display: block;
+            margin-top: 0.35rem;
+            font-size: 1rem;
+            color: #171c1f;
+        }
+        .mini-row,
+        .audit-event {
+            display: grid;
+            gap: 0.25rem;
+            border-radius: 0.5rem;
+            border: 1px solid rgba(191, 200, 204, 0.35);
+            background: #ffffff;
+            padding: 0.85rem;
+        }
+        .mini-row {
+            grid-template-columns: 1fr auto;
+            align-items: center;
+        }
+        .mini-row time {
+            grid-column: 1 / -1;
+        }
+        .audit-event p {
+            font-size: 0.875rem;
+            font-weight: 700;
+            color: #171c1f;
+        }
+        .chart-canvas-wrap {
+            position: relative;
+            min-height: 22rem;
+            height: 100%;
+        }
+        .table-tools {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.9rem 1rem;
+            border-bottom: 1px solid rgba(191, 200, 204, 0.32);
+            background: rgba(245, 250, 254, 0.72);
+        }
+        .table-search {
+            min-width: min(18rem, 100%);
+            border: 1px solid rgba(112, 120, 125, 0.22);
+            border-radius: 0.5rem;
+            padding: 0.55rem 0.75rem;
+            font-size: 0.82rem;
+            background: #ffffff;
+        }
+        .table-tool-button {
+            border-radius: 0.5rem;
+            padding: 0.55rem 0.75rem;
+            background: #e9eff2;
+            color: #004354;
+            font-size: 0.75rem;
+            font-weight: 900;
+            transition: background-color 0.18s ease, transform 0.18s ease;
+        }
+        .table-tool-button:hover {
+            background: rgba(0, 92, 114, 0.10);
+            transform: translateY(-1px);
+        }
+        .table-stable thead th {
+            position: sticky;
+            top: 0;
+            z-index: 5;
+            cursor: pointer;
+        }
+        .table-stable th:first-child,
+        .table-stable td:first-child {
+            width: 2.75rem;
+        }
+        .table-pagination {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            padding: 0.85rem 1rem;
+            border-top: 1px solid rgba(191, 200, 204, 0.32);
+            background: rgba(245, 250, 254, 0.55);
+        }
+        .motion-stagger > * {
+            opacity: 1;
+        }
+        .chart-bar {
+            transform-origin: bottom;
+            will-change: transform;
+        }
+        .table-stable tbody tr {
+            transition: background-color 160ms ease, box-shadow 160ms ease;
+        }
+        .table-stable tbody tr:hover {
+            box-shadow: inset 3px 0 0 #004354;
+        }
+        .skeleton-line,
+        .skeleton-card,
+        .skeleton-panel {
+            border-radius: 0.5rem;
+            background: linear-gradient(90deg, #e3e9ec 25%, #f5fafe 37%, #e3e9ec 63%);
+            background-size: 400% 100%;
+        }
+        .skeleton-card { height: 8rem; }
+        .skeleton-panel { height: 24rem; }
+        .empty-state,
+        .error-state {
+            display: flex;
+            gap: 0.875rem;
+            align-items: flex-start;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            border: 1px solid rgba(191, 200, 204, 0.45);
+            background: #f5fafe;
+        }
+        .empty-state .material-symbols-outlined,
+        .error-state .material-symbols-outlined {
+            color: #70787d;
+        }
+        .empty-state p,
+        .error-state p {
+            font-weight: 800;
+            font-size: 0.875rem;
+            color: #171c1f;
+        }
+        .empty-state span,
+        .error-state span {
+            display: block;
+            margin-top: 0.125rem;
+            font-size: 0.75rem;
+            color: #3f484c;
+        }
+        .error-state {
+            border-color: rgba(186, 26, 26, 0.22);
+            background: rgba(255, 218, 214, 0.35);
+        }
+        .error-state .material-symbols-outlined {
+            color: #ba1a1a;
+        }
+        .overlay-backdrop {
+            background: rgba(23, 28, 31, 0.22);
+            backdrop-filter: blur(2px);
+            opacity: 0;
+            transition: opacity 180ms ease;
+        }
+        .overlay-backdrop.is-visible {
+            opacity: 1;
+        }
+        .app-drawer,
+        .modal-panel {
+            transition: transform 220ms cubic-bezier(.2,.8,.2,1), opacity 180ms ease;
+        }
+        .app-drawer.is-open {
+            transform: translateX(0);
+        }
+        @media (prefers-reduced-motion: no-preference) {
+            .motion-stagger > * {
+                animation: rise-in 520ms cubic-bezier(.2,.8,.2,1) both;
+            }
+            .motion-stagger > *:nth-child(2) { animation-delay: 70ms; }
+            .motion-stagger > *:nth-child(3) { animation-delay: 140ms; }
+            .motion-stagger > *:nth-child(4) { animation-delay: 210ms; }
+            .motion-stagger > *:nth-child(5) { animation-delay: 280ms; }
+            .chart-bar.is-visible {
+                animation: grow-bar 720ms cubic-bezier(.2,.8,.2,1) both;
+            }
+            .skeleton-line,
+            .skeleton-card,
+            .skeleton-panel {
+                animation: skeleton-shimmer 1.15s ease-in-out infinite;
+            }
+            .critical-pulse,
+            .critical-dot {
+                animation: critical-pulse 1.6s ease-in-out infinite;
+            }
+            .app-modal.is-open .modal-panel {
+                animation: rise-in 180ms cubic-bezier(.2,.8,.2,1) both;
+            }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                scroll-behavior: auto !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+        @keyframes rise-in {
+            from { opacity: 0; transform: translateY(14px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes grow-bar {
+            from { transform: scaleY(0); }
+            to { transform: scaleY(1); }
+        }
+        @keyframes skeleton-shimmer {
+            0% { background-position: 100% 0; }
+            100% { background-position: 0 0; }
+        }
+        @keyframes critical-pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(186, 26, 26, 0); }
+            50% { box-shadow: 0 0 0 6px rgba(186, 26, 26, 0.10); }
+        }
+        @media (max-width: 767px) {
+            aside.h-screen.w-64 {
+                transform: translateX(-100%);
+            }
+            .app-topbar {
+                left: 0;
+            }
+            .app-topbar form {
+                width: min(58vw, 18rem);
+                max-width: none;
+            }
+            .ml-64,
+            .md\:ml-64 {
+                margin-left: 0 !important;
+            }
+            .pl-64 {
+                padding-left: 0 !important;
+            }
+        }
+    </style>
+{% block extra_head %}{% endblock %}
+</head>
+<body class="{% block body_class %}bg-surface text-on-surface antialiased{% endblock %}">
+{% include "partials/sidebar.html" %}
+{% include "partials/topbar.html" %}
+<div class="mobile-sidebar-backdrop hidden" data-mobile-sidebar-backdrop></div>
+{% include "partials/app_overlays.html" %}
+{% block page_body %}{% endblock %}
+<div class="toast-region" data-toast-region aria-live="polite" aria-atomic="true"></div>
+<script>
+(() => {
+    const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    if (document.fonts && document.fonts.load) {
+        document.fonts.load('24px "Material Symbols Outlined"').then((faces) => {
+            if (faces.length) {
+                document.documentElement.classList.add("symbols-ready");
+            }
+        });
+    } else {
+        document.documentElement.classList.add("symbols-ready");
+    }
+
+    document.querySelectorAll("table").forEach((table) => table.classList.add("table-stable"));
+
+    const barObserver = "IntersectionObserver" in window ? new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add("is-visible");
+                barObserver.unobserve(entry.target);
+            }
+        });
+    }, { threshold: 0.35 }) : null;
+    document.querySelectorAll('div[class*="rounded-t-sm"]').forEach((bar) => {
+        if (bar.style.height || /\bh-\[/.test(bar.className)) {
+            bar.classList.add("chart-bar");
+            if (barObserver && !prefersReduced) {
+                barObserver.observe(bar);
+            } else {
+                bar.classList.add("is-visible");
+            }
+        }
+    });
+
+    const numberFormatter = (value, decimals, useGrouping) => value.toLocaleString("en-US", {
+        minimumFractionDigits: decimals,
+        maximumFractionDigits: decimals,
+        useGrouping,
+    });
+    const countElements = document.querySelectorAll(".motion-stagger p, .motion-stagger h2, .motion-stagger h3");
+    countElements.forEach((element) => {
+        if (element.children.length) return;
+        const original = element.textContent.trim();
+        const match = original.match(/^([^\d-]*)(-?\d[\d,]*(?:\.\d+)?)(.*)$/);
+        if (!match || prefersReduced) return;
+        const [, prefix, rawNumber, suffix] = match;
+        const target = Number(rawNumber.replace(/,/g, ""));
+        if (!Number.isFinite(target)) return;
+        const decimals = (rawNumber.split(".")[1] || "").length;
+        const useGrouping = rawNumber.includes(",");
+        const duration = 680;
+        const start = performance.now();
+        const tick = (now) => {
+            if (element.dataset.statSynced === "true") return;
+            const progress = Math.min((now - start) / duration, 1);
+            const eased = 1 - Math.pow(1 - progress, 3);
+            element.textContent = `${prefix}${numberFormatter(target * eased, decimals, useGrouping)}${suffix}`;
+            if (progress < 1) requestAnimationFrame(tick);
+        };
+        requestAnimationFrame(tick);
+    });
+
+    const enhanceTable = (table) => {
+        if (table.dataset.enhanced === "true") return;
+        const headRow = table.querySelector("thead tr");
+        const body = table.querySelector("tbody");
+        if (!headRow || !body) return;
+        table.dataset.enhanced = "true";
+
+        const selectHead = document.createElement("th");
+        selectHead.className = "px-4 py-4";
+        selectHead.innerHTML = '<input aria-label="Select all rows" data-select-all type="checkbox">';
+        headRow.prepend(selectHead);
+        Array.from(body.rows).forEach((row) => {
+            const cell = document.createElement("td");
+            cell.className = "px-4 py-4";
+            cell.innerHTML = '<input aria-label="Select row" data-row-select type="checkbox">';
+            row.prepend(cell);
+        });
+
+        const rows = Array.from(body.rows);
+        const host = table.closest(".overflow-x-auto") || table;
+        host.classList.add("table-workspace");
+        const tools = document.createElement("div");
+        tools.className = "table-tools";
+        tools.innerHTML = `
+            <label class="table-search-shell">
+                <span class="material-symbols-outlined" aria-hidden="true">search</span>
+                <input class="table-search" aria-label="Search table" placeholder="Search inside table..." type="search">
+            </label>
+            <button class="table-tool-button" data-table-action="export" type="button">
+                <span class="material-symbols-outlined" aria-hidden="true">upload</span>
+                <span>Export</span>
+            </button>
+            <button class="table-tool-button" data-table-action="reminders" type="button">
+                <span class="material-symbols-outlined" aria-hidden="true">notifications</span>
+                <span>Send reminders</span>
+            </button>
+            <button class="table-tool-button" data-table-action="status" type="button">
+                <span class="material-symbols-outlined" aria-hidden="true">sell</span>
+                <span>Assign status</span>
+            </button>
+            <span class="table-selected-counter" data-selected-count data-count="0">0 selected</span>
+        `;
+        host.parentNode.insertBefore(tools, host);
+
+        const pagination = document.createElement("div");
+        pagination.className = "table-pagination";
+        pagination.innerHTML = `
+            <span class="text-xs font-bold text-on-surface-variant" data-page-label>Page 1</span>
+            <div class="flex gap-2">
+                <button class="table-tool-button" data-prev-page type="button">Previous</button>
+                <button class="table-tool-button" data-next-page type="button">Next</button>
+            </div>
+        `;
+        host.parentNode.insertBefore(pagination, host.nextSibling);
+
+        let page = 1;
+        const pageSize = 6;
+        let filteredRows = rows;
+        let skeletonTimer = null;
+        const setTableLoading = () => {
+            if (skeletonTimer) window.clearTimeout(skeletonTimer);
+            host.classList.add("is-loading");
+            skeletonTimer = window.setTimeout(() => host.classList.remove("is-loading"), 260);
+        };
+        const updateVisibleRows = () => {
+            const maxPage = Math.max(1, Math.ceil(filteredRows.length / pageSize));
+            page = Math.min(page, maxPage);
+            rows.forEach((row) => row.classList.add("hidden"));
+            filteredRows.slice((page - 1) * pageSize, page * pageSize).forEach((row) => row.classList.remove("hidden"));
+            const pageLabel = pagination.querySelector("[data-page-label]");
+            pageLabel.dataset.pageCurrent = page;
+            pageLabel.dataset.pageTotal = maxPage;
+            pageLabel.textContent = `Page ${page} of ${maxPage}`;
+            window.HydroFlowSyncLocale?.();
+        };
+        const updateSelection = () => {
+            const selected = table.querySelectorAll("[data-row-select]:checked").length;
+            const selectedLabel = tools.querySelector("[data-selected-count]");
+            selectedLabel.dataset.count = selected;
+            selectedLabel.textContent = `${selected} selected`;
+            window.HydroFlowSyncLocale?.();
+        };
+        const search = tools.querySelector(".table-search");
+        search.addEventListener("input", () => {
+            setTableLoading();
+            const query = search.value.trim().toLowerCase();
+            filteredRows = rows.filter((row) => row.dataset.globalFilterHidden !== "true" && row.textContent.toLowerCase().includes(query));
+            page = 1;
+            updateVisibleRows();
+        });
+        tools.querySelectorAll(".table-tool-button").forEach((button) => {
+            button.addEventListener("click", () => {
+                if (button.dataset.tableAction === "reminders") {
+                    document.querySelector("[data-drawer-open='notifications-drawer']")?.click();
+                }
+            });
+        });
+        table.querySelector("[data-select-all]").addEventListener("change", (event) => {
+            rows.forEach((row) => {
+                const checkbox = row.querySelector("[data-row-select]");
+                if (!row.classList.contains("hidden")) checkbox.checked = event.target.checked;
+            });
+            updateSelection();
+        });
+        table.querySelectorAll("[data-row-select]").forEach((checkbox) => checkbox.addEventListener("change", updateSelection));
+        updateSelection();
+        const semanticSortValue = (row, index, label) => {
+            const labelKey = String(label || "").toLowerCase();
+            const text = String(row.cells[index]?.textContent || "").trim();
+            const key = text.toLowerCase();
+            const datasetNumber = (name) => {
+                const value = Number(row.dataset[name]);
+                return Number.isFinite(value) ? { type: "number", value } : null;
+            };
+            const datasetText = (name) => row.dataset[name]
+                ? { type: "text", value: String(row.dataset[name]).toLowerCase() }
+                : null;
+            if (row.classList.contains("residential-district-row") || row.classList.contains("residential-building-row")) {
+                if (labelKey.includes("complex") || labelKey.includes("комплекс") || labelKey.includes("kompleks")) {
+                    const value = datasetText("sortName");
+                    if (value) return value;
+                }
+                if (labelKey.includes("infra") || labelKey.includes("инфра")) {
+                    const value = datasetNumber("sortUnits") || datasetNumber("sortBuildings");
+                    if (value) return value;
+                }
+                if (labelKey.includes("system") || labelKey.includes("систем") || labelKey.includes("tizim")) {
+                    const value = datasetNumber("sortSystemRank") || datasetNumber("sortHealth");
+                    if (value) return value;
+                }
+                if (labelKey.includes("finance") || labelKey.includes("фина") || labelKey.includes("moliya")) {
+                    const value = datasetNumber("sortHealth") || datasetNumber("sortFinance");
+                    if (value) return value;
+                }
+                if (labelKey.includes("debt") || labelKey.includes("долг") || labelKey.includes("qarz")) {
+                    const value = datasetNumber("sortDebt");
+                    if (value) return value;
+                }
+                if (labelKey.includes("action") || labelKey.includes("действ") || labelKey.includes("amal")) {
+                    const value = datasetNumber("sortDebtors") || datasetNumber("sortPaid");
+                    if (value) return value;
+                }
+            }
+            if (labelKey.includes("priority") || labelKey.includes("приоритет") || labelKey.includes("ustuvor")) {
+                const priority = row.dataset.priority || key;
+                if (priority.includes("high") || priority.includes("высок") || priority.includes("yuqori")) return { type: "rank", value: 3 };
+                if (priority.includes("medium") || priority.includes("сред") || priority.includes("o'rta")) return { type: "rank", value: 2 };
+                if (priority.includes("low") || priority.includes("низ") || priority.includes("past")) return { type: "rank", value: 1 };
+            }
+            if (labelKey.includes("status") || labelKey.includes("статус") || labelKey.includes("holat")) {
+                const status = row.dataset.statusKey || key;
+                if (status.includes("critical") || status.includes("overdue") || status.includes("критич")) return { type: "rank", value: 5 };
+                if (status.includes("progress") || status.includes("active") || status.includes("актив")) return { type: "rank", value: 4 };
+                if (status.includes("pending") || status.includes("planned") || status.includes("warning") || status.includes("ожид")) return { type: "rank", value: 3 };
+                if (status.includes("scheduled") || status.includes("upcoming") || status.includes("заплан")) return { type: "rank", value: 2 };
+                if (status.includes("completed") || status.includes("success") || status.includes("paid") || status.includes("заверш")) return { type: "rank", value: 1 };
+            }
+            if (labelKey.includes("date") || labelKey.includes("time") || labelKey.includes("дата") || labelKey.includes("время")) {
+                const [day, month, year] = text.split("|")[0].trim().split(".").map(Number);
+                return { type: "date", value: new Date(year || 1970, (month || 1) - 1, day || 1).getTime() };
+            }
+            const numeric = Number(text.replace(/[^\d.-]/g, ""));
+            if (Number.isFinite(numeric) && /\d/.test(text) && !/[a-zа-я]/i.test(text.replace(/uzs/ig, ""))) {
+                return { type: "number", value: numeric };
+            }
+            return { type: "text", value: key };
+        };
+        const compareSemanticRows = (a, b, index, direction, label) => {
+            const av = semanticSortValue(a, index, label);
+            const bv = semanticSortValue(b, index, label);
+            const result = av.type === "text" || bv.type === "text"
+                ? String(av.value).localeCompare(String(bv.value), undefined, { numeric: true, sensitivity: "base" })
+                : av.value - bv.value;
+            return direction === "asc" ? result : -result;
+        };
+        Array.from(headRow.cells).forEach((header, index) => {
+            if (index === 0) {
+                header.classList.add("table-select-heading");
+                return;
+            }
+            const label = header.textContent.trim();
+            header.classList.add("table-filter-heading");
+            header.setAttribute("role", "button");
+            header.setAttribute("tabindex", "0");
+            header.setAttribute("aria-label", `Filter and sort by ${label}`);
+            header.innerHTML = `
+                <span class="table-filter-heading-inner">
+                    <span class="material-symbols-outlined table-filter-heading-icon" aria-hidden="true">filter_list</span>
+                    <span class="table-filter-heading-text">${label}</span>
+                    <span class="material-symbols-outlined table-sort-heading-icon" aria-hidden="true">unfold_more</span>
+                </span>
+            `;
+            const applySort = () => {
+                setTableLoading();
+                const direction = header.dataset.sortDirection === "asc" ? "desc" : "asc";
+                Array.from(headRow.cells).forEach((cell) => {
+                    if (cell !== header) {
+                        delete cell.dataset.sortDirection;
+                        const icon = cell.querySelector(".table-sort-heading-icon");
+                        if (icon) icon.textContent = "unfold_more";
+                    }
+                });
+                header.dataset.sortDirection = direction;
+                const icon = header.querySelector(".table-sort-heading-icon");
+                if (icon) icon.textContent = direction === "asc" ? "arrow_upward" : "arrow_downward";
+                rows.sort((a, b) => compareSemanticRows(a, b, index, direction, label));
+                rows.forEach((row) => body.appendChild(row));
+                filteredRows = rows.filter((row) => row.textContent.toLowerCase().includes(search.value.trim().toLowerCase()));
+                updateVisibleRows();
+            };
+            header.addEventListener("click", applySort);
+            header.addEventListener("keydown", (event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    applySort();
+                }
+            });
+        });
+        pagination.querySelector("[data-prev-page]").addEventListener("click", () => {
+            setTableLoading();
+            page = Math.max(1, page - 1);
+            updateVisibleRows();
+        });
+        pagination.querySelector("[data-next-page]").addEventListener("click", () => {
+            setTableLoading();
+            page += 1;
+            updateVisibleRows();
+        });
+        updateVisibleRows();
+    };
+    document.querySelectorAll("table").forEach(enhanceTable);
+
+    const setupCharts = () => {
+        if (!window.Chart) return;
+        const baseOptions = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: "bottom", labels: { boxWidth: 10, usePointStyle: true } },
+                tooltip: {
+                    backgroundColor: "#171c1f",
+                    titleColor: "#ffffff",
+                    bodyColor: "#ffffff",
+                    borderColor: "rgba(112,120,125,0.18)",
+                    borderWidth: 1,
+                    padding: 12,
+                    cornerRadius: 8,
+                    displayColors: true,
+                    callbacks: {
+                        label: (ctx) => `${ctx.dataset.label}: ${Number(ctx.raw).toLocaleString("en-US")} UZS`
+                    }
+                }
+            },
+            scales: {
+                y: { beginAtZero: true, grid: { color: "rgba(112,120,125,0.15)" } },
+                x: { grid: { display: false } }
+            }
+        };
+        const analytics = document.getElementById("analytics-balance-chart");
+        if (analytics && !analytics.dataset.ready) {
+            analytics.dataset.ready = "true";
+            new Chart(analytics, {
+                type: "bar",
+                data: {
+                    labels: ["Jan", "Feb", "Mar", "Apr"],
+                    datasets: [
+                        { label: "Debit", data: [820000000, 940000000, 790000000, 860000000], backgroundColor: "#0061FF", borderRadius: 4 },
+                        { label: "Credit", data: [110000000, 120000000, 180000000, 160000000], backgroundColor: "#D1E4FF", borderRadius: 4 },
+                        { label: "Accruals", data: [320000000, 360000000, 240000000, 300000000], backgroundColor: "#FF6B00", borderRadius: 4 },
+                        { label: "Receipts", data: [410000000, 280000000, 220000000, 380000000], backgroundColor: "#00A878", borderRadius: 4 }
+                    ]
+                },
+                options: baseOptions
+            });
+        }
+        const consumption = document.getElementById("consumption-chart");
+        if (consumption && !consumption.dataset.ready) {
+            consumption.dataset.ready = "true";
+            new Chart(consumption, {
+                type: "bar",
+                data: {
+                    labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
+                    datasets: [
+                        { label: "Water", data: [128000000, 139000000, 118000000, 126000000, 132000000, 141000000], backgroundColor: "rgba(0, 45, 166, 0.45)", borderRadius: 4 },
+                        { label: "Heating", data: [91000000, 84000000, 99000000, 76000000, 54000000, 42000000], backgroundColor: "rgba(0, 92, 114, 0.25)", borderRadius: 4 }
+                    ]
+                },
+                options: baseOptions
+            });
+        }
+    };
+    setupCharts();
+
+    const backdrop = document.querySelector("[data-overlay-backdrop]");
+    let backdropTimer = null;
+    const showBackdrop = () => {
+        if (!backdrop) return;
+        if (backdropTimer) window.clearTimeout(backdropTimer);
+        backdrop.classList.remove("hidden");
+        requestAnimationFrame(() => backdrop.classList.add("is-visible"));
+    };
+    const hideBackdrop = () => {
+        if (!backdrop) return;
+        backdrop.classList.remove("is-visible");
+        backdropTimer = window.setTimeout(() => backdrop.classList.add("hidden"), prefersReduced ? 0 : 180);
+    };
+    const closeAll = () => {
+        document.querySelectorAll(".app-drawer.is-open").forEach((drawer) => {
+            drawer.classList.remove("is-open");
+            drawer.setAttribute("aria-hidden", "true");
+        });
+        document.querySelectorAll(".app-modal.is-open").forEach((modal) => {
+            modal.classList.add("hidden");
+            modal.classList.remove("is-open", "flex");
+            modal.setAttribute("aria-hidden", "true");
+        });
+        hideBackdrop();
+    };
+    document.querySelectorAll("[data-drawer-open]").forEach((button) => {
+        button.addEventListener("click", () => {
+            closeAll();
+            document.querySelector(".account-menu")?.classList.add("hidden");
+            const drawer = document.getElementById(button.dataset.drawerOpen);
+            if (!drawer) return;
+            showBackdrop();
+            drawer.classList.add("is-open");
+            drawer.setAttribute("aria-hidden", "false");
+        });
+    });
+    document.querySelectorAll("[data-modal-open]").forEach((button) => {
+        button.addEventListener("click", () => {
+            closeAll();
+            const modal = document.getElementById(button.dataset.modalOpen);
+            if (!modal) return;
+            showBackdrop();
+            modal.classList.remove("hidden");
+            modal.classList.add("flex", "is-open");
+            modal.setAttribute("aria-hidden", "false");
+        });
+    });
+    document.querySelectorAll("[data-close-overlay]").forEach((button) => button.addEventListener("click", closeAll));
+    backdrop?.addEventListener("click", closeAll);
+    document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") closeAll();
+        if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") {
+            event.preventDefault();
+            document.getElementById("command-palette")?.classList.remove("hidden");
+            document.getElementById("command-palette")?.classList.add("flex", "is-open");
+            document.getElementById("command-palette")?.setAttribute("aria-hidden", "false");
+            showBackdrop();
+            window.setTimeout(() => document.querySelector("[data-command-input]")?.focus(), 0);
+        }
+    });
+
+    document.querySelectorAll("[data-command-open]").forEach((input) => {
+        input.closest("form")?.addEventListener("submit", (event) => event.preventDefault());
+        input.addEventListener("focus", () => {
+            document.getElementById("command-palette")?.classList.remove("hidden");
+            document.getElementById("command-palette")?.classList.add("flex", "is-open");
+            document.getElementById("command-palette")?.setAttribute("aria-hidden", "false");
+            showBackdrop();
+            window.setTimeout(() => document.querySelector("[data-command-input]")?.focus(), 0);
+        });
+    });
+    document.querySelector("[data-command-input]")?.addEventListener("input", (event) => {
+        const query = event.target.value.trim().toLowerCase();
+        document.querySelectorAll(".command-item").forEach((item) => {
+            item.classList.toggle("hidden", !item.textContent.toLowerCase().includes(query));
+        });
+    });
+    const accountToggle = document.querySelector("[data-account-toggle]");
+    const accountMenu = document.querySelector(".account-menu");
+    const closeAccountMenu = () => {
+        accountMenu?.classList.add("hidden");
+        accountToggle?.setAttribute("aria-expanded", "false");
+    };
+    accountToggle?.addEventListener("click", (event) => {
+        event.stopPropagation();
+        const willOpen = accountMenu?.classList.contains("hidden");
+        accountMenu?.classList.toggle("hidden");
+        accountToggle?.setAttribute("aria-expanded", willOpen ? "true" : "false");
+    });
+    document.addEventListener("click", (event) => {
+        if (!event.target.closest("[data-account-toggle]") && !event.target.closest(".account-menu")) {
+            closeAccountMenu();
+        }
+    });
+    accountMenu?.querySelectorAll("button").forEach((button) => button.addEventListener("click", closeAccountMenu));
+    document.querySelector("[data-mark-read]")?.addEventListener("click", () => {
+        document.querySelectorAll("[data-notification-list] .notification-item").forEach((item) => item.classList.add("opacity-60"));
+        document.querySelector("[data-notification-dot]")?.classList.add("hidden");
+    });
+
+    document.querySelectorAll("button").forEach((button) => {
+        const label = button.textContent.trim().toLowerCase();
+        if (label.includes("filter") || label.includes("last 30 days")) {
+            button.addEventListener("click", () => document.querySelector("[data-drawer-open='filter-drawer']")?.click());
+        }
+        if ((label.includes("details") || label.includes("view report") || label.includes("billing history")) && !button.matches("[data-apartment-details]")) {
+            button.setAttribute("data-detail-open", "");
+        }
+    });
+    document.querySelectorAll("[data-detail-open]:not([data-apartment-details])").forEach((button) => {
+        button.addEventListener("click", () => document.querySelector("[data-drawer-open='details-drawer']")?.click());
+    });
+
+    window.HydroFlowFiltersBootstrapped = true;
+})();
+</script>
+<script>
+    window.HydroFlowBackendData = JSON.parse("{{ backend_billing_data_json|default:'{}'|escapejs }}");
+</script>
+<script src="{% static 'js/app.js' %}?v=backend-hydration-20260420"></script>
+</body>
+</html>

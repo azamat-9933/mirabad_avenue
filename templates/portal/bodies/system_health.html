@@ -1,0 +1,532 @@
+<!-- Main Canvas -->
+<main class="flex-1 md:ml-64 flex flex-col min-h-screen pt-16">
+<!-- Content Area -->
+<div class="p-6 md:p-8 space-y-8">
+<!-- Page Title Header -->
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+<div>
+<h2 class="text-3xl font-extrabold text-primary tracking-tight">Infrastructure &amp; System Health</h2>
+<p class="text-on-surface-variant text-sm mt-1">Real-time status of water distribution and thermal cores across all zones.</p>
+</div>
+<div class="flex items-center gap-3">
+<button class="flex items-center gap-2 px-4 py-2 bg-surface-container-high hover:bg-surface-container-highest transition-colors rounded-lg text-sm font-semibold" data-export-context="maintenance" data-export-open data-export-source="System Maintenance Log" type="button">
+<span class="material-symbols-outlined text-lg">download</span>
+                        Export Logs
+                    </button>
+<button class="flex items-center gap-2 px-4 py-2 bg-primary text-on-primary hover:opacity-90 transition-opacity rounded-lg text-sm font-semibold shadow-md" data-deploy-maintenance-open data-modal-open="deploy-maintenance-modal" type="button">
+<span class="material-symbols-outlined text-lg">build</span>
+                        Deploy Maintenance
+                    </button>
+</div>
+</div>
+<!-- KPI Cards Bento Grid -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 motion-stagger">
+<!-- Efficiency -->
+<div class="bg-surface-container-lowest p-6 rounded-lg shadow-sm border-b-4 border-primary ring-1 ring-black/5">
+<div class="flex justify-between items-start mb-4">
+<div class="p-2 bg-primary-fixed-dim/20 rounded-lg">
+<span class="material-symbols-outlined text-primary-container">bolt</span>
+</div>
+<span class="text-xs font-bold text-secondary flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">trending_up</span> +0.4%
+                        </span>
+</div>
+<p class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Overall System Efficiency</p>
+<h3 class="text-3xl font-black text-on-surface mt-1">98.4%</h3>
+<div aria-label="Overall system efficiency 98.4 percent" aria-valuemax="100" aria-valuemin="0" aria-valuenow="98.4" class="kpi-progress-meter kpi-progress-meter-blue system-efficiency-meter" role="meter" style="--progress: 98.4%;" data-value="98.4%">
+<span></span>
+</div>
+</div>
+<!-- Alerts -->
+<div class="bg-surface-container-lowest p-6 rounded-lg shadow-sm border-b-4 border-error ring-1 ring-black/5">
+<div class="flex justify-between items-start mb-4">
+<div class="p-2 bg-error-container/50 rounded-lg">
+<span class="material-symbols-outlined text-error">warning</span>
+</div>
+</div>
+<p class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Active Alerts</p>
+<h3 class="text-3xl font-black text-on-surface mt-1">3 <span class="text-sm font-medium text-on-surface-variant tracking-normal">Minor</span></h3>
+<p class="text-[10px] text-error font-bold mt-1">0 CRITICAL TASKS PENDING</p>
+</div>
+<!-- Water Pressure -->
+<div class="bg-surface-container-lowest p-6 rounded-lg shadow-sm border-b-4 border-tertiary ring-1 ring-black/5">
+<div class="flex justify-between items-start mb-4">
+<div class="p-2 bg-tertiary-fixed/30 rounded-lg">
+<span class="material-symbols-outlined text-tertiary">compress</span>
+</div>
+<div class="flex items-center gap-1">
+<div class="w-2 h-2 rounded-full bg-secondary motion-safe:animate-pulse"></div>
+<span class="text-[10px] font-bold text-secondary uppercase">Live</span>
+</div>
+</div>
+<p class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Water Pressure Status</p>
+<h3 class="text-3xl font-black text-on-surface mt-1 uppercase">Stable</h3>
+</div>
+<!-- Core Temp -->
+<div class="bg-surface-container-lowest p-6 rounded-lg shadow-sm border-b-4 border-secondary ring-1 ring-black/5">
+<div class="flex justify-between items-start mb-4">
+<div class="p-2 bg-secondary-container/50 rounded-lg">
+<span class="material-symbols-outlined text-secondary">device_thermostat</span>
+</div>
+</div>
+<p class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Heating Core Temp</p>
+<h3 class="text-3xl font-black text-on-surface mt-1 uppercase tracking-tight">Optimal</h3>
+</div>
+</div>
+<!-- Main Interactive Section -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+<!-- Network Health Map (Visual Focus) -->
+<div class="lg:col-span-8 space-y-6">
+<section class="network-health-panel" data-network-map>
+<div class="network-health-header">
+<div>
+<div class="network-eyebrow"><span class="status-dot dot-operational"></span> Live network layer</div>
+<h4>Network Health</h4>
+<p>Operational status across residential nodes</p>
+</div>
+<div class="network-health-actions" role="group" aria-label="Network status filters">
+<button class="network-filter is-active" data-network-filter="all" type="button">All <strong>145</strong></button>
+<button class="network-filter" data-network-filter="online" type="button"><span class="status-dot dot-operational"></span> Online <strong>142</strong></button>
+<button class="network-filter" data-network-filter="issue" type="button"><span class="status-dot dot-critical"></span> Issue <strong>3</strong></button>
+</div>
+</div>
+<div class="network-stage">
+<div class="network-layer" data-network-layer>
+<svg class="network-pipes" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+<path class="network-pipe is-online" data-route="alpha-harbor" d="M22 19 C18 31 13 43 9 58"></path>
+<path class="network-pipe is-issue" data-route="harbor-skyline" d="M9 58 C25 50 39 42 53 36"></path>
+<path class="network-pipe is-online" data-route="alpha-vista" d="M22 19 C43 30 60 48 72 68"></path>
+<path class="network-pipe is-online" data-route="vista-core" d="M72 68 C80 55 86 45 90 32"></path>
+<path class="network-pipe is-warning" data-route="skyline-vista" d="M53 36 C61 47 67 58 72 68"></path>
+</svg>
+<button class="network-node is-online is-selected" style="--x:22%; --y:19%;" data-node="zone-alpha" data-status="online" data-route="alpha-harbor alpha-vista" data-title="Zone Alpha" data-subtitle="Primary distribution hub" data-pressure="57 PSI" data-flow="1.8M l/day" data-latency="18ms" data-uptime="99.98%" type="button" aria-label="Zone Alpha network node">
+<span class="network-node-icon material-symbols-outlined">apartment</span>
+<span class="network-node-label">Zone Alpha</span>
+</button>
+<button class="network-node is-issue" style="--x:53%; --y:36%;" data-node="skyline-res" data-status="issue" data-route="harbor-skyline skyline-vista" data-title="Skyline Res." data-subtitle="Pressure drop in Block B" data-pressure="42 PSI" data-flow="0.9M l/day" data-latency="62ms" data-uptime="96.2%" type="button" aria-label="Skyline Residences issue node">
+<span class="network-node-icon material-symbols-outlined">domain</span>
+<span class="network-node-label">Skyline Res.</span>
+</button>
+<button class="network-node is-online" style="--x:9%; --y:58%;" data-node="harbor-west" data-status="online" data-route="alpha-harbor harbor-skyline" data-title="Harbor West" data-subtitle="Secondary pressure cluster" data-pressure="55 PSI" data-flow="1.2M l/day" data-latency="24ms" data-uptime="99.71%" type="button" aria-label="Harbor West network node">
+<span class="network-node-icon material-symbols-outlined">corporate_fare</span>
+<span class="network-node-label">Harbor West</span>
+</button>
+<button class="network-node is-online" style="--x:72%; --y:68%;" data-node="vista-towers" data-status="online" data-route="alpha-vista vista-core skyline-vista" data-title="Vista Towers" data-subtitle="Main inlet and thermal telemetry" data-pressure="56 PSI" data-flow="1.5M l/day" data-latency="21ms" data-uptime="99.86%" type="button" aria-label="Vista Towers network node">
+<span class="network-node-icon material-symbols-outlined">home_work</span>
+<span class="network-node-label">Vista Towers</span>
+</button>
+<button class="network-node is-warning" style="--x:90%; --y:32%;" data-node="thermal-core" data-status="online" data-route="vista-core" data-title="Thermal Core" data-subtitle="Heating core telemetry relay" data-pressure="Nominal" data-flow="83% load" data-latency="28ms" data-uptime="99.44%" type="button" aria-label="Thermal Core network node">
+<span class="network-node-icon material-symbols-outlined">device_thermostat</span>
+<span class="network-node-label">Thermal Core</span>
+</button>
+</div>
+<div class="network-controls" aria-label="Map zoom controls">
+<button data-network-zoom="in" type="button" aria-label="Zoom in"><span class="material-symbols-outlined">add</span></button>
+<button data-network-zoom="out" type="button" aria-label="Zoom out"><span class="material-symbols-outlined">remove</span></button>
+<button data-network-reset type="button" aria-label="Reset map"><span class="material-symbols-outlined">center_focus_strong</span></button>
+</div>
+<aside class="network-detail-card" aria-live="polite">
+<div class="network-detail-top">
+<span class="network-detail-status" data-network-detail-status>Online</span>
+<span class="network-detail-time">Updated 09:41</span>
+</div>
+<h5 data-network-detail-title>Zone Alpha</h5>
+<p data-network-detail-subtitle>Primary distribution hub</p>
+<div class="network-detail-grid">
+<div><span>Pressure</span><strong data-network-detail-pressure>57 PSI</strong></div>
+<div><span>Flow</span><strong data-network-detail-flow>1.8M l/day</strong></div>
+<div><span>Latency</span><strong data-network-detail-latency>18ms</strong></div>
+<div><span>Uptime</span><strong data-network-detail-uptime>99.98%</strong><div class="percent-meter percent-meter-green percent-meter-compact" style="--progress: 99.98%;" data-value="99.98%" data-network-detail-uptime-meter><span class="percent-meter-track"><span class="percent-meter-fill"></span></span></div></div>
+</div>
+<button class="network-detail-action" data-detail-open type="button">Open node details</button>
+</aside>
+</div>
+</section>
+<!-- Real-time Water Pressure Stability Chart -->
+<section class="pressure-stability-card bg-surface-container-lowest rounded-xl p-6 shadow-sm border border-outline-variant/10">
+<div class="flex justify-between items-center mb-8">
+<div>
+<h4 class="text-lg font-bold text-primary">Water Pressure Stability</h4>
+<p class="text-xs text-on-surface-variant">Real-time telemetry from main supply line (last 24h)</p>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-2">
+<div class="pressure-legend-dot pressure-legend-actual w-3 h-3 rounded-full bg-tertiary"></div>
+<span class="text-[10px] font-bold text-on-surface-variant">ACTUAL PSI</span>
+</div>
+<div class="flex items-center gap-2">
+<div class="pressure-legend-dot pressure-legend-target w-3 h-3 rounded-full bg-surface-variant"></div>
+<span class="text-[10px] font-bold text-on-surface-variant">NOMINAL TARGET</span>
+</div>
+</div>
+</div>
+<div class="pressure-bars h-48 flex items-end gap-1 px-2 relative">
+<!-- Background Grid Lines -->
+<div class="absolute inset-x-0 top-0 h-[1px] bg-slate-100"></div>
+<div class="absolute inset-x-0 top-1/4 h-[1px] bg-slate-100"></div>
+<div class="absolute inset-x-0 top-2/4 h-[1px] bg-slate-100"></div>
+<div class="absolute inset-x-0 top-3/4 h-[1px] bg-slate-100"></div>
+<!-- Bars representing pressure data -->
+<div class="flex-1 bg-tertiary/20 rounded-t-sm h-[85%] hover:bg-tertiary/40 transition-colors cursor-pointer group relative">
+<div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-on-surface text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">56 PSI</div>
+</div>
+<div class="flex-1 bg-tertiary/20 rounded-t-sm h-[88%]"></div>
+<div class="flex-1 bg-tertiary/20 rounded-t-sm h-[92%]"></div>
+<div class="flex-1 bg-tertiary/20 rounded-t-sm h-[90%]"></div>
+<div class="flex-1 bg-tertiary/20 rounded-t-sm h-[85%]"></div>
+<div class="flex-1 bg-tertiary/20 rounded-t-sm h-[82%]"></div>
+<div class="flex-1 bg-error/30 rounded-t-sm h-[40%]"></div> <!-- Dip -->
+<div class="flex-1 bg-tertiary/20 rounded-t-sm h-[75%]"></div>
+<div class="flex-1 bg-tertiary/20 rounded-t-sm h-[88%]"></div>
+<div class="flex-1 bg-tertiary/20 rounded-t-sm h-[92%]"></div>
+<div class="flex-1 bg-tertiary/20 rounded-t-sm h-[95%]"></div>
+<div class="flex-1 bg-tertiary/20 rounded-t-sm h-[93%]"></div>
+<div class="flex-1 bg-tertiary/20 rounded-t-sm h-[90%]"></div>
+<div class="flex-1 bg-tertiary/20 rounded-t-sm h-[88%]"></div>
+<div class="flex-1 bg-tertiary/20 rounded-t-sm h-[85%]"></div>
+<div class="flex-1 bg-tertiary/20 rounded-t-sm h-[82%]"></div>
+<div class="flex-1 bg-tertiary/20 rounded-t-sm h-[88%]"></div>
+<div class="flex-1 bg-tertiary/20 rounded-t-sm h-[91%]"></div>
+<div class="flex-1 bg-tertiary/20 rounded-t-sm h-[94%]"></div>
+<div class="flex-1 bg-tertiary/30 rounded-t-sm h-[98%]"></div> <!-- Current -->
+</div>
+<div class="flex justify-between mt-4 text-[10px] font-bold text-on-surface-variant tracking-wider uppercase">
+<span>00:00</span>
+<span>04:00</span>
+<span>08:00</span>
+<span>12:00</span>
+<span>16:00</span>
+<span>20:00</span>
+<span>NOW</span>
+</div>
+</section>
+</div>
+<!-- Sidebar/Contextual Info -->
+<div class="lg:col-span-4 space-y-8">
+<!-- Critical Alerts -->
+<section class="bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant/10 overflow-hidden">
+<div class="p-4 bg-error-container/30 border-b border-error/10 flex justify-between items-center">
+<h4 class="text-sm font-black text-error flex items-center gap-2">
+<span class="material-symbols-outlined text-lg">error</span>
+                                CRITICAL ALERTS
+                            </h4>
+<button class="text-[10px] font-bold px-2 py-0.5 bg-error text-white rounded transition-colors hover:brightness-110" data-modal-open="system-alerts-config-modal" type="button">ACT NOW</button>
+</div>
+<div class="divide-y divide-surface-container">
+<div class="p-4 flex gap-3">
+<div class="w-8 h-8 rounded-full bg-error-container flex-shrink-0 flex items-center justify-center text-error">
+<span class="material-symbols-outlined text-base">leak_add</span>
+</div>
+<div>
+<p class="text-xs font-bold text-on-surface">Pressure Drop Detected</p>
+<p class="text-[10px] text-on-surface-variant">Skyline Residences - Block B</p>
+<p class="text-[10px] text-error font-semibold mt-1">Detected: 12m ago</p>
+</div>
+</div>
+<div class="p-4 flex gap-3">
+<div class="w-8 h-8 rounded-full bg-secondary-container flex-shrink-0 flex items-center justify-center text-on-secondary-container">
+<span class="material-symbols-outlined text-base">offline_bolt</span>
+</div>
+<div>
+<p class="text-xs font-bold text-on-surface">Secondary Pump Offline</p>
+<p class="text-[10px] text-on-surface-variant">Industrial Sector 4</p>
+<p class="text-[10px] text-on-surface-variant font-semibold mt-1">Backup systems active.</p>
+</div>
+</div>
+</div>
+<button class="w-full py-3 text-[10px] font-black text-on-surface-variant hover:bg-surface-container transition-colors uppercase tracking-widest border-t border-surface-container" data-drawer-open="notifications-drawer" type="button">
+                            View All Active Alerts
+                        </button>
+</section>
+<!-- Upcoming Maintenance Schedule -->
+<section class="bg-surface-container-low rounded-xl p-6 shadow-sm border border-outline-variant/10" data-card="upcoming-maintenance">
+<h4 class="text-sm font-black text-primary uppercase tracking-widest mb-6 flex items-center gap-2">
+<span class="material-symbols-outlined text-lg">calendar_month</span>
+                            UPCOMING MAINTENANCE
+                        </h4>
+<div class="space-y-6">
+<div class="flex gap-4">
+<div class="flex flex-col items-center">
+<span class="text-[10px] font-bold text-on-surface-variant uppercase">APR</span>
+<span class="text-lg font-black text-primary leading-none">24</span>
+</div>
+<div class="h-10 w-[2px] bg-primary/20"></div>
+<div>
+<p class="text-xs font-bold text-on-surface">Sensor Calibration</p>
+<p class="text-[10px] text-on-surface-variant">Vista Towers • 09:00</p>
+<span class="text-[9px] px-2 py-0.5 bg-tertiary-fixed text-on-tertiary-fixed font-bold rounded mt-1 inline-block uppercase" data-status="scheduled">Scheduled</span>
+</div>
+</div>
+<div class="flex gap-4">
+<div class="flex flex-col items-center opacity-60">
+<span class="text-[10px] font-bold text-on-surface-variant uppercase">APR</span>
+<span class="text-lg font-black text-primary leading-none">27</span>
+</div>
+<div class="h-10 w-[2px] bg-primary/10"></div>
+<div>
+<p class="text-xs font-bold text-on-surface">Pipe Retrofitting</p>
+<p class="text-[10px] text-on-surface-variant">Zone Delta • 13:30</p>
+<span class="text-[9px] px-2 py-0.5 bg-secondary-container text-on-secondary-container font-bold rounded mt-1 inline-block uppercase" data-status="planned">Planned</span>
+</div>
+</div>
+<div class="flex gap-4">
+<div class="flex flex-col items-center opacity-40">
+<span class="text-[10px] font-bold text-on-surface-variant uppercase">MAY</span>
+<span class="text-lg font-black text-primary leading-none">02</span>
+</div>
+<div class="h-10 w-[2px] bg-primary/10"></div>
+<div>
+<p class="text-xs font-bold text-on-surface">Thermal Core Flush</p>
+<p class="text-[10px] text-on-surface-variant">Main Hub • 22:00</p>
+<span class="text-[9px] px-2 py-0.5 bg-surface-container-highest text-on-surface-variant font-bold rounded mt-1 inline-block uppercase">Pending</span>
+</div>
+</div>
+</div>
+</section>
+</div>
+</div>
+<!-- Maintenance Log Table -->
+<section class="bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant/10 overflow-hidden">
+<div class="p-6 flex justify-between items-center border-b border-surface-container">
+<div>
+<h4 class="text-lg font-bold text-primary">System Maintenance Log</h4>
+<p class="text-xs text-on-surface-variant">Historical and upcoming maintenance activities</p>
+</div>
+<div class="flex gap-2">
+<button class="px-3 py-1.5 border border-outline-variant rounded text-xs font-bold hover:bg-surface-container transition-colors">Last 30 Days</button>
+<button class="px-3 py-1.5 border border-outline-variant rounded text-xs font-bold hover:bg-surface-container transition-colors">Filters</button>
+<button class="px-3 py-1.5 border border-primary/35 rounded text-xs font-bold text-primary hover:bg-primary/10 transition-colors" data-export-open data-export-context="maintenance" data-export-source="System Maintenance Log" type="button">Export report</button>
+</div>
+</div>
+<div class="overflow-hidden maintenance-table-fit" data-maintenance-workspace>
+<table class="w-full text-left border-collapse maintenance-log-table" data-maintenance-table>
+<colgroup>
+<col class="w-[3.5%]">
+<col class="w-[17%]">
+<col class="w-[21.5%]">
+<col class="w-[13%]">
+<col class="w-[16%]">
+<col class="w-[14%]">
+<col class="w-[15%]">
+</colgroup>
+<thead>
+<tr class="bg-surface-container-low">
+<th class="px-6 py-4 text-[10px] font-black text-on-surface-variant uppercase tracking-widest">Asset / Task</th>
+<th class="px-6 py-4 text-[10px] font-black text-on-surface-variant uppercase tracking-widest">Location</th>
+<th class="px-6 py-4 text-[10px] font-black text-on-surface-variant uppercase tracking-widest">Priority</th>
+<th class="px-6 py-4 text-[10px] font-black text-on-surface-variant uppercase tracking-widest">Date / Time</th>
+<th class="px-6 py-4 text-[10px] font-black text-on-surface-variant uppercase tracking-widest">Status</th>
+<th class="px-6 py-4 text-[10px] font-black text-on-surface-variant uppercase tracking-widest text-right">Action</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-surface-container" data-maintenance-body>
+<tr>
+<td class="px-6 py-8 text-sm text-on-surface-variant" colspan="7">Loading maintenance tasks...</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+</div>
+<!-- Footer / FAB Context -->
+<footer class="p-8 mt-auto text-center border-t border-surface-container">
+<p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-[0.2em]">HydroFlow Enterprise v4.2.0 • Operational Authority Secured</p>
+</footer>
+</main>
+<script>
+(() => {
+    const map = document.querySelector("[data-network-map]");
+    if (!map) return;
+
+    const stage = map.querySelector(".network-stage");
+    const layer = map.querySelector("[data-network-layer]");
+    const nodes = Array.from(map.querySelectorAll(".network-node"));
+    const pipes = Array.from(map.querySelectorAll(".network-pipe"));
+    const filters = Array.from(map.querySelectorAll("[data-network-filter]"));
+    const detail = {
+        status: map.querySelector("[data-network-detail-status]"),
+        title: map.querySelector("[data-network-detail-title]"),
+        subtitle: map.querySelector("[data-network-detail-subtitle]"),
+        pressure: map.querySelector("[data-network-detail-pressure]"),
+        flow: map.querySelector("[data-network-detail-flow]"),
+        latency: map.querySelector("[data-network-detail-latency]"),
+        uptime: map.querySelector("[data-network-detail-uptime]"),
+        uptimeMeter: map.querySelector("[data-network-detail-uptime-meter]"),
+    };
+    let zoom = 1;
+    let panX = 0;
+    let panY = 0;
+    const zoomMin = 0.86;
+    const zoomMax = 1.72;
+
+    const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+
+    const clampPan = () => {
+        panX = clamp(panX, -260 * zoom, 260 * zoom);
+        panY = clamp(panY, -180 * zoom, 180 * zoom);
+    };
+
+    const applyMapTransform = () => {
+        layer.style.setProperty("--network-zoom", zoom);
+        layer.style.setProperty("--network-pan-x", `${panX}px`);
+        layer.style.setProperty("--network-pan-y", `${panY}px`);
+    };
+
+    const setZoom = (nextZoom, originEvent = null) => {
+        const previousZoom = zoom;
+        zoom = clamp(Number(nextZoom.toFixed(2)), zoomMin, zoomMax);
+        if (originEvent && stage && previousZoom !== zoom) {
+            const rect = stage.getBoundingClientRect();
+            const offsetX = originEvent.clientX - rect.left - rect.width / 2;
+            const offsetY = originEvent.clientY - rect.top - rect.height / 2;
+            const ratio = zoom / previousZoom;
+            panX -= offsetX * (ratio - 1);
+            panY -= offsetY * (ratio - 1);
+        }
+        clampPan();
+        applyMapTransform();
+    };
+
+    const setDrawerData = (node) => {
+        const drawerTitle = document.getElementById("details-title");
+        if (drawerTitle) drawerTitle.textContent = node.dataset.title || "Network node";
+        document.querySelector("[data-detail-subtitle]")?.replaceChildren(document.createTextNode(node.dataset.subtitle || "Network node detail preview."));
+        document.querySelector("[data-detail-status]")?.replaceChildren(document.createTextNode(node.dataset.status === "issue" ? "Issue detected" : "Operational"));
+        document.querySelector("[data-detail-status-label]")?.replaceChildren(document.createTextNode(node.dataset.status === "issue" ? "Issue" : "Operational"));
+        document.querySelector("[data-detail-health]")?.replaceChildren(document.createTextNode(node.dataset.uptime || "99.9%"));
+        document.querySelector("[data-detail-alert]")?.replaceChildren(document.createTextNode(node.dataset.status === "issue" ? "Pressure anomaly is active. Assign a technician before SLA breach." : "No active alerts for this node."));
+        const dot = document.querySelector("[data-detail-status-dot]");
+        if (dot) {
+            dot.classList.toggle("dot-critical", node.dataset.status === "issue");
+            dot.classList.toggle("dot-operational", node.dataset.status !== "issue");
+        }
+    };
+
+    const selectNode = (node) => {
+        nodes.forEach((item) => item.classList.toggle("is-selected", item === node));
+        const routes = (node.dataset.route || "").split(/\s+/).filter(Boolean);
+        pipes.forEach((pipe) => {
+            const active = routes.includes(pipe.dataset.route);
+            pipe.classList.toggle("is-highlighted", active);
+            pipe.classList.toggle("is-dimmed", !active);
+        });
+        const isIssue = node.dataset.status === "issue";
+        detail.status.textContent = isIssue ? "Issue" : "Online";
+        detail.status.classList.toggle("is-issue", isIssue);
+        detail.title.textContent = node.dataset.title;
+        detail.subtitle.textContent = node.dataset.subtitle;
+        detail.pressure.textContent = node.dataset.pressure;
+        detail.flow.textContent = node.dataset.flow;
+        detail.latency.textContent = node.dataset.latency;
+        detail.uptime.textContent = node.dataset.uptime;
+        if (detail.uptimeMeter) {
+            detail.uptimeMeter.dataset.value = node.dataset.uptime;
+            detail.uptimeMeter.style.setProperty("--progress", node.dataset.uptime || "0%");
+        }
+        setDrawerData(node);
+        window.HydroFlowSyncLocale?.();
+    };
+
+    const applyFilter = (filter) => {
+        filters.forEach((button) => button.classList.toggle("is-active", button.dataset.networkFilter === filter));
+        nodes.forEach((node) => {
+            const hidden = filter === "issue" ? node.dataset.status !== "issue" : filter === "online" ? node.dataset.status === "issue" : false;
+            node.classList.toggle("is-hidden", hidden);
+        });
+        pipes.forEach((pipe) => pipe.classList.toggle("is-dimmed", filter === "issue" && !pipe.classList.contains("is-issue")));
+        const firstVisible = nodes.find((node) => !node.classList.contains("is-hidden"));
+        if (firstVisible) selectNode(firstVisible);
+    };
+
+    nodes.forEach((node) => {
+        node.addEventListener("click", () => selectNode(node));
+        node.addEventListener("keydown", (event) => {
+            if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                selectNode(node);
+            }
+        });
+    });
+
+    filters.forEach((button) => button.addEventListener("click", () => applyFilter(button.dataset.networkFilter)));
+
+    if (stage) {
+        let isDragging = false;
+        let startX = 0;
+        let startY = 0;
+        let originX = 0;
+        let originY = 0;
+        const ignoredDragTargets = ".network-node, .network-controls, .network-detail-card, [data-network-filter]";
+
+        const stopDragging = (event) => {
+            if (!isDragging) return;
+            isDragging = false;
+            stage.classList.remove("is-panning");
+            stage.releasePointerCapture?.(event.pointerId);
+        };
+
+        stage.addEventListener("pointerdown", (event) => {
+            if (event.target.closest(ignoredDragTargets)) return;
+            isDragging = true;
+            startX = event.clientX;
+            startY = event.clientY;
+            originX = panX;
+            originY = panY;
+            stage.classList.add("is-panning");
+            stage.setPointerCapture?.(event.pointerId);
+        });
+
+        stage.addEventListener("pointermove", (event) => {
+            if (!isDragging) return;
+            panX = originX + event.clientX - startX;
+            panY = originY + event.clientY - startY;
+            clampPan();
+            applyMapTransform();
+        });
+
+        stage.addEventListener("pointerup", stopDragging);
+        stage.addEventListener("pointercancel", stopDragging);
+        stage.addEventListener("wheel", (event) => {
+            event.preventDefault();
+            const direction = event.deltaY < 0 ? 1 : -1;
+            setZoom(zoom + direction * 0.12, event);
+        }, { passive: false });
+    }
+
+    map.querySelector("[data-network-zoom='in']")?.addEventListener("click", () => {
+        setZoom(zoom + 0.12);
+    });
+    map.querySelector("[data-network-zoom='out']")?.addEventListener("click", () => {
+        setZoom(zoom - 0.12);
+    });
+    map.querySelector("[data-network-reset]")?.addEventListener("click", () => {
+        zoom = 1;
+        panX = 0;
+        panY = 0;
+        applyMapTransform();
+        applyFilter("all");
+    });
+
+    applyMapTransform();
+    selectNode(nodes.find((node) => node.classList.contains("is-selected")) || nodes[0]);
+})();
+</script>
+<!-- BottomNavBar for Mobile (md:hidden) -->
+<nav class="md:hidden fixed bottom-0 left-0 right-0 glass-panel border-t border-surface-container flex justify-around items-center p-3 z-50">
+<a class="flex flex-col items-center gap-1 text-slate-500" href="{% url 'portal:dashboard' %}">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="text-[9px] font-bold uppercase">Home</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-primary" href="{% url 'portal:system_health' %}">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">monitor_heart</span>
+<span class="text-[9px] font-bold uppercase">Health</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-slate-500" href="{% url 'portal:billing' %}">
+<span class="material-symbols-outlined">payments</span>
+<span class="text-[9px] font-bold uppercase">Billing</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-slate-500" href="#">
+<span class="material-symbols-outlined">account_circle</span>
+<span class="text-[9px] font-bold uppercase">Profile</span>
+</a>
+</nav>

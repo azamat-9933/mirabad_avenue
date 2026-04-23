@@ -1,0 +1,1049 @@
+<div class="fixed inset-0 z-[60] hidden overlay-backdrop" data-overlay-backdrop></div>
+<button class="hidden" data-drawer-open="details-drawer" type="button">Open details</button>
+<button class="hidden" data-drawer-open="apartment-details-drawer" type="button">Open apartment details</button>
+<button aria-label="Open checklist" class="checklist-floating-button" data-checklist-fab type="button">
+<span class="material-symbols-outlined">fact_check</span>
+<span class="checklist-floating-copy"><strong data-i18n-key="Checklist">Checklist</strong><small data-checklist-fab-text><b data-checklist-fab-count>5</b> tasks left</small></span>
+</button>
+
+<aside aria-labelledby="notifications-title" aria-hidden="true" class="app-drawer fixed top-0 right-0 z-[70] h-screen w-full max-w-md bg-white shadow-2xl border-l border-outline-variant/20 translate-x-full" id="notifications-drawer" role="dialog">
+<div class="h-full flex flex-col">
+<div class="px-6 py-5 border-b border-surface-container flex items-center justify-between">
+<div>
+<h2 class="text-lg font-black text-on-surface" id="notifications-title">Notifications</h2>
+<p class="text-xs text-on-surface-variant mt-1">Unread operational events and assigned actions.</p>
+</div>
+<button aria-label="Close notifications" class="p-2 rounded-lg hover:bg-surface-container transition-colors" data-close-overlay type="button">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<div class="px-6 py-3 border-b border-surface-container space-y-3">
+<div class="flex items-center justify-between">
+<span class="text-xs font-bold text-on-surface-variant" data-notification-count>3 unread</span>
+<div class="notification-toolbar-actions">
+<button class="text-xs font-bold text-primary hover:underline" data-mark-read type="button">Mark all as read</button>
+<button class="text-xs font-bold text-primary hover:underline" data-clear-read type="button">Clear read</button>
+</div>
+</div>
+<div class="notification-tabs" data-notification-tabs>
+<button class="is-active" data-notification-filter="all" type="button">All</button>
+<button data-notification-filter="critical" type="button">Critical</button>
+<button data-notification-filter="warning" type="button">Warning</button>
+<button data-notification-filter="info" type="button">Info</button>
+</div>
+</div>
+<div class="p-6 space-y-4 overflow-y-auto" data-notification-list>
+<div class="notification-group-label hidden" data-notification-group="pinned">Pinned</div>
+<div class="notification-group-label" data-notification-group="today">Today</div>
+<div class="notification-item critical-pulse" data-notification-id="pressure-drop" data-notification-section="today" data-read="false" data-pinned="false" data-severity="critical">
+<div class="notification-card-head">
+<p class="severity-badge severity-critical"><span class="status-dot dot-critical"></span>Critical</p>
+<div class="notification-card-meta">
+<time class="text-[10px] text-on-surface-variant">13 Apr 2026, 09:24</time>
+<button aria-label="Pin notification" aria-pressed="false" class="notification-pin" data-notification-pin type="button"><span class="material-symbols-outlined">keep</span><span class="notification-pin-label">Pin</span></button>
+</div>
+</div>
+<p class="text-sm font-bold text-on-surface mt-2">Pressure drop detected</p>
+<p class="text-xs text-on-surface-variant mt-1">Skyline Residences, Block B. Detected 12 minutes ago.</p>
+<p class="notification-action-state hidden" data-notification-state></p>
+<div class="mt-3 flex gap-2">
+<button class="drawer-action bg-error text-white" data-notification-action="Technician assignment queued" type="button">Assign technician</button>
+<button class="drawer-action bg-surface-container text-primary" data-detail-open type="button">Details</button>
+<button class="drawer-action bg-surface-container text-primary" data-confirm-action="close-critical-alert" type="button">Close alert</button>
+</div>
+</div>
+<div class="notification-item" data-notification-id="sensor-calibration" data-notification-section="today" data-read="false" data-pinned="false" data-severity="warning">
+<div class="notification-card-head">
+<p class="severity-badge severity-warning"><span class="status-dot dot-warning"></span>Warning</p>
+<div class="notification-card-meta">
+<time class="text-[10px] text-on-surface-variant">13 Apr 2026, 08:10</time>
+<button aria-label="Pin notification" aria-pressed="false" class="notification-pin" data-notification-pin type="button"><span class="material-symbols-outlined">keep</span><span class="notification-pin-label">Pin</span></button>
+</div>
+</div>
+<p class="text-sm font-bold text-on-surface mt-2">Sensor calibration scheduled</p>
+<p class="text-xs text-on-surface-variant mt-1">Vista Towers, today at 09:00.</p>
+<p class="notification-action-state hidden" data-notification-state></p>
+<div class="mt-3 flex gap-2">
+<button class="drawer-action bg-primary text-white" data-notification-action="Schedule opened" type="button">Open schedule</button>
+<button class="drawer-action bg-surface-container text-primary" data-notification-action="Notification muted" type="button">Mute</button>
+</div>
+</div>
+<div class="notification-group-label" data-notification-group="yesterday">Yesterday</div>
+<div class="notification-item" data-notification-id="payment-batch" data-notification-section="yesterday" data-read="false" data-pinned="false" data-severity="info">
+<div class="notification-card-head">
+<p class="severity-badge severity-info"><span class="status-dot dot-info"></span>Info</p>
+<div class="notification-card-meta">
+<time class="text-[10px] text-on-surface-variant">12 Apr 2026, 18:42</time>
+<button aria-label="Pin notification" aria-pressed="false" class="notification-pin" data-notification-pin type="button"><span class="material-symbols-outlined">keep</span><span class="notification-pin-label">Pin</span></button>
+</div>
+</div>
+<p class="text-sm font-bold text-on-surface mt-2">Payment batch imported</p>
+<p class="text-xs text-on-surface-variant mt-1">412 records from Payme and Click are ready for review.</p>
+<p class="notification-action-state hidden" data-notification-state></p>
+<div class="mt-3 flex gap-2">
+<button class="drawer-action bg-primary text-white" data-notification-action="Review queued" type="button">Review batch</button>
+<button class="drawer-action bg-surface-container text-primary" data-notification-action="Notification archived" type="button">Archive</button>
+</div>
+</div>
+<div class="empty-state hidden" data-notification-empty>
+<span class="material-symbols-outlined">notifications_off</span>
+<div>
+<p>No hidden alerts</p>
+<span>Resolved notifications are moved to the activity log.</span>
+</div>
+</div>
+</div>
+</div>
+</aside>
+
+<aside aria-labelledby="filter-title" aria-hidden="true" class="app-drawer fixed top-0 right-0 z-[70] h-screen w-full max-w-md bg-white shadow-2xl border-l border-outline-variant/20 translate-x-full" id="filter-drawer" role="dialog">
+<div class="h-full flex flex-col">
+<div class="px-6 py-5 border-b border-surface-container flex items-center justify-between">
+<div>
+<h2 class="text-lg font-black text-on-surface" id="filter-title">Filters</h2>
+<p class="text-xs text-on-surface-variant mt-1">Filters apply to the current local data set and saved view state.</p>
+</div>
+<button aria-label="Close filters" class="p-2 rounded-lg hover:bg-surface-container transition-colors" data-close-overlay type="button">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<div class="p-6 space-y-6 overflow-y-auto">
+<div>
+<label class="drawer-label" for="filter-district">District</label>
+<select class="drawer-field" id="filter-district" data-filter-field data-filter-kind="district">
+<option value="all">All Districts</option>
+</select>
+</div>
+<div>
+<label class="drawer-label" for="filter-status">Status</label>
+<select class="drawer-field" id="filter-status" data-filter-field data-filter-kind="status">
+<option value="all">All statuses</option>
+<option value="low">Low Risk</option>
+<option value="medium">Medium Risk</option>
+<option value="critical">Critical</option>
+<option value="paid">Paid</option>
+<option value="debtor">Debtors</option>
+</select>
+</div>
+<div>
+<label class="drawer-label" for="filter-period">Period</label>
+<select class="drawer-field" id="filter-period" data-filter-field data-filter-kind="period">
+<option value="90">Last 90 days</option>
+<option value="30">Last 30 days</option>
+<option value="month">Current month</option>
+<option value="all">All time</option>
+</select>
+</div>
+<div class="space-y-2">
+<p class="drawer-label">Selected filters</p>
+<div class="flex flex-wrap gap-2" data-filter-drawer-chips>
+<span class="filter-chip">All Districts</span>
+<span class="filter-chip">Last 90 days</span>
+</div>
+</div>
+<div class="empty-state hidden" data-filter-empty>
+<span class="material-symbols-outlined">filter_alt_off</span>
+<div>
+<p data-i18n-key="No objects match these filters">No objects match these filters</p>
+<span data-i18n-key="Change district, status or period to restore data.">Change district, status or period to restore data.</span>
+</div>
+</div>
+<div class="error-state hidden" data-filter-error>
+<span class="material-symbols-outlined">error</span>
+<div>
+<p>Не удалось загрузить данные</p>
+<span>Это демо-состояние для будущей backend-интеграции.</span>
+</div>
+</div>
+</div>
+<div class="p-6 border-t border-surface-container flex gap-3">
+<button class="flex-1 py-3 rounded-lg bg-surface-container text-primary text-sm font-bold" data-confirm-action="reset-filters" data-needs-confirm="true" data-reset-filters type="button">Reset filters</button>
+<button class="flex-1 py-3 rounded-lg bg-primary text-white text-sm font-bold" data-apply-filters type="button">Apply filters</button>
+</div>
+</div>
+</aside>
+
+<aside aria-labelledby="details-title" aria-hidden="true" class="app-drawer fixed top-0 right-0 z-[70] h-screen w-full max-w-xl bg-white shadow-2xl border-l border-outline-variant/20 translate-x-full" id="details-drawer" role="dialog">
+<div class="h-full flex flex-col">
+<div class="px-6 py-5 border-b border-surface-container flex items-start justify-between gap-4">
+<div>
+<div class="flex items-center gap-2 mb-2">
+<span class="status-dot dot-operational" data-detail-status-dot></span>
+<span class="text-[10px] font-black uppercase tracking-widest text-on-surface-variant" data-detail-status-label>Operational</span>
+</div>
+<h2 class="text-lg font-black text-on-surface" id="details-title">Skyline Residential North</h2>
+<p class="text-xs text-on-surface-variant mt-1" data-detail-subtitle>Residential complex detail preview.</p>
+</div>
+<button aria-label="Close details" class="p-2 rounded-lg hover:bg-surface-container transition-colors" data-close-overlay type="button">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<div class="p-6 space-y-6 overflow-y-auto">
+<div class="detail-hero">
+<div>
+<p class="drawer-label">Outstanding balance</p>
+<strong data-detail-debt>30,812,000 UZS</strong>
+<span>Last payment <b data-detail-payment>13 Apr 2026</b></span>
+</div>
+<div class="detail-health-ring"><span data-detail-health>96.5%</span><small>health</small></div>
+</div>
+<div class="grid grid-cols-2 gap-3">
+<div class="detail-metric"><span>Status</span><strong data-detail-status>Operational</strong></div>
+<div class="detail-metric"><span>Owner</span><strong data-detail-owner>Operations Team</strong></div>
+<div class="detail-metric"><span>Technician</span><strong data-detail-tech>Unassigned</strong></div>
+<div class="detail-metric"><span>SLA</span><strong data-detail-sla>2h 15m</strong></div>
+</div>
+<section class="space-y-3">
+<div class="flex items-center justify-between">
+<h3 class="text-sm font-black text-on-surface">Recent payments</h3>
+<button class="text-xs font-bold text-primary hover:underline" type="button">Export</button>
+</div>
+<div data-detail-payments>
+<div class="mini-row"><span>Payme</span><strong>4,320,000 UZS</strong><time>13 Apr 2026</time></div>
+<div class="mini-row"><span>Click</span><strong>2,100,000 UZS</strong><time>12 Apr 2026</time></div>
+<div class="mini-row"><span>Terminal</span><strong>980,000 UZS</strong><time>10 Apr 2026</time></div>
+</div>
+</section>
+<section class="space-y-3">
+<h3 class="text-sm font-black text-on-surface">System alerts</h3>
+<div class="notification-item" data-severity="warning">
+<p class="severity-badge severity-warning"><span class="status-dot dot-warning"></span>Warning</p>
+<p class="text-sm font-bold mt-2">Heating maintenance window pending</p>
+<p class="text-xs text-on-surface-variant mt-1" data-detail-alert>Schedule technician assignment before 15 Apr 2026.</p>
+</div>
+</section>
+<section class="space-y-3">
+<h3 class="text-sm font-black text-on-surface">Activity timeline</h3>
+<div class="activity-timeline">
+<div><time>13 Apr, 10:12</time><p>Balance report exported by Admin User.</p></div>
+<div><time>13 Apr, 09:40</time><p>Reminder queued for overdue residents.</p></div>
+<div><time>12 Apr, 18:05</time><p>Alert review completed after technician confirmation.</p></div>
+</div>
+</section>
+</div>
+<div class="p-6 border-t border-surface-container grid grid-cols-3 gap-3">
+<button class="drawer-action bg-error text-white" type="button">Send reminder</button>
+<button class="drawer-action bg-surface-container text-primary" type="button">Export</button>
+<button class="drawer-action bg-primary text-white" type="button">Assign technician</button>
+</div>
+</div>
+</aside>
+
+<aside aria-labelledby="apartment-details-title" aria-hidden="true" class="app-drawer apartment-details-drawer fixed top-0 right-0 z-[70] h-screen w-full max-w-xl bg-white shadow-2xl border-l border-outline-variant/20 translate-x-full" id="apartment-details-drawer" role="dialog">
+<div class="h-full flex flex-col">
+<div class="apartment-details-hero">
+<button aria-label="Close apartment details" class="profile-drawer-close" data-close-overlay type="button">
+<span class="material-symbols-outlined">close</span>
+</button>
+<div class="apartment-owner-hero">
+<img alt="" data-apartment-owner-photo src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=160&q=80"/>
+<div>
+<span class="apartment-status-pill" data-apartment-status>Paid</span>
+<h2 id="apartment-details-title" data-apartment-title>Apartment 402-A</h2>
+<p data-apartment-subtitle>Skyline Tower A · Skyline Residential North</p>
+</div>
+</div>
+<div class="apartment-balance-card">
+<span>Current balance</span>
+<strong data-apartment-balance>0 UZS</strong>
+<small data-apartment-payment>Last payment 13.04.2026</small>
+</div>
+</div>
+<div class="apartment-details-body">
+<section class="apartment-detail-section">
+<div class="section-title-row">
+<span class="material-symbols-outlined">home_work</span>
+<h3>Apartment data</h3>
+</div>
+<div class="apartment-detail-grid">
+<div><span>Unit</span><strong data-apartment-unit>402-A</strong></div>
+<div><span>Rooms</span><strong data-apartment-rooms>3 rooms</strong></div>
+<div><span>Area</span><strong data-apartment-area>84 m²</strong></div>
+<div><span>Meter</span><strong data-apartment-meter>HF-402A</strong></div>
+<div><span>Monthly charge</span><strong data-apartment-charge>1,240,000 UZS</strong></div>
+<div><span>Occupancy</span><strong data-apartment-occupancy>Resident</strong></div>
+</div>
+</section>
+<section class="apartment-detail-section">
+<div class="section-title-row">
+<span class="material-symbols-outlined">person</span>
+<h3>Owner profile</h3>
+</div>
+<div class="owner-profile-card">
+<img alt="" data-apartment-owner-photo-secondary src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=160&q=80"/>
+<div>
+<strong data-apartment-owner>Sarah Jenkins</strong>
+<span data-apartment-owner-meta>Contract HF-9284 · since 2024</span>
+</div>
+</div>
+<div class="apartment-detail-grid">
+<div><span>Phone</span><strong data-apartment-phone>+998 90 555 0123</strong></div>
+<div><span>Email</span><strong data-apartment-email>resident@hydroflow.local</strong></div>
+<div><span>Contract</span><strong data-apartment-contract>HF-9284</strong></div>
+<div><span>Last visit</span><strong data-apartment-visit>09.04.2026</strong></div>
+</div>
+</section>
+<section class="apartment-detail-section">
+<div class="section-title-row">
+<span class="material-symbols-outlined">timeline</span>
+<h3>Recent activity</h3>
+</div>
+<div class="apartment-activity-list">
+<div><time>13 Apr 2026</time><p data-apartment-activity-1>Payment received through Click.</p></div>
+<div><time>10 Apr 2026</time><p data-apartment-activity-2>Meter reading synced locally.</p></div>
+<div><time>08 Apr 2026</time><p data-apartment-activity-3>No open maintenance tickets.</p></div>
+</div>
+</section>
+</div>
+<div class="apartment-details-actions">
+<button class="drawer-action bg-error text-white" type="button">Send reminder</button>
+<button class="drawer-action bg-surface-container text-primary" type="button">Export</button>
+<button class="drawer-action bg-primary text-white" type="button">Assign technician</button>
+</div>
+</div>
+</aside>
+
+<aside aria-labelledby="audit-title" aria-hidden="true" class="app-drawer audit-drawer fixed top-0 right-0 z-[70] h-screen w-full max-w-xl bg-white shadow-2xl border-l border-outline-variant/20 translate-x-full" id="audit-drawer" role="dialog">
+<div class="h-full flex flex-col">
+<div class="px-6 py-5 border-b border-surface-container flex items-center justify-between">
+<div>
+<h2 class="text-lg font-black text-on-surface" id="audit-title">Audit log</h2>
+<p class="text-xs text-on-surface-variant mt-1">Static activity trail for future backend events.</p>
+</div>
+<button aria-label="Close audit log" class="p-2 rounded-lg hover:bg-surface-container transition-colors" data-close-overlay type="button">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<div class="audit-drawer-body p-6 overflow-y-auto">
+<div class="audit-summary-grid">
+<div><span>Total events</span><strong data-audit-total>4</strong></div>
+<div><span>Visible</span><strong data-audit-visible>4</strong></div>
+<div><span>Mode</span><strong>Local</strong></div>
+<div><span>Backend</span><strong>Pending</strong></div>
+</div>
+<div class="audit-toolbox">
+<label class="audit-search-shell">
+<span class="material-symbols-outlined" aria-hidden="true">search</span>
+<input aria-label="Search audit log" data-audit-search placeholder="Search audit events..." type="search"/>
+</label>
+<div class="audit-filter-row" data-audit-filters>
+<button class="is-active" data-audit-filter="all" type="button">All</button>
+<button data-audit-filter="export" type="button">Export</button>
+<button data-audit-filter="reminder" type="button">Reminder</button>
+<button data-audit-filter="alert" type="button">Alert</button>
+<button data-audit-filter="balance" type="button">Balance</button>
+</div>
+<div class="audit-action-row">
+<button data-audit-action="add-note" type="button"><span class="material-symbols-outlined">note_add</span><span>Add local note</span></button>
+<button data-audit-action="copy-latest" type="button"><span class="material-symbols-outlined">content_copy</span><span>Copy latest</span></button>
+<button data-audit-action="export" type="button"><span class="material-symbols-outlined">download</span><span>Export log</span></button>
+</div>
+</div>
+<div class="audit-timeline" data-audit-timeline>
+<div class="audit-event" data-audit-event data-type="export"><span class="audit-event-icon material-symbols-outlined">ios_share</span><div><time>13 Apr 2026, 10:12</time><p>Admin User exported billing report for North Sector.</p><span>Export</span></div></div>
+<div class="audit-event" data-audit-event data-type="reminder"><span class="audit-event-icon material-symbols-outlined">notifications_active</span><div><time>13 Apr 2026, 09:40</time><p>Debt reminder sent to Harbor View Heights.</p><span>Reminder</span></div></div>
+<div class="audit-event" data-audit-event data-type="alert"><span class="audit-event-icon material-symbols-outlined">warning</span><div><time>12 Apr 2026, 18:05</time><p>Pressure alert closed after technician confirmation.</p><span>Alert</span></div></div>
+<div class="audit-event" data-audit-event data-type="balance"><span class="audit-event-icon material-symbols-outlined">account_balance_wallet</span><div><time>12 Apr 2026, 15:21</time><p>Balance adjustment queued for Residential Unit 402B.</p><span>Balance</span></div></div>
+</div>
+<div class="audit-empty-state hidden" data-audit-empty>
+<span class="material-symbols-outlined">manage_search</span>
+<strong>No audit events found</strong>
+<small>Clear search or switch the event type.</small>
+</div>
+</div>
+</div>
+</aside>
+
+<aside aria-labelledby="support-title" aria-hidden="true" class="app-drawer support-drawer fixed top-0 right-0 z-[70] h-screen w-full max-w-md bg-white shadow-2xl border-l border-outline-variant/20 translate-x-full" id="support-drawer" role="dialog">
+<div class="h-full flex flex-col">
+<div class="support-drawer-hero">
+<button aria-label="Close support" class="profile-drawer-close" data-close-overlay type="button">
+<span class="material-symbols-outlined">close</span>
+</button>
+<span class="support-hero-icon material-symbols-outlined">support_agent</span>
+<div>
+<p class="profile-kicker">Prototype support</p>
+<h2 id="support-title">Support</h2>
+<span>Backend helpdesk is not connected yet.</span>
+</div>
+</div>
+<div class="support-drawer-body">
+<section class="support-placeholder-card">
+<span class="material-symbols-outlined">construction</span>
+<div>
+<h3>Temporary support workspace</h3>
+<p>Use these local tools while the real admin panel and ticket backend are being prepared.</p>
+</div>
+</section>
+<div class="support-tool-grid">
+<button data-support-action="copy-summary" type="button"><span class="material-symbols-outlined">content_copy</span><strong>Copy system summary</strong><small>Local prototype status</small></button>
+<button data-support-action="open-checklist" type="button"><span class="material-symbols-outlined">fact_check</span><strong>Open checklist</strong><small>Demo operations flow</small></button>
+<button data-support-action="report-ui" type="button"><span class="material-symbols-outlined">bug_report</span><strong>Report UI issue</strong><small>Create local note</small></button>
+<button data-drawer-open="audit-drawer" type="button"><span class="material-symbols-outlined">history</span><strong>View audit trail</strong><small>Recent local events</small></button>
+</div>
+<div class="support-status-list">
+<div><span>Helpdesk</span><strong>Not connected</strong></div>
+<div><span>Prototype mode</span><strong>Active</strong></div>
+<div><span>Timezone</span><strong>Asia/Tashkent</strong></div>
+</div>
+</div>
+</div>
+</aside>
+
+<aside aria-labelledby="checklist-title" aria-hidden="true" class="app-drawer checklist-drawer fixed top-0 right-0 z-[70] h-screen w-full max-w-lg bg-white shadow-2xl border-l border-outline-variant/20 translate-x-full" id="checklist-drawer" role="dialog">
+<div class="h-full flex flex-col">
+<div class="checklist-hero">
+<button aria-label="Close checklist" class="profile-drawer-close" data-close-overlay type="button">
+<span class="material-symbols-outlined">close</span>
+</button>
+<div class="checklist-hero-top">
+<span class="checklist-hero-icon material-symbols-outlined">fact_check</span>
+<div>
+<p class="profile-kicker" data-i18n-key="Operations checklist">Operations checklist</p>
+<h2 id="checklist-title" data-i18n-key="Readiness checklist">Readiness checklist</h2>
+<span data-checklist-subtitle data-i18n-key="Local workflow with saved progress.">Local workflow with saved progress.</span>
+</div>
+</div>
+<div class="checklist-progress-card">
+<div>
+<span data-i18n-key="Completion">Completion</span>
+<strong data-checklist-progress-label>0%</strong>
+</div>
+<div class="checklist-progress-bar" aria-label="Checklist completion" role="meter" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+<span data-checklist-progress-fill></span>
+</div>
+</div>
+</div>
+<div class="checklist-body">
+<div class="checklist-context-grid">
+<div><span data-i18n-key="Scope">Scope</span><strong data-checklist-scope data-i18n-key="Current workspace">Current workspace</strong></div>
+<div><span data-i18n-key="Owner">Owner</span><strong data-i18n-key="Operations Team">Operations Team</strong></div>
+<div><span data-i18n-key="Saved">Saved</span><strong data-checklist-saved data-i18n-key="Local">Local</strong></div>
+<div><span data-i18n-key="Timezone">Timezone</span><strong>Asia/Tashkent</strong></div>
+</div>
+<div class="checklist-toolbar">
+<button data-checklist-action="complete-visible" type="button"><span class="material-symbols-outlined">done_all</span><span data-i18n-key="Complete visible">Complete visible</span></button>
+<button data-checklist-action="reset" type="button"><span class="material-symbols-outlined">restart_alt</span><span data-i18n-key="Reset">Reset</span></button>
+<button data-checklist-action="copy" type="button"><span class="material-symbols-outlined">content_copy</span><span data-i18n-key="Copy summary">Copy summary</span></button>
+</div>
+<button class="checklist-add-note-main" data-checklist-action="toggle-note" type="button">
+<span class="material-symbols-outlined">add_notes</span>
+<span data-i18n-key="Add note">Add note</span>
+</button>
+<section class="checklist-note-composer hidden" data-checklist-note-composer>
+<div class="checklist-note-template-row">
+<label>
+<span data-i18n-key="Template">Template</span>
+<select data-checklist-note-template>
+<option value="" data-i18n-key="Custom note">Custom note</option>
+<option value="Reviewed filters and visible rows." data-template-text-key="Reviewed filters and visible rows." data-i18n-key="Filters reviewed">Filters reviewed</option>
+<option value="Critical alerts reviewed and technician ownership checked." data-template-text-key="Critical alerts reviewed and technician ownership checked." data-i18n-key="Critical alerts reviewed">Critical alerts reviewed</option>
+<option value="Export package checked for current visible data." data-template-text-key="Export package checked for current visible data." data-i18n-key="Export package checked">Export package checked</option>
+<option value="Resident balances and billing history checked." data-template-text-key="Resident balances and billing history checked." data-i18n-key="Resident balances checked">Resident balances checked</option>
+</select>
+</label>
+</div>
+<textarea data-checklist-note-input data-i18n-placeholder="Write a checklist note..." placeholder="Write a checklist note..."></textarea>
+<div class="checklist-note-actions">
+<button data-checklist-action="cancel-note" data-i18n-key="Cancel" type="button">Cancel</button>
+<button data-checklist-action="save-note" type="button"><span class="material-symbols-outlined">add</span><span data-i18n-key="Add note">Add note</span></button>
+</div>
+</section>
+<div class="checklist-list" data-checklist-list></div>
+<div class="checklist-notes-list hidden" data-checklist-notes-list></div>
+<div class="checklist-note">
+<span class="material-symbols-outlined">verified</span>
+<p data-i18n-key="This checklist is connected to local UI actions now. Backend tasks can replace the storage layer later without changing the interface.">This checklist is connected to local UI actions now. Backend tasks can replace the storage layer later without changing the interface.</p>
+</div>
+</div>
+<div class="checklist-footer">
+<button data-checklist-action="open-audit" type="button"><span class="material-symbols-outlined">history</span><span data-i18n-key="Open audit log">Open audit log</span></button>
+<button data-checklist-action="mark-reviewed" type="button"><span class="material-symbols-outlined">task_alt</span><span data-i18n-key="Mark reviewed">Mark reviewed</span></button>
+</div>
+</div>
+</aside>
+
+<aside aria-labelledby="profile-title" aria-hidden="true" class="app-drawer profile-drawer fixed top-0 right-0 z-[70] h-screen w-full max-w-md bg-white shadow-2xl border-l border-outline-variant/20 translate-x-full" id="profile-drawer" role="dialog">
+<div class="h-full flex flex-col">
+<div class="profile-drawer-hero">
+<button aria-label="Close profile" class="profile-drawer-close" data-close-overlay type="button">
+<span class="material-symbols-outlined">close</span>
+</button>
+<div class="profile-avatar-xl" data-profile-field="initials">AU</div>
+<div>
+<p class="profile-kicker" data-i18n-key="Workspace profile">Workspace profile</p>
+<h2 id="profile-title" data-profile-field="name">Admin User</h2>
+<span class="profile-role-pill" data-profile-field="role">Administrator</span>
+</div>
+</div>
+<div class="profile-drawer-body">
+<section class="profile-summary-card">
+<div>
+<span class="profile-summary-label" data-i18n-key="Status">Status</span>
+<strong><span class="status-dot dot-operational"></span><span data-profile-field="status">Active</span></strong>
+</div>
+<div>
+<span class="profile-summary-label" data-i18n-key="Workspace">Workspace</span>
+<strong data-profile-field="workspace">HydroFlow</strong>
+</div>
+<div>
+<span class="profile-summary-label" data-i18n-key="Time zone">Time zone</span>
+<strong data-profile-field="timezone">Asia/Tashkent</strong>
+</div>
+<div>
+<span class="profile-summary-label" data-i18n-key="Last active">Last active</span>
+<strong data-profile-field="lastActive">Backend session</strong>
+</div>
+</section>
+<section class="profile-info-section">
+<div class="profile-section-heading">
+<span class="material-symbols-outlined">badge</span>
+<h3 data-i18n-key="Profile details">Profile details</h3>
+</div>
+<div class="profile-info-list">
+<div><span data-i18n-key="Email">Email</span><strong data-profile-field="email">admin@hydroflow.uz</strong></div>
+<div><span data-i18n-key="Role">Role</span><strong data-profile-field="role">Administrator</strong></div>
+<div><span data-i18n-key="Organization">Organization</span><strong data-profile-field="organization">HydroFlow Utility Management</strong></div>
+<div><span data-i18n-key="Access level">Access level</span><strong data-profile-field="accessLevel">Full operations access</strong></div>
+</div>
+</section>
+<section class="profile-info-section">
+<div class="profile-section-heading">
+<span class="material-symbols-outlined">shield</span>
+<h3 data-i18n-key="Security">Security</h3>
+</div>
+<div class="profile-security-grid">
+<div><span data-i18n-key="Two-factor authentication">Two-factor authentication</span><strong data-profile-field="twoFactor">Enabled</strong></div>
+<div><span data-i18n-key="Session status">Session status</span><strong data-profile-field="sessionStatus">Active</strong></div>
+</div>
+</section>
+<p class="profile-note" data-profile-field="note">Profile data is loaded from Django admin and the active backend session.</p>
+</div>
+<div class="profile-drawer-actions">
+<button class="profile-action-primary" data-action-key="Edit profile" type="button">
+<span class="material-symbols-outlined">edit</span>
+<span>Edit profile</span>
+</button>
+<button class="profile-action-secondary" data-drawer-open="settings-drawer" type="button">
+<span class="material-symbols-outlined">tune</span>
+<span>Preferences</span>
+</button>
+<button class="profile-action-secondary" data-drawer-open="audit-drawer" type="button">
+<span class="material-symbols-outlined">history</span>
+<span>Audit log</span>
+</button>
+</div>
+</div>
+</aside>
+
+<div aria-labelledby="command-title" aria-hidden="true" class="app-modal fixed inset-0 z-[80] hidden items-start justify-center p-6 pt-24" id="command-palette" role="dialog">
+<div class="modal-panel command-palette-panel w-full max-w-2xl bg-white rounded-lg shadow-2xl border border-outline-variant/20 overflow-hidden">
+<div class="px-5 py-4 border-b border-surface-container flex items-center gap-3">
+<span class="material-symbols-outlined text-primary">search</span>
+<input aria-activedescendant="" aria-controls="command-results" aria-label="Command search" class="w-full border-none focus:ring-0 text-sm" data-command-input id="command-title" placeholder="Search residents, reports, alerts, actions..." type="search"/>
+<kbd class="text-[10px] font-bold text-slate-500 bg-surface-container rounded px-1.5 py-0.5">Esc</kbd>
+</div>
+<div class="command-suggestions" data-command-suggestions>
+<button data-command-suggestion="billing" type="button">billing</button>
+<button data-command-suggestion="filters" type="button">filters</button>
+<button data-command-suggestion="export" type="button">export</button>
+<button data-command-suggestion="theme" type="button">theme</button>
+</div>
+<div class="command-recent hidden" data-command-recent-wrap>
+<p>Recent actions</p>
+<div data-command-recent></div>
+</div>
+<div class="p-3 command-results" data-command-results id="command-results" role="listbox">
+<button class="command-item" data-command-id="go-dashboard" data-command-url="{% url 'portal:dashboard' %}" type="button"><span>Go to Dashboard</span><small>Overview, KPIs and debtor trends</small></button>
+<button class="command-item" data-command-id="go-billing" data-command-url="{% url 'portal:billing' %}" type="button"><span>Go to Billing</span><small>Payments, residents and transaction log</small></button>
+<button class="command-item" data-command-id="go-residential" data-command-url="{% url 'portal:residential' %}" type="button"><span>Go to Residential Units</span><small>Complex performance overview</small></button>
+<button class="command-item" data-command-id="go-system-health" data-command-url="{% url 'portal:system_health' %}" type="button"><span>Go to System Health</span><small>Network health and maintenance</small></button>
+<button class="command-item" data-command-id="go-analytics" data-command-url="{% url 'portal:analytics' %}" type="button"><span>Go to Analytics</span><small>Financial overview and reports</small></button>
+<button class="command-item" data-command-id="open-filters" data-drawer-open="filter-drawer" type="button"><span>Open Filters</span><small>District, status and period</small></button>
+<button class="command-item" data-command-id="open-settings" data-drawer-open="settings-drawer" type="button"><span>Open Settings</span><small>Theme, density, sound and workspace</small></button>
+<button class="command-item" data-command-id="open-notifications" data-drawer-open="notifications-drawer" type="button"><span>Review Notifications</span><small>Critical, warning and info</small></button>
+<button class="command-item" data-command-id="toggle-theme" data-command-action="toggle-theme" type="button"><span>Toggle Theme</span><small>Switch light or dark mode</small></button>
+<button class="command-item" data-command-id="export-csv" data-export-open data-export-source="Command palette" type="button"><span>Export CSV</span><small>Open export preview modal</small></button>
+<div class="command-empty hidden" data-command-empty>
+<span class="material-symbols-outlined">search_off</span>
+<p>No matching commands</p>
+<small>Try billing, filters, export, theme, settings.</small>
+</div>
+</div>
+</div>
+</div>
+
+<div aria-labelledby="export-preview-title" aria-hidden="true" class="app-modal fixed inset-0 z-[85] hidden items-center justify-center p-6" id="export-preview-modal" role="dialog">
+<div class="modal-panel export-preview-panel w-full max-w-lg bg-white rounded-lg shadow-2xl border border-outline-variant/20 overflow-hidden">
+<div class="export-preview-hero">
+<span class="material-symbols-outlined">ios_share</span>
+<div>
+<p class="profile-kicker">Local export preview</p>
+<h2 id="export-preview-title">Export report</h2>
+<small data-export-subtitle>Static preview. Backend export can replace this later.</small>
+</div>
+<button aria-label="Close export preview" class="profile-drawer-close" data-close-overlay type="button">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<div class="export-preview-body">
+<div class="export-summary-grid">
+<div><span>Source</span><strong data-export-source-label>Current page</strong></div>
+<div><span>Period</span><strong>Last 90 days</strong></div>
+<div><span>Timezone</span><strong>Asia/Tashkent</strong></div>
+<div><span>Rows</span><strong data-export-rows>Static preview</strong></div>
+</div>
+<div>
+<p class="drawer-label">Format</p>
+<div class="export-format-grid" data-export-format>
+<button class="is-active" data-format="CSV" type="button">CSV</button>
+<button data-format="XLSX" type="button">XLSX</button>
+<button data-format="PDF" type="button">PDF</button>
+</div>
+</div>
+<div class="export-preview-note">
+<span class="material-symbols-outlined">info</span>
+<p data-export-summary>Export includes visible table rows, selected filters and local timestamp.</p>
+</div>
+</div>
+<div class="export-preview-actions">
+<button data-export-copy type="button"><span class="material-symbols-outlined">content_copy</span><span>Copy summary</span></button>
+<button data-export-download type="button"><span class="material-symbols-outlined">download</span><span>Download preview</span></button>
+</div>
+</div>
+</div>
+
+<div aria-labelledby="resident-kit-title" aria-hidden="true" class="app-modal fixed inset-0 z-[86] hidden items-center justify-center p-6" id="resident-kit-modal" role="dialog">
+<div class="modal-panel export-preview-panel resident-kit-modal-panel w-full max-w-2xl bg-white rounded-lg shadow-2xl border border-outline-variant/20 overflow-hidden">
+<div class="export-preview-hero">
+<span class="material-symbols-outlined">folder_managed</span>
+<div>
+<p class="profile-kicker" data-i18n-key="Templates ready">Templates ready</p>
+<h2 data-i18n-key="Resident template preview" id="resident-kit-title">Resident template preview</h2>
+<small data-resident-kit-subtitle data-i18n-key="Generated from current backend residents and balances.">Generated from current backend residents and balances.</small>
+</div>
+<button aria-label="Close resident kit preview" class="profile-drawer-close" data-close-overlay type="button">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<div class="export-preview-body resident-kit-modal-body">
+<div class="export-summary-grid">
+<div><span data-i18n-key="Action">Action</span><strong data-resident-kit-action-label>Reminder script</strong></div>
+<div><span data-i18n-key="Residents in scope">Residents in scope</span><strong data-resident-kit-visible-count>0</strong></div>
+<div><span data-i18n-key="Debtors in scope">Debtors in scope</span><strong data-resident-kit-debtor-count>0</strong></div>
+<div><span data-i18n-key="Time zone">Time zone</span><strong>Asia/Tashkent</strong></div>
+</div>
+<label class="resident-create-field">
+<span data-resident-kit-content-label data-i18n-key="Reminder script">Reminder script</span>
+<textarea class="resident-kit-textarea" data-resident-kit-content spellcheck="false"></textarea>
+</label>
+<div class="export-preview-note" data-resident-kit-note>
+<span class="material-symbols-outlined">info</span>
+<p data-i18n-key="Preview generated from current residents visible on this page.">Preview generated from current residents visible on this page.</p>
+</div>
+</div>
+<div class="export-preview-actions">
+<button data-close-overlay type="button"><span class="material-symbols-outlined">close</span><span data-i18n-key="Close">Close</span></button>
+<button data-resident-kit-copy type="button"><span class="material-symbols-outlined">content_copy</span><span data-i18n-key="Copy script">Copy script</span></button>
+</div>
+</div>
+</div>
+
+<div aria-labelledby="deploy-maintenance-title" aria-hidden="true" class="app-modal fixed inset-0 z-[86] hidden items-center justify-center p-6" id="deploy-maintenance-modal" role="dialog">
+<div class="modal-panel deploy-maintenance-panel w-full max-w-2xl bg-white rounded-lg shadow-2xl border border-outline-variant/20 overflow-hidden">
+<div class="export-preview-hero">
+<span class="material-symbols-outlined">build</span>
+<div>
+<p class="profile-kicker">Backend maintenance</p>
+<h2 id="deploy-maintenance-title">Deploy maintenance</h2>
+<small>Create a maintenance task directly in Django admin and database.</small>
+</div>
+<button aria-label="Close deploy maintenance" class="profile-drawer-close" data-close-overlay type="button">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<form class="deploy-maintenance-form" data-deploy-maintenance-form>
+{% csrf_token %}
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<label class="resident-create-field">
+<span>Complex</span>
+<select name="complex_id" data-maintenance-complex required></select>
+</label>
+<label class="resident-create-field">
+<span>Building</span>
+<select name="building_id" data-maintenance-building></select>
+</label>
+<label class="resident-create-field md:col-span-2">
+<span>Task title</span>
+<input name="title" placeholder="Pressure audit, sensor calibration, emergency inspection..." required type="text" value="Preventive maintenance deployment"/>
+</label>
+<label class="resident-create-field">
+<span>Priority</span>
+<select name="priority">
+<option value="medium">Medium</option>
+<option value="high">High</option>
+<option value="low">Low</option>
+</select>
+</label>
+<label class="resident-create-field">
+<span>Scheduled time</span>
+<input name="scheduled_at" data-maintenance-scheduled type="datetime-local"/>
+</label>
+<label class="resident-create-field">
+<span>Assigned to</span>
+<input name="assigned_to" placeholder="Operations Team" type="text" value="Operations Team"/>
+</label>
+<label class="resident-create-field">
+<span>Action</span>
+<select name="action_label">
+<option value="Open checklist">Open checklist</option>
+<option value="Open route">Open route</option>
+<option value="Review meters">Review meters</option>
+<option value="View scope">View scope</option>
+<option value="Assign technician">Assign technician</option>
+</select>
+</label>
+<label class="resident-create-field md:col-span-2">
+<span>Notes</span>
+<textarea name="notes" placeholder="Add work scope, route details or technician notes."></textarea>
+</label>
+</div>
+<div class="resident-create-status hidden" data-deploy-maintenance-status>
+<span class="material-symbols-outlined">info</span>
+<p>Ready to create a maintenance task.</p>
+</div>
+<div class="deploy-maintenance-actions">
+<button data-close-overlay type="button">Cancel</button>
+<button data-deploy-maintenance-submit type="submit"><span class="material-symbols-outlined">build</span><span>Create task</span></button>
+</div>
+</form>
+</div>
+</div>
+
+<div aria-labelledby="system-alerts-config-title" aria-hidden="true" class="app-modal fixed inset-0 z-[87] hidden items-start justify-center overflow-y-auto p-4 md:p-6" id="system-alerts-config-modal" role="dialog">
+<div class="modal-panel system-alerts-config-panel w-full max-w-4xl bg-white rounded-lg shadow-2xl border border-outline-variant/20 overflow-hidden">
+<div class="export-preview-hero">
+<span class="material-symbols-outlined">notifications_active</span>
+<div>
+<p class="profile-kicker" data-i18n-key="Backend system alerts">Backend system alerts</p>
+<h2 data-i18n-key="Configure system alerts" id="system-alerts-config-title">Configure system alerts</h2>
+<small data-i18n-key="Create and manage live alerts stored in Django admin and database.">Create and manage live alerts stored in Django admin and database.</small>
+</div>
+<button aria-label="Close system alerts" class="profile-drawer-close" data-close-overlay type="button">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<div class="system-alerts-config-layout">
+<form class="system-alerts-config-form" data-system-alert-form>
+{% csrf_token %}
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<label class="resident-create-field md:col-span-2">
+<span data-i18n-key="Alert title">Alert title</span>
+<input data-i18n-placeholder="Pressure drop detected, payment sync delayed..." name="title" placeholder="Pressure drop detected, payment sync delayed..." required type="text"/>
+</label>
+<label class="resident-create-field">
+<span data-i18n-key="Severity">Severity</span>
+<select name="severity">
+<option data-i18n-key="Warning" value="warning">Warning</option>
+<option data-i18n-key="Critical" value="critical">Critical</option>
+<option data-i18n-key="Info" value="info">Info</option>
+</select>
+</label>
+<label class="resident-create-field">
+<span data-i18n-key="Category">Category</span>
+<select name="category">
+<option data-i18n-key="Pressure" value="pressure">Pressure</option>
+<option data-i18n-key="Water" value="water">Water</option>
+<option data-i18n-key="Heating" value="heating">Heating</option>
+<option data-i18n-key="Payment" value="payment">Payment</option>
+<option data-i18n-key="Security" value="security">Security</option>
+<option data-i18n-key="Other" value="other">Other</option>
+</select>
+</label>
+<label class="resident-create-field">
+<span data-i18n-key="Complex">Complex</span>
+<select name="complex_id" data-system-alert-complex></select>
+</label>
+<label class="resident-create-field">
+<span data-i18n-key="Building">Building</span>
+<select name="building_id" data-system-alert-building></select>
+</label>
+<label class="resident-create-field">
+<span data-i18n-key="Assigned to">Assigned to</span>
+<input data-i18n-placeholder="Operations Team" name="assigned_to" placeholder="Operations Team" type="text" value="Operations Team"/>
+</label>
+<label class="resident-create-field">
+<span data-i18n-key="Action label">Action label</span>
+<input data-i18n-placeholder="Review alert" name="action_label" placeholder="Review alert" type="text" value="Review alert"/>
+</label>
+<label class="resident-create-field md:col-span-2">
+<span data-i18n-key="Message">Message</span>
+<textarea data-i18n-placeholder="Explain the issue, scope and next action." name="message" placeholder="Explain the issue, scope and next action."></textarea>
+</label>
+</div>
+<div class="resident-create-status hidden" data-system-alert-status>
+<span class="material-symbols-outlined">info</span>
+<p data-i18n-key="Ready to create a live system alert.">Ready to create a live system alert.</p>
+</div>
+<div class="system-alerts-config-actions">
+<button data-close-overlay data-i18n-key="Cancel" type="button">Cancel</button>
+<button data-system-alert-submit type="submit"><span class="material-symbols-outlined">add_alert</span><span data-i18n-key="Create alert">Create alert</span></button>
+</div>
+</form>
+<div class="system-alerts-config-sidebar">
+<div class="system-alerts-config-head">
+<h3 data-i18n-key="Active alerts">Active alerts</h3>
+<span data-system-alert-count>0 live</span>
+</div>
+<div class="system-alerts-config-list" data-system-alert-list></div>
+</div>
+</div>
+</div>
+</div>
+
+<div aria-labelledby="assign-status-title" aria-hidden="true" class="app-modal fixed inset-0 z-[86] hidden items-center justify-center p-6" id="assign-status-modal" role="dialog">
+<div class="modal-panel assign-status-panel w-full max-w-md bg-white rounded-lg shadow-2xl border border-outline-variant/20 overflow-hidden">
+<div class="assign-status-hero">
+<span class="material-symbols-outlined">sell</span>
+<div>
+<p class="profile-kicker">Bulk table action</p>
+<h2 id="assign-status-title">Assign status</h2>
+<small data-assign-status-summary>Choose rows in a table first.</small>
+</div>
+<button aria-label="Close assign status" class="profile-drawer-close" data-close-overlay type="button">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<div class="assign-status-body">
+<div class="assign-status-context">
+<span>Target</span>
+<strong data-assign-status-target>Current table</strong>
+</div>
+<div class="assign-status-options" data-assign-status-options></div>
+<div class="assign-status-note">
+<span class="material-symbols-outlined">info</span>
+<p data-assign-status-note>Status changes are stored locally in this prototype session.</p>
+</div>
+</div>
+<div class="assign-status-actions">
+<button data-close-overlay type="button">Cancel</button>
+<button data-assign-status-apply type="button"><span class="material-symbols-outlined">check</span><span>Apply status</span></button>
+</div>
+</div>
+</div>
+
+<aside aria-labelledby="settings-title" aria-hidden="true" class="app-drawer settings-drawer fixed top-0 right-0 z-[70] h-screen w-full max-w-md bg-white shadow-2xl border-l border-outline-variant/20 translate-x-full" id="settings-drawer" role="dialog">
+<div class="h-full flex flex-col">
+<div class="px-6 py-5 border-b border-surface-container flex items-center justify-between">
+<div>
+<h2 class="text-lg font-black text-on-surface" id="settings-title">Workspace Settings</h2>
+<p class="text-xs text-on-surface-variant mt-1">Quick preferences for the operations console.</p>
+</div>
+<button aria-label="Close settings" class="p-2 rounded-lg hover:bg-surface-container transition-colors" data-close-overlay type="button">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<div class="settings-drawer-body p-6 space-y-4">
+<div class="settings-sync-card" data-settings-sync="offline">
+<div class="settings-sync-icon">
+<span class="material-symbols-outlined">cloud_off</span>
+</div>
+<div>
+<div class="settings-sync-heading">
+<p>Settings sync is offline</p>
+<span>Offline</span>
+</div>
+<span>Local changes remain available and will retry on reconnect.</span>
+</div>
+</div>
+<div class="settings-section">
+<p class="drawer-label">Interface density</p>
+<div class="density-control" data-density-control>
+<button class="is-active" data-density="comfortable" type="button">Comfortable</button>
+<button data-density="compact" type="button">Compact</button>
+</div>
+</div>
+<div class="settings-section">
+<p class="drawer-label">Interface sound</p>
+<button aria-pressed="false" class="sound-toggle-card" data-sound-toggle type="button">
+<span class="sound-toggle-icon material-symbols-outlined" data-sound-icon>volume_up</span>
+<span class="sound-toggle-copy">
+<strong data-sound-title>Sound effects</strong>
+<small data-sound-description>Click, toast and alert feedback.</small>
+</span>
+<span class="sound-toggle-state" data-sound-state>On</span>
+</button>
+</div>
+<div class="settings-action-grid grid grid-cols-2 gap-3">
+<div class="language-menu-wrap settings-language-menu" data-lang-menu>
+<button aria-expanded="false" aria-haspopup="menu" aria-label="Switch language" class="drawer-action bg-surface-container text-primary" data-lang-toggle type="button">
+<span class="material-symbols-outlined">language</span>
+<span>Switch language</span>
+</button>
+<div aria-label="Language selector" class="language-menu-panel hidden" data-lang-menu-panel role="menu">
+<button class="language-menu-option" data-lang-option="en" role="menuitemradio" type="button">
+<span class="language-menu-code">EN</span>
+<span class="language-menu-copy"><strong>English</strong><small>Interface language</small></span>
+<span class="material-symbols-outlined language-menu-check" aria-hidden="true">check</span>
+</button>
+<button class="language-menu-option" data-lang-option="ru" role="menuitemradio" type="button">
+<span class="language-menu-code">RU</span>
+<span class="language-menu-copy"><strong>Русский</strong><small>Язык интерфейса</small></span>
+<span class="material-symbols-outlined language-menu-check" aria-hidden="true">check</span>
+</button>
+<button class="language-menu-option" data-lang-option="uz" role="menuitemradio" type="button">
+<span class="language-menu-code">UZ</span>
+<span class="language-menu-copy"><strong>O'zbek</strong><small>Interfeys tili</small></span>
+<span class="material-symbols-outlined language-menu-check" aria-hidden="true">check</span>
+</button>
+</div>
+</div>
+<button class="drawer-action bg-surface-container text-primary" data-theme-toggle type="button">
+<span class="material-symbols-outlined">routine</span>
+<span>Toggle theme</span>
+</button>
+</div>
+<button class="settings-primary-action w-full py-3 bg-primary text-white rounded-lg text-sm font-bold" data-modal-open="request-modal" type="button">
+<span class="material-symbols-outlined">add_circle</span>
+<span>Open request modal</span>
+</button>
+<div class="system-status-card">
+<div><span>Local prototype</span><strong>Active</strong></div>
+<div><span>Backend</span><strong>Not connected</strong></div>
+<div><span>Timezone</span><strong>Asia/Tashkent</strong></div>
+<div><span>Last local save</span><strong>13.04.2026, 09:41</strong></div>
+</div>
+</div>
+</div>
+</aside>
+
+<div aria-labelledby="all-residents-title" aria-hidden="true" class="app-modal fixed inset-0 z-[88] hidden items-center justify-center p-6" id="all-residents-modal" role="dialog">
+<div class="modal-panel resident-view-modal-panel w-full max-w-4xl bg-white rounded-2xl shadow-2xl border border-outline-variant/20">
+<div class="resident-view-modal-head px-6 py-5 border-b border-surface-container flex items-center justify-between gap-4">
+<div>
+<p class="resident-view-modal-eyebrow" data-i18n-key="Resident directory">Resident directory</p>
+<h2 class="text-xl font-black text-on-surface mt-1" id="all-residents-title" data-i18n-key="Active Residents">Active Residents</h2>
+</div>
+<div class="resident-view-modal-head-actions">
+<span class="resident-view-modal-count" data-all-residents-count>8 shown</span>
+<button aria-label="Close residents list" class="p-2 rounded-lg hover:bg-surface-container transition-colors" data-close-overlay type="button">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+</div>
+<div class="resident-view-modal-body p-6">
+<div class="resident-view-modal-toolbar">
+<label class="resident-search-shell resident-view-search-shell">
+<span class="material-symbols-outlined" aria-hidden="true">search</span>
+<input data-all-residents-search aria-label="Search residents" placeholder="Search residents..." type="search"/>
+<button aria-label="Clear resident search" class="resident-search-clear" data-all-residents-search-clear type="button">
+<span class="material-symbols-outlined" aria-hidden="true">close</span>
+</button>
+</label>
+<div class="resident-filter-shell resident-view-filter-shell" data-all-residents-filter-group>
+<span class="resident-filter-label">Filter:</span>
+<button aria-pressed="true" class="resident-filter-button is-active" data-all-residents-filter="all" type="button">ALL</button>
+<button aria-pressed="false" class="resident-filter-button" data-all-residents-filter="debtor" type="button">DEBTORS</button>
+<button aria-pressed="false" class="resident-filter-button" data-all-residents-filter="paid" type="button">PAID</button>
+</div>
+</div>
+<div class="resident-view-modal-list" data-all-residents-list></div>
+<div class="resident-view-modal-empty hidden" data-all-residents-empty>
+<span class="material-symbols-outlined">search_off</span>
+<strong data-i18n-key="No residents available">No residents available</strong>
+</div>
+</div>
+</div>
+</div>
+
+<div aria-labelledby="request-modal-title" aria-hidden="true" class="app-modal fixed inset-0 z-[80] hidden items-center justify-center p-6" id="request-modal" role="dialog">
+<div class="modal-panel resident-create-modal w-full max-w-3xl bg-white rounded-lg shadow-2xl border border-outline-variant/20">
+<div class="px-6 py-5 border-b border-surface-container flex items-center justify-between">
+<div>
+<p class="text-[11px] font-black uppercase tracking-[0.18em] text-primary" data-i18n-key="Resident admin form">Resident admin form</p>
+<h2 class="text-lg font-black text-on-surface" id="request-modal-title" data-i18n-key="Add New Resident">Add New Resident</h2>
+</div>
+<button aria-label="Close modal" class="p-2 rounded-lg hover:bg-surface-container transition-colors" data-close-overlay type="button">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<form class="p-6 space-y-5" data-resident-create-form>
+{% csrf_token %}
+<p class="text-sm text-on-surface-variant" data-i18n-key="This form writes directly to Django admin and database.">
+This form writes directly to Django admin and database.
+</p>
+<div class="resident-create-status hidden" data-resident-create-status role="status"></div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<label class="resident-create-field">
+<span data-i18n-key="Full name">Full name</span>
+<input name="fio" required autocomplete="name" placeholder="Sarah Jenkins" type="text"/>
+</label>
+<label class="resident-create-field">
+<span data-i18n-key="Phone">Phone</span>
+<input name="phone" required autocomplete="tel" placeholder="+998 90 555 0988" maxlength="20" type="tel"/>
+</label>
+<label class="resident-create-field">
+<span data-i18n-key="Complex">Complex</span>
+<select name="complex_selector" data-resident-create-complex></select>
+</label>
+<label class="resident-create-field">
+<span data-i18n-key="Building">Building</span>
+<select name="building_selector" data-resident-create-building></select>
+</label>
+<label class="resident-create-field">
+<span data-i18n-key="Section">Section</span>
+<select name="section_selector" data-resident-create-section></select>
+</label>
+<label class="resident-create-field">
+<span data-i18n-key="Apartment">Apartment</span>
+<select name="apartment_id" required data-resident-create-apartment></select>
+</label>
+<label class="resident-create-field">
+<span data-i18n-key="Balance">Balance</span>
+<input name="balance" inputmode="decimal" placeholder="0" type="number" step="0.01"/>
+</label>
+<label class="resident-create-field">
+<span data-i18n-key="Telegram status">Telegram status</span>
+<select name="telegram_status">
+<option value="pending">pending</option>
+<option value="connected">connected</option>
+</select>
+</label>
+<label class="resident-create-field">
+<span data-i18n-key="Telegram id">Telegram id</span>
+<input name="telegram_id" placeholder="Optional" type="text"/>
+</label>
+<label class="resident-create-field">
+<span data-i18n-key="Telegram user">Telegram user</span>
+<input name="telegram_user" placeholder="@username" type="text"/>
+</label>
+</div>
+<div class="resident-create-preview" data-resident-create-preview>
+<span class="material-symbols-outlined">info</span>
+<p data-i18n-key="Only free apartments are shown. Occupied apartments must be edited in admin.">Only free apartments are shown. Occupied apartments must be edited in admin.</p>
+</div>
+<div class="flex justify-end gap-3">
+<button class="px-4 py-2 rounded-lg bg-surface-container text-sm font-bold" data-close-overlay type="button" data-i18n-key="Cancel">Cancel</button>
+<button class="px-5 py-2 rounded-lg bg-primary text-white text-sm font-bold" data-resident-create-submit type="submit">
+<span data-i18n-key="Create resident">Create resident</span>
+</button>
+</div>
+</form>
+</div>
+</div>
+
+<div aria-labelledby="confirm-title" aria-hidden="true" class="app-modal fixed inset-0 z-[90] hidden items-center justify-center p-6" id="confirm-modal" role="dialog">
+<div class="modal-panel w-full max-w-md bg-white rounded-lg shadow-2xl border border-outline-variant/20">
+<div class="px-6 py-5 border-b border-surface-container flex items-center gap-3">
+<span class="material-symbols-outlined text-error">warning</span>
+<div>
+<h2 class="text-lg font-black text-on-surface" id="confirm-title">Confirm action</h2>
+<p class="text-xs text-on-surface-variant mt-1" data-confirm-message>This action changes the current workspace state.</p>
+</div>
+</div>
+<div class="p-6 flex justify-end gap-3">
+<button class="px-4 py-2 rounded-lg bg-surface-container text-sm font-bold" data-confirm-cancel type="button">Cancel</button>
+<button class="px-4 py-2 rounded-lg bg-error text-white text-sm font-bold" data-confirm-submit type="button">Confirm</button>
+</div>
+</div>
+</div>

@@ -227,17 +227,24 @@ class GasMeterReading(models.Model):
     @property
     def consumption(self):
         """Sarflangan gaz miqdori (kub)"""
-        return self.end_reading - self.start_reading
+        if self.start_reading is None or self.end_reading is None:
+            return Decimal("0")
+        return max(Decimal("0"), self.end_reading - self.start_reading)
 
     @property
     def total_gas_cost(self):
         """Gaz uchun umumiy xarajat (so'm)"""
+        if self.price_per_m3 is None:
+            return Decimal("0")
         return self.consumption * self.price_per_m3
 
     def __str__(self):
+        service_name = self.get_service_type_display() or "Gaz hisoblagich"
+        building_name = self.building if self.building_id else "Yangi uy"
+        period_name = self.period.name if self.period_id else "Yangi davr"
         return (
-            f"{self.get_service_type_display()} — {self.building} "
-            f"({self.period.name}) — {self.consumption} kub"
+            f"{service_name} — {building_name} "
+            f"({period_name}) — {self.consumption} kub"
         )
 
     class Meta:
