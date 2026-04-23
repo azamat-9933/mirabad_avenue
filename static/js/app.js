@@ -12,6 +12,8 @@
         "New Unit Request": { ru: "Новая заявка", uz: "Yangi ariza" },
         "Settings": { ru: "Настройки", uz: "Sozlamalar" },
         "Support": { ru: "Поддержка", uz: "Yordam" },
+        "Recent requests": { ru: "Недавние запросы", uz: "So'nggi so'rovlar" },
+        "No results": { ru: "Ничего не найдено", uz: "Natija topilmadi" },
         "Admin User": { ru: "Администратор", uz: "Administrator" },
         "Administrator": { ru: "Администратор", uz: "Administrator" },
         "Profile": { ru: "Профиль", uz: "Profil" },
@@ -132,6 +134,26 @@
         "All Systems Operational": { ru: "Все системы работают", uz: "Barcha tizimlar ishlamoqda" },
         "Last check: 2m ago": { ru: "Последняя проверка: 2 мин назад", uz: "Oxirgi tekshiruv: 2 daqiqa oldin" },
         "Total Revenue": { ru: "Общая выручка", uz: "Jami tushum" },
+        "Total Residents": { ru: "Всего резидентов", uz: "Jami rezidentlar" },
+        "Paid Residents": { ru: "Оплатили", uz: "To'laganlar" },
+        "Total Debtors": { ru: "Всего должников", uz: "Jami qarzdorlar" },
+        "Total linked resident profiles": { ru: "Всего привязанных профилей резидентов", uz: "Jami ulangan rezident profillari" },
+        "Residents with positive or zero balance": { ru: "Резиденты с положительным или нулевым балансом", uz: "Musbat yoki nol balansli rezidentlar" },
+        "Residents with overdue balance": { ru: "Резиденты с просроченным балансом", uz: "Muddati o'tgan balansli rezidentlar" },
+        "Current resident liabilities": { ru: "Текущие обязательства резидентов", uz: "Rezidentlarning joriy majburiyatlari" },
+        "Resident Directory": { ru: "Каталог резидентов", uz: "Rezidentlar katalogi" },
+        "Linked resident profiles with contact, apartment and Telegram sync details.": { ru: "Привязанные профили резидентов с контактами, квартирой и Telegram-статусом.", uz: "Kontakt, kvartira va Telegram holati bilan ulangan rezident profillari." },
+        "Telegram": { ru: "Telegram", uz: "Telegram" },
+        "Connected": { ru: "Подключён", uz: "Ulangan" },
+        "Pending": { ru: "Ожидает", uz: "Kutilmoqda" },
+        "Not linked": { ru: "Не подключён", uz: "Ulanmagan" },
+        "No residents found": { ru: "Резиденты не найдены", uz: "Rezidentlar topilmadi" },
+        "Adjust search or filters to show matching resident profiles.": { ru: "Измените поиск или фильтры, чтобы показать подходящие профили.", uz: "Mos profillarni ko'rsatish uchun qidiruv yoki filtrlarni o'zgartiring." },
+        "Contract": { ru: "Договор", uz: "Shartnoma" },
+        "Resident since": { ru: "Резидент с", uz: "Rezident sanasi" },
+        "Telegram user": { ru: "Telegram user", uz: "Telegram foydalanuvchi" },
+        "Section": { ru: "Секция", uz: "Seksiya" },
+        "Current Balance": { ru: "Текущий баланс", uz: "Joriy balans" },
         "Total Complexes": { ru: "Всего комплексов", uz: "Jami komplekslar" },
         "Active Buildings": { ru: "Активные здания", uz: "Faol binolar" },
         "Occupancy Rate": { ru: "Заполняемость", uz: "Bandlik darajasi" },
@@ -615,6 +637,8 @@
     const placeholderTranslations = {
         "Search data points...": { ru: "Поиск данных...", uz: "Ma'lumotlarni qidirish..." },
         "Search": { ru: "Поиск", uz: "Qidirish" },
+        "Recent requests": { ru: "Недавние запросы", uz: "So'nggi so'rovlar" },
+        "No results": { ru: "Ничего не найдено", uz: "Natija topilmadi" },
         "Search inside table...": { ru: "Поиск в таблице...", uz: "Jadvaldan qidirish..." },
         "Search residents...": { ru: "Поиск жильцов...", uz: "Yashovchilarni qidirish..." },
         "Search district, house, apartment, resident...": { ru: "Поиск района, дома, квартиры, жильца...", uz: "Hudud, uy, xonadon, yashovchi..." },
@@ -633,6 +657,8 @@
         if (lang === "en") return key;
         return translations[key]?.[lang] || key;
     };
+    const currentInterfaceLang = () => storage.getItem("hydroflow-lang") || "en";
+    const t = (key) => translateValue(key, currentInterfaceLang());
 
     const captureTranslatableNodes = () => {
         const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, {
@@ -991,6 +1017,15 @@
         const criticalDebtUnits = criticalComplexes.reduce((total, complex) => total + complex.debtorResidents, 0);
         const totalDebtorUnits = complexes.reduce((total, complex) => total + complex.debtorResidents, 0);
         const totalPaidUnits = complexes.reduce((total, complex) => total + complex.paidResidents, 0);
+        const detailedResidents = billingData.residents.length;
+        const detailedPaidResidents = billingData.residents.filter((resident) => {
+            const status = String(resident.status || "").toLowerCase();
+            return status === "paid" || Number(resident.balance || 0) >= 0;
+        }).length;
+        const detailedDebtors = billingData.residents.filter((resident) => {
+            const status = String(resident.status || "").toLowerCase();
+            return status === "debtor" || Number(resident.balance || 0) < 0;
+        }).length;
         const avgPressure = billingData.complexes.reduce((total, complex) => total + complex.pressurePsi, 0) / Math.max(totalComplexes, 1);
         return {
             complexes,
@@ -1015,15 +1050,63 @@
             criticalAlerts: criticalAlertCount,
             criticalDebtUnits,
             totalDebtorUnits,
-            totalPaidUnits,
+            totalPaidUnits: detailedPaidResidents || totalPaidUnits,
             avgPressure,
-            detailedResidents: billingData.residents.length,
-            detailedDebtors: billingData.residents.filter((resident) => resident.status === "debtor").length,
+            detailedResidents,
+            detailedPaidResidents,
+            detailedDebtors,
             pendingTransactions: billingData.transactions.filter((transaction) => transaction.status !== "Success").length,
             successfulTransactions: billingData.transactions.filter((transaction) => transaction.status === "Success").length,
             sectors: new Set(billingData.complexes.map((complex) => complex.sector)).size,
         };
     };
+
+    const syncDashboardStatCards = (stats = getSiteStats()) => {
+        const paidPercent = stats.detailedResidents ? (stats.detailedPaidResidents / stats.detailedResidents) * 100 : 0;
+        const debtorPercent = stats.detailedResidents ? (stats.detailedDebtors / stats.detailedResidents) * 100 : 0;
+        const debtPercent = (stats.detailedDebt / Math.max(stats.detailedDebt + stats.totalCollected, 1)) * 100;
+        const cards = {
+            "total-residents": {
+                value: moneyFormatter.format(stats.detailedResidents),
+                support: t("Total linked resident profiles"),
+                progress: Math.max(6, Math.min(100, stats.detailedResidents ? 100 : 0)),
+            },
+            "paid-residents": {
+                value: moneyFormatter.format(stats.detailedPaidResidents),
+                support: t("Residents with positive or zero balance"),
+                progress: paidPercent,
+            },
+            "total-debtors": {
+                value: moneyFormatter.format(stats.detailedDebtors),
+                support: t("Residents with overdue balance"),
+                progress: debtorPercent,
+            },
+            "outstanding-debt": {
+                value: formatCompactUzs(stats.detailedDebt),
+                support: t("Current resident liabilities"),
+                progress: debtPercent,
+            },
+        };
+        Object.entries(cards).forEach(([key, payload]) => {
+            const card = document.querySelector(`[data-stat-card="${key}"]`);
+            if (!card) return;
+            const value = card.querySelector("h2");
+            const support = card.querySelector("[data-stat-support]");
+            const bar = card.querySelector(".chart-bar");
+            if (value) {
+                value.dataset.statSynced = "true";
+                value.textContent = payload.value;
+            }
+            if (support) {
+                support.dataset.statSynced = "true";
+                support.textContent = payload.support;
+            }
+            if (bar) {
+                bar.style.width = `${Math.max(3, Math.min(100, payload.progress || 0))}%`;
+            }
+        });
+    };
+    window.HydroFlowSyncDashboardStatCards = syncDashboardStatCards;
 
     const filterStorageKey = "hydroflow-global-filters";
     const defaultFilterState = { district: "all", status: "all", period: "90" };
@@ -1888,14 +1971,22 @@
             return afterValue || null;
         };
         const setStat = (label, value, support = "", progress = null) => {
-            const host = cardFor(label);
-            const valueElement = valueNode(host, label);
+            const statCardKeys = {
+                "Total Residents": "total-residents",
+                "Paid Residents": "paid-residents",
+                "Total Debtors": "total-debtors",
+                "Outstanding Debt": "outstanding-debt",
+            };
+            const host = statCardKeys[label]
+                ? document.querySelector(`[data-stat-card="${statCardKeys[label]}"]`) || cardFor(label)
+                : cardFor(label);
+            const valueElement = host?.dataset.statCard ? host.querySelector("h2") : valueNode(host, label);
             if (valueElement) {
                 valueElement.dataset.statSynced = "true";
                 valueElement.textContent = value;
             }
             if (support) {
-                const supportElement = supportNode(host, valueElement);
+                const supportElement = host?.dataset.statCard ? host.querySelector("[data-stat-support]") : supportNode(host, valueElement);
                 if (supportElement) {
                     supportElement.dataset.statSynced = "true";
                     supportElement.textContent = support;
@@ -1916,10 +2007,10 @@
             .reduce((total, transaction) => total + transaction.amount, 0);
         const detailedCollectionRate = (detailedPaid / Math.max(detailedPaid + stats.detailedDebt, 1)) * 100;
 
-        setStat("Total Revenue", formatCompactUzs(stats.totalCollected), `${formatCompactUzs(stats.transactionVolume)} logged locally`);
-        setStat("Active Subscribers", moneyFormatter.format(stats.occupiedUnits), `${stats.detailedResidents} linked resident profiles`);
-        setStat("Consumption Rate", `${compactNumber(stats.totalUsageM3)} m³`, `Across ${stats.totalComplexes} complexes`);
-        setStat("Outstanding Debt", formatCompactUzs(stats.totalDebt), `${stats.criticalDebtUnits} critical units`);
+        setStat("Total Residents", moneyFormatter.format(stats.detailedResidents), t("Total linked resident profiles"));
+        setStat("Paid Residents", moneyFormatter.format(stats.detailedPaidResidents), t("Residents with positive or zero balance"));
+        setStat("Total Debtors", moneyFormatter.format(stats.detailedDebtors), t("Residents with overdue balance"));
+        setStat("Outstanding Debt", formatCompactUzs(stats.detailedDebt), t("Current resident liabilities"));
         setStat("Total Complexes", moneyFormatter.format(stats.totalComplexes), `${stats.sectors} sectors connected`);
         setStat("Active Buildings", moneyFormatter.format(stats.totalBuildings), `${moneyFormatter.format(stats.totalUnits)} active units`);
         setStat("Occupancy Rate", percentValue(stats.occupancyRate), `Across ${stats.totalBuildings} buildings`, stats.occupancyRate);
@@ -2664,12 +2755,65 @@
         return "is-success";
     };
     const renderTableStatus = (value) => `<span class="table-assigned-status ${tableStatusClass(value)}">${escapeHtml(value)}</span>`;
-    const renderResidentCardMarkup = (resident) => {
+    const renderResidentCardMarkup = (resident, layout = "card") => {
         const isDebtor = String(resident.status || "").toLowerCase() === "debtor";
         const balanceClass = isDebtor ? "text-error" : Number(resident.balance || 0) > 0 ? "text-secondary" : "text-on-surface";
+        const telegramKey = resident.telegramConnected
+            ? "Connected"
+            : resident.telegramStatus === "pending" || resident.telegramStatus === "review"
+            ? "Pending"
+            : "Not linked";
+        const telegramClass = resident.telegramConnected
+            ? "is-telegram-connected"
+            : resident.telegramStatus === "pending" || resident.telegramStatus === "review"
+            ? "is-telegram-pending"
+            : "is-telegram-empty";
         const avatar = resident.photo
             ? `<img class="h-12 w-12 rounded-lg object-cover" src="${escapeAttr(resident.photo)}" alt="">`
             : `<div class="h-12 w-12 rounded-lg ${isDebtor ? "bg-error/20 text-error" : "bg-secondary/20 text-secondary"} flex items-center justify-center font-bold text-xl">${escapeHtml(initialsFor(resident.name || "R"))}</div>`;
+        if (layout === "flat") {
+            return `
+                <article class="resident-list-row"
+                    data-resident-card
+                    data-resident-id="${escapeAttr(resident.id)}"
+                    data-resident-status="${escapeAttr(resident.status)}"
+                    data-owner-backend-id="${escapeAttr(resident.ownerBackendId || resident.backendId || "")}"
+                    data-apartment-backend-id="${escapeAttr(resident.apartmentBackendId || "")}"
+                    data-building-backend-id="${escapeAttr(resident.buildingBackendId || "")}"
+                    data-complex-backend-id="${escapeAttr(resident.complexBackendId || "")}"
+                    data-complex-id="${escapeAttr(resident.complexId || "")}">
+                    <div class="resident-list-person">
+                        ${avatar}
+                        <div>
+                            <h4>${escapeHtml(resident.name || "Resident")}</h4>
+                            <p>${escapeHtml(resident.apartment || "-")}</p>
+                        </div>
+                    </div>
+                    <div class="resident-list-cell resident-list-property">
+                        <span data-i18n-key="Property">Property</span>
+                        <strong>${escapeHtml(resident.building || "-")}</strong>
+                        <small>${escapeHtml(resident.complex || "-")}</small>
+                    </div>
+                    <div class="resident-list-cell">
+                        <span data-i18n-key="Phone">Phone</span>
+                        <strong>${escapeHtml(resident.phone || "-")}</strong>
+                    </div>
+                    <div class="resident-list-cell">
+                        <span data-i18n-key="Last Payment">Last Payment</span>
+                        <strong>${escapeHtml(resident.lastPayment || "-")}</strong>
+                    </div>
+                    <div class="resident-list-cell">
+                        <span data-i18n-key="Telegram">Telegram</span>
+                        <strong class="resident-list-telegram ${telegramClass}">${escapeHtml(resident.telegramUser || telegramKey || "-")}</strong>
+                    </div>
+                    <div class="resident-list-balance">
+                        <span data-i18n-key="Current Balance">Current Balance</span>
+                        <strong class="${balanceClass}">${formatBillingUzs(resident.balance || 0)}</strong>
+                    </div>
+                    <button class="resident-list-action" data-resident-billing-history type="button" data-i18n-key="Details">Details</button>
+                </article>
+            `;
+        }
         const actionButton = isDebtor
             ? `<button class="w-full py-2 bg-error text-white text-xs font-bold rounded-lg hover:bg-red-700 transition-colors" data-reminder-action type="button" data-i18n-key="SEND URGENT REMINDER">SEND URGENT REMINDER</button>`
             : `<button class="w-full py-2 bg-surface-container-high text-on-surface-variant text-xs font-bold rounded-lg hover:bg-surface-container-highest transition-colors" data-resident-billing-history type="button" data-i18n-key="VIEW BILLING HISTORY">VIEW BILLING HISTORY</button>`;
@@ -2937,38 +3081,52 @@
         const residentEmpty = document.querySelector("[data-resident-filter-empty]");
         const residentCount = residentFilterGroup?.querySelector("[data-resident-filter-count]");
         const residentButtons = Array.from(document.querySelectorAll("[data-resident-filter]"));
-        const residentCountLabel = (visible) => {
+        const residentTelegramButtons = Array.from(document.querySelectorAll("[data-resident-telegram]"));
+        const residentLayout = residentsGrid?.dataset.residentLayout || "card";
+        const residentPageSize = Number(residentsGrid?.dataset.residentPageSize || residentsGrid?.dataset.residentLimit || 8) || 8;
+        const residentCountLabel = (visible, total = visible) => {
             const lang = storage.getItem("hydroflow-lang") || "en";
-            if (lang === "ru") return `${visible} показано`;
-            if (lang === "uz") return `${visible} ko'rsatildi`;
-            return `${visible} shown`;
+            const count = Number(total || visible || 0);
+            if (lang === "ru") return `${count} жителей`;
+            if (lang === "uz") return `${count} rezident`;
+            return `${count} residents`;
         };
         const loadResidents = async () => {
             if (!residentsGrid) return;
-            const state = readListUrlState("residents", { page: "1", search: "", status: "all", ordering: "name" });
+            const state = readListUrlState("residents", { page: "1", search: "", status: "all", telegram: "all", ordering: "name" });
             const { params } = currentGlobalListFilters();
             const payload = await fetchServerList("/api/lists/residents/", {
                 ...params,
                 page: state.page,
-                page_size: 8,
+                page_size: residentPageSize,
                 search: state.search,
                 status: state.status,
+                telegram: residentTelegramButtons.length ? state.telegram : "all",
                 ordering: state.ordering,
             });
-            residentsGrid.innerHTML = payload.results.map(renderResidentCardMarkup).join("");
+            residentsGrid.innerHTML = payload.results.map((resident) => renderResidentCardMarkup(resident, residentLayout)).join("");
             residentButtons.forEach((button) => {
                 const active = (button.dataset.residentFilter || "all") === state.status;
                 button.classList.toggle("is-active", active);
                 button.setAttribute("aria-pressed", String(active));
             });
+            residentTelegramButtons.forEach((button) => {
+                const active = (button.dataset.residentTelegram || "all") === state.telegram;
+                button.classList.toggle("is-active", active);
+                button.setAttribute("aria-pressed", String(active));
+            });
             if (residentSearch) residentSearch.value = state.search || "";
-            if (residentCount) residentCount.textContent = residentCountLabel(payload.results.length);
+            if (residentCount) residentCount.textContent = residentCountLabel(payload.results.length, payload.total);
             residentEmpty?.classList.toggle("hidden", payload.results.length > 0);
             window.HydroFlowSyncLocale?.();
         };
         if (residentsGrid) {
             residentButtons.forEach((button) => button.addEventListener("click", () => {
                 writeListUrlState("residents", { status: button.dataset.residentFilter || "all", page: 1 });
+                loadResidents();
+            }));
+            residentTelegramButtons.forEach((button) => button.addEventListener("click", () => {
+                writeListUrlState("residents", { telegram: button.dataset.residentTelegram || "all", page: 1 });
                 loadResidents();
             }));
             residentSearch?.addEventListener("input", debounce(() => {
@@ -3214,6 +3372,15 @@
         };
 
         Object.values(serverListControllers).forEach((controller) => controller?.load?.());
+    };
+
+    const safeSyncSiteStatistics = () => {
+        syncDashboardStatCards();
+        try {
+            syncSiteStatistics();
+        } catch (error) {
+            console.warn("HydroFlow statistics sync failed", error);
+        }
     };
 
     const setupBillingDataSync = () => {
@@ -3642,9 +3809,10 @@
             const footerText = performanceTable.closest(".bg-surface-container-lowest")?.querySelector(".border-t span.text-xs");
             if (footerText) footerText.textContent = `Showing 1-${getComplexStats().length} of ${getComplexStats().length} complexes`;
             repairEnhancedTableControls(performanceTable);
+            setupResidentialHierarchy();
         }
 
-        syncSiteStatistics();
+        safeSyncSiteStatistics();
         const maintenanceTable = document.querySelector("[data-maintenance-body]")?.closest("table");
         repairEnhancedTableControls(maintenanceTable);
         window.HydroFlowSyncLocale?.();
@@ -4138,11 +4306,18 @@
     };
 
     const setupResidentialHierarchy = () => {
-        const table = document.querySelector("[data-drill-row='district']")?.closest("table");
-        if (!table || table.dataset.residentialHierarchyReady === "true") return;
-        table.dataset.residentialHierarchyReady = "true";
+        const table = document.querySelector(".residential-performance-table")
+            || document.querySelector("[data-drill-row='district']")?.closest("table");
+        if (!table) return;
         const body = table.querySelector("tbody");
         if (!body) return;
+        table.HydroFlowResidentialCleanup?.();
+        const cleanupHandlers = [];
+        const listen = (target, type, handler, options) => {
+            if (!target) return;
+            target.addEventListener(type, handler, options);
+            cleanupHandlers.push(() => target.removeEventListener(type, handler, options));
+        };
 
         const ownerPool = billingData.residents.map((resident) => ({
             name: resident.name,
@@ -4449,6 +4624,15 @@
             searchInput.dataset.i18nPlaceholder = searchPlaceholderKey;
             searchInput.setAttribute("aria-label", "Search district, house, apartment or resident");
             searchInput.closest(".table-search-shell")?.classList.add("residential-smart-search-shell");
+            const pendingCommandQuery = storage.getItem("hydroflow-command-query-pending") || "";
+            if (pendingCommandQuery) {
+                storage.removeItem("hydroflow-command-query-pending");
+                window.requestAnimationFrame(() => {
+                    searchInput.value = pendingCommandQuery;
+                    searchInput.dispatchEvent(new Event("input", { bubbles: true }));
+                    searchInput.focus();
+                });
+            }
         }
         const syncResidentialLabels = (lang = storage.getItem("hydroflow-lang") || "en") => {
             const labels = {
@@ -4568,7 +4752,7 @@
             window.HydroFlowSyncLocale?.();
         };
 
-        table.addEventListener("click", (event) => {
+        listen(table, "click", (event) => {
             if (event.target.closest("button, a, input, label, select")) return;
             const building = event.target.closest("[data-drill-row='building']");
             if (building) {
@@ -4581,14 +4765,14 @@
             }
         });
 
-        table.addEventListener("click", (event) => {
+        listen(table, "click", (event) => {
             const button = event.target.closest(".residential-open-button");
             if (!button) return;
             const row = button.closest("[data-drill-row='building']");
             row?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
         });
 
-        table.addEventListener("keydown", (event) => {
+        listen(table, "keydown", (event) => {
             if (event.key !== "Enter" && event.key !== " ") return;
             const row = event.target.closest("[data-drill-row='district'], [data-drill-row='building']");
             if (!row) return;
@@ -4637,7 +4821,7 @@
             window.HydroFlowSyncLocale?.();
         };
 
-        table.addEventListener("click", (event) => {
+        listen(table, "click", (event) => {
             const button = event.target.closest("[data-apartment-details]");
             if (!button) return;
             event.preventDefault();
@@ -4648,7 +4832,7 @@
             openOverlayById("apartment-details-drawer");
         }, true);
 
-        table.addEventListener("click", async (event) => {
+        listen(table, "click", async (event) => {
             const button = event.target.closest("[data-copy-phone]");
             if (!button) return;
             event.preventDefault();
@@ -4662,13 +4846,16 @@
             }
         });
 
-        searchInput?.addEventListener("input", () => window.setTimeout(runSmartSearch, 0));
-        document.addEventListener("keydown", (event) => {
+        listen(searchInput, "input", () => window.setTimeout(runSmartSearch, 0));
+        listen(document, "keydown", (event) => {
             if (event.key === "Escape" && searchInput?.value && document.activeElement === searchInput) {
                 searchInput.value = "";
                 runSmartSearch();
             }
         });
+        table.HydroFlowResidentialCleanup = () => {
+            cleanupHandlers.splice(0).forEach((cleanup) => cleanup());
+        };
     };
 
     const decorateStatusText = () => {
@@ -4750,7 +4937,7 @@
             renderBackendAuditEvents();
             window.HydroFlowRenderSupport?.();
             window.HydroFlowRenderChecklist?.();
-            syncSiteStatistics();
+            safeSyncSiteStatistics();
             window.HydroFlowApplyFilters?.(readFilterState(), { resetPage: false });
             document.dispatchEvent(new CustomEvent("hydroflow:backend-refreshed"));
         } catch {
@@ -4821,7 +5008,7 @@
         renderBackendAuditEvents();
         window.HydroFlowRenderSupport?.();
         window.HydroFlowRenderChecklist?.();
-        syncSiteStatistics();
+        safeSyncSiteStatistics();
         window.HydroFlowApplyFilters?.(readFilterState(), { resetPage: false });
         window.HydroFlowSyncLocale?.();
         document.dispatchEvent(new CustomEvent("hydroflow:backend-refreshed"));
@@ -6064,6 +6251,7 @@
     });
 
     const recentCommandKey = "hydroflow-recent-commands";
+    const recentSearchKey = "hydroflow-recent-searches";
     const commandPalette = document.getElementById("command-palette");
     const commandInput = document.querySelector("[data-command-input]");
     const commandResults = document.querySelector("[data-command-results]");
@@ -6075,6 +6263,25 @@
         } catch {
             return [];
         }
+    };
+    const getRecentSearches = () => {
+        try {
+            return JSON.parse(storage.getItem(recentSearchKey) || "[]");
+        } catch {
+            return [];
+        }
+    };
+    const normalizeCommandSearch = (value) => String(value || "")
+        .toLowerCase()
+        .normalize("NFKD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .trim();
+    const saveRecentSearch = (query) => {
+        const value = String(query || "").trim();
+        if (!value) return;
+        const recent = getRecentSearches().filter((item) => item !== value);
+        recent.unshift(value);
+        storage.setItem(recentSearchKey, JSON.stringify(recent.slice(0, 6)));
     };
     const saveRecentCommand = (button) => {
         const title = button.querySelector("span")?.textContent?.trim();
@@ -6097,13 +6304,169 @@
         const wrap = document.querySelector("[data-command-recent-wrap]");
         const target = document.querySelector("[data-command-recent]");
         if (!wrap || !target) return;
-        const recent = getRecentCommands();
-        wrap.classList.toggle("hidden", recent.length === 0);
-        target.innerHTML = recent.map((item) => `
-            <button class="command-recent-chip" data-command-recent-id="${item.id}" type="button">
-                <span>${item.title}</span>
+        const recent = getRecentSearches();
+        const fallback = recent.length ? [] : [
+            billingData.residents[0]?.name,
+            billingData.residents[0]?.apartmentNumber ? `Apartment ${billingData.residents[0].apartmentNumber}` : "",
+            billingData.complexes[0]?.name,
+            billingData.complexes[0]?.buildingItems?.[0]?.name,
+        ].filter(Boolean);
+        const items = recent.length ? recent : fallback;
+        wrap.classList.toggle("hidden", items.length === 0);
+        target.innerHTML = items.slice(0, 6).map((item) => `
+            <button class="command-recent-chip" data-command-recent-query="${escapeAttr(item)}" type="button">
+                <span>${escapeHtml(item)}</span>
             </button>
         `).join("");
+    };
+    const commandSearchIndex = () => {
+        const buildings = billingData.complexes.flatMap((complex) => (
+            Array.isArray(complex.buildingItems)
+                ? complex.buildingItems.map((building) => ({ complex, building }))
+                : []
+        ));
+        const apartments = buildings.flatMap(({ complex, building }) => (
+            Array.isArray(building.apartments)
+                ? building.apartments.map((apartment) => ({ complex, building, apartment }))
+                : []
+        ));
+        const residentEntries = billingData.residents.map((resident) => {
+            const complex = getComplexById(resident.complexId);
+            const title = resident.name || resident.fio || "";
+            const apartmentLabel = resident.apartmentNumber || resident.apartment || "";
+            const buildingLabel = resident.building || "";
+            const search = [
+                title,
+                resident.phone,
+                apartmentLabel,
+                buildingLabel,
+                complex?.name,
+                complex?.sector,
+            ].filter(Boolean).join(" ");
+            return {
+                id: `resident-${resident.id}`,
+                type: "resident",
+                title,
+                meta: [apartmentLabel, buildingLabel || complex?.name].filter(Boolean).join(" · "),
+                search: normalizeCommandSearch(search),
+                residentId: resident.id,
+            };
+        });
+        const buildingEntries = buildings.map(({ complex, building }) => ({
+            id: `building-${building.backendId || building.id || building.number}`,
+            type: "building",
+            title: building.name || `House ${building.number || ""}`.trim(),
+            meta: [complex?.name, building.address].filter(Boolean).join(" · "),
+            search: normalizeCommandSearch([
+                building.name,
+                building.number,
+                building.address,
+                complex?.name,
+                complex?.sector,
+            ].filter(Boolean).join(" ")),
+            commandQuery: building.name || building.number || complex?.name || "",
+            buildingId: building.backendId || "",
+            complexId: complex?.id || "",
+        }));
+        const apartmentEntries = apartments.map(({ complex, building, apartment }) => {
+            const ownerName = apartment.owner?.name || "";
+            const unit = apartment.unit || apartment.number || "";
+            const buildingName = building.name || `House ${building.number || ""}`.trim();
+            return {
+                id: `apartment-${apartment.apartmentBackendId || apartment.backendId || unit}`,
+                type: "apartment",
+                title: `Apartment ${unit}`.trim(),
+                meta: [buildingName, ownerName].filter(Boolean).join(" · "),
+                search: normalizeCommandSearch([
+                    unit,
+                    ownerName,
+                    apartment.owner?.phone,
+                    complex?.name,
+                    buildingName,
+                    apartment.contract,
+                ].filter(Boolean).join(" ")),
+                commandQuery: ownerName || unit || buildingName || "",
+                apartmentData: {
+                    title: `Apartment ${unit}`.trim(),
+                    subtitle: [buildingName, complex?.name].filter(Boolean).join(" · "),
+                    owner: ownerName || "Unassigned owner",
+                    photo: apartment.owner?.photo || "",
+                    phone: apartment.owner?.phone || "",
+                    email: apartment.owner?.email || "",
+                    balance: formatUzs(Number(apartment.balance || 0)),
+                    status: apartment.status || "Paid",
+                    unit,
+                    rooms: apartment.rooms || "Apartment",
+                    area: apartment.area || "",
+                    meter: apartment.meter || "",
+                    charge: apartment.charge || "",
+                    occupancy: apartment.occupancy || "Resident",
+                    contract: apartment.contract || "",
+                    visit: apartment.visit || "",
+                    payment: apartment.lastPayment || "",
+                    ownerBackendId: apartment.ownerBackendId || "",
+                    apartmentBackendId: apartment.apartmentBackendId || apartment.backendId || "",
+                    buildingBackendId: apartment.buildingBackendId || building.backendId || "",
+                    complexBackendId: apartment.complexBackendId || complex?.backendId || "",
+                },
+            };
+        });
+        return [...residentEntries, ...apartmentEntries, ...buildingEntries];
+    };
+    const renderCommandResults = (entries) => {
+        if (!commandResults) return;
+        commandResults.innerHTML = entries.map((entry) => `
+            <button
+                class="command-item"
+                data-command-id="${escapeAttr(entry.id)}"
+                data-command-target-type="${escapeAttr(entry.type)}"
+                data-command-resident-id="${escapeAttr(entry.residentId || "")}"
+                data-command-building-id="${escapeAttr(entry.buildingId || "")}"
+                data-command-complex-id="${escapeAttr(entry.complexId || "")}"
+                data-command-query="${escapeAttr(entry.commandQuery || "")}"
+                data-command-search="${escapeAttr(entry.search || "")}"
+                data-command-url="${escapeAttr(entry.url || "")}"
+                type="button"
+            >
+                <span>${escapeHtml(entry.title)}</span>
+                ${entry.meta ? `<small>${escapeHtml(entry.meta)}</small>` : ""}
+            </button>
+        `).join("");
+    };
+    let commandSearchRequestId = 0;
+    const mergeCommandEntries = (entries) => {
+        const seen = new Set();
+        return entries.filter((entry) => {
+            const key = entry.id || `${entry.type}:${entry.title}:${entry.meta}`;
+            if (seen.has(key)) return false;
+            seen.add(key);
+            return true;
+        });
+    };
+    const fetchResidentCommandEntries = async (query, requestId) => {
+        const response = await fetch(`/api/lists/residents/?page=1&page_size=10&search=${encodeURIComponent(query)}`, {
+            cache: "no-store",
+            credentials: "same-origin",
+            headers: { Accept: "application/json" },
+        });
+        if (!response.ok || requestId !== commandSearchRequestId) return [];
+        const payload = await response.json();
+        return (payload.results || []).map((resident) => ({
+            id: `resident-api-${resident.id || resident.backendId || resident.ownerBackendId}`,
+            type: "resident",
+            title: resident.name || "Resident",
+            meta: [resident.apartment, resident.building || resident.complex, resident.phone].filter(Boolean).join(" · "),
+            search: normalizeCommandSearch([
+                resident.name,
+                resident.phone,
+                resident.apartment,
+                resident.building,
+                resident.complex,
+                resident.contract,
+            ].filter(Boolean).join(" ")),
+            residentId: resident.id,
+            commandQuery: resident.name || query,
+        }));
     };
     const setActiveCommand = (items, index) => {
         items.forEach((item, itemIndex) => {
@@ -6113,14 +6476,34 @@
         });
     };
     const filterCommands = () => {
-        const query = commandInput?.value.trim().toLowerCase() || "";
+        const rawQuery = commandInput?.value.trim() || "";
+        const query = normalizeCommandSearch(rawQuery);
+        if (!query) {
+            renderCommandResults([]);
+            commandEmpty?.classList.add("hidden");
+            renderRecentCommands();
+            return;
+        }
+        if (rawQuery.length >= 2) {
+            saveRecentSearch(rawQuery);
+            renderRecentCommands();
+        }
+        const matches = commandSearchIndex()
+            .filter((item) => item.search.includes(query))
+            .sort((a, b) => {
+                const exactDelta = Number(normalizeCommandSearch(b.title).startsWith(query)) - Number(normalizeCommandSearch(a.title).startsWith(query));
+                if (exactDelta) return exactDelta;
+                const typeOrder = { resident: 0, apartment: 1, building: 2 };
+                return (typeOrder[a.type] ?? 9) - (typeOrder[b.type] ?? 9);
+            })
+            .slice(0, 16);
+        renderCommandResults(matches);
         const items = getCommandItems();
         let visible = 0;
         items.forEach((item, index) => {
             if (!item.id) item.id = `command-item-${index}`;
-            const text = item.textContent.toLowerCase();
-            const show = !query || text.includes(query);
-            item.classList.toggle("hidden", !show);
+            const show = true;
+            item.classList.remove("hidden");
             item.querySelectorAll("span, small").forEach((part) => {
                 const original = part.dataset.originalText || part.textContent;
                 part.dataset.originalText = original;
@@ -6145,10 +6528,44 @@
         const visibleItems = items.filter((item) => !item.classList.contains("hidden"));
         setActiveCommand(visibleItems, visibleItems.length ? 0 : -1);
         commandEmpty?.classList.toggle("hidden", visible > 0);
+        const requestId = ++commandSearchRequestId;
+        fetchResidentCommandEntries(rawQuery, requestId)
+            .then((remoteEntries) => {
+                if (requestId !== commandSearchRequestId) return;
+                const merged = mergeCommandEntries([...matches, ...remoteEntries]).slice(0, 16);
+                renderCommandResults(merged);
+                const refreshedItems = getCommandItems();
+                setActiveCommand(refreshedItems, refreshedItems.length ? 0 : -1);
+                commandEmpty?.classList.toggle("hidden", refreshedItems.length > 0);
+            })
+            .catch(() => {
+                // Local embedded backend data is kept as fallback when the list endpoint is unavailable.
+            });
     };
     const executeCommand = (button) => {
         if (!button) return;
+        const queryValue = button.dataset.commandQuery || commandInput?.value || button.querySelector("span")?.textContent || "";
+        saveRecentSearch(queryValue);
         saveRecentCommand(button);
+        if (button.dataset.commandTargetType === "resident") {
+            const details = detailsFromResident(getResidentById(button.dataset.commandResidentId));
+            if (details) {
+                fillDetails(details);
+                closeOverlayById("command-palette");
+                openOverlayById("details-drawer");
+                return;
+            }
+        }
+        if (button.dataset.commandTargetType === "building") {
+            storage.setItem("hydroflow-command-query-pending", button.dataset.commandQuery || button.querySelector("span")?.textContent || "");
+            window.location.href = "/residential/";
+            return;
+        }
+        if (button.dataset.commandTargetType === "apartment") {
+            storage.setItem("hydroflow-command-query-pending", button.dataset.commandQuery || button.querySelector("span")?.textContent || "");
+            window.location.href = "/residential/";
+            return;
+        }
         if (button.dataset.commandUrl) {
             window.location.href = button.dataset.commandUrl;
             return;
@@ -6169,7 +6586,12 @@
         }
     };
     renderRecentCommands();
-    commandInput?.addEventListener("input", filterCommands);
+    renderCommandResults([]);
+    commandInput?.addEventListener("focus", () => {
+        renderRecentCommands();
+        filterCommands();
+    });
+    commandInput?.addEventListener("input", debounce(filterCommands, 120));
     commandInput?.addEventListener("keydown", (event) => {
         const items = getCommandItems().filter((item) => !item.classList.contains("hidden"));
         const current = Math.max(0, items.findIndex((item) => item.classList.contains("is-active")));
@@ -6184,20 +6606,15 @@
             active?.click();
         }
     });
-    document.querySelectorAll("[data-command-suggestion]").forEach((button) => button.addEventListener("click", () => {
-        if (!commandInput) return;
-        commandInput.value = button.dataset.commandSuggestion || "";
-        commandInput.dispatchEvent(new Event("input", { bubbles: true }));
-        commandInput.focus();
-    }));
     document.addEventListener("click", (event) => {
         const command = event.target.closest("[data-command-results] .command-item");
         if (command) executeCommand(command);
-        const recent = event.target.closest("[data-command-recent-id]");
+        const recent = event.target.closest("[data-command-recent-query]");
         if (recent) {
-            const commandData = getRecentCommands().find((item) => item.id === recent.dataset.commandRecentId);
-            const original = getCommandItems().find((item) => (item.dataset.commandId || item.querySelector("span")?.textContent?.trim()) === commandData?.id);
-            original?.click();
+            if (!commandInput) return;
+            commandInput.value = recent.dataset.commandRecentQuery || "";
+            commandInput.dispatchEvent(new Event("input", { bubbles: true }));
+            commandInput.focus();
         }
     });
 

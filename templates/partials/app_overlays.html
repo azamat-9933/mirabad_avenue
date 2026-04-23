@@ -545,34 +545,17 @@
 <div class="modal-panel command-palette-panel w-full max-w-2xl bg-white rounded-lg shadow-2xl border border-outline-variant/20 overflow-hidden">
 <div class="px-5 py-4 border-b border-surface-container flex items-center gap-3">
 <span class="material-symbols-outlined text-primary">search</span>
-<input aria-activedescendant="" aria-controls="command-results" aria-label="Command search" class="w-full border-none focus:ring-0 text-sm" data-command-input id="command-title" placeholder="Search residents, reports, alerts, actions..." type="search"/>
+<input aria-activedescendant="" aria-controls="command-results" aria-label="Command search" class="w-full border-none focus:ring-0 text-sm" data-command-input id="command-title" placeholder="Search" type="search"/>
 <kbd class="text-[10px] font-bold text-slate-500 bg-surface-container rounded px-1.5 py-0.5">Esc</kbd>
 </div>
-<div class="command-suggestions" data-command-suggestions>
-<button data-command-suggestion="billing" type="button">billing</button>
-<button data-command-suggestion="filters" type="button">filters</button>
-<button data-command-suggestion="export" type="button">export</button>
-<button data-command-suggestion="theme" type="button">theme</button>
-</div>
 <div class="command-recent hidden" data-command-recent-wrap>
-<p>Recent actions</p>
+<p data-i18n-key="Recent requests">Recent requests</p>
 <div data-command-recent></div>
 </div>
 <div class="p-3 command-results" data-command-results id="command-results" role="listbox">
-<button class="command-item" data-command-id="go-dashboard" data-command-url="{% url 'portal:dashboard' %}" type="button"><span>Go to Dashboard</span><small>Overview, KPIs and debtor trends</small></button>
-<button class="command-item" data-command-id="go-billing" data-command-url="{% url 'portal:billing' %}" type="button"><span>Go to Billing</span><small>Payments, residents and transaction log</small></button>
-<button class="command-item" data-command-id="go-residential" data-command-url="{% url 'portal:residential' %}" type="button"><span>Go to Residential Units</span><small>Complex performance overview</small></button>
-<button class="command-item" data-command-id="go-system-health" data-command-url="{% url 'portal:system_health' %}" type="button"><span>Go to System Health</span><small>Network health and maintenance</small></button>
-<button class="command-item" data-command-id="go-analytics" data-command-url="{% url 'portal:analytics' %}" type="button"><span>Go to Analytics</span><small>Financial overview and reports</small></button>
-<button class="command-item" data-command-id="open-filters" data-drawer-open="filter-drawer" type="button"><span>Open Filters</span><small>District, status and period</small></button>
-<button class="command-item" data-command-id="open-settings" data-drawer-open="settings-drawer" type="button"><span>Open Settings</span><small>Theme, density, sound and workspace</small></button>
-<button class="command-item" data-command-id="open-notifications" data-drawer-open="notifications-drawer" type="button"><span>Review Notifications</span><small>Critical, warning and info</small></button>
-<button class="command-item" data-command-id="toggle-theme" data-command-action="toggle-theme" type="button"><span>Toggle Theme</span><small>Switch light or dark mode</small></button>
-<button class="command-item" data-command-id="export-csv" data-export-open data-export-source="Command palette" type="button"><span>Export CSV</span><small>Open export preview modal</small></button>
 <div class="command-empty hidden" data-command-empty>
 <span class="material-symbols-outlined">search_off</span>
-<p>No matching commands</p>
-<small>Try billing, filters, export, theme, settings.</small>
+<p data-i18n-key="No results">No results</p>
 </div>
 </div>
 </div>
@@ -888,18 +871,6 @@
 </button>
 </div>
 <div class="settings-drawer-body p-6 space-y-4">
-<div class="settings-sync-card" data-settings-sync="offline">
-<div class="settings-sync-icon">
-<span class="material-symbols-outlined">cloud_off</span>
-</div>
-<div>
-<div class="settings-sync-heading">
-<p>Settings sync is offline</p>
-<span>Offline</span>
-</div>
-                            <span>Backend sync will retry on reconnect and keep current changes queued.</span>
-</div>
-</div>
 <div class="settings-section">
 <p class="drawer-label">Interface density</p>
 <div class="density-control" data-density-control>
@@ -951,12 +922,6 @@
 <span class="material-symbols-outlined">add_circle</span>
 <span>Open request modal</span>
 </button>
-<div class="system-status-card">
-                        <div><span>Portal mode</span><strong>Active</strong></div>
-                        <div><span>Backend</span><strong>Connected</strong></div>
-<div><span>Timezone</span><strong>Asia/Tashkent</strong></div>
-                        <div><span>Last sync</span><strong>13.04.2026, 09:41</strong></div>
-</div>
 </div>
 </div>
 </aside>

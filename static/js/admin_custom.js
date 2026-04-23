@@ -393,6 +393,26 @@
 
     const translatePattern = (value, lang = selectedLanguage()) => {
         const text = normalize(value);
+        const actionModelMatch = text.match(/^(Delete selected|Удалить выбранные|Tanlanganlarni o'chirish|Delete selected Payment transactions|Delete selected Transactions|Delete selected Payme transactions)\s+(.+)$/i);
+        if (actionModelMatch) {
+            const model = translateExact(actionModelMatch[2], lang) || translateValue(actionModelMatch[2], lang) || actionModelMatch[2];
+            if (lang === "ru") return `Удалить выбранные ${model}`;
+            if (lang === "uz") return `Tanlangan ${model}ni o'chirish`;
+            return `Delete selected ${model}`;
+        }
+        const selectedModelActionMatch = text.match(/^(Change selected|Изменить выбранные|Tanlanganlarni o'zgartirish|View selected|Просмотреть выбранные|Tanlanganlarni ko'rish)\s+(.+)$/i);
+        if (selectedModelActionMatch) {
+            const base = selectedModelActionMatch[1].toLowerCase();
+            const model = translateExact(selectedModelActionMatch[2], lang) || translateValue(selectedModelActionMatch[2], lang) || selectedModelActionMatch[2];
+            if (base.includes("view") || base.includes("прос") || base.includes("ko'r")) {
+                if (lang === "ru") return `Просмотреть выбранные ${model}`;
+                if (lang === "uz") return `Tanlangan ${model}ni ko'rish`;
+                return `View selected ${model}`;
+            }
+            if (lang === "ru") return `Изменить выбранные ${model}`;
+            if (lang === "uz") return `Tanlangan ${model}ni o'zgartirish`;
+            return `Change selected ${model}`;
+        }
         const backDateMatch = text.match(/^([‹<]\s*)(.+)$/);
         if (backDateMatch) {
             const translated = translateExact(backDateMatch[2], lang);

@@ -1,6 +1,7 @@
 import json
 import base64
 import io
+import re
 import zipfile
 from decimal import Decimal, InvalidOperation
 from datetime import timedelta
@@ -218,6 +219,10 @@ def _serialize_resident_row(owner):
     complex_obj = building.complex
     balance = _money(owner.balance)
     last_payment_at = getattr(owner, "last_payment_at", None)
+    telegram_status = str(owner.telegram_status or "").strip().lower()
+    telegram_user = str(owner.telegram_user or "").strip()
+    telegram_id = str(owner.telegram_id or "").strip()
+    telegram_connected = bool(telegram_user or telegram_id or telegram_status in {"connected", "active", "verified"})
     return {
         "id": f"owner-{owner.id}",
         "backendId": owner.id,
@@ -231,7 +236,11 @@ def _serialize_resident_row(owner):
         "name": owner.fio,
         "apartment": f"Apartment {apartment.number}",
         "apartmentNumber": apartment.number,
+        "section": apartment.section.name if apartment.section_id else "",
         "building": f"House {building.number}",
+        "buildingNumber": building.number,
+        "complex": complex_obj.title,
+        "complexAddress": complex_obj.address or "",
         "phone": owner.phone or "",
         "lastPayment": _date(last_payment_at),
         "lastPaymentAt": _datetime(last_payment_at),
@@ -244,6 +253,10 @@ def _serialize_resident_row(owner):
         "contract": f"APT-{apartment.id}",
         "meter": apartment.section.name if apartment.section_id else "",
         "email": "",
+        "telegramStatus": telegram_status or "not_linked",
+        "telegramUser": telegram_user,
+        "telegramId": telegram_id,
+        "telegramConnected": telegram_connected,
         "createdAt": _datetime(owner.created_at),
     }
 
@@ -529,6 +542,7 @@ def api_list_residents(request):
     page, page_size = _page_params(request)
     search = _query_param(request, "search", "")
     status_value = _query_param(request, "status", "all").lower()
+    telegram_value = _query_param(request, "telegram", "all").lower()
     district_value = _query_param(request, "district", "")
     period_value = _query_param(request, "period", "all").lower()
     ordering_raw = _query_param(request, "ordering", "name")
@@ -549,7 +563,13 @@ def api_list_residents(request):
         last_payment_at=Max("transactions__created_at", filter=Q(transactions__amount__gt=0))
     )
     if search:
-        queryset = queryset.filter(
+        normalized_search = re.sub(
+            r"\b(apartment|apt|house|home|unit|flat|квартира|кв|дом|уй|uy|kvartira)\b\.?",
+            "",
+            search,
+            flags=re.IGNORECASE,
+        ).strip()
+        search_filter = (
             Q(fio__icontains=search)
             | Q(phone__icontains=search)
             | Q(apartment__number__icontains=search)
@@ -557,10 +577,30 @@ def api_list_residents(request):
             | Q(apartment__building__complex__title__icontains=search)
             | Q(apartment__building__complex__address__icontains=search)
         )
+        if normalized_search and normalized_search != search:
+            search_filter |= (
+                Q(apartment__number__icontains=normalized_search)
+                | Q(apartment__building__number__icontains=normalized_search)
+            )
+        queryset = queryset.filter(search_filter)
     if status_value == "debtor":
         queryset = queryset.filter(balance__lt=0)
     elif status_value == "paid":
         queryset = queryset.filter(balance__gte=0)
+    if telegram_value == "connected":
+        queryset = queryset.filter(
+            (Q(telegram_user__isnull=False) & ~Q(telegram_user=""))
+            | (Q(telegram_id__isnull=False) & ~Q(telegram_id=""))
+            | Q(telegram_status__in=["connected", "active", "verified"])
+        )
+    elif telegram_value in {"pending", "review"}:
+        queryset = queryset.filter(telegram_status__in=["pending", "review"])
+    elif telegram_value in {"not_linked", "offline"}:
+        queryset = queryset.filter(
+            Q(telegram_user__isnull=True) | Q(telegram_user="")
+        ).filter(
+            Q(telegram_id__isnull=True) | Q(telegram_id="")
+        ).exclude(telegram_status__in=["connected", "active", "verified", "pending", "review"])
     queryset = _apply_related_district_filter(
         queryset,
         district_value,

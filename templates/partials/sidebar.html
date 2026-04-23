@@ -13,10 +13,6 @@
 <span class="material-symbols-outlined" data-icon="domain" {% if active_page == 'residential' %}style="font-variation-settings: 'FILL' 1;"{% endif %}>domain</span>
 <span class="font-medium">Residential Units</span>
 </a>
-<a class="nav-item sidebar-link relative flex items-center gap-3 px-4 py-3 rounded-lg {% if active_page == 'system_health' %}active is-active font-bold{% else %}dark:text-slate-400{% endif %}" data-nav-link href="{% url 'portal:system_health' %}">
-<span class="material-symbols-outlined" data-icon="monitor_heart" {% if active_page == 'system_health' %}style="font-variation-settings: 'FILL' 1;"{% endif %}>monitor_heart</span>
-<span class="font-medium">System Health</span>
-</a>
 <a class="nav-item sidebar-link relative flex items-center gap-3 px-4 py-3 rounded-lg {% if active_page == 'billing' %}active is-active font-bold{% else %}dark:text-slate-400{% endif %}" data-nav-link href="{% url 'portal:billing' %}">
 <span class="material-symbols-outlined" data-icon="payments" {% if active_page == 'billing' %}style="font-variation-settings: 'FILL' 1;"{% endif %}>payments</span>
 <span class="font-medium">Billing &amp; Debt</span>
@@ -39,11 +35,5 @@
 <span class="material-symbols-outlined" data-icon="contact_support">contact_support</span>
 <span class="font-medium">Support</span>
 </button>
-<div class="sidebar-status-footer">
-<div><span>Portal mode</span><strong>Active</strong></div>
-<div><span>Backend</span><strong data-sidebar-backend-status>Connected</strong></div>
-<div><span>Timezone</span><strong>Asia/Tashkent</strong></div>
-<div><span>Last sync</span><strong data-sidebar-last-sync>--</strong></div>
-</div>
 </div>
 </aside>

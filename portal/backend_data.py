@@ -532,6 +532,14 @@ def build_portal_data(user=None) -> dict:
                 building_collected += owner_collected
 
                 resident_id = _slug("owner", owner.id) if owner else _slug("apartment", apartment.id)
+                telegram_status = str(getattr(owner, "telegram_status", "") or "").strip().lower() if owner else ""
+                telegram_user = str(getattr(owner, "telegram_user", "") or "").strip() if owner else ""
+                telegram_id = str(getattr(owner, "telegram_id", "") or "").strip() if owner else ""
+                telegram_connected = bool(
+                    telegram_user
+                    or telegram_id
+                    or telegram_status in {"connected", "active", "verified"}
+                )
                 resident = {
                     "id": resident_id,
                     "backendId": owner.id if owner else None,
@@ -545,9 +553,14 @@ def build_portal_data(user=None) -> dict:
                     "name": owner.fio if owner else "Unassigned owner",
                     "apartment": f"Apartment {apartment.number}",
                     "apartmentNumber": apartment.number,
+                    "section": apartment.section.name if apartment.section else "",
                     "building": f"House {building.number}",
+                    "buildingNumber": building.number,
+                    "complex": complex_obj.title,
+                    "complexAddress": complex_obj.address or "",
                     "phone": owner.phone if owner else "",
                     "lastPayment": _date(latest_payment.created_at) if latest_payment else "",
+                    "lastPaymentAt": _datetime(latest_payment.created_at) if latest_payment else "",
                     "balance": balance,
                     "status": "debtor" if is_debtor else "paid",
                     "photo": "",
@@ -556,6 +569,12 @@ def build_portal_data(user=None) -> dict:
                     "charge": "",
                     "contract": f"APT-{apartment.id}",
                     "meter": apartment.section.name if apartment.section else "",
+                    "email": "",
+                    "telegramStatus": telegram_status or "not_linked",
+                    "telegramUser": telegram_user,
+                    "telegramId": telegram_id,
+                    "telegramConnected": telegram_connected,
+                    "createdAt": _datetime(owner.created_at) if owner else _datetime(apartment.created_at),
                 }
                 resident_rows.append(resident)
 
