@@ -1,4 +1,5 @@
 import os
+import socket
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -28,6 +29,25 @@ def env_list(name, default=None):
     return [item.strip() for item in value.split(",") if item.strip()]
 
 
+def build_allowed_hosts():
+    hosts = set(env_list("ALLOWED_HOSTS", []))
+    hosts.update({"localhost", "127.0.0.1", "testserver", "0.0.0.0", "[::1]"})
+
+    try:
+        hostname = socket.gethostname()
+        if hostname:
+            hosts.add(hostname)
+        _resolved_host, _aliases, resolved_ips = socket.gethostbyname_ex(hostname)
+        hosts.update(ip for ip in resolved_ips if ip)
+    except OSError:
+        pass
+
+    if DEBUG:
+        hosts.add("*")
+
+    return sorted(hosts)
+
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
@@ -37,7 +57,7 @@ SECRET_KEY = os.getenv("SECRET_KEY", "django-insecure-local-hydroflow-prototype"
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env_bool("DEBUG", True)
 
-ALLOWED_HOSTS = env_list("ALLOWED_HOSTS", ["localhost", "127.0.0.1", "testserver"])
+ALLOWED_HOSTS = build_allowed_hosts()
 
 
 # Application definition
