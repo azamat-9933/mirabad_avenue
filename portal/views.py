@@ -804,36 +804,41 @@ def api_list_audit(request):
         "type": "event_type",
         "title": "title",
     }
-    queryset = AuditEvent.objects.select_related(
-        "complex",
-        "building",
-        "apartment",
-        "owner",
-    )
-    if search:
-        queryset = queryset.filter(
-            Q(title__icontains=search)
-            | Q(message__icontains=search)
-            | Q(actor__icontains=search)
-            | Q(owner__fio__icontains=search)
-            | Q(complex__title__icontains=search)
-        )
-    if event_type:
-        queryset = queryset.filter(event_type=event_type)
-    if actor:
-        queryset = queryset.filter(actor__icontains=actor)
-    complex_id = _query_int(request, "complex_id", 0)
-    owner_id = _query_int(request, "owner_id", 0)
-    if complex_id:
-        queryset = queryset.filter(complex_id=complex_id)
-    if owner_id:
-        queryset = queryset.filter(owner_id=owner_id)
-    queryset = _apply_related_district_filter(queryset, district_value, "complex__title", "complex__address", "message")
-    queryset = _apply_period_filter(queryset, "created_at", period_value)
     ordering = _normalize_ordering(ordering_raw, allowed_ordering, "-created_at")
-    page_obj = _paginate_queryset(queryset.order_by(*ordering, "-id"), page, page_size)
-    results = [_serialize_audit_row(item) for item in page_obj.object_list]
-    return _paginated_response(results, page_obj.number, page_size, queryset.count(), ordering_raw)
+    try:
+        queryset = AuditEvent.objects.select_related(
+            "complex",
+            "building",
+            "apartment",
+            "owner",
+        )
+        if search:
+            queryset = queryset.filter(
+                Q(title__icontains=search)
+                | Q(message__icontains=search)
+                | Q(actor__icontains=search)
+                | Q(owner__fio__icontains=search)
+                | Q(complex__title__icontains=search)
+            )
+        if event_type:
+            queryset = queryset.filter(event_type=event_type)
+        if actor:
+            queryset = queryset.filter(actor__icontains=actor)
+        complex_id = _query_int(request, "complex_id", 0)
+        owner_id = _query_int(request, "owner_id", 0)
+        if complex_id:
+            queryset = queryset.filter(complex_id=complex_id)
+        if owner_id:
+            queryset = queryset.filter(owner_id=owner_id)
+        queryset = _apply_related_district_filter(queryset, district_value, "complex__title", "complex__address", "message")
+        queryset = _apply_period_filter(queryset, "created_at", period_value)
+        page_obj = _paginate_queryset(queryset.order_by(*ordering, "-id"), page, page_size)
+        results = [_serialize_audit_row(item) for item in page_obj.object_list]
+        return _paginated_response(results, page_obj.number, page_size, queryset.count(), ordering_raw)
+    except (DatabaseError, OperationalError):
+        # Fresh DB can open the portal before portal migrations are applied.
+        # Keep API contract stable instead of returning HTTP 500.
+        return _paginated_response([], page, page_size, 0, ordering_raw)
 
 
 def api_list_complexes(request):
