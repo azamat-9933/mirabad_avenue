@@ -20,6 +20,7 @@ from django.views.decorators.http import require_POST
 from django.views.generic import TemplateView
 
 from billing.models import HotWaterMeterReading
+from main_app.models import DEFAULT_SECTOR_NAME
 from properties.models import Apartment, Building, Complex, Owner
 from payments.models import Transaction
 from portal.models import (
@@ -514,7 +515,7 @@ def _serialize_complex_row(complex_obj, override_maps=None, hot_water_by_complex
         "id": f"complex-{complex_obj.id}",
         "backendId": complex_obj.id,
         "name": complex_obj.title,
-        "sector": complex_obj.address or "Mirabad Avenue",
+        "sector": DEFAULT_SECTOR_NAME,
         "prefix": complex_obj.title,
         "buildings": len(building_rows),
         "units": unit_total,
@@ -632,6 +633,7 @@ def api_list_transactions(request):
     period_value = _query_param(request, "period", "all").lower()
     ordering_raw = _query_param(request, "ordering", "-created_at")
     allowed_ordering = {
+        "id": "id",
         "created_at": "created_at",
         "amount": "amount",
         "resident": "owner__fio",
@@ -1456,42 +1458,12 @@ def api_logout(request):
 
 @require_POST
 def api_create_complex(request):
-    payload = _json_payload(request)
-    title = str(payload.get("title") or "").strip()
-    address = str(payload.get("address") or "").strip()
-
-    if not title or not address:
-        return JsonResponse(
-            {"ok": False, "error": "Complex title and district/address are required."},
-            status=400,
-        )
-
-    if Complex.objects.filter(title__iexact=title).exists():
-        return JsonResponse(
-            {"ok": False, "error": "A complex with this title already exists."},
-            status=409,
-        )
-
-    complex_obj = Complex.objects.create(
-        title=title,
-        address=address,
-        author=_actor(request),
-    )
-    AuditEvent.objects.create(
-        event_type=AuditEvent.TYPE_SYSTEM,
-        title="Complex created",
-        message=f"{complex_obj.title} was added from the portal structure form.",
-        actor=_actor(request),
-        complex=complex_obj,
-        metadata={"source": "portal_complex_form"},
-    )
     return JsonResponse(
         {
-            "ok": True,
-            "complexId": complex_obj.id,
-            "adminUrl": f"/admin/main_app/complex/{complex_obj.id}/change/",
-            "portalData": safe_portal_data(request),
-        }
+            "ok": False,
+            "error": "Sector creation is disabled. This project uses one fixed sector.",
+        },
+        status=410,
     )
 
 

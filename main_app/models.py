@@ -1,6 +1,9 @@
 from django.db import models
 
 
+DEFAULT_SECTOR_NAME = "Mirabad Avenue"
+
+
 class Complex(models.Model):
     """Turar joy majmuasi — Mirabad Avenue kabi"""
     title = models.CharField(max_length=255, verbose_name="Nomi")
@@ -10,6 +13,10 @@ class Complex(models.Model):
 
     def __str__(self):
         return self.title
+
+    def save(self, *args, **kwargs):
+        self.address = DEFAULT_SECTOR_NAME
+        super().save(*args, **kwargs)
 
     class Meta:
         verbose_name = "Turar joy majmuasi"

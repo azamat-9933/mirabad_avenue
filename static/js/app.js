@@ -77,6 +77,7 @@
         "Apply filters": { ru: "Применить", uz: "Qo'llash" },
         "No objects match these filters": { ru: "Нет объектов по этим фильтрам", uz: "Bu filtrlarga mos obyektlar yo'q" },
         "Change district, status or period to restore data.": { ru: "Измените район, статус или период, чтобы вернуть данные.", uz: "Ma'lumotlarni qaytarish uchun tuman, holat yoki davrni o'zgartiring." },
+        "Change status or period to restore data.": { ru: "Измените статус или период, чтобы вернуть данные.", uz: "Ma'lumotlarni qaytarish uchun holat yoki davrni o'zgartiring." },
         "All Districts": { ru: "Все районы", uz: "Barcha tumanlar" },
         "North Sector": { ru: "Северный сектор", uz: "Shimoliy sektor" },
         "Harbor District": { ru: "Портовый район", uz: "Harbor tumani" },
@@ -107,6 +108,7 @@
         "Previous": { ru: "Назад", uz: "Oldingi" },
         "Next": { ru: "Далее", uz: "Keyingi" },
         "No filters": { ru: "Фильтров нет", uz: "Filtrlar yo'q" },
+        "All homes connected": { ru: "Все дома подключены", uz: "Barcha uylar ulangan" },
         "All": { ru: "Все", uz: "Hammasi" },
         "Close alert": { ru: "Закрыть alert", uz: "Alertni yopish" },
         "Confirm action": { ru: "Подтвердите действие", uz: "Amalni tasdiqlang" },
@@ -964,6 +966,56 @@
             issueEvery,
         };
     });
+    const SINGLE_SECTOR_ID = "mirabad-avenue";
+    const SINGLE_SECTOR_NAME = "Mirabad Avenue";
+    const getSingleSectorStats = () => {
+        const complexes = getComplexStats();
+        const buildingItems = complexes.flatMap((complex) => (complex.buildingItems || []).map((building) => ({
+            ...building,
+            parentComplexId: complex.id,
+            parentComplexName: complex.name,
+            parentComplexBackendId: complex.backendId || "",
+            parentSector: complex.sector || SINGLE_SECTOR_NAME,
+        })));
+        const units = complexes.reduce((total, complex) => total + (Number(complex.units) || 0), 0);
+        const buildings = buildingItems.length || complexes.reduce((total, complex) => total + (Number(complex.buildings) || 0), 0);
+        const paidResidents = complexes.reduce((total, complex) => total + (Number(complex.paidResidents) || 0), 0);
+        const debtorResidents = complexes.reduce((total, complex) => total + (Number(complex.debtorResidents) || 0), 0);
+        const debt = complexes.reduce((total, complex) => total + (Number(complex.debt) || 0), 0);
+        const collected = complexes.reduce((total, complex) => total + (Number(complex.collected) || 0), 0);
+        const weightedHealth = complexes.reduce((total, complex) => total + ((Number(complex.health) || 0) * Math.max(Number(complex.units) || 0, 1)), 0) / Math.max(units, complexes.length, 1);
+        const hasCritical = complexes.some((complex) => complex.risk === "Critical");
+        const hasMedium = complexes.some((complex) => complex.risk === "Medium Risk");
+        const risk = hasCritical ? "Critical" : hasMedium ? "Medium Risk" : riskForHealth(weightedHealth);
+        return {
+            id: SINGLE_SECTOR_ID,
+            backendId: "",
+            name: SINGLE_SECTOR_NAME,
+            sector: "Single sector",
+            prefix: "House",
+            buildings,
+            count: buildings,
+            units,
+            water: complexes.some((complex) => complex.water !== "Optimal") ? "Review" : "Optimal",
+            heating: complexes.some((complex) => complex.heating !== "Optimal") ? "Review" : "Optimal",
+            health: Math.round(weightedHealth * 10) / 10,
+            waterM3: complexes.reduce((total, complex) => total + (Number(complex.waterM3) || 0), 0),
+            heatingM3: complexes.reduce((total, complex) => total + (Number(complex.heatingM3) || 0), 0),
+            pressurePsi: 0,
+            collected,
+            debt,
+            finances: collected + debt,
+            image: "",
+            icon: "apartment",
+            risk,
+            tone: toneForRisk(risk),
+            debtorResidents,
+            paidResidents,
+            buildingItems,
+            residents: billingData.residents,
+            transactions: billingData.transactions,
+        };
+    };
     const compactNumber = (value, suffix = "") => {
         const numeric = Number(value) || 0;
         if (Math.abs(numeric) >= 1000000000) return `${(numeric / 1000000000).toFixed(1).replace(/\.0$/, "")}B${suffix}`;
@@ -1057,7 +1109,7 @@
             detailedDebtors,
             pendingTransactions: billingData.transactions.filter((transaction) => transaction.status !== "Success").length,
             successfulTransactions: billingData.transactions.filter((transaction) => transaction.status === "Success").length,
-            sectors: new Set(billingData.complexes.map((complex) => complex.sector)).size,
+            sectors: 1,
         };
     };
 
@@ -1112,13 +1164,13 @@
     const defaultFilterState = { district: "all", status: "all", period: "90" };
     const readFilterState = () => {
         try {
-            return { ...defaultFilterState, ...(JSON.parse(storage.getItem(filterStorageKey) || "{}") || {}) };
+            return { ...defaultFilterState, ...(JSON.parse(storage.getItem(filterStorageKey) || "{}") || {}), district: "all" };
         } catch {
             return { ...defaultFilterState };
         }
     };
     const writeFilterState = (state) => {
-        storage.setItem(filterStorageKey, JSON.stringify({ ...defaultFilterState, ...state }));
+        storage.setItem(filterStorageKey, JSON.stringify({ ...defaultFilterState, ...state, district: "all" }));
     };
     const filterPeriodLabel = (period) => ({
         "30": "Last 30 days",
@@ -1147,9 +1199,10 @@
         return timestamp >= latest - days * 24 * 60 * 60 * 1000;
     };
     const filterMatchesComplex = (complexId, state = readFilterState()) => {
-        const complex = getComplexStats().find((item) => item.id === complexId) || getComplexById(complexId);
+        const complex = complexId === SINGLE_SECTOR_ID
+            ? getSingleSectorStats()
+            : getComplexStats().find((item) => item.id === complexId) || getComplexById(complexId);
         if (!complex) return true;
-        if (state.district !== "all" && complex.sector !== state.district) return false;
         if (["low", "medium", "critical"].includes(state.status) && filterStatusValueForComplex(complex) !== state.status) return false;
         if (state.status === "paid" && (complex.paidResidents || 0) <= 0) return false;
         if (state.status === "debtor" && (complex.debtorResidents || 0) <= 0) return false;
@@ -2011,7 +2064,7 @@
         setStat("Paid Residents", moneyFormatter.format(stats.detailedPaidResidents), t("Residents with positive or zero balance"));
         setStat("Total Debtors", moneyFormatter.format(stats.detailedDebtors), t("Residents with overdue balance"));
         setStat("Outstanding Debt", formatCompactUzs(stats.detailedDebt), t("Current resident liabilities"));
-        setStat("Total Complexes", moneyFormatter.format(stats.totalComplexes), `${stats.sectors} sectors connected`);
+        setStat("Total Complexes", moneyFormatter.format(stats.totalComplexes), t("All homes connected"));
         setStat("Active Buildings", moneyFormatter.format(stats.totalBuildings), `${moneyFormatter.format(stats.totalUnits)} active units`);
         setStat("Occupancy Rate", percentValue(stats.occupancyRate), `Across ${stats.totalBuildings} buildings`, stats.occupancyRate);
         setStat("Critical Debt Units", moneyFormatter.format(stats.criticalDebtUnits), `${stats.totalDebtorUnits} debt units total`);
@@ -3146,9 +3199,9 @@
         if (transactionTable) {
             const transactionChrome = prepareServerTableChrome(transactionTable, {
                 name: "transactions",
-                sortMap: ["resident", "type", "created_at", "amount", "status"],
+                sortMap: ["id", "resident", "type", "amount", "status", "created_at"],
                 defaultOrdering: "-created_at",
-                defaultSortDirection: { resident: "asc", type: "asc", created_at: "desc", amount: "desc", status: "desc" },
+                defaultSortDirection: { id: "desc", resident: "asc", type: "asc", created_at: "desc", amount: "desc", status: "desc" },
                 load: () => loadTransactions(),
             });
             const renderTransactions = (items = []) => {
@@ -3171,13 +3224,17 @@
                             data-complex-backend-id="${escapeAttr(item.complexBackendId || "")}">
                             <td class="px-4 py-4"><input aria-label="Select row" data-row-select type="checkbox"></td>
                             <td class="px-6 py-4">
-                                <p class="font-bold text-primary text-sm">${escapeHtml(item.residentName || "Resident")}</p>
-                                <p class="text-[10px] text-on-surface-variant">${escapeHtml(item.id.toUpperCase())}</p>
+                                <p class="font-bold text-primary text-sm">${escapeHtml(String(item.id || "").toUpperCase())}</p>
+                                <p class="text-[10px] text-on-surface-variant">${escapeHtml(item.externalId || "Backend transaction")}</p>
                             </td>
-                            <td class="px-6 py-4 text-xs font-medium text-on-surface-variant">${escapeHtml(item.type)}</td>
-                            <td class="px-6 py-4 text-xs text-on-surface-variant">${escapeHtml(item.date)}</td>
+                            <td class="px-6 py-4">
+                                <p class="font-bold text-primary text-sm">${escapeHtml(item.residentName || "Resident")}</p>
+                                <p class="text-[10px] text-on-surface-variant">${escapeHtml(item.apartment ? `Apartment ${item.apartment}` : item.residentId || "")}</p>
+                            </td>
+                            <td class="px-6 py-4 text-xs font-medium text-on-surface-variant">${escapeHtml(item.method || item.type || "Payment")}</td>
                             <td class="px-6 py-4 text-sm font-bold ${pending ? "text-error" : "text-on-surface"}">${formatBillingUzs(item.amount || 0)}</td>
                             <td class="px-6 py-4">${renderTableStatus(item.status)}</td>
+                            <td class="px-6 py-4 text-xs text-on-surface-variant">${escapeHtml(item.date)}</td>
                         </tr>
                     `;
                 }).join("");
@@ -3736,16 +3793,17 @@
                 if (ratio >= 0.75) return "is-caution";
                 return "is-healthy";
             };
-            performanceBody.innerHTML = getComplexStats().map((complex) => {
+            const singleSector = getSingleSectorStats();
+            performanceBody.innerHTML = [singleSector].map((complex) => {
                 const waterIssue = complex.water !== "Optimal";
                 const heatingIssue = complex.heating !== "Optimal";
                 const riskTextClass = complex.risk === "Critical" ? "text-error" : "text-on-surface";
                 const splitTone = debtSplitTone(complex.debtorResidents, complex.paidResidents);
                 return `
-                    <tr aria-expanded="false" class="hover:bg-surface-container-low/30 transition-colors residential-district-row"
+                    <tr aria-expanded="false" class="hidden hover:bg-surface-container-low/30 transition-colors residential-district-row residential-sector-root-row"
                         data-district-id="${escapeHtml(complex.id)}"
                         data-backend-id="${escapeHtml(complex.backendId || "")}"
-                        data-backend-type="complex"
+                        data-backend-type="sector"
                         data-drill-row="district"
                         data-sort-name="${escapeHtml(complex.name)}"
                         data-sort-buildings="${Number(complex.buildings) || 0}"
@@ -3807,7 +3865,7 @@
                 `;
             }).join("");
             const footerText = performanceTable.closest(".bg-surface-container-lowest")?.querySelector(".border-t span.text-xs");
-            if (footerText) footerText.textContent = `Showing 1-${getComplexStats().length} of ${getComplexStats().length} complexes`;
+            if (footerText) footerText.textContent = `Showing 1 sector with ${singleSector.buildings} homes`;
             repairEnhancedTableControls(performanceTable);
             setupResidentialHierarchy();
         }
@@ -3822,10 +3880,6 @@
         if (document.body.dataset.globalFiltersReady === "true") return;
         document.body.dataset.globalFiltersReady = "true";
 
-        const districtOptions = [
-            ["all", "All Districts"],
-            ...Array.from(new Set(billingData.complexes.map((complex) => complex.sector))).map((sector) => [sector, sector]),
-        ];
         const statusOptions = [
             ["all", "All statuses"],
             ["low", "Low Risk"],
@@ -3843,7 +3897,7 @@
         const optionMarkup = (options) => options
             .map(([value, label]) => `<option value="${escapeHtml(value)}" data-i18n-key="${escapeHtml(label)}">${escapeHtml(label)}</option>`)
             .join("");
-        const districtFields = () => Array.from(document.querySelectorAll("#filter-district, [data-global-district-filter]"));
+        const districtFields = () => Array.from(document.querySelectorAll("[data-global-district-filter]"));
         const statusFields = () => Array.from(document.querySelectorAll("#filter-status"));
         const periodFields = () => Array.from(document.querySelectorAll("#filter-period"));
         const setFieldOptions = (fields, options) => fields.forEach((field) => {
@@ -3853,24 +3907,21 @@
         });
         const visibleLabel = (value, fallback) => {
             const state = readFilterState();
-            if (fallback === "district") return value === "all" ? "All Districts" : value;
             if (fallback === "status") return filterStatusLabel(value || state.status);
             return filterPeriodLabel(value || state.period);
         };
         const syncFields = (state = readFilterState()) => {
-            setFieldOptions(districtFields(), districtOptions);
             setFieldOptions(statusFields(), statusOptions);
             setFieldOptions(periodFields(), periodOptions);
-            districtFields().forEach((field) => { field.value = state.district; });
+            districtFields().forEach((field) => { field.value = "all"; });
             statusFields().forEach((field) => { field.value = state.status; });
             periodFields().forEach((field) => { field.value = state.period; });
         };
         const updateChips = (state = readFilterState()) => {
             const chips = [
-                ["district", visibleLabel(state.district, "district")],
                 ["period", filterPeriodLabel(state.period)],
             ];
-            if (state.status !== "all") chips.splice(1, 0, ["status", filterStatusLabel(state.status)]);
+            if (state.status !== "all") chips.unshift(["status", filterStatusLabel(state.status)]);
             const html = chips.map(([kind, label]) => `
                 <button class="filter-chip" type="button" data-filter-chip-remove="${escapeHtml(kind)}">
                     <span data-i18n-key="${escapeHtml(label)}">${escapeHtml(label)}</span>
@@ -3893,7 +3944,8 @@
         };
         const setRowFilterState = (row, visible) => {
             row.dataset.globalFilterHidden = visible ? "false" : "true";
-            row.classList.toggle("hidden", !visible);
+            const isRootSector = row.dataset.drillRow === "district" && row.dataset.districtId === SINGLE_SECTOR_ID;
+            row.classList.toggle("hidden", isRootSector || !visible);
         };
         const filterMatchesMaintenanceRow = (row, state) => {
             const complexId = row.dataset.complexId || "";
@@ -3978,13 +4030,13 @@
         syncFields();
         updateChips();
         Array.from(document.querySelectorAll("[data-global-district-filter]")).forEach((field) => field.addEventListener("change", () => {
-            const state = { ...readFilterState(), district: field.value || "all" };
+            const state = { ...readFilterState(), district: "all" };
             applyFilters(state, { toast: false });
         }));
         document.querySelectorAll("[data-filter-field]").forEach((field) => field.addEventListener("change", () => {
             const state = {
                 ...readFilterState(),
-                district: document.getElementById("filter-district")?.value || readFilterState().district,
+                district: "all",
                 status: document.getElementById("filter-status")?.value || readFilterState().status,
                 period: document.getElementById("filter-period")?.value || readFilterState().period,
             };
@@ -3993,7 +4045,7 @@
         }));
         document.querySelector("[data-apply-filters]")?.addEventListener("click", () => {
             applyFilters({
-                district: document.getElementById("filter-district")?.value || "all",
+                district: "all",
                 status: document.getElementById("filter-status")?.value || "all",
                 period: document.getElementById("filter-period")?.value || "90",
             });
@@ -4326,18 +4378,21 @@
             photo: resident.photo || "",
         }));
 
-        const districts = Object.fromEntries(getComplexStats().map((complex) => [complex.id, {
-            complex: complex.name,
-            sector: complex.sector,
-            prefix: complex.prefix,
-            count: complex.buildings,
-            units: complex.units,
-            risk: complex.risk,
-            tone: complex.tone,
-            debt: complex.finances,
-            issueEvery: complex.issueEvery,
-            buildingItems: complex.buildingItems || [],
-        }]));
+        const singleSector = getSingleSectorStats();
+        const districts = {
+            [SINGLE_SECTOR_ID]: {
+                complex: singleSector.name,
+                sector: singleSector.sector,
+                prefix: singleSector.prefix,
+                count: singleSector.buildings,
+                units: singleSector.units,
+                risk: singleSector.risk,
+                tone: singleSector.tone,
+                debt: singleSector.finances,
+                issueEvery: 0,
+                buildingItems: singleSector.buildingItems || [],
+            },
+        };
 
         const escapeHtml = (value) => String(value ?? "").replace(/[&<>"']/g, (char) => ({
             "&": "&amp;",
@@ -4492,7 +4547,7 @@
                         <span class="residential-level-chip" data-i18n-key="House">House</span>
                         <div>
                             <p>${escapeHtml(buildingName(district, index))}</p>
-                            <small>${escapeHtml(district.complex)}</small>
+                            <small>${escapeHtml(realBuilding?.parentComplexName || district.complex)}</small>
                         </div>
                     </div>
                 </td>
@@ -4589,15 +4644,18 @@
             table.querySelectorAll("[data-drill-row='district']").forEach(collapseDistrict);
         };
         const getDistrictRows = () => Array.from(table.querySelectorAll("[data-drill-row='district']"));
+        const isRootSectorRow = (row) => row?.dataset?.districtId === SINGLE_SECTOR_ID;
         const expandDistrict = (row) => {
             const district = districts[row.dataset.districtId];
             if (!district) return;
+            removeRows(`[data-parent-district="${row.dataset.districtId}"]`);
             const fragment = document.createDocumentFragment();
             for (let index = 1; index <= district.count; index += 1) {
                 fragment.appendChild(renderBuildingRow(row.dataset.districtId, index));
             }
             row.after(fragment);
             row.classList.add("is-expanded");
+            if (isRootSectorRow(row)) row.classList.add("hidden");
             row.setAttribute("aria-expanded", "true");
             window.HydroFlowSyncLocale?.();
         };
@@ -4670,7 +4728,7 @@
             removeRows("[data-drill-child='true'], [data-smart-empty='true']");
             getDistrictRows().forEach((row) => {
                 row.classList.remove("is-expanded", "residential-smart-match");
-                row.classList.toggle("hidden", row.dataset.globalFilterHidden === "true");
+                row.classList.toggle("hidden", isRootSectorRow(row) || row.dataset.globalFilterHidden === "true");
                 row.setAttribute("aria-expanded", "false");
             });
         };
@@ -4678,7 +4736,13 @@
             if (!searchInput) return;
             const query = searchInput.value.trim().toLowerCase();
             resetSmartSearch();
-            if (!query) return;
+            if (!query) {
+                const rootSectorRow = getDistrictRows()[0];
+                if (rootSectorRow && !rootSectorRow.classList.contains("is-expanded")) {
+                    expandDistrict(rootSectorRow);
+                }
+                return;
+            }
 
             table.classList.add("residential-smart-search-active");
             let visibleCount = 0;
@@ -4739,7 +4803,7 @@
 
                 if (districtMatches || hasChildMatch) {
                     visibleCount += 1;
-                    districtRow.classList.remove("hidden");
+                    districtRow.classList.toggle("hidden", isRootSectorRow(districtRow));
                     districtRow.classList.add("is-expanded", "residential-smart-match");
                     districtRow.setAttribute("aria-expanded", "true");
                     districtRow.after(fragment);
@@ -4779,6 +4843,11 @@
             event.preventDefault();
             row.click();
         });
+
+        const rootSectorRow = getDistrictRows()[0];
+        if (rootSectorRow && !rootSectorRow.classList.contains("is-expanded")) {
+            expandDistrict(rootSectorRow);
+        }
 
         const fillApartmentDrawer = (data) => {
             const drawer = document.getElementById("apartment-details-drawer");
@@ -5189,44 +5258,6 @@
         });
     };
 
-    const setupComplexCreateForm = () => {
-        const form = document.querySelector("[data-complex-create-form]");
-        if (!form || form.dataset.structureReady === "true") return;
-        form.dataset.structureReady = "true";
-        const status = form.querySelector("[data-complex-create-status]");
-        const submit = form.querySelector("[data-complex-create-submit]");
-        const setStatus = (message, kind = "info") => {
-            if (!status) return;
-            status.textContent = message;
-            status.classList.remove("hidden", "is-error", "is-success");
-            if (kind === "error") status.classList.add("is-error");
-            if (kind === "success") status.classList.add("is-success");
-        };
-
-        form.addEventListener("submit", async (event) => {
-            event.preventDefault();
-            const formData = new FormData(form);
-            submit.disabled = true;
-            setStatus("Creating district in Django admin and database...");
-            try {
-                const payload = await postPortalJson("/api/complexes/create/", {
-                    title: formData.get("title"),
-                    address: formData.get("address"),
-                });
-                rehydrateFromPortalData(payload.portalData);
-                form.reset();
-                setStatus("District created and synced with admin.", "success");
-                toast("District created", "Django admin and portal data were updated.", "success");
-                window.setTimeout(() => closeOverlayById("create-complex-modal"), 500);
-            } catch (error) {
-                setStatus(error.message || "Could not create district.", "error");
-                toast("District was not created", error.message || "Check the entered data.", "warning");
-            } finally {
-                submit.disabled = false;
-            }
-        });
-    };
-
     const setupBuildingCreateForm = () => {
         const form = document.querySelector("[data-building-create-form]");
         if (!form || form.dataset.structureReady === "true") return;
@@ -5248,8 +5279,8 @@
             const complexes = (Array.isArray(billingData.complexes) ? billingData.complexes : []).filter((item) => item?.backendId);
             if (!complexSelect) return;
             complexSelect.innerHTML = complexes.length
-                ? complexes.map((complex) => `<option value="${escapeHtml(complex.backendId)}">${escapeHtml(complex.name)} · ${escapeHtml(complex.sector || "")}</option>`).join("")
-                : '<option value="">No districts available</option>';
+                ? complexes.map((complex) => `<option value="${escapeHtml(complex.backendId)}">${escapeHtml(complex.name)}</option>`).join("")
+                : '<option value="">No complexes available</option>';
             complexSelect.disabled = !complexes.length;
             if (previous && complexes.some((item) => String(item.backendId) === String(previous))) {
                 complexSelect.value = previous;
@@ -5331,8 +5362,8 @@
             const complexes = allComplexes();
             const previous = complexSelect.value || "";
             complexSelect.innerHTML = complexes.length
-                ? complexes.map((complex) => `<option value="${escapeHtml(complex.backendId)}">${escapeHtml(complex.name)} · ${escapeHtml(complex.sector || "")}</option>`).join("")
-                : '<option value="">No districts available</option>';
+                ? complexes.map((complex) => `<option value="${escapeHtml(complex.backendId)}">${escapeHtml(complex.name)}</option>`).join("")
+                : '<option value="">No complexes available</option>';
             complexSelect.disabled = !complexes.length;
             if (previous && complexes.some((item) => String(item.backendId) === String(previous))) {
                 complexSelect.value = previous;
@@ -5417,7 +5448,7 @@
             const previous = complexSelect.value;
             const complexes = billingData.complexes.filter((complex) => complex.backendId);
             complexSelect.innerHTML = complexes.map((complex) => (
-                `<option value="${escapeHtml(complex.backendId)}">${escapeHtml(complex.name)} · ${escapeHtml(complex.sector || "")}</option>`
+                `<option value="${escapeHtml(complex.backendId)}">${escapeHtml(complex.name)}</option>`
             )).join("");
             const target = complexes.slice().sort((a, b) => (b.extraDebt || 0) - (a.extraDebt || 0))[0];
             const nextValue = previous && complexes.some((complex) => String(complex.backendId) === String(previous))
@@ -5533,7 +5564,7 @@
             const previous = complexSelect.value;
             const complexes = billingData.complexes.filter((complex) => complex.backendId);
             complexSelect.innerHTML = complexes.map((complex) => (
-                `<option value="${escapeHtml(complex.backendId)}">${escapeHtml(complex.name)} · ${escapeHtml(complex.sector || "")}</option>`
+                `<option value="${escapeHtml(complex.backendId)}">${escapeHtml(complex.name)}</option>`
             )).join("");
             complexSelect.value = previous && complexes.some((complex) => String(complex.backendId) === String(previous))
                 ? previous
@@ -5660,7 +5691,6 @@
         });
     };
 
-    setupComplexCreateForm();
     setupBuildingCreateForm();
     setupApartmentCreateForm();
     setupResidentCreateForm();
@@ -6308,7 +6338,6 @@
         const fallback = recent.length ? [] : [
             billingData.residents[0]?.name,
             billingData.residents[0]?.apartmentNumber ? `Apartment ${billingData.residents[0].apartmentNumber}` : "",
-            billingData.complexes[0]?.name,
             billingData.complexes[0]?.buildingItems?.[0]?.name,
         ].filter(Boolean);
         const items = recent.length ? recent : fallback;

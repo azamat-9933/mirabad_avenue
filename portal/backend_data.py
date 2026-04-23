@@ -8,6 +8,7 @@ from django.db.models import Prefetch, Sum
 from django.utils import timezone
 
 from billing.models import HotWaterMeterReading
+from main_app.models import DEFAULT_SECTOR_NAME
 from properties.models import Apartment, Building, Complex, Owner
 from payments.models import Transaction
 from portal.models import (
@@ -643,7 +644,7 @@ def build_portal_data(user=None) -> dict:
             "id": _slug("complex", complex_obj.id),
             "backendId": complex_obj.id,
             "name": complex_obj.title,
-            "sector": complex_obj.address or "Mirabad Avenue",
+            "sector": DEFAULT_SECTOR_NAME,
             "prefix": complex_obj.title,
             "buildings": len(building_rows),
             "units": unit_total,

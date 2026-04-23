@@ -4,7 +4,7 @@ from django.db.models import Count, Q, Sum
 from django.urls import reverse
 from django.utils.html import format_html
 
-from .models import Apartment, Building, BuildingSection, Complex, Owner
+from .models import DEFAULT_SECTOR_NAME, Apartment, Building, BuildingSection, Complex, Owner
 
 
 def admin_number(value, places=0):
@@ -53,13 +53,18 @@ class BuildingInline(admin.TabularInline):
 
 @admin.register(Complex)
 class ComplexAdmin(admin.ModelAdmin):
-    list_display  = ("title", "address", "buildings_count", "author", "created_at")
-    search_fields = ("title", "address")
+    list_display  = ("title", "buildings_count", "author", "created_at")
+    search_fields = ("title",)
     readonly_fields = ("created_at",)
     inlines       = [BuildingInline]
+    fields = ("title", "author", "created_at")
 
     def get_readonly_fields(self, request, obj=None):
         return ("created_at",) if obj else ()
+
+    def save_model(self, request, obj, form, change):
+        obj.address = DEFAULT_SECTOR_NAME
+        super().save_model(request, obj, form, change)
 
     # ── kastom kolonka ──────────────────────────────
     @admin.display(description="Uylar soni")
