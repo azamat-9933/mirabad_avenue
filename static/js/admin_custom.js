@@ -393,6 +393,26 @@
 
     const translatePattern = (value, lang = selectedLanguage()) => {
         const text = normalize(value);
+        const actionModelMatch = text.match(/^(Delete selected|Удалить выбранные|Tanlanganlarni o'chirish|Delete selected Payment transactions|Delete selected Transactions|Delete selected Payme transactions)\s+(.+)$/i);
+        if (actionModelMatch) {
+            const model = translateExact(actionModelMatch[2], lang) || translateValue(actionModelMatch[2], lang) || actionModelMatch[2];
+            if (lang === "ru") return `Удалить выбранные ${model}`;
+            if (lang === "uz") return `Tanlangan ${model}ni o'chirish`;
+            return `Delete selected ${model}`;
+        }
+        const selectedModelActionMatch = text.match(/^(Change selected|Изменить выбранные|Tanlanganlarni o'zgartirish|View selected|Просмотреть выбранные|Tanlanganlarni ko'rish)\s+(.+)$/i);
+        if (selectedModelActionMatch) {
+            const base = selectedModelActionMatch[1].toLowerCase();
+            const model = translateExact(selectedModelActionMatch[2], lang) || translateValue(selectedModelActionMatch[2], lang) || selectedModelActionMatch[2];
+            if (base.includes("view") || base.includes("прос") || base.includes("ko'r")) {
+                if (lang === "ru") return `Просмотреть выбранные ${model}`;
+                if (lang === "uz") return `Tanlangan ${model}ni ko'rish`;
+                return `View selected ${model}`;
+            }
+            if (lang === "ru") return `Изменить выбранные ${model}`;
+            if (lang === "uz") return `Tanlangan ${model}ni o'zgartirish`;
+            return `Change selected ${model}`;
+        }
         const backDateMatch = text.match(/^([‹<]\s*)(.+)$/);
         if (backDateMatch) {
             const translated = translateExact(backDateMatch[2], lang);
@@ -503,7 +523,7 @@
     const shouldSkipNode = (node) => {
         const parent = node.parentElement;
         if (!parent) return true;
-        return Boolean(parent.closest("script, style, textarea, pre, code, .admin-lang-switcher, .select2-search"));
+        return Boolean(parent.closest("script, style, textarea, pre, code, .admin-lang-switcher, .select2-search, .select2-container, .select2-results, .related-widget-wrapper"));
     };
 
     const translateTextNode = (node, lang) => {
@@ -519,6 +539,7 @@
 
     const translateAttributes = (root, lang) => {
         root.querySelectorAll("input, textarea, select, option, button, a, label, th, span, div").forEach((element) => {
+            if (element.closest(".select2-container, .select2-results, .related-widget-wrapper")) return;
             ["placeholder", "title", "aria-label", "data-original-title"].forEach((attr) => {
                 if (!element.hasAttribute(attr)) return;
                 const current = element.getAttribute(attr);
@@ -528,6 +549,24 @@
             if ((element.matches("input[type='submit'], input[type='button'], input[type='reset']")) && element.value) {
                 const translated = translateValue(element.value, lang);
                 if (translated !== element.value) element.value = translated;
+            }
+        });
+    };
+
+    const bindAdminActionSubmit = () => {
+        const changelist = document.getElementById("changelist-form");
+        if (!changelist || changelist.dataset.actionBound === "true") return;
+        changelist.dataset.actionBound = "true";
+        changelist.addEventListener("click", (event) => {
+            const button = event.target.closest(".actions button, .actions input[type='submit'], .actions input[type='button']");
+            if (!button || button.disabled) return;
+            event.preventDefault();
+            const form = button.form || changelist;
+            if (!form) return;
+            if (typeof form.requestSubmit === "function") {
+                form.requestSubmit(button);
+            } else {
+                form.submit();
             }
         });
     };
@@ -573,6 +612,7 @@
     const boot = () => {
         mountLanguageSwitcher();
         initOwnerApartmentFilters();
+        bindAdminActionSubmit();
         translatePage(selectedLanguage());
         if ("MutationObserver" in window) {
             let scheduled = false;
@@ -583,6 +623,7 @@
                     scheduled = false;
                     mountLanguageSwitcher();
                     initOwnerApartmentFilters();
+                    bindAdminActionSubmit();
                     translatePage(selectedLanguage());
                 });
             });

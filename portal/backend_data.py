@@ -8,13 +8,16 @@ from django.db.models import Prefetch, Sum
 from django.utils import timezone
 
 from billing.models import HotWaterMeterReading
-from main_app.models import Apartment, Building, Complex, Owner
+from properties.models import Apartment, Building, Complex, Owner
 from payments.models import Transaction
 from portal.models import (
     AuditEvent,
     ChecklistItem,
+    ChecklistNote,
     MaintenanceTask,
     PortalNotification,
+    PortalStatusOverride,
+    SupportTicket,
     SystemAlert,
     TelemetryNode,
     TelemetrySample,
@@ -171,6 +174,15 @@ def _tone_from_risk(risk: str) -> str:
     return "blue"
 
 
+def _residential_status_to_tone(status: str) -> str:
+    value = str(status or "").strip().lower()
+    if value in {"critical", "критично", "kritik"}:
+        return "red"
+    if value in {"medium risk", "средний риск", "o'rta xavf", "maintenance", "обслуживание", "xizmat", "review", "проверка", "tekshiruv"}:
+        return "amber"
+    return "blue"
+
+
 def _health_from_split(debtors: int, paid: int) -> float:
     total = debtors + paid
     if not total:
@@ -323,6 +335,63 @@ def _serialize_checklist_items() -> list[dict]:
     ]
 
 
+def _serialize_checklist_notes() -> list[dict]:
+    return [
+        {
+            "id": f"note-{note.id}",
+            "backendId": note.id,
+            "text": note.text,
+            "time": _datetime(note.created_at),
+            "done": note.done,
+            "scope": note.scope,
+            "templateKey": note.template_key,
+        }
+        for note in ChecklistNote.objects.order_by("-created_at")[:24]
+    ]
+
+
+def _serialize_support_tickets() -> list[dict]:
+    rows = []
+    queryset = SupportTicket.objects.select_related(
+        "created_by",
+        "complex",
+        "building",
+        "apartment",
+        "owner",
+    ).order_by("status", "-updated_at")[:40]
+    for ticket in queryset:
+        rows.append({
+            "id": f"ticket-{ticket.id}",
+            "backendId": ticket.id,
+            "title": ticket.title,
+            "message": ticket.message,
+            "category": ticket.category,
+            "priority": ticket.priority,
+            "status": ticket.status,
+            "source": ticket.source,
+            "createdBy": ticket.created_by.get_username() if ticket.created_by_id else "Portal",
+            "updatedAt": _datetime(ticket.updated_at),
+            "adminUrl": f"/admin/portal/supportticket/{ticket.id}/change/",
+        })
+    return rows
+
+
+def _serialize_support_summary() -> dict:
+    tickets = list(SupportTicket.objects.order_by("status", "-updated_at")[:20])
+    open_count = sum(1 for ticket in tickets if ticket.status == SupportTicket.STATUS_OPEN)
+    in_progress_count = sum(1 for ticket in tickets if ticket.status == SupportTicket.STATUS_IN_PROGRESS)
+    resolved_count = sum(1 for ticket in tickets if ticket.status == SupportTicket.STATUS_RESOLVED)
+    latest = tickets[0] if tickets else None
+    return {
+        "helpdesk": "Connected",
+        "openCount": open_count,
+        "inProgressCount": in_progress_count,
+        "resolvedCount": resolved_count,
+        "latestUpdatedAt": _datetime(latest.updated_at) if latest else "",
+        "latestTitle": latest.title if latest else "",
+    }
+
+
 def _serialize_telemetry_nodes() -> list[dict]:
     rows = []
     queryset = TelemetryNode.objects.select_related("complex", "building").order_by("title")
@@ -419,6 +488,10 @@ def build_portal_data(user=None) -> dict:
             total=Sum("end_reading")
         )
     }
+    override_map = {
+        (item.context, item.target_type, item.target_id): item.status_value
+        for item in PortalStatusOverride.objects.all()
+    }
 
     for complex_obj in complexes:
         building_rows = []
@@ -459,6 +532,14 @@ def build_portal_data(user=None) -> dict:
                 building_collected += owner_collected
 
                 resident_id = _slug("owner", owner.id) if owner else _slug("apartment", apartment.id)
+                telegram_status = str(getattr(owner, "telegram_status", "") or "").strip().lower() if owner else ""
+                telegram_user = str(getattr(owner, "telegram_user", "") or "").strip() if owner else ""
+                telegram_id = str(getattr(owner, "telegram_id", "") or "").strip() if owner else ""
+                telegram_connected = bool(
+                    telegram_user
+                    or telegram_id
+                    or telegram_status in {"connected", "active", "verified"}
+                )
                 resident = {
                     "id": resident_id,
                     "backendId": owner.id if owner else None,
@@ -472,9 +553,14 @@ def build_portal_data(user=None) -> dict:
                     "name": owner.fio if owner else "Unassigned owner",
                     "apartment": f"Apartment {apartment.number}",
                     "apartmentNumber": apartment.number,
+                    "section": apartment.section.name if apartment.section else "",
                     "building": f"House {building.number}",
+                    "buildingNumber": building.number,
+                    "complex": complex_obj.title,
+                    "complexAddress": complex_obj.address or "",
                     "phone": owner.phone if owner else "",
                     "lastPayment": _date(latest_payment.created_at) if latest_payment else "",
+                    "lastPaymentAt": _datetime(latest_payment.created_at) if latest_payment else "",
                     "balance": balance,
                     "status": "debtor" if is_debtor else "paid",
                     "photo": "",
@@ -483,6 +569,12 @@ def build_portal_data(user=None) -> dict:
                     "charge": "",
                     "contract": f"APT-{apartment.id}",
                     "meter": apartment.section.name if apartment.section else "",
+                    "email": "",
+                    "telegramStatus": telegram_status or "not_linked",
+                    "telegramUser": telegram_user,
+                    "telegramId": telegram_id,
+                    "telegramConnected": telegram_connected,
+                    "createdAt": _datetime(owner.created_at) if owner else _datetime(apartment.created_at),
                 }
                 resident_rows.append(resident)
 
@@ -516,6 +608,10 @@ def build_portal_data(user=None) -> dict:
                 })
 
             building_risk = _risk_from_split(building_debtors, building_paid, building_debt)
+            building_risk = override_map.get(
+                (PortalStatusOverride.CONTEXT_RESIDENTIAL, PortalStatusOverride.TARGET_BUILDING, building.id),
+                building_risk,
+            )
             building_rows.append({
                 "id": _slug("building", building.id),
                 "backendId": building.id,
@@ -531,12 +627,16 @@ def build_portal_data(user=None) -> dict:
                 "paidResidents": building_paid,
                 "risk": building_risk,
                 "health": _health_from_split(building_debtors, building_paid),
-                "tone": _tone_from_risk(building_risk),
+                "tone": _residential_status_to_tone(building_risk),
                 "floors": "",
                 "entrance": "",
             })
 
         risk = _risk_from_split(debtor_count, paid_count, debt_total)
+        risk = override_map.get(
+            (PortalStatusOverride.CONTEXT_RESIDENTIAL, PortalStatusOverride.TARGET_COMPLEX, complex_obj.id),
+            risk,
+        )
         health = _health_from_split(debtor_count, paid_count)
         water_m3 = hot_water_by_complex.get(complex_obj.id, 0)
         complex_rows.append({
@@ -558,11 +658,28 @@ def build_portal_data(user=None) -> dict:
             "image": "",
             "icon": "apartment",
             "risk": risk,
-            "tone": _tone_from_risk(risk),
+            "tone": _residential_status_to_tone(risk),
             "debtorResidents": debtor_count,
             "paidResidents": paid_count,
             "buildingItems": building_rows,
         })
+
+    apartment_override_map = {
+        target_id: status
+        for (context, target_type, target_id), status in override_map.items()
+        if context == PortalStatusOverride.CONTEXT_RESIDENTIAL and target_type == PortalStatusOverride.TARGET_APARTMENT
+    }
+    if apartment_override_map:
+        for resident in resident_rows:
+            apartment_id = resident.get("apartmentBackendId")
+            if apartment_id in apartment_override_map:
+                resident["status"] = apartment_override_map[apartment_id]
+        for complex_row in complex_rows:
+            for building_row in complex_row.get("buildingItems", []):
+                for apartment_row in building_row.get("apartments", []):
+                    apartment_id = apartment_row.get("backendId")
+                    if apartment_id in apartment_override_map:
+                        apartment_row["status"] = apartment_override_map[apartment_id]
 
     transaction_rows = []
     for transaction in transactions:
@@ -574,7 +691,12 @@ def build_portal_data(user=None) -> dict:
         transaction_rows.append({
             "id": f"trx-{transaction.id}",
             "backendId": transaction.id,
+            "ownerBackendId": owner.id,
+            "apartmentBackendId": apartment.id,
+            "buildingBackendId": building.id,
+            "complexBackendId": complex_obj.id,
             "residentId": _slug("owner", owner.id),
+            "residentName": owner.fio,
             "complexId": _slug("complex", complex_obj.id),
             "buildingId": _slug("building", building.id),
             "type": _transaction_type(transaction),
@@ -585,6 +707,13 @@ def build_portal_data(user=None) -> dict:
             "status": "Success" if amount > 0 else "Pending",
             "description": transaction.description,
         })
+
+    for row in transaction_rows:
+        override = override_map.get(
+            (PortalStatusOverride.CONTEXT_TRANSACTIONS, PortalStatusOverride.TARGET_TRANSACTION, row["backendId"])
+        )
+        if override:
+            row["status"] = override
 
     return {
         "source": "mirabad_avenue_backend",
@@ -598,6 +727,9 @@ def build_portal_data(user=None) -> dict:
         "maintenanceTasks": _serialize_maintenance_tasks(),
         "auditEvents": _serialize_audit_events(),
         "checklistItems": _serialize_checklist_items(),
+        "checklistNotes": _serialize_checklist_notes(),
+        "supportTickets": _serialize_support_tickets(),
+        "supportSummary": _serialize_support_summary(),
         "telemetryNodes": _serialize_telemetry_nodes(),
         "pressureSeries": _serialize_pressure_series(),
     }

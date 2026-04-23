@@ -219,6 +219,135 @@ textarea,
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
+.fieldBox,
+.form-row,
+.form-group,
+.row,
+[class*="col-"] {
+    min-width: 0;
+}
+
+.related-widget-wrapper {
+    display: flex !important;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    min-width: 0;
+    flex-wrap: nowrap;
+}
+
+.related-widget-wrapper > select,
+.related-widget-wrapper > .select2-container,
+.related-widget-wrapper > .select2-container .selection,
+.related-widget-wrapper > .form-control {
+    flex: 1 1 auto !important;
+    min-width: 0;
+    width: 100% !important;
+}
+
+.related-widget-wrapper select,
+.related-widget-wrapper input,
+.related-widget-wrapper textarea {
+    width: 100% !important;
+    min-width: 0;
+}
+
+.related-widget-wrapper a {
+    flex: 0 0 auto;
+}
+
+.select2-container {
+    display: block !important;
+    width: 100% !important;
+    min-width: 0;
+}
+
+.select2-container .select2-selection--single,
+.select2-container .select2-selection--multiple {
+    min-height: 38px !important;
+}
+
+.select2-container--default .select2-selection--single {
+    display: flex !important;
+    align-items: center;
+    padding-right: 34px !important;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__rendered {
+    display: block !important;
+    width: 100%;
+    padding-left: 12px !important;
+    padding-right: 0 !important;
+    color: var(--hf-admin-text) !important;
+    line-height: 36px !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__placeholder,
+.select2-container--default .select2-results__option--highlighted[aria-selected],
+.select2-container--default .select2-results__option {
+    color: var(--hf-admin-text) !important;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__arrow {
+    height: 36px !important;
+    right: 10px !important;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__arrow b {
+    border-color: #c8d2dc transparent transparent transparent !important;
+}
+
+.select2-dropdown {
+    background: #273038 !important;
+    border: 1px solid rgba(255, 255, 255, 0.18) !important;
+    border-radius: 10px !important;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35) !important;
+}
+
+.select2-search__field {
+    color: var(--hf-admin-text) !important;
+    background: rgba(255, 255, 255, 0.05) !important;
+    border: 1px solid rgba(255, 255, 255, 0.14) !important;
+    border-radius: 8px !important;
+}
+
+.select2-search__field::placeholder {
+    color: #aebbc6 !important;
+}
+
+.select2-selection__choice,
+.select2-selection__clear,
+.select2-selection__choice__remove {
+    color: var(--hf-admin-text) !important;
+}
+
+.select2-results__option {
+    background: transparent !important;
+}
+
+.select2-container--default .select2-results__option[aria-selected="true"] {
+    background: rgba(79, 142, 247, 0.16) !important;
+}
+
+.select2-container--default .select2-results__option--highlighted[aria-selected] {
+    background: rgba(79, 142, 247, 0.24) !important;
+}
+
+.errorlist,
+.errors,
+.invalid-feedback,
+.help-block {
+    color: #ff8f8f !important;
+}
+
+.required legend,
+.required label {
+    color: var(--hf-admin-text) !important;
+}
+
 .form-control:focus,
 .custom-select:focus,
 select:focus,
@@ -250,6 +379,17 @@ select option {
     align-items: center;
     flex-wrap: wrap;
     gap: 10px;
+}
+
+#changelist .actions select {
+    min-width: 220px;
+    max-width: 100%;
+}
+
+#changelist .actions button,
+#changelist .actions input[type="submit"],
+#changelist .actions input[type="button"] {
+    cursor: pointer;
 }
 
 #changelist .actions label,
@@ -287,4 +427,131 @@ select option {
 
 .sidebar .nav-link {
     border-radius: 9px !important;
+}
+
+/* Django admin autocomplete/select2 widgets need their own explicit theme,
+   otherwise Jazzmin dark mode and our generic form styles can collapse or
+   hide the selected value. */
+.related-widget-wrapper .select2-container--admin-autocomplete,
+.related-widget-wrapper .select2-container--default,
+.fieldBox .select2-container,
+.form-group .select2-container {
+    width: 100% !important;
+    min-width: 0 !important;
+}
+
+.select2-container--admin-autocomplete .select2-selection--single,
+.select2-container--admin-autocomplete .select2-selection--multiple,
+.select2-container--default .select2-selection--single,
+.select2-container--default .select2-selection--multiple {
+    display: flex !important;
+    align-items: center !important;
+    min-height: 38px !important;
+    width: 100% !important;
+    color: var(--hf-admin-text) !important;
+    background: rgba(255, 255, 255, 0.055) !important;
+    border: 1px solid rgba(255, 255, 255, 0.20) !important;
+    border-radius: 9px !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04) !important;
+}
+
+.select2-container--admin-autocomplete .select2-selection--single .select2-selection__rendered,
+.select2-container--admin-autocomplete .select2-selection--multiple .select2-selection__rendered,
+.select2-container--default .select2-selection--single .select2-selection__rendered,
+.select2-container--default .select2-selection--multiple .select2-selection__rendered {
+    width: 100% !important;
+    min-width: 0 !important;
+    padding-left: 12px !important;
+    padding-right: 34px !important;
+    color: var(--hf-admin-text) !important;
+    line-height: 36px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+.select2-container--admin-autocomplete .select2-selection__placeholder,
+.select2-container--default .select2-selection__placeholder,
+.select2-container--admin-autocomplete .select2-selection__choice,
+.select2-container--default .select2-selection__choice,
+.select2-container--admin-autocomplete .select2-selection__choice__display,
+.select2-container--default .select2-selection__choice__display,
+.select2-container--admin-autocomplete .select2-selection__clear,
+.select2-container--default .select2-selection__clear {
+    color: var(--hf-admin-text) !important;
+}
+
+.select2-container--admin-autocomplete .select2-selection__arrow,
+.select2-container--default .select2-selection__arrow {
+    height: 36px !important;
+    right: 10px !important;
+}
+
+.select2-container--admin-autocomplete .select2-selection__arrow b,
+.select2-container--default .select2-selection__arrow b {
+    border-color: #c8d2dc transparent transparent transparent !important;
+}
+
+.select2-container--admin-autocomplete.select2-container--focus .select2-selection,
+.select2-container--default.select2-container--focus .select2-selection,
+.select2-container--admin-autocomplete.select2-container--open .select2-selection,
+.select2-container--default.select2-container--open .select2-selection {
+    border-color: rgba(79, 142, 247, 0.78) !important;
+    box-shadow: 0 0 0 3px rgba(79, 142, 247, 0.16) !important;
+    background-color: rgba(79, 142, 247, 0.10) !important;
+}
+
+.related-widget-wrapper .related-widget-wrapper-link,
+.related-widget-wrapper a.related-widget-wrapper-link {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 28px !important;
+    height: 28px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border-radius: 8px !important;
+    flex: 0 0 28px !important;
+}
+
+.related-widget-wrapper .related-widget-wrapper-link img,
+.related-widget-wrapper a.related-widget-wrapper-link img {
+    display: block !important;
+    width: 16px !important;
+    height: 16px !important;
+}
+
+/* Keep long admin model labels readable in the left sidebar instead of
+   clipping them into broken ellipsis fragments. */
+#jazzy-sidebar .brand-link,
+#jazzy-sidebar .brand-link .brand-text,
+#jazzy-sidebar .nav-sidebar .nav-item,
+#jazzy-sidebar .nav-sidebar .nav-link {
+    min-width: 0;
+}
+
+#jazzy-sidebar .nav-sidebar .nav-link {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+}
+
+#jazzy-sidebar .nav-sidebar .nav-link p,
+#jazzy-sidebar .nav-sidebar .nav-link span,
+#jazzy-sidebar .nav-sidebar .nav-link .nav-link-text {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    color: inherit !important;
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    line-height: 1.35 !important;
+    word-break: break-word !important;
+}
+
+#jazzy-sidebar .nav-header {
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
 }

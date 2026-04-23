@@ -12,6 +12,8 @@
         "New Unit Request": { ru: "Новая заявка", uz: "Yangi ariza" },
         "Settings": { ru: "Настройки", uz: "Sozlamalar" },
         "Support": { ru: "Поддержка", uz: "Yordam" },
+        "Recent requests": { ru: "Недавние запросы", uz: "So'nggi so'rovlar" },
+        "No results": { ru: "Ничего не найдено", uz: "Natija topilmadi" },
         "Admin User": { ru: "Администратор", uz: "Administrator" },
         "Administrator": { ru: "Администратор", uz: "Administrator" },
         "Profile": { ru: "Профиль", uz: "Profil" },
@@ -66,6 +68,7 @@
         "Resolved notifications are moved to the activity log.": { ru: "Закрытые уведомления перемещаются в журнал действий.", uz: "Yopilgan bildirishnomalar faoliyat jurnaliga ko'chiriladi." },
         "Filters": { ru: "Фильтры", uz: "Filtrlar" },
         "Static preview filters. Backend wiring can replace these later.": { ru: "Демо-фильтры. Позже их можно подключить к backend.", uz: "Demo filtrlar. Keyin backendga ulash mumkin." },
+        "Filters apply to the current backend data set and saved view state.": { ru: "Фильтры применяются к текущим backend-данным и сохранённому состоянию вида.", uz: "Filtrlar joriy backend ma'lumotlari va saqlangan ko'rinish holatiga qo'llanadi." },
         "District": { ru: "Район", uz: "Hudud" },
         "Status": { ru: "Статус", uz: "Holat" },
         "Period": { ru: "Период", uz: "Davr" },
@@ -131,6 +134,26 @@
         "All Systems Operational": { ru: "Все системы работают", uz: "Barcha tizimlar ishlamoqda" },
         "Last check: 2m ago": { ru: "Последняя проверка: 2 мин назад", uz: "Oxirgi tekshiruv: 2 daqiqa oldin" },
         "Total Revenue": { ru: "Общая выручка", uz: "Jami tushum" },
+        "Total Residents": { ru: "Всего резидентов", uz: "Jami rezidentlar" },
+        "Paid Residents": { ru: "Оплатили", uz: "To'laganlar" },
+        "Total Debtors": { ru: "Всего должников", uz: "Jami qarzdorlar" },
+        "Total linked resident profiles": { ru: "Всего привязанных профилей резидентов", uz: "Jami ulangan rezident profillari" },
+        "Residents with positive or zero balance": { ru: "Резиденты с положительным или нулевым балансом", uz: "Musbat yoki nol balansli rezidentlar" },
+        "Residents with overdue balance": { ru: "Резиденты с просроченным балансом", uz: "Muddati o'tgan balansli rezidentlar" },
+        "Current resident liabilities": { ru: "Текущие обязательства резидентов", uz: "Rezidentlarning joriy majburiyatlari" },
+        "Resident Directory": { ru: "Каталог резидентов", uz: "Rezidentlar katalogi" },
+        "Linked resident profiles with contact, apartment and Telegram sync details.": { ru: "Привязанные профили резидентов с контактами, квартирой и Telegram-статусом.", uz: "Kontakt, kvartira va Telegram holati bilan ulangan rezident profillari." },
+        "Telegram": { ru: "Telegram", uz: "Telegram" },
+        "Connected": { ru: "Подключён", uz: "Ulangan" },
+        "Pending": { ru: "Ожидает", uz: "Kutilmoqda" },
+        "Not linked": { ru: "Не подключён", uz: "Ulanmagan" },
+        "No residents found": { ru: "Резиденты не найдены", uz: "Rezidentlar topilmadi" },
+        "Adjust search or filters to show matching resident profiles.": { ru: "Измените поиск или фильтры, чтобы показать подходящие профили.", uz: "Mos profillarni ko'rsatish uchun qidiruv yoki filtrlarni o'zgartiring." },
+        "Contract": { ru: "Договор", uz: "Shartnoma" },
+        "Resident since": { ru: "Резидент с", uz: "Rezident sanasi" },
+        "Telegram user": { ru: "Telegram user", uz: "Telegram foydalanuvchi" },
+        "Section": { ru: "Секция", uz: "Seksiya" },
+        "Current Balance": { ru: "Текущий баланс", uz: "Joriy balans" },
         "Total Complexes": { ru: "Всего комплексов", uz: "Jami komplekslar" },
         "Active Buildings": { ru: "Активные здания", uz: "Faol binolar" },
         "Occupancy Rate": { ru: "Заполняемость", uz: "Bandlik darajasi" },
@@ -154,6 +177,23 @@
         "Quick Actions": { ru: "Быстрые действия", uz: "Tezkor amallar" },
         "Generate Usage Report": { ru: "Сформировать отчёт потребления", uz: "Iste'mol hisobotini yaratish" },
         "Add New Resident Profile": { ru: "Добавить профиль жильца", uz: "Yangi yashovchi profilini qo'shish" },
+        "Add district": { ru: "Добавить район", uz: "Hudud qo'shish" },
+        "Add house": { ru: "Добавить дом", uz: "Uy qo'shish" },
+        "Add apartment": { ru: "Добавить квартиру", uz: "Kvartira qo'shish" },
+        "Add resident": { ru: "Добавить резидента", uz: "Rezident qo'shish" },
+        "Create district": { ru: "Создать район", uz: "Hudud yaratish" },
+        "Create house": { ru: "Создать дом", uz: "Uy yaratish" },
+        "Create apartment": { ru: "Создать квартиру", uz: "Kvartira yaratish" },
+        "Structure admin form": { ru: "Форма структуры", uz: "Tuzilma formasi" },
+        "This form writes a new district directly to Django admin and database.": { ru: "Эта форма записывает новый район прямо в Django admin и базу данных.", uz: "Bu forma yangi hududni to'g'ridan-to'g'ri Django admin va bazaga yozadi." },
+        "This form writes a new house directly to Django admin and database.": { ru: "Эта форма записывает новый дом прямо в Django admin и базу данных.", uz: "Bu forma yangi uyni to'g'ridan-to'g'ri Django admin va bazaga yozadi." },
+        "This form writes a new apartment directly to Django admin and database.": { ru: "Эта форма записывает новую квартиру прямо в Django admin и базу данных.", uz: "Bu forma yangi kvartirani to'g'ridan-to'g'ri Django admin va bazaga yozadi." },
+        "District name": { ru: "Название района", uz: "Hudud nomi" },
+        "Address": { ru: "Адрес", uz: "Manzil" },
+        "House number": { ru: "Номер дома", uz: "Uy raqami" },
+        "House": { ru: "Дом", uz: "Uy" },
+        "Apartment number": { ru: "Номер квартиры", uz: "Kvartira raqami" },
+        "Area (m²)": { ru: "Площадь (м²)", uz: "Maydon (m²)" },
         "Configure System Alerts": { ru: "Настроить системные уведомления", uz: "Tizim ogohlantirishlarini sozlash" },
         "Configure system alerts": { ru: "Настроить системные уведомления", uz: "Tizim ogohlantirishlarini sozlash" },
         "Backend system alerts": { ru: "Backend системные уведомления", uz: "Backend tizim ogohlantirishlari" },
@@ -313,6 +353,9 @@
         "Quick preferences for the operations console.": { ru: "Быстрые настройки рабочей консоли.", uz: "Operatsion konsol uchun tezkor sozlamalar." },
         "Settings sync is offline": { ru: "Синхронизация настроек недоступна", uz: "Sozlamalar sinxronlash oflayn" },
         "Local changes remain available and will retry on reconnect.": { ru: "Локальные изменения сохранятся и повторятся после подключения.", uz: "Mahalliy o'zgarishlar saqlanadi va ulanish tiklanganda qayta urinadi." },
+        "Backend sync will retry on reconnect and keep current changes queued.": { ru: "Синхронизация с backend повторится после переподключения и сохранит текущие изменения в очереди.", uz: "Backend sinxroni qayta ulanganda davom etadi va joriy o'zgarishlarni navbatda saqlaydi." },
+        "Portal mode": { ru: "Режим портала", uz: "Portal rejimi" },
+        "Last sync": { ru: "Последняя синхронизация", uz: "Oxirgi sinxronlash" },
         "Interface sound": { ru: "Звук интерфейса", uz: "Interfeys ovozi" },
         "Sound effects": { ru: "Звуковые эффекты", uz: "Ovoz effektlari" },
         "Click, toast and alert feedback.": { ru: "Клики, toast и alert feedback.", uz: "Klik, toast va alert javoblari." },
@@ -329,6 +372,21 @@
         "Create request": { ru: "Создать заявку", uz: "Ariza yaratish" },
         "Cancel": { ru: "Отмена", uz: "Bekor qilish" },
         "Export started": { ru: "Экспорт запущен", uz: "Eksport boshlandi" },
+        "Backend workflow with saved progress.": { ru: "Backend-процесс с сохранённым прогрессом.", uz: "Saqlangan progressli backend jarayon." },
+        "Connected": { ru: "Подключено", uz: "Ulangan" },
+        "This checklist is connected to backend checklist notes and audit events.": { ru: "Этот checklist подключён к backend checklist notes и audit events.", uz: "Bu checklist backend checklist notes va audit events bilan ulangan." },
+        "Stored in backend audit trail.": { ru: "Сохранено в backend audit trail.", uz: "Backend audit trailga saqlandi." },
+        "Audit note save failed": { ru: "Не удалось сохранить audit note", uz: "Audit note saqlanmadi" },
+        "Backend audit note was not saved.": { ru: "Backend audit note не была сохранена.", uz: "Backend audit note saqlanmadi." },
+        "Backend audit CSV was generated from the current timeline.": { ru: "Backend audit CSV сформирован из текущей ленты.", uz: "Backend audit CSV joriy timeline asosida yaratildi." },
+        "Operations helpdesk": { ru: "Операционный helpdesk", uz: "Operatsion helpdesk" },
+        "Backend sync active": { ru: "Синхронизация backend активна", uz: "Backend sinxroni faol" },
+        "Support ticket created": { ru: "Support ticket создан", uz: "Support ticket yaratildi" },
+        "UI issue was added to backend helpdesk.": { ru: "Проблема интерфейса добавлена в backend helpdesk.", uz: "Interfeys muammosi backend helpdeskga qo'shildi." },
+        "Support ticket failed": { ru: "Support ticket не создан", uz: "Support ticket yaratilmadi" },
+        "Backend helpdesk request failed.": { ru: "Запрос в backend helpdesk завершился ошибкой.", uz: "Backend helpdesk so'rovi bajarilmadi." },
+        "Authentication request failed": { ru: "Ошибка запроса авторизации", uz: "Autentifikatsiya so'rovi xato berdi" },
+        "Logout request failed.": { ru: "Не удалось выполнить logout-запрос.", uz: "Logout so'rovi bajarilmadi." },
         "Reminder queued": { ru: "Напоминание поставлено в очередь", uz: "Eslatma navbatga qo'yildi" },
         "Technician assignment queued": { ru: "Назначение техника поставлено в очередь", uz: "Texnik tayinlash navbatga qo'yildi" },
         "Filters applied": { ru: "Фильтры применены", uz: "Filtrlar qo'llandi" },
@@ -579,6 +637,8 @@
     const placeholderTranslations = {
         "Search data points...": { ru: "Поиск данных...", uz: "Ma'lumotlarni qidirish..." },
         "Search": { ru: "Поиск", uz: "Qidirish" },
+        "Recent requests": { ru: "Недавние запросы", uz: "So'nggi so'rovlar" },
+        "No results": { ru: "Ничего не найдено", uz: "Natija topilmadi" },
         "Search inside table...": { ru: "Поиск в таблице...", uz: "Jadvaldan qidirish..." },
         "Search residents...": { ru: "Поиск жильцов...", uz: "Yashovchilarni qidirish..." },
         "Search district, house, apartment, resident...": { ru: "Поиск района, дома, квартиры, жильца...", uz: "Hudud, uy, xonadon, yashovchi..." },
@@ -597,6 +657,8 @@
         if (lang === "en") return key;
         return translations[key]?.[lang] || key;
     };
+    const currentInterfaceLang = () => storage.getItem("hydroflow-lang") || "en";
+    const t = (key) => translateValue(key, currentInterfaceLang());
 
     const captureTranslatableNodes = () => {
         const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, {
@@ -848,6 +910,18 @@
             dot.classList.toggle("dot-operational", (profile.statusKey || "active") === "active");
             dot.classList.toggle("dot-critical", profile.statusKey === "inactive");
         });
+        const lastSync = billingData.generatedAt
+            ? new Date(billingData.generatedAt).toLocaleString("en-GB", {
+                day: "2-digit",
+                month: "2-digit",
+                year: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+                timeZone: "Asia/Tashkent",
+            }).replace(",", "")
+            : "--";
+        document.querySelector("[data-sidebar-last-sync]")?.replaceChildren(document.createTextNode(lastSync));
+        document.querySelector("[data-sidebar-backend-status]")?.replaceChildren(document.createTextNode(billingData.source ? "Connected" : "Unavailable"));
     };
 
     renderBackendProfile();
@@ -943,6 +1017,15 @@
         const criticalDebtUnits = criticalComplexes.reduce((total, complex) => total + complex.debtorResidents, 0);
         const totalDebtorUnits = complexes.reduce((total, complex) => total + complex.debtorResidents, 0);
         const totalPaidUnits = complexes.reduce((total, complex) => total + complex.paidResidents, 0);
+        const detailedResidents = billingData.residents.length;
+        const detailedPaidResidents = billingData.residents.filter((resident) => {
+            const status = String(resident.status || "").toLowerCase();
+            return status === "paid" || Number(resident.balance || 0) >= 0;
+        }).length;
+        const detailedDebtors = billingData.residents.filter((resident) => {
+            const status = String(resident.status || "").toLowerCase();
+            return status === "debtor" || Number(resident.balance || 0) < 0;
+        }).length;
         const avgPressure = billingData.complexes.reduce((total, complex) => total + complex.pressurePsi, 0) / Math.max(totalComplexes, 1);
         return {
             complexes,
@@ -967,15 +1050,63 @@
             criticalAlerts: criticalAlertCount,
             criticalDebtUnits,
             totalDebtorUnits,
-            totalPaidUnits,
+            totalPaidUnits: detailedPaidResidents || totalPaidUnits,
             avgPressure,
-            detailedResidents: billingData.residents.length,
-            detailedDebtors: billingData.residents.filter((resident) => resident.status === "debtor").length,
+            detailedResidents,
+            detailedPaidResidents,
+            detailedDebtors,
             pendingTransactions: billingData.transactions.filter((transaction) => transaction.status !== "Success").length,
             successfulTransactions: billingData.transactions.filter((transaction) => transaction.status === "Success").length,
             sectors: new Set(billingData.complexes.map((complex) => complex.sector)).size,
         };
     };
+
+    const syncDashboardStatCards = (stats = getSiteStats()) => {
+        const paidPercent = stats.detailedResidents ? (stats.detailedPaidResidents / stats.detailedResidents) * 100 : 0;
+        const debtorPercent = stats.detailedResidents ? (stats.detailedDebtors / stats.detailedResidents) * 100 : 0;
+        const debtPercent = (stats.detailedDebt / Math.max(stats.detailedDebt + stats.totalCollected, 1)) * 100;
+        const cards = {
+            "total-residents": {
+                value: moneyFormatter.format(stats.detailedResidents),
+                support: t("Total linked resident profiles"),
+                progress: Math.max(6, Math.min(100, stats.detailedResidents ? 100 : 0)),
+            },
+            "paid-residents": {
+                value: moneyFormatter.format(stats.detailedPaidResidents),
+                support: t("Residents with positive or zero balance"),
+                progress: paidPercent,
+            },
+            "total-debtors": {
+                value: moneyFormatter.format(stats.detailedDebtors),
+                support: t("Residents with overdue balance"),
+                progress: debtorPercent,
+            },
+            "outstanding-debt": {
+                value: formatCompactUzs(stats.detailedDebt),
+                support: t("Current resident liabilities"),
+                progress: debtPercent,
+            },
+        };
+        Object.entries(cards).forEach(([key, payload]) => {
+            const card = document.querySelector(`[data-stat-card="${key}"]`);
+            if (!card) return;
+            const value = card.querySelector("h2");
+            const support = card.querySelector("[data-stat-support]");
+            const bar = card.querySelector(".chart-bar");
+            if (value) {
+                value.dataset.statSynced = "true";
+                value.textContent = payload.value;
+            }
+            if (support) {
+                support.dataset.statSynced = "true";
+                support.textContent = payload.support;
+            }
+            if (bar) {
+                bar.style.width = `${Math.max(3, Math.min(100, payload.progress || 0))}%`;
+            }
+        });
+    };
+    window.HydroFlowSyncDashboardStatCards = syncDashboardStatCards;
 
     const filterStorageKey = "hydroflow-global-filters";
     const defaultFilterState = { district: "all", status: "all", period: "90" };
@@ -1455,6 +1586,13 @@
     const fillDetails = (data) => {
         if (!detailsDrawer || !data) return;
         window.HydroFlowSyncLocale?.();
+        detailsDrawer.dataset.ownerBackendId = data.ownerBackendId || "";
+        detailsDrawer.dataset.apartmentBackendId = data.apartmentBackendId || "";
+        detailsDrawer.dataset.buildingBackendId = data.buildingBackendId || "";
+        detailsDrawer.dataset.complexBackendId = data.complexBackendId || "";
+        detailsDrawer.dataset.alertBackendId = data.alertBackendId || "";
+        detailsDrawer.dataset.maintenanceBackendId = data.maintenanceBackendId || "";
+        detailsDrawer.dataset.notificationBackendId = data.notificationBackendId || "";
         detailsDrawer.querySelector("#details-title").textContent = data.title;
         detailsDrawer.querySelector("[data-detail-subtitle]").textContent = data.subtitle;
         detailsDrawer.querySelector("[data-detail-status]").textContent = data.status;
@@ -1504,6 +1642,10 @@
             technician: "Billing Team",
             sla: isDebtor ? "24h" : "Closed",
             payments: payments.length ? payments : [{ method: "No payments", amount: "0 UZS", date: resident.lastPayment || "13.04.2026" }],
+            ownerBackendId: resident.ownerBackendId || resident.backendId || "",
+            apartmentBackendId: resident.apartmentBackendId || "",
+            buildingBackendId: resident.buildingBackendId || "",
+            complexBackendId: resident.complexBackendId || "",
         };
     };
 
@@ -1526,6 +1668,7 @@
                 amount: formatBillingUzs(payment.amount),
                 date: payment.date,
             })),
+            complexBackendId: complex.backendId || "",
         };
     };
 
@@ -1550,6 +1693,10 @@
                     technician: transaction.method,
                     sla: transaction.status === "Pending" ? "12h" : "Closed",
                     payments: [{ method: transaction.method, amount: formatBillingUzs(transaction.amount), date: transaction.date }],
+                    ownerBackendId: resident.ownerBackendId || resident.backendId || "",
+                    apartmentBackendId: resident.apartmentBackendId || "",
+                    buildingBackendId: resident.buildingBackendId || "",
+                    complexBackendId: resident.complexBackendId || "",
                 };
             }
         }
@@ -1675,6 +1822,7 @@
         const list = document.querySelector("[data-notification-list]");
         const notifications = Array.isArray(billingData.notifications) ? billingData.notifications : [];
         if (!list || list.dataset.backendNotificationsRendered === "true") return;
+        if (list.dataset.serverList === "alerts") return;
         if (!notifications.length && !billingData.source) return;
         const groupLabel = (key, label, hidden = false) => `<div class="notification-group-label ${hidden ? "hidden" : ""}" data-notification-group="${key}">${label}</div>`;
         const severityLabel = (severity) => severity === "critical" ? "Critical" : severity === "warning" ? "Warning" : "Info";
@@ -1683,7 +1831,7 @@
             const secondary = item.actionSecondary || (item.severity === "critical" ? "Close alert" : "");
             return `
                 <div class="mt-3 flex gap-2">
-                    <button class="drawer-action ${item.severity === "critical" ? "bg-error" : "bg-primary"} text-white" data-notification-action="${escapeHtml(item.actionState || `${primary} queued`)}" type="button">${escapeHtml(primary)}</button>
+                    <button class="drawer-action ${item.severity === "critical" ? "bg-error" : "bg-primary"} text-white" ${item.severity === "critical" ? `data-assign-technician data-notification-backend-id="${escapeHtml(item.backendId || "")}"` : `data-notification-action="${escapeHtml(item.actionState || `${primary} queued`)}"`} type="button">${escapeHtml(primary)}</button>
                     ${secondary ? `<button class="drawer-action bg-surface-container text-primary" ${item.severity === "critical" ? 'data-confirm-action="close-critical-alert"' : `data-notification-action="${escapeHtml(`${secondary} queued`)}"`} type="button">${escapeHtml(secondary)}</button>` : ""}
                 </div>
             `;
@@ -1693,6 +1841,7 @@
             return `
                 <div class="notification-item ${severity === "critical" ? "critical-pulse" : ""}"
                     data-notification-id="${escapeHtml(item.id)}"
+                    data-notification-backend-id="${escapeHtml(item.backendId || "")}"
                     data-notification-section="${escapeHtml(item.section || "today")}"
                     data-read="${item.read ? "true" : "false"}"
                     data-pinned="${item.pinned ? "true" : "false"}"
@@ -1822,14 +1971,22 @@
             return afterValue || null;
         };
         const setStat = (label, value, support = "", progress = null) => {
-            const host = cardFor(label);
-            const valueElement = valueNode(host, label);
+            const statCardKeys = {
+                "Total Residents": "total-residents",
+                "Paid Residents": "paid-residents",
+                "Total Debtors": "total-debtors",
+                "Outstanding Debt": "outstanding-debt",
+            };
+            const host = statCardKeys[label]
+                ? document.querySelector(`[data-stat-card="${statCardKeys[label]}"]`) || cardFor(label)
+                : cardFor(label);
+            const valueElement = host?.dataset.statCard ? host.querySelector("h2") : valueNode(host, label);
             if (valueElement) {
                 valueElement.dataset.statSynced = "true";
                 valueElement.textContent = value;
             }
             if (support) {
-                const supportElement = supportNode(host, valueElement);
+                const supportElement = host?.dataset.statCard ? host.querySelector("[data-stat-support]") : supportNode(host, valueElement);
                 if (supportElement) {
                     supportElement.dataset.statSynced = "true";
                     supportElement.textContent = support;
@@ -1850,10 +2007,10 @@
             .reduce((total, transaction) => total + transaction.amount, 0);
         const detailedCollectionRate = (detailedPaid / Math.max(detailedPaid + stats.detailedDebt, 1)) * 100;
 
-        setStat("Total Revenue", formatCompactUzs(stats.totalCollected), `${formatCompactUzs(stats.transactionVolume)} logged locally`);
-        setStat("Active Subscribers", moneyFormatter.format(stats.occupiedUnits), `${stats.detailedResidents} linked resident profiles`);
-        setStat("Consumption Rate", `${compactNumber(stats.totalUsageM3)} m³`, `Across ${stats.totalComplexes} complexes`);
-        setStat("Outstanding Debt", formatCompactUzs(stats.totalDebt), `${stats.criticalDebtUnits} critical units`);
+        setStat("Total Residents", moneyFormatter.format(stats.detailedResidents), t("Total linked resident profiles"));
+        setStat("Paid Residents", moneyFormatter.format(stats.detailedPaidResidents), t("Residents with positive or zero balance"));
+        setStat("Total Debtors", moneyFormatter.format(stats.detailedDebtors), t("Residents with overdue balance"));
+        setStat("Outstanding Debt", formatCompactUzs(stats.detailedDebt), t("Current resident liabilities"));
         setStat("Total Complexes", moneyFormatter.format(stats.totalComplexes), `${stats.sectors} sectors connected`);
         setStat("Active Buildings", moneyFormatter.format(stats.totalBuildings), `${moneyFormatter.format(stats.totalUnits)} active units`);
         setStat("Occupancy Rate", percentValue(stats.occupancyRate), `Across ${stats.totalBuildings} buildings`, stats.occupancyRate);
@@ -2539,6 +2696,693 @@
         }
     };
 
+    const findSectionHeading = (text, selector = "h3, h4") => Array.from(document.querySelectorAll(selector))
+        .find((heading) => heading.textContent.trim().toLowerCase().includes(String(text || "").toLowerCase()));
+    const listUrlKey = (name, key) => `${name}_${key}`;
+    const readListUrlState = (name, defaults = {}) => {
+        const url = new URL(window.location.href);
+        return Object.fromEntries(Object.entries(defaults).map(([key, fallback]) => {
+            const raw = url.searchParams.get(listUrlKey(name, key));
+            return [key, raw === null || raw === "" ? fallback : raw];
+        }));
+    };
+    const writeListUrlState = (name, nextState = {}) => {
+        const url = new URL(window.location.href);
+        Object.entries(nextState).forEach(([key, value]) => {
+            const param = listUrlKey(name, key);
+            if (value === undefined || value === null || value === "") {
+                url.searchParams.delete(param);
+            } else {
+                url.searchParams.set(param, String(value));
+            }
+        });
+        window.history.replaceState({}, "", `${url.pathname}?${url.searchParams.toString()}${url.hash}`);
+    };
+    const debounce = (fn, delay = 220) => {
+        let timer = 0;
+        return (...args) => {
+            window.clearTimeout(timer);
+            timer = window.setTimeout(() => fn(...args), delay);
+        };
+    };
+    const currentGlobalListFilters = () => {
+        const state = typeof readFilterState === "function" ? readFilterState() : { district: "all", period: "all", status: "all" };
+        const params = {};
+        if (state.district && state.district !== "all") params.district = state.district;
+        if (state.period && state.period !== "all") params.period = state.period;
+        return { state, params };
+    };
+    const fetchServerList = async (endpoint, params = {}) => {
+        const url = new URL(endpoint, window.location.origin);
+        Object.entries(params).forEach(([key, value]) => {
+            if (value === undefined || value === null || value === "" || value === "all") return;
+            url.searchParams.set(key, value);
+        });
+        const response = await fetch(url.toString(), {
+            cache: "no-store",
+            credentials: "same-origin",
+            headers: { Accept: "application/json" },
+        });
+        if (!response.ok) throw new Error(`List request failed: ${response.status}`);
+        return response.json();
+    };
+    const escapeAttr = (value) => escapeHtml(value ?? "");
+    const tableStatusClass = (value = "") => {
+        const key = String(value || "").toLowerCase();
+        if (key.includes("critical") || key.includes("overdue") || key.includes("failed")) return "is-critical";
+        if (key.includes("pending") || key.includes("warning") || key.includes("planned") || key.includes("medium")) return "is-warning";
+        if (key.includes("scheduled") || key.includes("upcoming") || key.includes("progress") || key.includes("review") || key.includes("active")) return "is-info";
+        return "is-success";
+    };
+    const renderTableStatus = (value) => `<span class="table-assigned-status ${tableStatusClass(value)}">${escapeHtml(value)}</span>`;
+    const renderResidentCardMarkup = (resident, layout = "card") => {
+        const isDebtor = String(resident.status || "").toLowerCase() === "debtor";
+        const balanceClass = isDebtor ? "text-error" : Number(resident.balance || 0) > 0 ? "text-secondary" : "text-on-surface";
+        const telegramKey = resident.telegramConnected
+            ? "Connected"
+            : resident.telegramStatus === "pending" || resident.telegramStatus === "review"
+            ? "Pending"
+            : "Not linked";
+        const telegramClass = resident.telegramConnected
+            ? "is-telegram-connected"
+            : resident.telegramStatus === "pending" || resident.telegramStatus === "review"
+            ? "is-telegram-pending"
+            : "is-telegram-empty";
+        const avatar = resident.photo
+            ? `<img class="h-12 w-12 rounded-lg object-cover" src="${escapeAttr(resident.photo)}" alt="">`
+            : `<div class="h-12 w-12 rounded-lg ${isDebtor ? "bg-error/20 text-error" : "bg-secondary/20 text-secondary"} flex items-center justify-center font-bold text-xl">${escapeHtml(initialsFor(resident.name || "R"))}</div>`;
+        if (layout === "flat") {
+            return `
+                <article class="resident-list-row"
+                    data-resident-card
+                    data-resident-id="${escapeAttr(resident.id)}"
+                    data-resident-status="${escapeAttr(resident.status)}"
+                    data-owner-backend-id="${escapeAttr(resident.ownerBackendId || resident.backendId || "")}"
+                    data-apartment-backend-id="${escapeAttr(resident.apartmentBackendId || "")}"
+                    data-building-backend-id="${escapeAttr(resident.buildingBackendId || "")}"
+                    data-complex-backend-id="${escapeAttr(resident.complexBackendId || "")}"
+                    data-complex-id="${escapeAttr(resident.complexId || "")}">
+                    <div class="resident-list-person">
+                        ${avatar}
+                        <div>
+                            <h4>${escapeHtml(resident.name || "Resident")}</h4>
+                            <p>${escapeHtml(resident.apartment || "-")}</p>
+                        </div>
+                    </div>
+                    <div class="resident-list-cell resident-list-property">
+                        <span data-i18n-key="Property">Property</span>
+                        <strong>${escapeHtml(resident.building || "-")}</strong>
+                        <small>${escapeHtml(resident.complex || "-")}</small>
+                    </div>
+                    <div class="resident-list-cell">
+                        <span data-i18n-key="Phone">Phone</span>
+                        <strong>${escapeHtml(resident.phone || "-")}</strong>
+                    </div>
+                    <div class="resident-list-cell">
+                        <span data-i18n-key="Last Payment">Last Payment</span>
+                        <strong>${escapeHtml(resident.lastPayment || "-")}</strong>
+                    </div>
+                    <div class="resident-list-cell">
+                        <span data-i18n-key="Telegram">Telegram</span>
+                        <strong class="resident-list-telegram ${telegramClass}">${escapeHtml(resident.telegramUser || telegramKey || "-")}</strong>
+                    </div>
+                    <div class="resident-list-balance">
+                        <span data-i18n-key="Current Balance">Current Balance</span>
+                        <strong class="${balanceClass}">${formatBillingUzs(resident.balance || 0)}</strong>
+                    </div>
+                    <button class="resident-list-action" data-resident-billing-history type="button" data-i18n-key="Details">Details</button>
+                </article>
+            `;
+        }
+        const actionButton = isDebtor
+            ? `<button class="w-full py-2 bg-error text-white text-xs font-bold rounded-lg hover:bg-red-700 transition-colors" data-reminder-action type="button" data-i18n-key="SEND URGENT REMINDER">SEND URGENT REMINDER</button>`
+            : `<button class="w-full py-2 bg-surface-container-high text-on-surface-variant text-xs font-bold rounded-lg hover:bg-surface-container-highest transition-colors" data-resident-billing-history type="button" data-i18n-key="VIEW BILLING HISTORY">VIEW BILLING HISTORY</button>`;
+        return `
+            <div class="resident-card group ${isDebtor ? "bg-error-container/30 border-error/20" : "bg-secondary-container/20 border-secondary/10"} border p-5 rounded-xl transition-all hover:shadow-lg relative overflow-hidden"
+                data-resident-card
+                data-resident-id="${escapeAttr(resident.id)}"
+                data-resident-status="${escapeAttr(resident.status)}"
+                data-owner-backend-id="${escapeAttr(resident.ownerBackendId || resident.backendId || "")}"
+                data-apartment-backend-id="${escapeAttr(resident.apartmentBackendId || "")}"
+                data-building-backend-id="${escapeAttr(resident.buildingBackendId || "")}"
+                data-complex-backend-id="${escapeAttr(resident.complexBackendId || "")}"
+                data-complex-id="${escapeAttr(resident.complexId || "")}">
+                <div class="absolute top-0 right-0 w-16 h-16 ${isDebtor ? "bg-error/10" : "bg-secondary/10"} rounded-bl-full flex items-start justify-end p-2 transition-transform group-hover:scale-110">
+                    <span class="material-symbols-outlined ${isDebtor ? "text-error" : "text-secondary"} text-[20px]">${isDebtor ? "warning" : "check_circle"}</span>
+                </div>
+                <div class="flex items-start gap-4 mb-4">
+                    ${avatar}
+                    <div>
+                        <h4 class="font-bold text-on-surface leading-tight">${escapeHtml(resident.name || "Resident")}</h4>
+                        <p class="text-xs text-on-surface-variant">${escapeHtml(resident.apartment || "")}</p>
+                    </div>
+                </div>
+                <div class="space-y-3">
+                    <div class="flex justify-between items-end">
+                        <span class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant" data-i18n-key="Current Balance">Current Balance</span>
+                        <span class="text-xl font-black ${balanceClass}">${formatBillingUzs(resident.balance || 0)}</span>
+                    </div>
+                    <div class="bg-white/40 p-3 rounded-lg text-[11px] space-y-1.5">
+                        <p class="text-on-surface-variant flex justify-between"><span data-i18n-key="Phone:">Phone:</span> <span class="text-on-surface font-semibold">${escapeHtml(resident.phone || "")}</span></p>
+                        <p class="text-on-surface-variant flex justify-between"><span data-i18n-key="Last Payment:">Last Payment:</span> <span class="text-on-surface font-semibold">${escapeHtml(resident.lastPayment || "")}</span></p>
+                    </div>
+                    ${actionButton}
+                </div>
+            </div>
+        `;
+    };
+    const cloneWithFreshListeners = (element) => {
+        if (!element) return null;
+        const clone = element.cloneNode(true);
+        element.replaceWith(clone);
+        return clone;
+    };
+    const prepareServerTableChrome = (table, config) => {
+        if (!table) return null;
+        table.dataset.serverPagination = "true";
+        table.dataset.serverList = config.name;
+        const workspace = table.closest(".table-workspace") || table.closest(".overflow-x-auto") || table;
+        let tools = workspace.previousElementSibling?.classList?.contains("table-tools") ? workspace.previousElementSibling : null;
+        let pagination = workspace.nextElementSibling?.classList?.contains("table-pagination") ? workspace.nextElementSibling : null;
+        let thead = table.querySelector("thead");
+        if (tools) tools = cloneWithFreshListeners(tools);
+        if (pagination) pagination = cloneWithFreshListeners(pagination);
+        if (thead) thead = cloneWithFreshListeners(thead);
+        const body = table.querySelector("tbody");
+        const selectAll = table.querySelector("[data-select-all]");
+        const searchInput = tools?.querySelector(".table-search");
+        const headers = Array.from(table.querySelectorAll("thead th")).filter((cell) => !cell.querySelector("[data-select-all]"));
+        const updateSelection = () => {
+            const selected = Array.from(body?.querySelectorAll("[data-row-select]:checked") || []).length;
+            const label = tools?.querySelector("[data-selected-count]");
+            if (label) {
+                label.dataset.count = selected;
+                label.textContent = `${selected} selected`;
+            }
+        };
+        if (selectAll) {
+            selectAll.addEventListener("change", (event) => {
+                Array.from(body?.querySelectorAll("[data-row-select]") || []).forEach((checkbox) => {
+                    if (checkbox.closest("tr")?.classList.contains("hidden")) return;
+                    checkbox.checked = event.target.checked;
+                });
+                updateSelection();
+            });
+        }
+        body?.addEventListener("change", (event) => {
+            if (event.target.matches("[data-row-select]")) updateSelection();
+        });
+        const syncSortIndicators = (ordering) => {
+            const key = String(ordering || "");
+            headers.forEach((header, index) => {
+                const icon = header.querySelector(".table-sort-heading-icon");
+                if (!icon) return;
+                const map = config.sortMap[index];
+                if (!map) {
+                    icon.textContent = "unfold_more";
+                    return;
+                }
+                if (key === map) icon.textContent = "arrow_upward";
+                else if (key === `-${map}`) icon.textContent = "arrow_downward";
+                else icon.textContent = "unfold_more";
+            });
+        };
+        const toggleOrdering = (index) => {
+            const sortKey = config.sortMap[index];
+            if (!sortKey) return;
+            const current = readListUrlState(config.name, { ordering: config.defaultOrdering }).ordering;
+            const next = current === sortKey ? `-${sortKey}` : current === `-${sortKey}` ? sortKey : (config.defaultSortDirection?.[sortKey] === "desc" ? `-${sortKey}` : sortKey);
+            writeListUrlState(config.name, { ordering: next, page: 1 });
+            config.load();
+        };
+        headers.forEach((header, index) => {
+            header.addEventListener("click", () => toggleOrdering(index));
+            header.addEventListener("keydown", (event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    toggleOrdering(index);
+                }
+            });
+        });
+        searchInput?.addEventListener("input", debounce(() => {
+            writeListUrlState(config.name, { search: searchInput.value.trim(), page: 1 });
+            config.load();
+        }));
+        tools?.querySelector("[data-table-action='reminders']")?.addEventListener("click", () => {
+            document.querySelector("[data-drawer-open='notifications-drawer']")?.click();
+        });
+        pagination?.querySelector("[data-prev-page]")?.addEventListener("click", () => {
+            const state = readListUrlState(config.name, { page: "1" });
+            writeListUrlState(config.name, { page: Math.max(1, Number(state.page || 1) - 1) });
+            config.load();
+        });
+        pagination?.querySelector("[data-next-page]")?.addEventListener("click", () => {
+            const state = readListUrlState(config.name, { page: "1" });
+            const totalPages = Number(pagination?.dataset.totalPages || 1);
+            writeListUrlState(config.name, { page: Math.min(totalPages, Number(state.page || 1) + 1) });
+            config.load();
+        });
+        return {
+            table,
+            workspace,
+            body,
+            tools,
+            pagination,
+            searchInput,
+            selectAll,
+            syncSortIndicators,
+            updateSelection,
+            syncMeta(meta) {
+                if (searchInput) searchInput.value = readListUrlState(config.name, { search: "" }).search;
+                if (pagination) {
+                    pagination.dataset.totalPages = String(meta.pages || 1);
+                    const pageLabel = pagination.querySelector("[data-page-label]");
+                    if (pageLabel) pageLabel.textContent = `Page ${meta.page} of ${meta.pages}`;
+                    const prev = pagination.querySelector("[data-prev-page]");
+                    const next = pagination.querySelector("[data-next-page]");
+                    if (prev) prev.disabled = Number(meta.page || 1) <= 1;
+                    if (next) next.disabled = Number(meta.page || 1) >= Number(meta.pages || 1);
+                }
+                syncSortIndicators(meta.ordering || config.defaultOrdering);
+                if (selectAll) selectAll.checked = false;
+                updateSelection();
+                window.HydroFlowSyncLocale?.();
+            },
+        };
+    };
+    const ensureDrawerPagination = (host, key) => {
+        if (!host) return null;
+        let pager = host.querySelector(`[data-drawer-pagination='${key}']`);
+        if (pager) return pager;
+        pager = document.createElement("div");
+        pager.className = "table-pagination mt-4";
+        pager.dataset.drawerPagination = key;
+        pager.innerHTML = `
+            <span class="text-xs font-bold text-on-surface-variant" data-page-label>Page 1 of 1</span>
+            <div class="flex gap-2">
+                <button class="table-tool-button" data-prev-page type="button">Previous</button>
+                <button class="table-tool-button" data-next-page type="button">Next</button>
+            </div>
+        `;
+        host.appendChild(pager);
+        return pager;
+    };
+    const renderNotificationMarkup = (items = []) => {
+        const groupLabel = (key, label, hidden = false) => `<div class="notification-group-label ${hidden ? "hidden" : ""}" data-notification-group="${key}">${label}</div>`;
+        const severityLabel = (severity) => severity === "critical" ? "Critical" : severity === "warning" ? "Warning" : "Info";
+        const actionButtons = (item) => {
+            const primary = item.actionPrimary || (item.severity === "critical" ? "Assign technician" : "Details");
+            const secondary = item.actionSecondary || (item.severity === "critical" ? "Close alert" : "");
+            return `
+                <div class="mt-3 flex gap-2">
+                    <button class="drawer-action ${item.severity === "critical" ? "bg-error" : "bg-primary"} text-white" ${item.severity === "critical" ? `data-assign-technician type="button"` : `data-notification-action="${escapeAttr(item.actionState || `${primary} queued`)}" type="button"`}>${escapeHtml(primary)}</button>
+                    ${secondary ? `<button class="drawer-action bg-surface-container text-primary" ${item.severity === "critical" ? 'data-confirm-action="close-critical-alert"' : `data-notification-action="${escapeAttr(`${secondary} queued`)}"`} type="button">${escapeHtml(secondary)}</button>` : ""}
+                </div>
+            `;
+        };
+        const renderItem = (item) => {
+            const severity = ["critical", "warning", "info"].includes(item.severity) ? item.severity : "info";
+            return `
+                <div class="notification-item ${severity === "critical" ? "critical-pulse" : ""}"
+                    data-notification-id="${escapeAttr(item.id)}"
+                    data-notification-backend-id="${escapeAttr(item.backendId || "")}"
+                    data-notification-section="${escapeAttr(item.section || "today")}"
+                    data-read="${item.read ? "true" : "false"}"
+                    data-pinned="${item.pinned ? "true" : "false"}"
+                    data-severity="${escapeAttr(severity)}">
+                    <div class="notification-card-head">
+                        <p class="severity-badge severity-${escapeAttr(severity)}"><span class="status-dot dot-${severity === "critical" ? "critical" : severity === "warning" ? "warning" : "info"}"></span>${severityLabel(severity)}</p>
+                        <div class="notification-card-meta">
+                            <time class="text-[10px] text-on-surface-variant">${escapeHtml(item.eventAt || "")}</time>
+                            <button aria-label="Pin notification" aria-pressed="${item.pinned ? "true" : "false"}" class="notification-pin" data-notification-pin type="button"><span class="material-symbols-outlined">${item.pinned ? "keep_off" : "keep"}</span><span class="notification-pin-label">${item.pinned ? "Pinned" : "Pin"}</span></button>
+                        </div>
+                    </div>
+                    <p class="text-sm font-bold text-on-surface mt-2">${escapeHtml(item.title)}</p>
+                    <p class="text-xs text-on-surface-variant mt-1">${escapeHtml(item.message || "")}</p>
+                    <p class="notification-action-state ${item.actionState ? "" : "hidden"}" data-notification-state>${escapeHtml(item.actionState || "")}</p>
+                    ${actionButtons(item)}
+                </div>
+            `;
+        };
+        const pinned = items.filter((item) => item.pinned);
+        const today = items.filter((item) => !item.pinned && (item.section || "today") === "today");
+        const yesterday = items.filter((item) => !item.pinned && item.section === "yesterday");
+        const older = items.filter((item) => !item.pinned && !["today", "yesterday"].includes(item.section || "today"));
+        return [
+            groupLabel("pinned", "Pinned", !pinned.length),
+            pinned.map(renderItem).join(""),
+            groupLabel("today", "Today", !today.length),
+            today.map(renderItem).join(""),
+            groupLabel("yesterday", "Yesterday", !yesterday.length),
+            yesterday.map(renderItem).join(""),
+            groupLabel("older", "Older", !older.length),
+            older.map(renderItem).join(""),
+            `<div class="empty-state ${items.length ? "hidden" : ""}" data-notification-empty><span class="material-symbols-outlined">notifications_off</span><div><p>No hidden alerts</p><span>Resolved notifications are moved to the activity log.</span></div></div>`,
+        ].join("");
+    };
+    const renderAuditMarkup = (items = []) => {
+        const iconForType = (type) => ({
+            export: "ios_share",
+            reminder: "notifications_active",
+            alert: "warning",
+            balance: "account_balance_wallet",
+            note: "edit_note",
+            status: "sell",
+            system: "settings_suggest",
+        }[type] || "history");
+        return items.map((event) => `
+            <div class="audit-event" data-audit-event data-type="${escapeAttr(event.type || "system")}" data-audit-backend-id="${escapeAttr(event.backendId || "")}">
+                <span class="audit-event-icon material-symbols-outlined">${escapeHtml(iconForType(event.type))}</span>
+                <div>
+                    <time>${escapeHtml(event.time || "")}</time>
+                    <p>${escapeHtml(event.message || event.title || "")}</p>
+                    <span>${escapeHtml(event.label || event.type || "System")}</span>
+                </div>
+            </div>
+        `).join("");
+    };
+    const markServerDrivenHosts = () => {
+        document.querySelector("[data-resident-grid]")?.setAttribute("data-server-list", "residents");
+        findSectionHeading("Recent Transaction Log")?.closest(".bg-surface-container-lowest")?.querySelector("table")?.setAttribute("data-server-list", "transactions");
+        document.querySelector("[data-maintenance-body]")?.closest("table")?.setAttribute("data-server-list", "maintenance");
+        document.querySelector("[data-notification-list]")?.setAttribute("data-server-list", "alerts");
+        document.querySelector("[data-audit-timeline]")?.setAttribute("data-server-list", "audit");
+    };
+    markServerDrivenHosts();
+    const serverListControllers = {};
+    const setupServerLists = () => {
+        if (document.body.dataset.serverListsReady === "true") return;
+        document.body.dataset.serverListsReady = "true";
+
+        const residentsGrid = document.querySelector("[data-resident-grid]");
+        const residentFilterGroup = document.querySelector("[data-resident-filter-group]");
+        const residentSearch = document.querySelector("[data-resident-search]");
+        const residentClear = document.querySelector("[data-resident-search-clear]");
+        const residentEmpty = document.querySelector("[data-resident-filter-empty]");
+        const residentCount = residentFilterGroup?.querySelector("[data-resident-filter-count]");
+        const residentButtons = Array.from(document.querySelectorAll("[data-resident-filter]"));
+        const residentTelegramButtons = Array.from(document.querySelectorAll("[data-resident-telegram]"));
+        const residentLayout = residentsGrid?.dataset.residentLayout || "card";
+        const residentPageSize = Number(residentsGrid?.dataset.residentPageSize || residentsGrid?.dataset.residentLimit || 8) || 8;
+        const residentCountLabel = (visible, total = visible) => {
+            const lang = storage.getItem("hydroflow-lang") || "en";
+            const count = Number(total || visible || 0);
+            if (lang === "ru") return `${count} жителей`;
+            if (lang === "uz") return `${count} rezident`;
+            return `${count} residents`;
+        };
+        const loadResidents = async () => {
+            if (!residentsGrid) return;
+            const state = readListUrlState("residents", { page: "1", search: "", status: "all", telegram: "all", ordering: "name" });
+            const { params } = currentGlobalListFilters();
+            const payload = await fetchServerList("/api/lists/residents/", {
+                ...params,
+                page: state.page,
+                page_size: residentPageSize,
+                search: state.search,
+                status: state.status,
+                telegram: residentTelegramButtons.length ? state.telegram : "all",
+                ordering: state.ordering,
+            });
+            residentsGrid.innerHTML = payload.results.map((resident) => renderResidentCardMarkup(resident, residentLayout)).join("");
+            residentButtons.forEach((button) => {
+                const active = (button.dataset.residentFilter || "all") === state.status;
+                button.classList.toggle("is-active", active);
+                button.setAttribute("aria-pressed", String(active));
+            });
+            residentTelegramButtons.forEach((button) => {
+                const active = (button.dataset.residentTelegram || "all") === state.telegram;
+                button.classList.toggle("is-active", active);
+                button.setAttribute("aria-pressed", String(active));
+            });
+            if (residentSearch) residentSearch.value = state.search || "";
+            if (residentCount) residentCount.textContent = residentCountLabel(payload.results.length, payload.total);
+            residentEmpty?.classList.toggle("hidden", payload.results.length > 0);
+            window.HydroFlowSyncLocale?.();
+        };
+        if (residentsGrid) {
+            residentButtons.forEach((button) => button.addEventListener("click", () => {
+                writeListUrlState("residents", { status: button.dataset.residentFilter || "all", page: 1 });
+                loadResidents();
+            }));
+            residentTelegramButtons.forEach((button) => button.addEventListener("click", () => {
+                writeListUrlState("residents", { telegram: button.dataset.residentTelegram || "all", page: 1 });
+                loadResidents();
+            }));
+            residentSearch?.addEventListener("input", debounce(() => {
+                writeListUrlState("residents", { search: residentSearch.value.trim(), page: 1 });
+                loadResidents();
+            }));
+            residentClear?.addEventListener("click", () => {
+                if (!residentSearch) return;
+                residentSearch.value = "";
+                writeListUrlState("residents", { search: "", page: 1 });
+                loadResidents();
+            });
+            serverListControllers.residents = { name: "residents", load: loadResidents, refresh: () => loadResidents() };
+        }
+
+        const transactionTable = findSectionHeading("Recent Transaction Log")?.closest(".bg-surface-container-lowest")?.querySelector("table");
+        if (transactionTable) {
+            const transactionChrome = prepareServerTableChrome(transactionTable, {
+                name: "transactions",
+                sortMap: ["resident", "type", "created_at", "amount", "status"],
+                defaultOrdering: "-created_at",
+                defaultSortDirection: { resident: "asc", type: "asc", created_at: "desc", amount: "desc", status: "desc" },
+                load: () => loadTransactions(),
+            });
+            const renderTransactions = (items = []) => {
+                const colspan = transactionTable.querySelector("thead tr")?.cells.length || 6;
+                if (!items.length) {
+                    return `<tr data-smart-empty="true"><td class="px-6 py-8 text-sm text-on-surface-variant" colspan="${colspan}">No transactions found.</td></tr>`;
+                }
+                return items.map((item) => {
+                    const pending = Number(item.signedAmount || 0) <= 0 || String(item.status || "").toLowerCase() === "pending";
+                    return `
+                        <tr class="hover:bg-surface-container-low transition-colors"
+                            data-transaction-id="${escapeAttr(item.id)}"
+                            data-resident-id="${escapeAttr(item.residentId)}"
+                            data-complex-id="${escapeAttr(item.complexId)}"
+                            data-backend-id="${escapeAttr(item.backendId || "")}"
+                            data-backend-type="transaction"
+                            data-owner-backend-id="${escapeAttr(item.ownerBackendId || "")}"
+                            data-apartment-backend-id="${escapeAttr(item.apartmentBackendId || "")}"
+                            data-building-backend-id="${escapeAttr(item.buildingBackendId || "")}"
+                            data-complex-backend-id="${escapeAttr(item.complexBackendId || "")}">
+                            <td class="px-4 py-4"><input aria-label="Select row" data-row-select type="checkbox"></td>
+                            <td class="px-6 py-4">
+                                <p class="font-bold text-primary text-sm">${escapeHtml(item.residentName || "Resident")}</p>
+                                <p class="text-[10px] text-on-surface-variant">${escapeHtml(item.id.toUpperCase())}</p>
+                            </td>
+                            <td class="px-6 py-4 text-xs font-medium text-on-surface-variant">${escapeHtml(item.type)}</td>
+                            <td class="px-6 py-4 text-xs text-on-surface-variant">${escapeHtml(item.date)}</td>
+                            <td class="px-6 py-4 text-sm font-bold ${pending ? "text-error" : "text-on-surface"}">${formatBillingUzs(item.amount || 0)}</td>
+                            <td class="px-6 py-4">${renderTableStatus(item.status)}</td>
+                        </tr>
+                    `;
+                }).join("");
+            };
+            const loadTransactions = async () => {
+                const state = readListUrlState("transactions", { page: "1", search: "", ordering: "-created_at" });
+                const { state: globalState, params } = currentGlobalListFilters();
+                const status = globalState.status === "paid" ? "success" : globalState.status === "debtor" ? "pending" : "";
+                const payload = await fetchServerList("/api/lists/transactions/", {
+                    ...params,
+                    page: state.page,
+                    page_size: 6,
+                    search: state.search,
+                    ordering: state.ordering,
+                    status,
+                });
+                transactionChrome.body.innerHTML = renderTransactions(payload.results || []);
+                transactionChrome.syncMeta(payload);
+            };
+            serverListControllers.transactions = { name: "transactions", load: loadTransactions, refresh: () => loadTransactions() };
+        }
+
+        const maintenanceTable = document.querySelector("[data-maintenance-body]")?.closest("table");
+        if (maintenanceTable) {
+            const maintenanceChrome = prepareServerTableChrome(maintenanceTable, {
+                name: "maintenance",
+                sortMap: ["title", "location", "priority", "scheduled_at", "status", null],
+                defaultOrdering: "-priority,-scheduled_at",
+                defaultSortDirection: { title: "asc", location: "asc", priority: "desc", scheduled_at: "desc", status: "desc" },
+                load: () => loadMaintenance(),
+            });
+            const renderMaintenance = (items = []) => {
+                const colspan = maintenanceTable.querySelector("thead tr")?.cells.length || 7;
+                if (!items.length) {
+                    return `<tr data-smart-empty="true"><td class="px-6 py-8 text-sm text-on-surface-variant" colspan="${colspan}">No maintenance tasks found.</td></tr>`;
+                }
+                return items.map((task) => `
+                    <tr class="maintenance-log-row hover:bg-surface-container-low transition-colors group"
+                        data-maintenance-row
+                        data-maintenance-id="${escapeAttr(task.backendId || task.id || "")}"
+                        data-backend-id="${escapeAttr(task.backendId || task.id || "")}"
+                        data-backend-type="maintenance"
+                        data-complex-id="${escapeAttr(task.complexId || "")}"
+                        data-building-id="${escapeAttr(task.buildingId || "")}"
+                        data-priority="${escapeAttr(String(task.priorityKey || "").toLowerCase())}"
+                        data-status-key="${escapeAttr(String(task.statusKey || "").toLowerCase())}"
+                        data-admin-url="${escapeAttr(task.adminUrl || "")}"
+                        data-date="${escapeAttr(task.date || "")}">
+                        <td class="px-4 py-4"><input aria-label="Select row" data-row-select type="checkbox"></td>
+                        <td class="px-5 py-4">
+                            <div class="flex items-center gap-3">
+                                <div class="maintenance-task-icon">
+                                    <span class="material-symbols-outlined">${escapeHtml(task.icon || "fact_check")}</span>
+                                </div>
+                                <span class="maintenance-task-title">${escapeHtml(task.task || task.title)}</span>
+                            </div>
+                        </td>
+                        <td class="px-5 py-4 text-sm text-on-surface-variant">${escapeHtml(task.location || "")}</td>
+                        <td class="px-5 py-4 whitespace-nowrap">${renderTableStatus(task.priority)}</td>
+                        <td class="px-5 py-4 text-sm text-on-surface whitespace-nowrap">${escapeHtml(task.date || "")}</td>
+                        <td class="px-5 py-4 whitespace-nowrap">${renderTableStatus(task.status)}</td>
+                        <td class="px-5 py-4 text-right whitespace-nowrap"><button class="maintenance-action-button" data-maintenance-action type="button">${escapeHtml(task.action || "Open checklist")}</button></td>
+                    </tr>
+                `).join("");
+            };
+            const loadMaintenance = async () => {
+                const state = readListUrlState("maintenance", { page: "1", search: "", ordering: "-priority,-scheduled_at" });
+                const { state: globalState, params } = currentGlobalListFilters();
+                const priority = globalState.status === "critical" ? "high" : globalState.status === "medium" ? "medium" : globalState.status === "low" ? "low" : "";
+                const payload = await fetchServerList("/api/lists/maintenance/", {
+                    ...params,
+                    page: state.page,
+                    page_size: 6,
+                    search: state.search,
+                    ordering: state.ordering,
+                    priority,
+                });
+                maintenanceChrome.body.innerHTML = renderMaintenance(payload.results || []);
+                maintenanceChrome.syncMeta(payload);
+            };
+            serverListControllers.maintenance = { name: "maintenance", load: loadMaintenance, refresh: () => loadMaintenance() };
+        }
+
+        const notificationList = document.querySelector("[data-notification-list]");
+        if (notificationList) {
+            const drawer = notificationList.closest("#notifications-drawer");
+            const pager = ensureDrawerPagination(notificationList.parentElement || drawer, "alerts");
+            const filterButtons = Array.from(document.querySelectorAll("[data-notification-filter]"));
+            const loadAlerts = async () => {
+                const activeFilter = filterButtons.find((button) => button.classList.contains("is-active"))?.dataset.notificationFilter || "all";
+                const state = readListUrlState("alerts", { page: "1", ordering: "-pinned,-event_at" });
+                const { params } = currentGlobalListFilters();
+                const payload = await fetchServerList("/api/lists/alerts/", {
+                    ...params,
+                    page: state.page,
+                    page_size: 12,
+                    ordering: state.ordering,
+                    severity: activeFilter === "all" ? "" : activeFilter,
+                });
+                notificationList.innerHTML = renderNotificationMarkup(payload.results || []);
+                if (pager) {
+                    pager.dataset.totalPages = String(payload.pages || 1);
+                    pager.querySelector("[data-page-label]").textContent = `Page ${payload.page} of ${payload.pages}`;
+                    pager.querySelector("[data-prev-page]").disabled = Number(payload.page || 1) <= 1;
+                    pager.querySelector("[data-next-page]").disabled = Number(payload.page || 1) >= Number(payload.pages || 1);
+                }
+                updateNotifications();
+                window.HydroFlowSyncLocale?.();
+            };
+            filterButtons.forEach((button) => button.addEventListener("click", () => {
+                filterButtons.forEach((item) => item.classList.toggle("is-active", item === button));
+                writeListUrlState("alerts", { page: 1 });
+                loadAlerts();
+            }));
+            pager?.querySelector("[data-prev-page]")?.addEventListener("click", () => {
+                const state = readListUrlState("alerts", { page: "1" });
+                writeListUrlState("alerts", { page: Math.max(1, Number(state.page || 1) - 1) });
+                loadAlerts();
+            });
+            pager?.querySelector("[data-next-page]")?.addEventListener("click", () => {
+                const state = readListUrlState("alerts", { page: "1" });
+                writeListUrlState("alerts", { page: Math.min(Number(pager?.dataset.totalPages || 1), Number(state.page || 1) + 1) });
+                loadAlerts();
+            });
+            serverListControllers.alerts = { name: "alerts", load: loadAlerts, refresh: () => loadAlerts() };
+        }
+
+        const auditTimeline = document.querySelector("[data-audit-timeline]");
+        if (auditTimeline) {
+            const drawer = auditTimeline.closest("#audit-drawer");
+            const pager = ensureDrawerPagination(auditTimeline.parentElement || drawer, "audit");
+            const search = drawer?.querySelector("[data-audit-search]");
+            const filterButtons = Array.from(drawer?.querySelectorAll("[data-audit-filter]") || []);
+            const loadAudit = async () => {
+                const activeType = filterButtons.find((button) => button.classList.contains("is-active"))?.dataset.auditFilter || "all";
+                const state = readListUrlState("audit", { page: "1", search: "", ordering: "-created_at" });
+                const { params } = currentGlobalListFilters();
+                const payload = await fetchServerList("/api/lists/audit/", {
+                    ...params,
+                    page: state.page,
+                    page_size: 12,
+                    search: state.search,
+                    ordering: state.ordering,
+                    type: activeType === "all" ? "" : activeType,
+                });
+                auditTimeline.innerHTML = renderAuditMarkup(payload.results || []);
+                if (search) search.value = state.search || "";
+                if (pager) {
+                    pager.dataset.totalPages = String(payload.pages || 1);
+                    pager.querySelector("[data-page-label]").textContent = `Page ${payload.page} of ${payload.pages}`;
+                    pager.querySelector("[data-prev-page]").disabled = Number(payload.page || 1) <= 1;
+                    pager.querySelector("[data-next-page]").disabled = Number(payload.page || 1) >= Number(payload.pages || 1);
+                }
+                const totalLabel = drawer?.querySelector("[data-audit-total]");
+                const visibleLabel = drawer?.querySelector("[data-audit-visible]");
+                if (totalLabel) totalLabel.textContent = String(payload.total || 0);
+                if (visibleLabel) visibleLabel.textContent = String((payload.results || []).length);
+                drawer?.querySelector("[data-audit-empty]")?.classList.toggle("hidden", (payload.results || []).length > 0);
+                window.HydroFlowSyncLocale?.();
+            };
+            search?.addEventListener("input", debounce(() => {
+                writeListUrlState("audit", { search: search.value.trim(), page: 1 });
+                loadAudit();
+            }));
+            filterButtons.forEach((button) => button.addEventListener("click", () => {
+                filterButtons.forEach((item) => item.classList.toggle("is-active", item === button));
+                writeListUrlState("audit", { page: 1 });
+                loadAudit();
+            }));
+            pager?.querySelector("[data-prev-page]")?.addEventListener("click", () => {
+                const state = readListUrlState("audit", { page: "1" });
+                writeListUrlState("audit", { page: Math.max(1, Number(state.page || 1) - 1) });
+                loadAudit();
+            });
+            pager?.querySelector("[data-next-page]")?.addEventListener("click", () => {
+                const state = readListUrlState("audit", { page: "1" });
+                writeListUrlState("audit", { page: Math.min(Number(pager?.dataset.totalPages || 1), Number(state.page || 1) + 1) });
+                loadAudit();
+            });
+            serverListControllers.audit = { name: "audit", load: loadAudit, refresh: () => loadAudit() };
+        }
+
+        window.HydroFlowServerLists = {
+            refreshAll(options = {}) {
+                const jobs = Object.values(serverListControllers).map((controller) => {
+                    if (options.resetPage && controller?.name) writeListUrlState(controller.name, { page: 1 });
+                    return controller?.refresh?.();
+                });
+                return Promise.allSettled(jobs);
+            },
+            ...serverListControllers,
+        };
+
+        Object.values(serverListControllers).forEach((controller) => controller?.load?.());
+    };
+
+    const safeSyncSiteStatistics = () => {
+        syncDashboardStatCards();
+        try {
+            syncSiteStatistics();
+        } catch (error) {
+            console.warn("HydroFlow statistics sync failed", error);
+        }
+    };
+
     const setupBillingDataSync = () => {
         const syncedAttr = "billingDataSynced";
         if (document.body.dataset[syncedAttr] === "true") return;
@@ -2555,11 +3399,15 @@
             const isDebtor = resident.status === "debtor";
             const balanceClass = isDebtor ? "text-error" : resident.balance > 0 ? "text-secondary" : "text-on-surface";
             const button = isDebtor
-                ? `<button class="w-full py-2 bg-error text-white text-xs font-bold rounded-lg hover:bg-red-700 transition-colors" type="button" data-i18n-key="SEND URGENT REMINDER">SEND URGENT REMINDER</button>`
+                ? `<button class="w-full py-2 bg-error text-white text-xs font-bold rounded-lg hover:bg-red-700 transition-colors" type="button" data-i18n-key="SEND URGENT REMINDER" data-reminder-action>SEND URGENT REMINDER</button>`
                 : `<button class="w-full py-2 bg-surface-container-high text-on-surface-variant text-xs font-bold rounded-lg hover:bg-surface-container-highest transition-colors" data-resident-billing-history type="button" data-i18n-key="VIEW BILLING HISTORY">VIEW BILLING HISTORY</button>`;
             return `
                 <div class="resident-card group ${isDebtor ? "bg-error-container/30 border-error/20" : "bg-secondary-container/20 border-secondary/10"} border p-5 rounded-xl transition-all hover:shadow-lg relative overflow-hidden"
-                    data-resident-card data-resident-id="${escapeHtml(resident.id)}" data-complex-id="${escapeHtml(resident.complexId)}" data-resident-status="${escapeHtml(resident.status)}">
+                    data-resident-card data-resident-id="${escapeHtml(resident.id)}" data-complex-id="${escapeHtml(resident.complexId)}" data-resident-status="${escapeHtml(resident.status)}"
+                    data-owner-backend-id="${escapeHtml(resident.ownerBackendId || resident.backendId || "")}"
+                    data-apartment-backend-id="${escapeHtml(resident.apartmentBackendId || "")}"
+                    data-building-backend-id="${escapeHtml(resident.buildingBackendId || "")}"
+                    data-complex-backend-id="${escapeHtml(resident.complexBackendId || "")}">
                     <div class="absolute top-0 right-0 w-16 h-16 ${isDebtor ? "bg-error/10" : "bg-secondary/10"} rounded-bl-full flex items-start justify-end p-2 transition-transform group-hover:scale-110">
                         <span class="material-symbols-outlined ${isDebtor ? "text-error" : "text-secondary"} text-[20px]">${isDebtor ? "warning" : "check_circle"}</span>
                     </div>
@@ -2586,12 +3434,13 @@
         };
 
         const residentGrid = document.querySelector("[data-resident-grid]");
-        if (residentGrid) {
+        if (residentGrid && residentGrid.dataset.serverList !== "residents") {
             residentGrid.innerHTML = billingData.residents.map(renderResidentCard).join("");
         }
 
         const repairEnhancedTableControls = (table) => {
             if (!table) return;
+            if (table.dataset.serverList) return;
             if (table.dataset.billingControlsReady === "true") {
                 table.HydroFlowRefreshTableControls?.();
                 return;
@@ -2800,7 +3649,7 @@
         const recentHeading = findHeading("Recent Transaction Log");
         const recentTable = recentHeading?.closest(".bg-surface-container-lowest")?.querySelector("table");
         const recentTableBody = recentTable?.querySelector("tbody");
-        if (recentTableBody) {
+        if (recentTableBody && recentTable?.dataset.serverList !== "transactions") {
             const headers = Array.from(recentTable.querySelectorAll("thead th"))
                 .filter((cell) => !cell.querySelector("[data-select-all]"))
                 .map((cell) => cell.textContent.trim().toLowerCase());
@@ -2815,7 +3664,7 @@
                     const isPending = transaction.status !== "Success";
                     if (usesAnalyticsColumns) {
                         return `
-                            <tr class="border-b border-surface-container-low hover:bg-surface-container-low/50 transition-colors" data-transaction-id="${escapeHtml(transaction.id)}" data-resident-id="${escapeHtml(transaction.residentId)}" data-complex-id="${escapeHtml(transaction.complexId)}">
+                            <tr class="border-b border-surface-container-low hover:bg-surface-container-low/50 transition-colors" data-transaction-id="${escapeHtml(transaction.id)}" data-resident-id="${escapeHtml(transaction.residentId)}" data-complex-id="${escapeHtml(transaction.complexId)}" data-backend-id="${escapeHtml(transaction.backendId || "")}" data-backend-type="transaction">
                                 ${selectCell(`Select ${transaction.id}`)}
                                 <td class="px-6 py-4">
                                     <p class="font-mono text-xs text-primary font-bold">${escapeHtml(transaction.id.toUpperCase())}</p>
@@ -2833,7 +3682,7 @@
                         `;
                     }
                     return `
-                        <tr class="hover:bg-surface-container-low transition-colors" data-transaction-id="${escapeHtml(transaction.id)}" data-resident-id="${escapeHtml(transaction.residentId)}" data-complex-id="${escapeHtml(transaction.complexId)}">
+                        <tr class="hover:bg-surface-container-low transition-colors" data-transaction-id="${escapeHtml(transaction.id)}" data-resident-id="${escapeHtml(transaction.residentId)}" data-complex-id="${escapeHtml(transaction.complexId)}" data-backend-id="${escapeHtml(transaction.backendId || "")}" data-backend-type="transaction">
                             ${selectCell(`Select ${transaction.id}`)}
                             <td class="px-6 py-4">
                                 <p class="font-bold text-primary text-sm">${escapeHtml(resident?.name || "Resident")}</p>
@@ -2895,6 +3744,8 @@
                 return `
                     <tr aria-expanded="false" class="hover:bg-surface-container-low/30 transition-colors residential-district-row"
                         data-district-id="${escapeHtml(complex.id)}"
+                        data-backend-id="${escapeHtml(complex.backendId || "")}"
+                        data-backend-type="complex"
                         data-drill-row="district"
                         data-sort-name="${escapeHtml(complex.name)}"
                         data-sort-buildings="${Number(complex.buildings) || 0}"
@@ -2958,9 +3809,10 @@
             const footerText = performanceTable.closest(".bg-surface-container-lowest")?.querySelector(".border-t span.text-xs");
             if (footerText) footerText.textContent = `Showing 1-${getComplexStats().length} of ${getComplexStats().length} complexes`;
             repairEnhancedTableControls(performanceTable);
+            setupResidentialHierarchy();
         }
 
-        syncSiteStatistics();
+        safeSyncSiteStatistics();
         const maintenanceTable = document.querySelector("[data-maintenance-body]")?.closest("table");
         repairEnhancedTableControls(maintenanceTable);
         window.HydroFlowSyncLocale?.();
@@ -3069,27 +3921,37 @@
             updateChips(normalized);
             clearGeneratedRows();
 
+            const serverDrivenResidents = document.querySelector("[data-resident-grid]")?.dataset.serverList === "residents";
+            const serverDrivenTransactions = Boolean(document.querySelector("table[data-server-list='transactions']"));
+            const serverDrivenMaintenance = Boolean(document.querySelector("table[data-server-list='maintenance']"));
+
             let visibleRows = 0;
             document.querySelectorAll("[data-drill-row='district']").forEach((row) => {
                 const visible = filterMatchesComplex(row.dataset.districtId, normalized);
                 if (visible) visibleRows += 1;
                 setRowFilterState(row, visible);
             });
-            document.querySelectorAll("[data-resident-card]").forEach((card) => {
-                const resident = billingData.residents.find((item) => item.id === card.dataset.residentId);
-                const visible = filterMatchesResident(resident, normalized);
-                card.dataset.globalFilterHidden = visible ? "false" : "true";
-                card.classList.toggle("hidden", !visible);
-            });
-            document.querySelectorAll("[data-transaction-id]").forEach((row) => {
-                const transaction = billingData.transactions.find((item) => item.id === row.dataset.transactionId);
-                const visible = filterMatchesTransaction(transaction, normalized);
-                setRowFilterState(row, visible);
-            });
-            document.querySelectorAll("[data-maintenance-row]").forEach((row) => {
-                const visible = filterMatchesMaintenanceRow(row, normalized);
-                setRowFilterState(row, visible);
-            });
+            if (!serverDrivenResidents) {
+                document.querySelectorAll("[data-resident-card]").forEach((card) => {
+                    const resident = billingData.residents.find((item) => item.id === card.dataset.residentId);
+                    const visible = filterMatchesResident(resident, normalized);
+                    card.dataset.globalFilterHidden = visible ? "false" : "true";
+                    card.classList.toggle("hidden", !visible);
+                });
+            }
+            if (!serverDrivenTransactions) {
+                document.querySelectorAll("[data-transaction-id]").forEach((row) => {
+                    const transaction = billingData.transactions.find((item) => item.id === row.dataset.transactionId);
+                    const visible = filterMatchesTransaction(transaction, normalized);
+                    setRowFilterState(row, visible);
+                });
+            }
+            if (!serverDrivenMaintenance) {
+                document.querySelectorAll("[data-maintenance-row]").forEach((row) => {
+                    const visible = filterMatchesMaintenanceRow(row, normalized);
+                    setRowFilterState(row, visible);
+                });
+            }
             document.querySelectorAll(".revenue-debt-item, .debtor-complex-item, .debtor-row, .complex-health-row, .network-node").forEach((item) => {
                 const visible = filterMatchesComplex(item.dataset.complexId || item.dataset.node, normalized);
                 item.classList.toggle("hidden", !visible);
@@ -3097,8 +3959,15 @@
                 item.dataset.globalFilterHidden = visible ? "false" : "true";
             });
             document.querySelectorAll(".table-search").forEach((input) => {
+                const tools = input.closest(".table-tools");
+                const workspace = tools?.nextElementSibling;
+                const table = workspace?.querySelector?.("table");
+                if (table?.dataset.serverList) return;
                 input.dispatchEvent(new Event("input", { bubbles: true }));
             });
+            if (options.refreshServer !== false) {
+                window.HydroFlowServerLists?.refreshAll?.({ resetPage: options.resetPage !== false });
+            }
             document.dispatchEvent(new CustomEvent("hydroflow:filters-applied", { detail: normalized }));
             updateEmptyState(visibleRows);
             if (options.toast !== false) {
@@ -3147,8 +4016,8 @@
             applyFilters(state);
         });
         document.addEventListener("hydroflow:data-rendered", () => applyFilters(readFilterState(), { toast: false }));
-        window.HydroFlowApplyFilters = (nextState = readFilterState()) => applyFilters(nextState, { toast: false });
-        applyFilters(readFilterState(), { toast: false });
+        window.HydroFlowApplyFilters = (nextState = readFilterState(), options = {}) => applyFilters(nextState, { toast: false, ...options });
+        applyFilters(readFilterState(), { toast: false, refreshServer: false });
     };
 
     document.querySelectorAll("[data-notification-filter]").forEach((button) => button.addEventListener("click", () => {
@@ -3168,6 +4037,10 @@
         const group = document.querySelector("[data-resident-filter-group]");
         const grid = document.querySelector("[data-resident-grid]");
         if (!group || !grid || group.dataset.ready === "true") return;
+        if (grid.dataset.serverList === "residents") {
+            group.dataset.ready = "true";
+            return;
+        }
         group.dataset.ready = "true";
 
         const buttons = Array.from(group.querySelectorAll("[data-resident-filter]"));
@@ -3382,15 +4255,26 @@
             const resident = getResidentById(card.dataset.residentId);
             if (resident) return resident;
             const detailRows = card.querySelectorAll(".bg-white\\/40 p");
+            const parsedName = card.querySelector("h4")?.textContent.trim() || "Resident";
+            const parsedPhone = detailRows[0]?.querySelectorAll("span")[1]?.textContent.trim() || "";
+            const ownerBackendId = Number(card.dataset.ownerBackendId || 0);
+            const fallbackResident = billingData.residents.find((item) =>
+                (ownerBackendId && Number(item.ownerBackendId || item.backendId || 0) === ownerBackendId)
+                || (item.name === parsedName && (!parsedPhone || item.phone === parsedPhone))
+            );
+            if (fallbackResident) return fallbackResident;
             const balance = Number(card.querySelector(".text-xl.font-black")?.textContent.replace(/[^\d.-]/g, "")) || 0;
             return {
-                name: card.querySelector("h4")?.textContent.trim() || "Resident",
+                id: card.dataset.residentId || "",
+                backendId: card.dataset.ownerBackendId || "",
+                ownerBackendId: card.dataset.ownerBackendId || "",
+                name: parsedName,
                 apartment: card.querySelector("h4 + p")?.textContent.trim() || "",
-                phone: detailRows[0]?.querySelectorAll("span")[1]?.textContent.trim() || "",
+                phone: parsedPhone,
                 lastPayment: detailRows[1]?.querySelectorAll("span")[1]?.textContent.trim() || "",
                 balance,
-                status: card.dataset.residentStatus === "debtor" ? "Overdue" : "Paid",
-                complexId: card.dataset.complexId,
+                status: card.dataset.residentStatus === "debtor" ? "debtor" : "paid",
+                complexId: card.dataset.complexId || "",
             };
         };
 
@@ -3414,33 +4298,26 @@
             event.preventDefault();
             event.stopPropagation();
             const resident = parseResident(card);
-            const isDebtor = resident.status === "debtor" || resident.balance < 0;
-            const complex = getComplexById(resident.complexId);
-            fillDetails({
-                title: resident.name,
-                subtitle: `${resident.apartment} · ${resident.phone}`,
-                status: isDebtor ? "Overdue" : "Paid",
-                debt: formatBillingUzs(resident.balance),
-                lastPayment: resident.lastPayment,
-                health: isDebtor ? "Debt" : "Paid",
-                alerts: isDebtor
-                    ? "Outstanding balance is active. Send reminder before escalation."
-                    : `No active billing alerts for ${complex?.name || "this resident"}.`,
-                owner: resident.name,
-                technician: "Billing Team",
-                sla: isDebtor ? "24h" : "Closed",
-                payments: residentPayments(resident),
-            });
+            const details = detailsFromResident(resident);
+            if (!details) return;
+            fillDetails(details);
             openOverlayById("details-drawer");
         });
     };
 
     const setupResidentialHierarchy = () => {
-        const table = document.querySelector("[data-drill-row='district']")?.closest("table");
-        if (!table || table.dataset.residentialHierarchyReady === "true") return;
-        table.dataset.residentialHierarchyReady = "true";
+        const table = document.querySelector(".residential-performance-table")
+            || document.querySelector("[data-drill-row='district']")?.closest("table");
+        if (!table) return;
         const body = table.querySelector("tbody");
         if (!body) return;
+        table.HydroFlowResidentialCleanup?.();
+        const cleanupHandlers = [];
+        const listen = (target, type, handler, options) => {
+            if (!target) return;
+            target.addEventListener(type, handler, options);
+            cleanupHandlers.push(() => target.removeEventListener(type, handler, options));
+        };
 
         const ownerPool = billingData.residents.map((resident) => ({
             name: resident.name,
@@ -3500,6 +4377,10 @@
                         email: realApartment.owner?.email || "",
                         photo: realApartment.owner?.photo || "",
                     },
+                    ownerBackendId: realApartment.ownerBackendId || "",
+                    apartmentBackendId: realApartment.apartmentBackendId || realApartment.backendId || "",
+                    buildingBackendId: realApartment.buildingBackendId || "",
+                    complexBackendId: realApartment.complexBackendId || "",
                     balance: Number(realApartment.balance || 0),
                     status: realApartment.status || "Paid",
                     rooms: realApartment.rooms || "Apartment",
@@ -3521,6 +4402,10 @@
             return {
                 unit,
                 owner,
+                ownerBackendId: "",
+                apartmentBackendId: "",
+                buildingBackendId: district?.buildingItems?.[buildingIndex - 1]?.backendId || "",
+                complexBackendId: "",
                 balance,
                 status: isDebtor ? "Overdue" : "Paid",
                 rooms: `${2 + (unitIndex % 3)} rooms`,
@@ -3586,6 +4471,8 @@
             row.dataset.parentDistrict = districtId;
             row.dataset.buildingId = `${districtId}-${index}`;
             row.dataset.buildingIndex = String(index);
+            row.dataset.backendId = String(realBuilding?.backendId || "");
+            row.dataset.backendType = "building";
             row.dataset.sortName = buildingName(district, index);
             row.dataset.sortBuildings = "1";
             row.dataset.sortUnits = String(unitCount);
@@ -3648,6 +4535,8 @@
             row.dataset.drillRow = "apartment";
             row.dataset.parentDistrict = districtId;
             row.dataset.parentBuilding = `${districtId}-${buildingIndex}`;
+            row.dataset.backendId = String(apartment.apartmentBackendId || "");
+            row.dataset.backendType = "apartment";
             row.innerHTML = `
                 ${makeSelectCell(`Select apartment ${apartment.unit}`)}
                 <td class="px-6 py-4">${renderOwner(apartment.owner, `Apartment ${apartment.unit}`)}</td>
@@ -3674,6 +4563,10 @@
                         data-contract="${attr(apartment.contract)}"
                         data-visit="${attr(apartment.visit)}"
                         data-payment="${attr(apartment.lastPayment)}"
+                        data-owner-backend-id="${attr(apartment.ownerBackendId || "")}"
+                        data-apartment-backend-id="${attr(apartment.apartmentBackendId || "")}"
+                        data-building-backend-id="${attr(apartment.buildingBackendId || "")}"
+                        data-complex-backend-id="${attr(apartment.complexBackendId || "")}"
                         data-i18n-key="Details"
                         type="button">Details</button>
                 </td>
@@ -3731,6 +4624,15 @@
             searchInput.dataset.i18nPlaceholder = searchPlaceholderKey;
             searchInput.setAttribute("aria-label", "Search district, house, apartment or resident");
             searchInput.closest(".table-search-shell")?.classList.add("residential-smart-search-shell");
+            const pendingCommandQuery = storage.getItem("hydroflow-command-query-pending") || "";
+            if (pendingCommandQuery) {
+                storage.removeItem("hydroflow-command-query-pending");
+                window.requestAnimationFrame(() => {
+                    searchInput.value = pendingCommandQuery;
+                    searchInput.dispatchEvent(new Event("input", { bubbles: true }));
+                    searchInput.focus();
+                });
+            }
         }
         const syncResidentialLabels = (lang = storage.getItem("hydroflow-lang") || "en") => {
             const labels = {
@@ -3850,7 +4752,7 @@
             window.HydroFlowSyncLocale?.();
         };
 
-        table.addEventListener("click", (event) => {
+        listen(table, "click", (event) => {
             if (event.target.closest("button, a, input, label, select")) return;
             const building = event.target.closest("[data-drill-row='building']");
             if (building) {
@@ -3863,14 +4765,14 @@
             }
         });
 
-        table.addEventListener("click", (event) => {
+        listen(table, "click", (event) => {
             const button = event.target.closest(".residential-open-button");
             if (!button) return;
             const row = button.closest("[data-drill-row='building']");
             row?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
         });
 
-        table.addEventListener("keydown", (event) => {
+        listen(table, "keydown", (event) => {
             if (event.key !== "Enter" && event.key !== " ") return;
             const row = event.target.closest("[data-drill-row='district'], [data-drill-row='building']");
             if (!row) return;
@@ -3881,6 +4783,10 @@
         const fillApartmentDrawer = (data) => {
             const drawer = document.getElementById("apartment-details-drawer");
             if (!drawer) return;
+            drawer.dataset.ownerBackendId = data.ownerBackendId || "";
+            drawer.dataset.apartmentBackendId = data.apartmentBackendId || "";
+            drawer.dataset.buildingBackendId = data.buildingBackendId || "";
+            drawer.dataset.complexBackendId = data.complexBackendId || "";
             const set = (selector, value) => {
                 const element = drawer.querySelector(selector);
                 if (element) element.textContent = value || "";
@@ -3915,7 +4821,7 @@
             window.HydroFlowSyncLocale?.();
         };
 
-        table.addEventListener("click", (event) => {
+        listen(table, "click", (event) => {
             const button = event.target.closest("[data-apartment-details]");
             if (!button) return;
             event.preventDefault();
@@ -3926,7 +4832,7 @@
             openOverlayById("apartment-details-drawer");
         }, true);
 
-        table.addEventListener("click", async (event) => {
+        listen(table, "click", async (event) => {
             const button = event.target.closest("[data-copy-phone]");
             if (!button) return;
             event.preventDefault();
@@ -3940,13 +4846,16 @@
             }
         });
 
-        searchInput?.addEventListener("input", () => window.setTimeout(runSmartSearch, 0));
-        document.addEventListener("keydown", (event) => {
+        listen(searchInput, "input", () => window.setTimeout(runSmartSearch, 0));
+        listen(document, "keydown", (event) => {
             if (event.key === "Escape" && searchInput?.value && document.activeElement === searchInput) {
                 searchInput.value = "";
                 runSmartSearch();
             }
         });
+        table.HydroFlowResidentialCleanup = () => {
+            cleanupHandlers.splice(0).forEach((cleanup) => cleanup());
+        };
     };
 
     const decorateStatusText = () => {
@@ -3991,6 +4900,7 @@
         });
     };
 
+    setupServerLists();
     setupBillingDataSync();
     decorateStatusText();
     decorateRiskBadges();
@@ -4025,8 +4935,10 @@
             renderBackendProfile();
             renderBackendNotifications();
             renderBackendAuditEvents();
-            syncSiteStatistics();
-            window.HydroFlowApplyFilters?.();
+            window.HydroFlowRenderSupport?.();
+            window.HydroFlowRenderChecklist?.();
+            safeSyncSiteStatistics();
+            window.HydroFlowApplyFilters?.(readFilterState(), { resetPage: false });
             document.dispatchEvent(new CustomEvent("hydroflow:backend-refreshed"));
         } catch {
             // The UI keeps the last successful payload when the local backend is temporarily unavailable.
@@ -4094,8 +5006,10 @@
         renderBackendProfile();
         renderBackendNotifications();
         renderBackendAuditEvents();
-        syncSiteStatistics();
-        window.HydroFlowApplyFilters?.();
+        window.HydroFlowRenderSupport?.();
+        window.HydroFlowRenderChecklist?.();
+        safeSyncSiteStatistics();
+        window.HydroFlowApplyFilters?.(readFilterState(), { resetPage: false });
         window.HydroFlowSyncLocale?.();
         document.dispatchEvent(new CustomEvent("hydroflow:backend-refreshed"));
         return true;
@@ -4269,6 +5183,193 @@
             } catch (error) {
                 setStatus(error.message || "Could not create resident.", "error");
                 toast("Resident was not created", error.message || "Check the selected apartment.", "warning");
+            } finally {
+                submit.disabled = false;
+            }
+        });
+    };
+
+    const setupComplexCreateForm = () => {
+        const form = document.querySelector("[data-complex-create-form]");
+        if (!form || form.dataset.structureReady === "true") return;
+        form.dataset.structureReady = "true";
+        const status = form.querySelector("[data-complex-create-status]");
+        const submit = form.querySelector("[data-complex-create-submit]");
+        const setStatus = (message, kind = "info") => {
+            if (!status) return;
+            status.textContent = message;
+            status.classList.remove("hidden", "is-error", "is-success");
+            if (kind === "error") status.classList.add("is-error");
+            if (kind === "success") status.classList.add("is-success");
+        };
+
+        form.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            const formData = new FormData(form);
+            submit.disabled = true;
+            setStatus("Creating district in Django admin and database...");
+            try {
+                const payload = await postPortalJson("/api/complexes/create/", {
+                    title: formData.get("title"),
+                    address: formData.get("address"),
+                });
+                rehydrateFromPortalData(payload.portalData);
+                form.reset();
+                setStatus("District created and synced with admin.", "success");
+                toast("District created", "Django admin and portal data were updated.", "success");
+                window.setTimeout(() => closeOverlayById("create-complex-modal"), 500);
+            } catch (error) {
+                setStatus(error.message || "Could not create district.", "error");
+                toast("District was not created", error.message || "Check the entered data.", "warning");
+            } finally {
+                submit.disabled = false;
+            }
+        });
+    };
+
+    const setupBuildingCreateForm = () => {
+        const form = document.querySelector("[data-building-create-form]");
+        if (!form || form.dataset.structureReady === "true") return;
+        form.dataset.structureReady = "true";
+        const complexSelect = form.querySelector("[data-building-create-complex]");
+        const status = form.querySelector("[data-building-create-status]");
+        const submit = form.querySelector("[data-building-create-submit]");
+
+        const setStatus = (message, kind = "info") => {
+            if (!status) return;
+            status.textContent = message;
+            status.classList.remove("hidden", "is-error", "is-success");
+            if (kind === "error") status.classList.add("is-error");
+            if (kind === "success") status.classList.add("is-success");
+        };
+
+        const syncComplexOptions = () => {
+            const previous = complexSelect?.value || "";
+            const complexes = (Array.isArray(billingData.complexes) ? billingData.complexes : []).filter((item) => item?.backendId);
+            if (!complexSelect) return;
+            complexSelect.innerHTML = complexes.length
+                ? complexes.map((complex) => `<option value="${escapeHtml(complex.backendId)}">${escapeHtml(complex.name)} · ${escapeHtml(complex.sector || "")}</option>`).join("")
+                : '<option value="">No districts available</option>';
+            complexSelect.disabled = !complexes.length;
+            if (previous && complexes.some((item) => String(item.backendId) === String(previous))) {
+                complexSelect.value = previous;
+            }
+        };
+
+        document.addEventListener("hydroflow:backend-refreshed", syncComplexOptions);
+        syncComplexOptions();
+
+        form.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            if (!complexSelect?.value) {
+                setStatus("Create a district first.", "error");
+                return;
+            }
+            const formData = new FormData(form);
+            submit.disabled = true;
+            setStatus("Creating house in Django admin and database...");
+            try {
+                const payload = await postPortalJson("/api/buildings/create/", {
+                    complex_id: formData.get("complex_id"),
+                    number: formData.get("number"),
+                    address: formData.get("address"),
+                });
+                rehydrateFromPortalData(payload.portalData);
+                form.reset();
+                syncComplexOptions();
+                setStatus("House created and synced with admin.", "success");
+                toast("House created", "Django admin and portal data were updated.", "success");
+                window.setTimeout(() => closeOverlayById("create-building-modal"), 500);
+            } catch (error) {
+                setStatus(error.message || "Could not create house.", "error");
+                toast("House was not created", error.message || "Check the selected district.", "warning");
+            } finally {
+                submit.disabled = false;
+            }
+        });
+    };
+
+    const setupApartmentCreateForm = () => {
+        const form = document.querySelector("[data-apartment-create-form]");
+        if (!form || form.dataset.structureReady === "true") return;
+        form.dataset.structureReady = "true";
+        const complexSelect = form.querySelector("[data-apartment-create-complex]");
+        const buildingSelect = form.querySelector("[data-apartment-create-building]");
+        const status = form.querySelector("[data-apartment-create-status]");
+        const submit = form.querySelector("[data-apartment-create-submit]");
+
+        const setStatus = (message, kind = "info") => {
+            if (!status) return;
+            status.textContent = message;
+            status.classList.remove("hidden", "is-error", "is-success");
+            if (kind === "error") status.classList.add("is-error");
+            if (kind === "success") status.classList.add("is-success");
+        };
+
+        const allComplexes = () => (Array.isArray(billingData.complexes) ? billingData.complexes : []).filter((item) => item?.backendId);
+
+        const syncBuildingOptions = () => {
+            if (!buildingSelect) return;
+            const complexes = allComplexes();
+            const selectedComplexId = complexSelect?.value || "";
+            const selectedComplex = complexes.find((item) => String(item.backendId) === String(selectedComplexId));
+            const buildings = Array.isArray(selectedComplex?.buildingItems)
+                ? selectedComplex.buildingItems.filter((item) => item?.backendId)
+                : [];
+            const previous = buildingSelect.value || "";
+            buildingSelect.innerHTML = buildings.length
+                ? buildings.map((building) => `<option value="${escapeHtml(building.backendId)}">${escapeHtml(building.name || building.number || "House")}</option>`).join("")
+                : '<option value="">No houses available</option>';
+            buildingSelect.disabled = !buildings.length;
+            if (previous && buildings.some((item) => String(item.backendId) === String(previous))) {
+                buildingSelect.value = previous;
+            }
+        };
+
+        const syncComplexOptions = () => {
+            if (!complexSelect) return;
+            const complexes = allComplexes();
+            const previous = complexSelect.value || "";
+            complexSelect.innerHTML = complexes.length
+                ? complexes.map((complex) => `<option value="${escapeHtml(complex.backendId)}">${escapeHtml(complex.name)} · ${escapeHtml(complex.sector || "")}</option>`).join("")
+                : '<option value="">No districts available</option>';
+            complexSelect.disabled = !complexes.length;
+            if (previous && complexes.some((item) => String(item.backendId) === String(previous))) {
+                complexSelect.value = previous;
+            }
+            syncBuildingOptions();
+        };
+
+        complexSelect?.addEventListener("change", syncBuildingOptions);
+        document.addEventListener("hydroflow:backend-refreshed", syncComplexOptions);
+        syncComplexOptions();
+
+        form.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            if (!buildingSelect?.value) {
+                setStatus("Select a house first.", "error");
+                return;
+            }
+            const formData = new FormData(form);
+            submit.disabled = true;
+            setStatus("Creating apartment in Django admin and database...");
+            try {
+                const payload = await postPortalJson("/api/apartments/create/", {
+                    complex_id: formData.get("complex_id"),
+                    building_id: formData.get("building_id"),
+                    section_name: formData.get("section_name"),
+                    number: formData.get("number"),
+                    area: formData.get("area"),
+                });
+                rehydrateFromPortalData(payload.portalData);
+                form.reset();
+                syncComplexOptions();
+                setStatus("Apartment created and synced with admin.", "success");
+                toast("Apartment created", "Django admin and portal data were updated.", "success");
+                window.setTimeout(() => closeOverlayById("create-apartment-modal"), 500);
+            } catch (error) {
+                setStatus(error.message || "Could not create apartment.", "error");
+                toast("Apartment was not created", error.message || "Check the selected structure.", "warning");
             } finally {
                 submit.disabled = false;
             }
@@ -4559,9 +5660,111 @@
         });
     };
 
+    setupComplexCreateForm();
+    setupBuildingCreateForm();
+    setupApartmentCreateForm();
     setupResidentCreateForm();
     setupMaintenanceDeploy();
     setupSystemAlertsConfig();
+
+    const assignTechnicianModal = document.getElementById("assign-technician-modal");
+    const assignTechnicianSelect = assignTechnicianModal?.querySelector("[data-assign-technician-select]");
+    const assignTechnicianNote = assignTechnicianModal?.querySelector("[data-assign-technician-note]");
+    const assignTechnicianTarget = assignTechnicianModal?.querySelector("[data-assign-technician-target]");
+    const assignTechnicianApply = assignTechnicianModal?.querySelector("[data-assign-technician-apply]");
+    let pendingTechnicianAssignment = {};
+
+    const nearestActionPayload = (trigger) => {
+        const detailsHost = trigger.closest("#details-drawer");
+        if (detailsHost) {
+            return {
+                owner_id: detailsHost.dataset.ownerBackendId || "",
+                apartment_id: detailsHost.dataset.apartmentBackendId || "",
+                building_id: detailsHost.dataset.buildingBackendId || "",
+                complex_id: detailsHost.dataset.complexBackendId || "",
+                alert_id: detailsHost.dataset.alertBackendId || "",
+                maintenance_id: detailsHost.dataset.maintenanceBackendId || "",
+                notification_id: detailsHost.dataset.notificationBackendId || "",
+                label: detailsHost.querySelector("#details-title")?.textContent?.trim() || "Details",
+            };
+        }
+        const apartmentHost = trigger.closest("#apartment-details-drawer");
+        if (apartmentHost) {
+            return {
+                owner_id: apartmentHost.dataset.ownerBackendId || "",
+                apartment_id: apartmentHost.dataset.apartmentBackendId || "",
+                building_id: apartmentHost.dataset.buildingBackendId || "",
+                complex_id: apartmentHost.dataset.complexBackendId || "",
+                label: apartmentHost.querySelector("[data-apartment-title]")?.textContent?.trim() || "Apartment",
+            };
+        }
+        const residentCard = trigger.closest("[data-resident-card]");
+        if (residentCard) {
+            return {
+                owner_id: residentCard.dataset.ownerBackendId || "",
+                apartment_id: residentCard.dataset.apartmentBackendId || "",
+                building_id: residentCard.dataset.buildingBackendId || "",
+                complex_id: residentCard.dataset.complexBackendId || "",
+                label: residentCard.querySelector("h4")?.textContent?.trim() || "Resident",
+            };
+        }
+        const notificationItem = trigger.closest(".notification-item");
+        if (notificationItem) {
+            return {
+                notification_id: notificationItem.dataset.notificationBackendId || "",
+                label: notificationItem.querySelector(".text-sm.font-bold")?.textContent?.trim() || "Notification",
+            };
+        }
+        const maintenanceRow = trigger.closest("[data-maintenance-id]");
+        if (maintenanceRow) {
+            return {
+                maintenance_id: maintenanceRow.dataset.maintenanceId || maintenanceRow.dataset.backendId || "",
+                label: maintenanceRow.querySelector("td:nth-child(2)")?.textContent?.trim() || "Maintenance task",
+            };
+        }
+        return {};
+    };
+
+    document.addEventListener("click", async (event) => {
+        const reminderButton = event.target.closest("[data-reminder-action]");
+        if (!reminderButton) return;
+        event.preventDefault();
+        const payload = nearestActionPayload(reminderButton);
+        try {
+            const response = await postPortalJson("/api/reminders/send/", payload);
+            rehydrateFromPortalData(response.portalData);
+            toast("Reminder queued", `${response.count || 1} reminder(s) synced to backend.`, "success");
+        } catch (error) {
+            toast("Reminder failed", error.message || "Backend reminder sync failed.", "warning");
+        }
+    }, true);
+
+    document.addEventListener("click", (event) => {
+        const assignButton = event.target.closest("[data-assign-technician]");
+        if (!assignButton) return;
+        event.preventDefault();
+        pendingTechnicianAssignment = nearestActionPayload(assignButton);
+        if (assignTechnicianTarget) assignTechnicianTarget.textContent = pendingTechnicianAssignment.label || "Current item";
+        if (assignTechnicianSelect) assignTechnicianSelect.value = "Field Team A";
+        if (assignTechnicianNote) assignTechnicianNote.value = "";
+        openOverlayById("assign-technician-modal");
+    }, true);
+
+    assignTechnicianApply?.addEventListener("click", async () => {
+        try {
+            const response = await postPortalJson("/api/technicians/assign/", {
+                ...pendingTechnicianAssignment,
+                technician: assignTechnicianSelect?.value || "Field Team A",
+                note: assignTechnicianNote?.value || "",
+            });
+            rehydrateFromPortalData(response.portalData);
+            closeOverlayById("assign-technician-modal");
+            toast("Technician assigned", "Assignment saved in backend and synced to portal.", "success");
+            pendingTechnicianAssignment = {};
+        } catch (error) {
+            toast("Assignment failed", error.message || "Backend assignment failed.", "warning");
+        }
+    });
 
     const setupResidentKitTools = () => {
         const modal = document.getElementById("resident-kit-modal");
@@ -4769,13 +5972,12 @@
     setupResidentKitTools();
 
     const checklistStorageKey = "hydroflow-operations-checklist";
-    const checklistNotesStorageKey = "hydroflow-operations-checklist-notes";
     const checklistItems = [
         { id: "filters", title: "Validate active filters", detail: "Confirm district, status and period filters match the current operation scope.", tag: "Data view", icon: "tune" },
         { id: "residents", title: "Review residents and balances", detail: "Check debtor/paid split, resident cards and billing history before handoff.", tag: "Billing", icon: "group" },
         { id: "alerts", title: "Resolve visible critical alerts", detail: "Open notification center and confirm critical items have an owner or technician.", tag: "Safety", icon: "notification_important" },
-        { id: "exports", title: "Prepare export package", detail: "Verify CSV/XLSX/PDF preview includes current visible data and local timestamp.", tag: "Export", icon: "ios_share" },
-        { id: "audit", title: "Attach audit note", detail: "Record manual changes or review comments in the local audit trail.", tag: "Audit", icon: "history" },
+        { id: "exports", title: "Prepare export package", detail: "Verify CSV/XLSX/PDF preview includes current visible data and backend timestamp.", tag: "Export", icon: "ios_share" },
+        { id: "audit", title: "Attach audit note", detail: "Record manual changes or review comments in the backend audit trail.", tag: "Audit", icon: "history" },
     ];
     if (Array.isArray(billingData.checklistItems) && billingData.checklistItems.length) {
         checklistItems.splice(0, checklistItems.length, ...billingData.checklistItems.map((item) => ({
@@ -4810,22 +6012,7 @@
             const deleted = new Set(getDeletedItems(state));
             return checklistItems.filter((item) => !deleted.has(item.id));
         };
-        const readNotes = () => {
-            try {
-                const notes = JSON.parse(storage.getItem(checklistNotesStorageKey) || "[]") || [];
-                let changed = false;
-                const normalized = notes.map((note, index) => {
-                    if (note.id) return note;
-                    changed = true;
-                    return { ...note, id: `note-${Date.now()}-${index}`, done: Boolean(note.done) };
-                });
-                if (changed) writeNotes(normalized);
-                return normalized;
-            } catch {
-                return [];
-            }
-        };
-        const writeNotes = (notes) => storage.setItem(checklistNotesStorageKey, JSON.stringify(notes.slice(0, 12)));
+        const readNotes = () => Array.isArray(billingData.checklistNotes) ? billingData.checklistNotes.slice(0, 24) : [];
         const allChecklistEntries = (state = readState(), notes = readNotes()) => [
             ...visibleChecklistItems(state).map((item) => ({ ...item, done: Boolean(state[item.id]), custom: false })),
             ...notes.map((note) => ({
@@ -4891,8 +6078,8 @@
             drawer.querySelector("[data-checklist-progress-label]").textContent = `${percent}%`;
             const saved = drawer.querySelector("[data-checklist-saved]");
             if (saved) {
-                saved.textContent = "Saved locally";
-                saved.dataset.i18nKey = "Saved locally";
+                saved.textContent = "Synced to backend";
+                saved.dataset.i18nKey = "Synced to backend";
             }
             drawer.querySelector(".checklist-progress-bar")?.setAttribute("aria-valuenow", String(percent));
             updateFab(state);
@@ -4919,12 +6106,19 @@
                     delete state[id];
                     state[deletedKey] = [...deleted];
                     writeState(state);
-                    toast(translateValue("Checklist item removed", storage.getItem("hydroflow-lang") || "en"), translateValue("Removed locally.", storage.getItem("hydroflow-lang") || "en"), "info");
+                    toast(translateValue("Checklist item removed", storage.getItem("hydroflow-lang") || "en"), translateValue("Removed from current checklist view.", storage.getItem("hydroflow-lang") || "en"), "info");
                 }
                 if (noteDelete) {
                     const id = noteDelete.dataset.checklistNoteDelete;
-                    writeNotes(readNotes().filter((item) => item.id !== id));
-                    toast(translateValue("Checklist note removed", storage.getItem("hydroflow-lang") || "en"), translateValue("Removed locally.", storage.getItem("hydroflow-lang") || "en"), "info");
+                    postPortalJson("/api/checklist/note/", {
+                        mode: "delete",
+                        note_id: String(id).replace("note-", ""),
+                    }).then((payload) => {
+                        rehydrateFromPortalData(payload.portalData);
+                        toast(translateValue("Checklist note removed", storage.getItem("hydroflow-lang") || "en"), translateValue("Removed from backend checklist.", storage.getItem("hydroflow-lang") || "en"), "info");
+                    }).catch((error) => {
+                        toast("Checklist note removal failed", error.message, "danger");
+                    });
                 }
                 render();
                 playSound("click");
@@ -4932,12 +6126,15 @@
             }
             const note = event.target.closest("[data-checklist-note-toggle]");
             if (note) {
-                const notes = readNotes();
-                const targetNote = notes.find((item) => item.id === note.dataset.checklistNoteToggle);
-                if (targetNote) targetNote.done = !targetNote.done;
-                writeNotes(notes);
-                render();
-                playSound("toggle");
+                postPortalJson("/api/checklist/note/", {
+                    mode: "toggle",
+                    note_id: String(note.dataset.checklistNoteToggle || "").replace("note-", ""),
+                }).then((payload) => {
+                    rehydrateFromPortalData(payload.portalData);
+                    playSound("toggle");
+                }).catch((error) => {
+                    toast("Checklist note update failed", error.message, "danger");
+                });
                 return;
             }
             const item = event.target.closest("[data-checklist-item]");
@@ -4954,15 +6151,13 @@
                 state[item.id] = true;
             });
             writeState(state);
-            writeNotes(readNotes().map((note) => ({ ...note, done: true })));
             render();
             toast("Checklist completed", "All visible checklist items are marked complete.", "success");
         });
         drawer.querySelector("[data-checklist-action='reset']")?.addEventListener("click", () => {
             writeState({});
-            writeNotes(readNotes().map((note) => ({ ...note, done: false })));
             render();
-            toast("Checklist reset", "Progress was cleared locally.", "warning");
+            toast("Checklist reset", "Checklist progress was cleared for this workspace.", "warning");
         });
         drawer.querySelector("[data-checklist-action='copy']")?.addEventListener("click", async () => {
             const state = readState();
@@ -4999,33 +6194,38 @@
                 noteInput?.focus();
                 return;
             }
-            const notes = readNotes();
-            const now = new Date();
-            const time = now.toLocaleString("en-GB", {
-                day: "2-digit",
-                month: "short",
-                year: "numeric",
-                hour: "2-digit",
-                minute: "2-digit",
-                timeZone: "Asia/Tashkent",
-            }).replace(",", "");
-            notes.unshift({ id: `note-${Date.now()}`, text, time, done: false });
-            writeNotes(notes);
-            if (noteInput) noteInput.value = "";
-            if (noteTemplate) noteTemplate.value = "";
-            composer?.classList.add("hidden");
-            render();
-            toast("Checklist note added", "Saved locally and attached to checklist summary.", "success");
+            postPortalJson("/api/checklist/note/", {
+                mode: "create",
+                text,
+                template_key: noteTemplate?.value || "",
+                scope: drawer.querySelector("[data-checklist-scope]")?.textContent?.trim() || "Operations",
+            }).then((payload) => {
+                if (noteInput) noteInput.value = "";
+                if (noteTemplate) noteTemplate.value = "";
+                composer?.classList.add("hidden");
+                rehydrateFromPortalData(payload.portalData);
+                toast("Checklist note added", "Stored in backend checklist and audit trail.", "success");
+            }).catch((error) => {
+                toast("Checklist note save failed", error.message, "danger");
+            });
         });
         drawer.querySelector("[data-checklist-action='open-audit']")?.addEventListener("click", () => openOverlayById("audit-drawer"));
         drawer.querySelector("[data-checklist-action='mark-reviewed']")?.addEventListener("click", () => {
-            document.querySelector("[data-audit-action='add-note']")?.click();
-            toast("Review recorded", "A local audit note was added.", "success");
+            postPortalJson("/api/audit/note/", {
+                title: "Checklist reviewed",
+                message: "Checklist marked reviewed from operations drawer.",
+            }).then((payload) => {
+                rehydrateFromPortalData(payload.portalData);
+                toast("Review recorded", "A backend audit note was added.", "success");
+            }).catch((error) => {
+                toast("Review save failed", error.message, "danger");
+            });
         });
         document.querySelectorAll("[data-checklist-fab]").forEach((button) => {
             button.addEventListener("click", () => openChecklist("Operations"));
         });
         window.HydroFlowOpenChecklist = openChecklist;
+        window.HydroFlowRenderChecklist = render;
         render();
     };
 
@@ -5051,6 +6251,7 @@
     });
 
     const recentCommandKey = "hydroflow-recent-commands";
+    const recentSearchKey = "hydroflow-recent-searches";
     const commandPalette = document.getElementById("command-palette");
     const commandInput = document.querySelector("[data-command-input]");
     const commandResults = document.querySelector("[data-command-results]");
@@ -5062,6 +6263,25 @@
         } catch {
             return [];
         }
+    };
+    const getRecentSearches = () => {
+        try {
+            return JSON.parse(storage.getItem(recentSearchKey) || "[]");
+        } catch {
+            return [];
+        }
+    };
+    const normalizeCommandSearch = (value) => String(value || "")
+        .toLowerCase()
+        .normalize("NFKD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .trim();
+    const saveRecentSearch = (query) => {
+        const value = String(query || "").trim();
+        if (!value) return;
+        const recent = getRecentSearches().filter((item) => item !== value);
+        recent.unshift(value);
+        storage.setItem(recentSearchKey, JSON.stringify(recent.slice(0, 6)));
     };
     const saveRecentCommand = (button) => {
         const title = button.querySelector("span")?.textContent?.trim();
@@ -5084,13 +6304,169 @@
         const wrap = document.querySelector("[data-command-recent-wrap]");
         const target = document.querySelector("[data-command-recent]");
         if (!wrap || !target) return;
-        const recent = getRecentCommands();
-        wrap.classList.toggle("hidden", recent.length === 0);
-        target.innerHTML = recent.map((item) => `
-            <button class="command-recent-chip" data-command-recent-id="${item.id}" type="button">
-                <span>${item.title}</span>
+        const recent = getRecentSearches();
+        const fallback = recent.length ? [] : [
+            billingData.residents[0]?.name,
+            billingData.residents[0]?.apartmentNumber ? `Apartment ${billingData.residents[0].apartmentNumber}` : "",
+            billingData.complexes[0]?.name,
+            billingData.complexes[0]?.buildingItems?.[0]?.name,
+        ].filter(Boolean);
+        const items = recent.length ? recent : fallback;
+        wrap.classList.toggle("hidden", items.length === 0);
+        target.innerHTML = items.slice(0, 6).map((item) => `
+            <button class="command-recent-chip" data-command-recent-query="${escapeAttr(item)}" type="button">
+                <span>${escapeHtml(item)}</span>
             </button>
         `).join("");
+    };
+    const commandSearchIndex = () => {
+        const buildings = billingData.complexes.flatMap((complex) => (
+            Array.isArray(complex.buildingItems)
+                ? complex.buildingItems.map((building) => ({ complex, building }))
+                : []
+        ));
+        const apartments = buildings.flatMap(({ complex, building }) => (
+            Array.isArray(building.apartments)
+                ? building.apartments.map((apartment) => ({ complex, building, apartment }))
+                : []
+        ));
+        const residentEntries = billingData.residents.map((resident) => {
+            const complex = getComplexById(resident.complexId);
+            const title = resident.name || resident.fio || "";
+            const apartmentLabel = resident.apartmentNumber || resident.apartment || "";
+            const buildingLabel = resident.building || "";
+            const search = [
+                title,
+                resident.phone,
+                apartmentLabel,
+                buildingLabel,
+                complex?.name,
+                complex?.sector,
+            ].filter(Boolean).join(" ");
+            return {
+                id: `resident-${resident.id}`,
+                type: "resident",
+                title,
+                meta: [apartmentLabel, buildingLabel || complex?.name].filter(Boolean).join(" · "),
+                search: normalizeCommandSearch(search),
+                residentId: resident.id,
+            };
+        });
+        const buildingEntries = buildings.map(({ complex, building }) => ({
+            id: `building-${building.backendId || building.id || building.number}`,
+            type: "building",
+            title: building.name || `House ${building.number || ""}`.trim(),
+            meta: [complex?.name, building.address].filter(Boolean).join(" · "),
+            search: normalizeCommandSearch([
+                building.name,
+                building.number,
+                building.address,
+                complex?.name,
+                complex?.sector,
+            ].filter(Boolean).join(" ")),
+            commandQuery: building.name || building.number || complex?.name || "",
+            buildingId: building.backendId || "",
+            complexId: complex?.id || "",
+        }));
+        const apartmentEntries = apartments.map(({ complex, building, apartment }) => {
+            const ownerName = apartment.owner?.name || "";
+            const unit = apartment.unit || apartment.number || "";
+            const buildingName = building.name || `House ${building.number || ""}`.trim();
+            return {
+                id: `apartment-${apartment.apartmentBackendId || apartment.backendId || unit}`,
+                type: "apartment",
+                title: `Apartment ${unit}`.trim(),
+                meta: [buildingName, ownerName].filter(Boolean).join(" · "),
+                search: normalizeCommandSearch([
+                    unit,
+                    ownerName,
+                    apartment.owner?.phone,
+                    complex?.name,
+                    buildingName,
+                    apartment.contract,
+                ].filter(Boolean).join(" ")),
+                commandQuery: ownerName || unit || buildingName || "",
+                apartmentData: {
+                    title: `Apartment ${unit}`.trim(),
+                    subtitle: [buildingName, complex?.name].filter(Boolean).join(" · "),
+                    owner: ownerName || "Unassigned owner",
+                    photo: apartment.owner?.photo || "",
+                    phone: apartment.owner?.phone || "",
+                    email: apartment.owner?.email || "",
+                    balance: formatUzs(Number(apartment.balance || 0)),
+                    status: apartment.status || "Paid",
+                    unit,
+                    rooms: apartment.rooms || "Apartment",
+                    area: apartment.area || "",
+                    meter: apartment.meter || "",
+                    charge: apartment.charge || "",
+                    occupancy: apartment.occupancy || "Resident",
+                    contract: apartment.contract || "",
+                    visit: apartment.visit || "",
+                    payment: apartment.lastPayment || "",
+                    ownerBackendId: apartment.ownerBackendId || "",
+                    apartmentBackendId: apartment.apartmentBackendId || apartment.backendId || "",
+                    buildingBackendId: apartment.buildingBackendId || building.backendId || "",
+                    complexBackendId: apartment.complexBackendId || complex?.backendId || "",
+                },
+            };
+        });
+        return [...residentEntries, ...apartmentEntries, ...buildingEntries];
+    };
+    const renderCommandResults = (entries) => {
+        if (!commandResults) return;
+        commandResults.innerHTML = entries.map((entry) => `
+            <button
+                class="command-item"
+                data-command-id="${escapeAttr(entry.id)}"
+                data-command-target-type="${escapeAttr(entry.type)}"
+                data-command-resident-id="${escapeAttr(entry.residentId || "")}"
+                data-command-building-id="${escapeAttr(entry.buildingId || "")}"
+                data-command-complex-id="${escapeAttr(entry.complexId || "")}"
+                data-command-query="${escapeAttr(entry.commandQuery || "")}"
+                data-command-search="${escapeAttr(entry.search || "")}"
+                data-command-url="${escapeAttr(entry.url || "")}"
+                type="button"
+            >
+                <span>${escapeHtml(entry.title)}</span>
+                ${entry.meta ? `<small>${escapeHtml(entry.meta)}</small>` : ""}
+            </button>
+        `).join("");
+    };
+    let commandSearchRequestId = 0;
+    const mergeCommandEntries = (entries) => {
+        const seen = new Set();
+        return entries.filter((entry) => {
+            const key = entry.id || `${entry.type}:${entry.title}:${entry.meta}`;
+            if (seen.has(key)) return false;
+            seen.add(key);
+            return true;
+        });
+    };
+    const fetchResidentCommandEntries = async (query, requestId) => {
+        const response = await fetch(`/api/lists/residents/?page=1&page_size=10&search=${encodeURIComponent(query)}`, {
+            cache: "no-store",
+            credentials: "same-origin",
+            headers: { Accept: "application/json" },
+        });
+        if (!response.ok || requestId !== commandSearchRequestId) return [];
+        const payload = await response.json();
+        return (payload.results || []).map((resident) => ({
+            id: `resident-api-${resident.id || resident.backendId || resident.ownerBackendId}`,
+            type: "resident",
+            title: resident.name || "Resident",
+            meta: [resident.apartment, resident.building || resident.complex, resident.phone].filter(Boolean).join(" · "),
+            search: normalizeCommandSearch([
+                resident.name,
+                resident.phone,
+                resident.apartment,
+                resident.building,
+                resident.complex,
+                resident.contract,
+            ].filter(Boolean).join(" ")),
+            residentId: resident.id,
+            commandQuery: resident.name || query,
+        }));
     };
     const setActiveCommand = (items, index) => {
         items.forEach((item, itemIndex) => {
@@ -5100,14 +6476,34 @@
         });
     };
     const filterCommands = () => {
-        const query = commandInput?.value.trim().toLowerCase() || "";
+        const rawQuery = commandInput?.value.trim() || "";
+        const query = normalizeCommandSearch(rawQuery);
+        if (!query) {
+            renderCommandResults([]);
+            commandEmpty?.classList.add("hidden");
+            renderRecentCommands();
+            return;
+        }
+        if (rawQuery.length >= 2) {
+            saveRecentSearch(rawQuery);
+            renderRecentCommands();
+        }
+        const matches = commandSearchIndex()
+            .filter((item) => item.search.includes(query))
+            .sort((a, b) => {
+                const exactDelta = Number(normalizeCommandSearch(b.title).startsWith(query)) - Number(normalizeCommandSearch(a.title).startsWith(query));
+                if (exactDelta) return exactDelta;
+                const typeOrder = { resident: 0, apartment: 1, building: 2 };
+                return (typeOrder[a.type] ?? 9) - (typeOrder[b.type] ?? 9);
+            })
+            .slice(0, 16);
+        renderCommandResults(matches);
         const items = getCommandItems();
         let visible = 0;
         items.forEach((item, index) => {
             if (!item.id) item.id = `command-item-${index}`;
-            const text = item.textContent.toLowerCase();
-            const show = !query || text.includes(query);
-            item.classList.toggle("hidden", !show);
+            const show = true;
+            item.classList.remove("hidden");
             item.querySelectorAll("span, small").forEach((part) => {
                 const original = part.dataset.originalText || part.textContent;
                 part.dataset.originalText = original;
@@ -5132,10 +6528,44 @@
         const visibleItems = items.filter((item) => !item.classList.contains("hidden"));
         setActiveCommand(visibleItems, visibleItems.length ? 0 : -1);
         commandEmpty?.classList.toggle("hidden", visible > 0);
+        const requestId = ++commandSearchRequestId;
+        fetchResidentCommandEntries(rawQuery, requestId)
+            .then((remoteEntries) => {
+                if (requestId !== commandSearchRequestId) return;
+                const merged = mergeCommandEntries([...matches, ...remoteEntries]).slice(0, 16);
+                renderCommandResults(merged);
+                const refreshedItems = getCommandItems();
+                setActiveCommand(refreshedItems, refreshedItems.length ? 0 : -1);
+                commandEmpty?.classList.toggle("hidden", refreshedItems.length > 0);
+            })
+            .catch(() => {
+                // Local embedded backend data is kept as fallback when the list endpoint is unavailable.
+            });
     };
     const executeCommand = (button) => {
         if (!button) return;
+        const queryValue = button.dataset.commandQuery || commandInput?.value || button.querySelector("span")?.textContent || "";
+        saveRecentSearch(queryValue);
         saveRecentCommand(button);
+        if (button.dataset.commandTargetType === "resident") {
+            const details = detailsFromResident(getResidentById(button.dataset.commandResidentId));
+            if (details) {
+                fillDetails(details);
+                closeOverlayById("command-palette");
+                openOverlayById("details-drawer");
+                return;
+            }
+        }
+        if (button.dataset.commandTargetType === "building") {
+            storage.setItem("hydroflow-command-query-pending", button.dataset.commandQuery || button.querySelector("span")?.textContent || "");
+            window.location.href = "/residential/";
+            return;
+        }
+        if (button.dataset.commandTargetType === "apartment") {
+            storage.setItem("hydroflow-command-query-pending", button.dataset.commandQuery || button.querySelector("span")?.textContent || "");
+            window.location.href = "/residential/";
+            return;
+        }
         if (button.dataset.commandUrl) {
             window.location.href = button.dataset.commandUrl;
             return;
@@ -5156,7 +6586,12 @@
         }
     };
     renderRecentCommands();
-    commandInput?.addEventListener("input", filterCommands);
+    renderCommandResults([]);
+    commandInput?.addEventListener("focus", () => {
+        renderRecentCommands();
+        filterCommands();
+    });
+    commandInput?.addEventListener("input", debounce(filterCommands, 120));
     commandInput?.addEventListener("keydown", (event) => {
         const items = getCommandItems().filter((item) => !item.classList.contains("hidden"));
         const current = Math.max(0, items.findIndex((item) => item.classList.contains("is-active")));
@@ -5171,20 +6606,15 @@
             active?.click();
         }
     });
-    document.querySelectorAll("[data-command-suggestion]").forEach((button) => button.addEventListener("click", () => {
-        if (!commandInput) return;
-        commandInput.value = button.dataset.commandSuggestion || "";
-        commandInput.dispatchEvent(new Event("input", { bubbles: true }));
-        commandInput.focus();
-    }));
     document.addEventListener("click", (event) => {
         const command = event.target.closest("[data-command-results] .command-item");
         if (command) executeCommand(command);
-        const recent = event.target.closest("[data-command-recent-id]");
+        const recent = event.target.closest("[data-command-recent-query]");
         if (recent) {
-            const commandData = getRecentCommands().find((item) => item.id === recent.dataset.commandRecentId);
-            const original = getCommandItems().find((item) => (item.dataset.commandId || item.querySelector("span")?.textContent?.trim()) === commandData?.id);
-            original?.click();
+            if (!commandInput) return;
+            commandInput.value = recent.dataset.commandRecentQuery || "";
+            commandInput.dispatchEvent(new Event("input", { bubbles: true }));
+            commandInput.focus();
         }
     });
 
@@ -6186,7 +7616,7 @@ ${sheets}
             ? "Backend maintenance export from Django admin data."
             : isUsageReport
             ? "Live usage export generated from current backend complexes and telemetry."
-            : "Preview export generated from the current visible data."));
+            : "Live export generated from current backend rows and filters."));
         exportModal?.querySelector("[data-export-rows]")?.replaceChildren(document.createTextNode(isDebtLetters
             ? `${buildRealDebtorRows().length} debtor rows`
             : isUsageReport
@@ -6195,14 +7625,14 @@ ${sheets}
             ? `${maintenanceRows} maintenance rows`
             : visibleRows ? `${visibleRows} visible rows` : "Current page summary"));
         exportModal?.querySelector("[data-export-summary]")?.replaceChildren(document.createTextNode(isDebtLetters
-            ? `${selectedExportFormat} preview includes debtor residents, balances, phones, complex debt summary and Asia/Tashkent timestamp.`
+            ? `${selectedExportFormat} export includes debtor residents, balances, phones, debt summary and Asia/Tashkent timestamp.`
             : isUsageReport
-            ? `${selectedExportFormat} preview includes complex water/heating usage, total consumption, pressure, active alert count and Asia/Tashkent timestamp.`
+            ? `${selectedExportFormat} export includes complex water/heating usage, total consumption, pressure, alert count and Asia/Tashkent timestamp.`
             : isMaintenanceLog
-            ? `${selectedExportFormat} preview includes maintenance tasks, location, priority, status, Asia/Tashkent timestamp and local prototype metadata.`
+            ? `${selectedExportFormat} export includes maintenance tasks, location, priority, status and Asia/Tashkent timestamp.`
             : isTransactionLog
-            ? `${selectedExportFormat} preview includes visible transaction rows, invoice numbers, payment status, Asia/Tashkent timestamp and local prototype metadata.`
-            : `${selectedExportFormat} preview includes visible rows, selected filters, Asia/Tashkent timestamp and local prototype metadata.`));
+            ? `${selectedExportFormat} export includes visible transaction rows, payment status and Asia/Tashkent timestamp.`
+            : `${selectedExportFormat} export includes visible rows, active filters and Asia/Tashkent timestamp.`));
         openOverlayById("export-preview-modal");
     };
     document.querySelectorAll("[data-export-format] button").forEach((button) => button.addEventListener("click", () => {
@@ -6214,14 +7644,14 @@ ${sheets}
         const isDebtLetters = lastExportContext === "debt-letters" || (lastExportSource || "").toLowerCase().includes("debt letters");
         const isUsageReport = lastExportContext === "usage-report" || (lastExportSource || "").toLowerCase().includes("usage report");
         exportModal?.querySelector("[data-export-summary]")?.replaceChildren(document.createTextNode(isDebtLetters
-            ? `${selectedExportFormat} preview includes debtor residents, balances, phones, complex debt summary and Asia/Tashkent timestamp.`
+            ? `${selectedExportFormat} export includes debtor residents, balances, phones, debt summary and Asia/Tashkent timestamp.`
             : isUsageReport
-            ? `${selectedExportFormat} preview includes complex water/heating usage, total consumption, pressure, active alert count and Asia/Tashkent timestamp.`
+            ? `${selectedExportFormat} export includes complex water/heating usage, total consumption, pressure, alert count and Asia/Tashkent timestamp.`
             : isMaintenanceLog
-            ? `${selectedExportFormat} preview includes maintenance tasks, location, priority, status, Asia/Tashkent timestamp and local prototype metadata.`
+            ? `${selectedExportFormat} export includes maintenance tasks, location, priority, status and Asia/Tashkent timestamp.`
             : isTransactionLog
-            ? `${selectedExportFormat} preview includes visible transaction rows, invoice numbers, payment status, Asia/Tashkent timestamp and local prototype metadata.`
-            : `${selectedExportFormat} preview includes visible rows, selected filters, Asia/Tashkent timestamp and local prototype metadata.`));
+            ? `${selectedExportFormat} export includes visible transaction rows, payment status and Asia/Tashkent timestamp.`
+            : `${selectedExportFormat} export includes visible rows, active filters and Asia/Tashkent timestamp.`));
     }));
     document.addEventListener("click", (event) => {
         const exportButton = event.target.closest("[data-export-open], [data-table-action='export']");
@@ -6260,49 +7690,87 @@ ${sheets}
             toast("Export summary ready", summary, "info");
         }
     });
-    const syncUsageReportAudit = async (datasets) => {
-        if (lastExportContext !== "usage-report") return;
-        try {
-            const payload = await postPortalJson("/api/usage-report/export/", {
-                format: selectedExportFormat,
-                source: lastExportSource || "Usage Report",
-                row_count: datasets?.complexes?.length || 0,
-                total_usage: getSiteStats().totalUsageM3 || 0,
-            });
-            rehydrateFromPortalData(payload.portalData);
-        } catch (error) {
-            console.warn("Usage report audit sync failed:", error);
+    const triggerDownloadPayload = (download) => {
+        if (!download?.content) return;
+        const binary = window.atob(download.content);
+        const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
+        downloadBlob(bytes, download.mime || "application/octet-stream", download.filename || "hydroflow-export.dat");
+    };
+    const buildBackendExportSelection = (context) => {
+        const selection = {
+            context,
+            lang: storage.getItem("hydroflow-lang") || "en",
+            owner_ids: [],
+            complex_backend_ids: [],
+            building_backend_ids: [],
+            apartment_backend_ids: [],
+            transaction_backend_ids: [],
+            maintenance_backend_ids: [],
+        };
+        const detailsHost = lastExportButton?.closest("#details-drawer");
+        if (detailsHost) {
+            const ownerId = Number(detailsHost.dataset.ownerBackendId || 0);
+            const apartmentId = Number(detailsHost.dataset.apartmentBackendId || 0);
+            const buildingId = Number(detailsHost.dataset.buildingBackendId || 0);
+            const complexId = Number(detailsHost.dataset.complexBackendId || 0);
+            const maintenanceId = Number(detailsHost.dataset.maintenanceBackendId || 0);
+            const alertId = Number(detailsHost.dataset.alertBackendId || 0);
+            if (ownerId) selection.owner_ids = [ownerId];
+            if (apartmentId) selection.apartment_backend_ids = [apartmentId];
+            if (buildingId) selection.building_backend_ids = [buildingId];
+            if (complexId) selection.complex_backend_ids = [complexId];
+            if (maintenanceId) selection.maintenance_backend_ids = [maintenanceId];
+            if (context === "transactions" && alertId) selection.source_alert_id = alertId;
+            return selection;
         }
+        const apartmentHost = lastExportButton?.closest("#apartment-details-drawer");
+        if (apartmentHost) {
+            const ownerId = Number(apartmentHost.dataset.ownerBackendId || 0);
+            const apartmentId = Number(apartmentHost.dataset.apartmentBackendId || 0);
+            const buildingId = Number(apartmentHost.dataset.buildingBackendId || 0);
+            const complexId = Number(apartmentHost.dataset.complexBackendId || 0);
+            if (ownerId) selection.owner_ids = [ownerId];
+            if (apartmentId) selection.apartment_backend_ids = [apartmentId];
+            if (buildingId) selection.building_backend_ids = [buildingId];
+            if (complexId) selection.complex_backend_ids = [complexId];
+            return selection;
+        }
+        if (context === "transactions") {
+            selection.transaction_backend_ids = Array.from(document.querySelectorAll("[data-transaction-id]:not(.hidden)"))
+                .map((row) => Number(row.dataset.backendId || 0))
+                .filter(Boolean);
+            return selection;
+        }
+        if (context === "maintenance") {
+            selection.maintenance_backend_ids = Array.from(document.querySelectorAll("[data-maintenance-id]:not(.hidden)"))
+                .map((row) => Number(row.dataset.maintenanceId || row.dataset.backendId || 0))
+                .filter(Boolean);
+            return selection;
+        }
+        if (context === "residential") {
+            const rows = Array.from(document.querySelectorAll("[data-drill-row]:not(.hidden)"));
+            selection.complex_backend_ids = rows.filter((row) => row.dataset.backendType === "complex").map((row) => Number(row.dataset.backendId || 0)).filter(Boolean);
+            selection.building_backend_ids = rows.filter((row) => row.dataset.backendType === "building").map((row) => Number(row.dataset.backendId || 0)).filter(Boolean);
+            selection.apartment_backend_ids = rows.filter((row) => row.dataset.backendType === "apartment").map((row) => Number(row.dataset.backendId || 0)).filter(Boolean);
+            return selection;
+        }
+        return selection;
     };
     document.querySelector("[data-export-download]")?.addEventListener("click", async () => {
-        const datasets = getExportDataForContext();
-        const filePrefix = datasets.usageReport
-            ? "hydroflow-usage-report"
-            : datasets.maintenanceLog
-            ? "hydroflow-system-maintenance-log"
-            : datasets.transactionLog
-            ? "hydroflow-recent-transactions"
-            : datasets.debtLetters
-            ? "hydroflow-debt-letters"
-            : "hydroflow-report";
-        if (selectedExportFormat === "XLSX") {
-            const workbookXml = createExcelXmlWorkbook(datasets);
-            downloadBlob(workbookXml, "application/vnd.ms-excel;charset=utf-8", `${filePrefix}.xls`);
-            toast("Download preview ready", "Excel report generated.", "success");
-            await syncUsageReportAudit(datasets);
-            return;
+        try {
+            const payload = await postPortalJson("/api/export/report/", {
+                ...buildBackendExportSelection(lastExportContext || "default"),
+                context: lastExportContext || "residential",
+                format: selectedExportFormat,
+                source: lastExportSource || "Current page",
+                language: exportLang(),
+            });
+            triggerDownloadPayload(payload.download);
+            rehydrateFromPortalData(payload.portalData);
+            toast("Download ready", `${selectedExportFormat} file generated from backend data.`, "success");
+        } catch (error) {
+            toast("Export failed", error.message || "Backend export failed.", "warning");
         }
-        if (selectedExportFormat === "PDF") {
-            const pdfContent = await createPdfFromLines(createPdfReportLines(datasets));
-            downloadBlob(pdfContent, "application/pdf", `${filePrefix}.pdf`);
-            toast("Download preview ready", "PDF report generated.", "success");
-            await syncUsageReportAudit(datasets);
-            return;
-        }
-        const csvContent = buildSectionedCsv(datasets);
-        downloadBlob(csvContent, "text/csv;charset=utf-8", `${filePrefix}.csv`);
-        toast("Download preview ready", "CSV report generated.", "success");
-        await syncUsageReportAudit(datasets);
     });
     const assignStatusModal = document.getElementById("assign-status-modal");
     const assignStatusOptionsRoot = assignStatusModal?.querySelector("[data-assign-status-options]");
@@ -6311,18 +7779,7 @@ ${sheets}
     const assignStatusNote = assignStatusModal?.querySelector("[data-assign-status-note]");
     const assignStatusApply = assignStatusModal?.querySelector("[data-assign-status-apply]");
     let pendingStatusAssignment = { rows: [], button: null, context: "default", value: "" };
-    const assignedStatusStorageKey = "hydroflow-assigned-statuses-v3";
     const statusLabel = (labels) => labels?.[exportLang()] || labels?.en || "";
-    const readAssignedStatusStore = () => {
-        try {
-            return JSON.parse(storage.getItem(assignedStatusStorageKey) || "{}");
-        } catch {
-            return {};
-        }
-    };
-    const writeAssignedStatusStore = (store) => {
-        storage.setItem(assignedStatusStorageKey, JSON.stringify(store));
-    };
     const assignStatusCatalog = {
         residential: [
             { value: "Low Risk", tone: "success", icon: "verified", label: { en: "Low risk", ru: "Низкий риск", uz: "Past xavf" }, note: { en: "Debt and operations are under control.", ru: "Долг и операции под контролем.", uz: "Qarz va ishlar nazoratda." } },
@@ -6436,54 +7893,21 @@ ${sheets}
         statusCell.innerHTML = renderAssignedStatus(statusConfig);
         row.dataset.assignedStatus = statusConfig.value;
     };
-    const persistStatusAssignment = (context, rows, statusConfig) => {
-        const store = readAssignedStatusStore();
-        rows.forEach((row) => {
-            const key = getStatusRowKey(row, context);
-            if (key) store[key] = statusConfig.value;
-            const legacyKey = getLegacyStatusRowKey(row, context);
-            if (legacyKey && legacyKey !== key) store[legacyKey] = statusConfig.value;
-        });
-        writeAssignedStatusStore(store);
-    };
-    const applyStoredStatusToRow = (row, context, statusIndex = -1, store = readAssignedStatusStore()) => {
-        const value = store[getStatusRowKey(row, context)] || store[getLegacyStatusRowKey(row, context)];
-        if (!value) return;
-        const options = assignStatusCatalog[context] || assignStatusCatalog.default;
-        const option = options.find((item) => item.value === value);
-        if (option) applyStatusToRow(row, option, statusIndex, context);
-    };
-    const restoreAssignedStatuses = () => {
-        const store = readAssignedStatusStore();
-        if (!Object.keys(store).length) return;
-        document.querySelectorAll("[data-table-action='status']").forEach((button) => {
-            const context = detectExportContext(button);
-            const statusIndex = getStatusColumnIndex(button);
-            getRowsForStatusAction(button).forEach((row) => {
-                applyStoredStatusToRow(row, context, statusIndex, store);
-            });
-        });
-    };
-    const observeAssignedStatusRows = () => {
-        const store = readAssignedStatusStore();
-        if (!Object.keys(store).length || !("MutationObserver" in window)) return;
-        document.querySelectorAll(".table-workspace").forEach((workspace) => {
-            const statusButton = workspace.previousElementSibling?.querySelector("[data-table-action='status']");
-            if (!statusButton || workspace.dataset.assignedStatusObserver === "true") return;
-            workspace.dataset.assignedStatusObserver = "true";
-            const context = detectExportContext(statusButton);
-            const statusIndex = getStatusColumnIndex(statusButton);
-            const observer = new MutationObserver((mutations) => {
-                mutations.forEach((mutation) => {
-                    mutation.addedNodes.forEach((node) => {
-                        if (!(node instanceof HTMLElement)) return;
-                        const rows = node.matches?.("tr") ? [node] : Array.from(node.querySelectorAll?.("tr") || []);
-                        rows.forEach((row) => applyStoredStatusToRow(row, context, statusIndex));
-                    });
-                });
-            });
-            observer.observe(workspace, { childList: true, subtree: true });
-        });
+    const statusSelectionForRow = (row, context) => {
+        if (context === "residential") {
+            const targetType = row.dataset.backendType || (row.dataset.drillRow === "district" ? "complex" : row.dataset.drillRow);
+            const targetId = Number(row.dataset.backendId || 0);
+            return targetId ? { target_type: targetType, target_id: targetId } : null;
+        }
+        if (context === "transactions") {
+            const targetId = Number(row.dataset.backendId || 0);
+            return targetId ? { target_type: "transaction", target_id: targetId } : null;
+        }
+        if (context === "maintenance") {
+            const targetId = Number(row.dataset.maintenanceId || row.dataset.backendId || 0);
+            return targetId ? { target_type: "maintenance", target_id: targetId } : null;
+        }
+        return null;
     };
     const setAssignStatusSelection = (value) => {
         pendingStatusAssignment.value = value;
@@ -6521,7 +7945,7 @@ ${sheets}
         const context = detectExportContext(button);
         pendingStatusAssignment = { rows: selectedRows, button, context, value: "" };
         renderAssignStatusOptions(context);
-        if (assignStatusSummary) assignStatusSummary.textContent = `${selectedRows.length} selected rows will be updated locally.`;
+        if (assignStatusSummary) assignStatusSummary.textContent = `${selectedRows.length} selected rows will be updated in backend.`;
         if (assignStatusTarget) assignStatusTarget.textContent = {
             maintenance: "System Maintenance Log",
             transactions: "Recent Transaction Log",
@@ -6536,34 +7960,46 @@ ${sheets}
         if (!option) return;
         setAssignStatusSelection(option.dataset.assignStatusOption || "");
     });
-    assignStatusApply?.addEventListener("click", () => {
+    assignStatusApply?.addEventListener("click", async () => {
         const options = assignStatusCatalog[pendingStatusAssignment.context] || assignStatusCatalog.default;
         const option = options.find((item) => item.value === pendingStatusAssignment.value);
         if (!option || !pendingStatusAssignment.rows.length || !pendingStatusAssignment.button) {
             toast("Select rows first", "Choose one or more rows before assigning status.", "warning");
             return;
         }
-        const statusIndex = getStatusColumnIndex(pendingStatusAssignment.button);
-        pendingStatusAssignment.rows.forEach((row) => applyStatusToRow(row, option, statusIndex, pendingStatusAssignment.context));
-        persistStatusAssignment(pendingStatusAssignment.context, pendingStatusAssignment.rows, option);
-        observeAssignedStatusRows();
-        pendingStatusAssignment.rows.forEach((row) => {
-            const checkbox = row.querySelector("[data-row-select]");
-            if (!checkbox) return;
-            checkbox.checked = false;
-            checkbox.dispatchEvent(new Event("change", { bubbles: true }));
-        });
-        const selectAll = pendingStatusAssignment.button.closest(".table-tools")?.nextElementSibling?.querySelector("[data-select-all]");
-        if (selectAll) {
-            selectAll.checked = false;
-            selectAll.dispatchEvent(new Event("change", { bubbles: true }));
+        const selected = pendingStatusAssignment.rows
+            .map((row) => statusSelectionForRow(row, pendingStatusAssignment.context))
+            .filter(Boolean);
+        if (!selected.length) {
+            toast("Rows are not linked", "Selected rows do not have backend identifiers.", "warning");
+            return;
         }
-        closeOverlayById("assign-status-modal");
-        toast("Status assigned", `${statusLabel(option.label)} applied to ${pendingStatusAssignment.rows.length} rows.`, "success");
-        pendingStatusAssignment = { rows: [], button: null, context: "default", value: "" };
+        const statusIndex = getStatusColumnIndex(pendingStatusAssignment.button);
+        try {
+            const payload = await postPortalJson("/api/status/assign/", {
+                context: pendingStatusAssignment.context,
+                status: option.value,
+                selected,
+            });
+            rehydrateFromPortalData(payload.portalData);
+            pendingStatusAssignment.rows.forEach((row) => {
+                const checkbox = row.querySelector("[data-row-select]");
+                if (!checkbox) return;
+                checkbox.checked = false;
+                checkbox.dispatchEvent(new Event("change", { bubbles: true }));
+            });
+            const selectAll = pendingStatusAssignment.button.closest(".table-tools")?.nextElementSibling?.querySelector("[data-select-all]");
+            if (selectAll) {
+                selectAll.checked = false;
+                selectAll.dispatchEvent(new Event("change", { bubbles: true }));
+            }
+            closeOverlayById("assign-status-modal");
+            toast("Status assigned", `${statusLabel(option.label)} applied to ${payload.updated || selected.length} rows.`, "success");
+            pendingStatusAssignment = { rows: [], button: null, context: "default", value: "" };
+        } catch (error) {
+            toast("Status update failed", error.message || "Backend status update failed.", "warning");
+        }
     });
-    restoreAssignedStatuses();
-    observeAssignedStatusRows();
 
     const updateTableEmptyStates = () => {
         document.querySelectorAll(".table-workspace").forEach((host) => {
@@ -6574,7 +8010,7 @@ ${sheets}
                 state = document.createElement("div");
                 state.className = "table-empty-state hidden";
                 state.dataset.tableEmptyState = "true";
-                state.innerHTML = '<span class="material-symbols-outlined">search_off</span><strong>No transactions for selected filters</strong><small>Try another search term or reset filters. Local static fallback remains available.</small><button type="button" data-table-empty-reset>Retry</button>';
+                state.innerHTML = '<span class="material-symbols-outlined">search_off</span><strong>No transactions for selected filters</strong><small>Try another search term or reset filters. Backend data will refresh on retry.</small><button type="button" data-table-empty-reset>Retry</button>';
                 host.appendChild(state);
             }
             state.classList.toggle("hidden", visible > 0 || rows.length === 0);
@@ -6677,7 +8113,8 @@ ${sheets}
     const renderBackendAuditEvents = () => {
         const timeline = document.querySelector("[data-audit-timeline]");
         const events = Array.isArray(billingData.auditEvents) ? billingData.auditEvents : [];
-        if (!timeline || timeline.dataset.backendAuditRendered === "true") return;
+        if (!timeline) return;
+        if (timeline.dataset.serverList === "audit") return;
         if (!events.length && !billingData.source) return;
         const iconForType = (type) => ({
             export: "ios_share",
@@ -6699,6 +8136,25 @@ ${sheets}
             </div>
         `).join("");
         timeline.dataset.backendAuditRendered = "true";
+    };
+
+    const renderSupportDrawer = () => {
+        const drawer = document.getElementById("support-drawer");
+        if (!drawer) return;
+        const summary = billingData.supportSummary || {};
+        const tickets = Array.isArray(billingData.supportTickets) ? billingData.supportTickets : [];
+        const setText = (selector, value) => {
+            const node = drawer.querySelector(selector);
+            if (node) node.textContent = value ?? "";
+        };
+        setText("[data-support-helpdesk]", summary.helpdesk || "Operations helpdesk");
+        setText("[data-support-open-tickets]", String(summary.openTickets ?? tickets.filter((ticket) => ticket.status === "open").length));
+        setText("[data-support-in-progress]", String(summary.inProgress ?? tickets.filter((ticket) => ticket.status === "in_progress").length));
+        setText("[data-support-resolved]", String(summary.resolved ?? tickets.filter((ticket) => ticket.status === "resolved").length));
+        setText("[data-support-updated]", summary.updatedAt || "Backend sync active");
+        setText("[data-support-headline]", summary.headline || "Operational issues sync through Django admin helpdesk.");
+        setText("[data-support-summary-caption]", summary.caption || "Use this drawer to copy the current support summary, create a backend helpdesk ticket, or open the checklist.");
+        drawer.dataset.latestSupportTicket = tickets[0]?.title || "";
     };
 
     const setupAuditTools = () => {
@@ -6737,17 +8193,20 @@ ${sheets}
         }));
         search?.addEventListener("input", refreshAudit);
 
-        drawer.querySelector("[data-audit-action='add-note']")?.addEventListener("click", () => {
-            const item = document.createElement("div");
-            item.className = "audit-event";
-            item.dataset.auditEvent = "true";
-            item.dataset.type = "note";
-            item.innerHTML = '<span class="audit-event-icon material-symbols-outlined">edit_note</span><div><time>14 Apr 2026, 09:41</time><p>Local support note added for prototype review.</p><span>Note</span></div>';
-            timeline?.prepend(item);
-            activeType = "all";
-            filters.forEach((filter) => filter.classList.toggle("is-active", filter.dataset.auditFilter === "all"));
-            refreshAudit();
-            toast("Audit note added", "Stored locally for this prototype session.", "success");
+        drawer.querySelector("[data-audit-action='add-note']")?.addEventListener("click", async () => {
+            try {
+                const payload = await postPortalJson("/api/audit/note/", {
+                    title: "Audit note",
+                    message: "Manual audit note added from audit drawer.",
+                });
+                rehydrateFromPortalData(payload.portalData);
+                activeType = "all";
+                filters.forEach((filter) => filter.classList.toggle("is-active", filter.dataset.auditFilter === "all"));
+                refreshAudit();
+                toast("Audit note added", "Stored in backend audit trail.", "success");
+            } catch (error) {
+                toast("Audit note save failed", error.message || "Backend audit note was not saved.", "danger");
+            }
         });
 
         drawer.querySelector("[data-audit-action='copy-latest']")?.addEventListener("click", async () => {
@@ -6774,7 +8233,7 @@ ${sheets}
             link.download = "hydroflow-audit-log.csv";
             link.click();
             URL.revokeObjectURL(link.href);
-            toast("Audit log exported", "Local CSV preview generated.", "success");
+            toast("Audit log exported", "Backend audit CSV was generated from the current timeline.", "success");
         });
 
         refreshAudit();
@@ -6784,10 +8243,18 @@ ${sheets}
         const drawer = document.getElementById("support-drawer");
         if (!drawer || drawer.dataset.supportReady === "true") return;
         drawer.dataset.supportReady = "true";
-        drawer.querySelectorAll("[data-support-action]").forEach((button) => button.addEventListener("click", async () => {
+        renderSupportDrawer();
+        drawer.querySelectorAll("[data-support-action]").forEach((button) => button.addEventListener("click", async (event) => {
             const action = button.dataset.supportAction;
             if (action === "copy-summary") {
-                const summary = "HydroFlow local prototype | Backend: Not connected | Timezone: Asia/Tashkent | Last local save: 13.04.2026, 09:41";
+                const summaryData = billingData.supportSummary || {};
+                const summary = [
+                    summaryData.helpdesk || "Operations helpdesk",
+                    `Open: ${summaryData.openTickets ?? 0}`,
+                    `In progress: ${summaryData.inProgress ?? 0}`,
+                    `Resolved: ${summaryData.resolved ?? 0}`,
+                    `Updated: ${summaryData.updatedAt || "Backend sync active"}`,
+                ].join(" | ");
                 try {
                     await navigator.clipboard?.writeText(summary);
                     toast("Support summary copied", summary, "success");
@@ -6801,8 +8268,20 @@ ${sheets}
                 window.HydroFlowOpenChecklist?.("Support workspace");
             }
             if (action === "report-ui") {
-                document.querySelector("[data-audit-action='add-note']")?.click();
-                toast("UI issue note created", "A local audit note was added.", "warning");
+                try {
+                    const payload = await postPortalJson("/api/support/ticket/", {
+                        title: "Portal UI issue reported",
+                        message: "Support drawer created a UI review ticket from the current portal session.",
+                        category: "ui",
+                        priority: "medium",
+                        source: "portal_support_drawer",
+                    });
+                    rehydrateFromPortalData(payload.portalData);
+                    renderSupportDrawer();
+                    toast("Support ticket created", "UI issue was added to backend helpdesk.", "success");
+                } catch (error) {
+                    toast("Support ticket failed", error.message || "Backend helpdesk request failed.", "danger");
+                }
             }
         }));
     };
@@ -6811,6 +8290,7 @@ ${sheets}
     setupChecklist();
     setupAuditTools();
     setupSupportTools();
+    window.HydroFlowRenderSupport = renderSupportDrawer;
 
     document.addEventListener("click", (event) => {
         const button = event.target.closest("button");
@@ -6825,11 +8305,8 @@ ${sheets}
         const label = actionKey.toLowerCase();
         const lang = storage.getItem("hydroflow-lang") || "en";
         if (label === "export") toast(translateValue("Export started", lang), "A static report preview is being prepared.");
-        if (label.includes("send reminder")) toast(translateValue("Reminder queued", lang), "This will connect to backend messaging later.");
-        if (label.includes("assign technician")) toast(translateValue("Technician assignment queued", lang), "A future backend task will own this action.", "info");
         if (label.includes("apply filters")) toast(translateValue("Filters applied", lang), "Current data view updated.");
         if (label.includes("reset filters")) toast(translateValue("Filters reset", lang), "Default data view restored.");
-        if (label.includes("create request")) toast(translateValue("Request created", lang), "Saved locally for this prototype session.");
         if (label.includes("open checklist")) {
             event.preventDefault();
             window.HydroFlowOpenChecklist?.("Operations");
@@ -6839,12 +8316,14 @@ ${sheets}
             window.location.assign(adminUrl);
         }
         if (label.includes("sign out")) {
-            const message = {
-                en: "Authentication backend is not connected yet.",
-                ru: "Backend авторизации пока не подключён.",
-                uz: "Autentifikatsiya backend hali ulanmagan.",
-            };
-            toast(translateValue("Sign out unavailable", lang), message[lang] || message.en, "warning");
+            event.preventDefault();
+            postPortalJson("/api/logout/", {})
+                .then((payload) => {
+                    window.location.assign(payload.redirectUrl || "/");
+                })
+                .catch((error) => {
+                    toast("Authentication request failed", error.message || "Logout request failed.", "warning");
+                });
         }
     });
 })();

@@ -925,12 +925,6 @@
             window.setTimeout(() => document.querySelector("[data-command-input]")?.focus(), 0);
         });
     });
-    document.querySelector("[data-command-input]")?.addEventListener("input", (event) => {
-        const query = event.target.value.trim().toLowerCase();
-        document.querySelectorAll(".command-item").forEach((item) => {
-            item.classList.toggle("hidden", !item.textContent.toLowerCase().includes(query));
-        });
-    });
     const accountToggle = document.querySelector("[data-account-toggle]");
     const accountMenu = document.querySelector(".account-menu");
     const closeAccountMenu = () => {
@@ -973,6 +967,6 @@
 <script>
     window.HydroFlowBackendData = JSON.parse("{{ backend_billing_data_json|default:'{}'|escapejs }}");
 </script>
-<script src="{% static 'js/app.js' %}?v=backend-hydration-20260420"></script>
+<script src="{% static 'js/app.js' %}?v=backend-hydration-20260423-resident-list-rows"></script>
 </body>
 </html>
