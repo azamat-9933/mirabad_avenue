@@ -275,8 +275,10 @@
         "Debtor Trends": { ru: "Динамика должников", uz: "Qarzdorlar dinamikasi" },
         "High Risk": { ru: "Высокий риск", uz: "Yuqori xavf" },
         "Critical Debtors (Top 3 Δ)": { ru: "Критичные должники (топ 3 Δ)", uz: "Jiddiy qarzdorlar (top 3 Δ)" },
-        "Generate Debt Letters": { ru: "Сформировать письма по долгам", uz: "Qarz xatlarini yaratish" },
+        "Critical Houses (Top 5)": { ru: "Критичные дома (топ 5)", uz: "Jiddiy uylar (top 5)" },
         "View All Debtors": { ru: "Все должники", uz: "Barcha qarzdorlar" },
+        "View All Houses": { ru: "Все дома", uz: "Barcha uylar" },
+        "debt residents": { ru: "должников", uz: "qarzdor rezidentlar" },
         "Analytics Overview": { ru: "Обзор аналитики", uz: "Tahlil sharhi" },
         "Real-time system performance and fiscal health": { ru: "Производительность системы и финансовое состояние в реальном времени", uz: "Tizim samaradorligi va moliyaviy holat real vaqtda" },
         "Last 3 Months": { ru: "Последние 3 месяца", uz: "So'nggi 3 oy" },
@@ -2654,21 +2656,41 @@
 
         const debtorList = document.querySelector(".debtor-list .space-y-2");
         if (debtorList) {
-            const topDebtors = stats.complexes.slice()
+            const houseDebtRows = stats.complexes.flatMap((complex) => (complex.buildingItems || []).map((building, index) => {
+                const apartmentRows = Array.isArray(building.apartments) ? building.apartments : [];
+                const fallbackDebt = apartmentRows.reduce((total, apartment) => {
+                    const apartmentBalance = Number(apartment.balance || 0);
+                    return total + (apartmentBalance < 0 ? Math.abs(apartmentBalance) : 0);
+                }, 0);
+                const fallbackDebtors = apartmentRows.filter((apartment) => Number(apartment.balance || 0) < 0).length;
+                const houseDebt = Number.isFinite(Number(building.debt)) ? Number(building.debt) : fallbackDebt;
+                const houseDebtors = Number.isFinite(Number(building.debtorResidents))
+                    ? Number(building.debtorResidents)
+                    : fallbackDebtors;
+                return {
+                    id: building.id || `${complex.id}-building-${index}`,
+                    name: building.name || `House ${building.number || index + 1}`,
+                    debt: houseDebt,
+                    debtorResidents: houseDebtors,
+                    tone: building.tone || complex.tone || "blue",
+                };
+            }));
+            const totalHouseDebt = houseDebtRows.reduce((sum, house) => sum + Math.max(0, Number(house.debt) || 0), 0);
+            const topDebtors = houseDebtRows
                 .sort((a, b) => b.debt - a.debt)
-                .slice(0, 3);
+                .slice(0, 5);
             const debtorTitle = debtorList.closest(".debtor-list")?.querySelector(".debtor-list-title");
-            if (debtorTitle) debtorTitle.textContent = `Critical Debtors (Top ${topDebtors.length})`;
+            if (debtorTitle) debtorTitle.textContent = t("Critical Houses (Top 5)");
             debtorList.innerHTML = topDebtors
-                .map((complex) => {
-                    const share = (complex.debt / Math.max(stats.totalDebt, 1)) * 100;
+                .map((house) => {
+                    const share = (house.debt / Math.max(totalHouseDebt, 1)) * 100;
                     return `
-                        <div class="debtor-row flex items-center justify-between gap-3 p-2.5 bg-surface-container-low rounded-lg border border-outline-variant/5" data-complex-id="${escapeHtml(complex.id)}">
+                        <div class="debtor-row flex items-center justify-between gap-3 p-2.5 bg-surface-container-low rounded-lg border border-outline-variant/5" data-building-id="${escapeHtml(house.id)}">
                             <div class="min-w-0">
-                                <span class="block text-xs font-semibold truncate">${escapeHtml(complex.name)}</span>
-                                <span class="block text-[10px] font-bold text-on-surface-variant">${formatBillingUzs(complex.debt)} · ${complex.debtorResidents} debt units</span>
+                                <span class="block text-xs font-semibold truncate">${escapeHtml(house.name)}</span>
+                                <span class="block text-[10px] font-bold text-on-surface-variant">${formatBillingUzs(house.debt)} · ${moneyFormatter.format(house.debtorResidents)} ${escapeHtml(t("debt residents"))}</span>
                             </div>
-                            <div class="percent-meter percent-meter-${escapeHtml(complex.tone)} percent-meter-row shrink-0" style="--progress: ${Math.min(100, share)}%;" data-value="${percentValue(share)}" aria-label="${escapeHtml(complex.name)} debt share ${percentValue(share)}">
+                            <div class="percent-meter percent-meter-${escapeHtml(house.tone)} percent-meter-row shrink-0" style="--progress: ${Math.min(100, share)}%;" data-value="${percentValue(share)}" aria-label="${escapeHtml(house.name)} debt share ${percentValue(share)}">
                                 <span class="percent-meter-track"><span class="percent-meter-fill"></span></span>
                             </div>
                         </div>

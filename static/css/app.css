@@ -7220,7 +7220,7 @@ html.dark,
 .resident-residents-toolbar {
     display: flex;
     align-items: center;
-    justify-content: flex-end;
+    justify-content: flex-start;
     gap: 12px;
     min-width: 0;
     flex-wrap: wrap;
@@ -7228,20 +7228,28 @@ html.dark,
 
 .resident-directory-header {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 18px;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    gap: 8px;
 }
 
 .resident-directory-copy {
-    flex: 0 0 230px;
-    min-width: 200px;
+    flex: 0 0 auto;
+    min-width: 0;
+    margin-top: -6px;
+}
+
+.resident-directory-copy h3 {
+    margin: 0;
 }
 
 .resident-directory-toolbar {
-    flex: 1 1 auto;
+    width: 100%;
+    flex: 0 0 auto;
     flex-wrap: nowrap;
-    justify-content: flex-end;
+    justify-content: flex-start;
+    margin-left: 0;
 }
 
 .resident-directory-toolbar .resident-search-shell {
