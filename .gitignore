@@ -10,7 +10,3 @@ __pycache__/
 *.pyo
 *$py.class
 
-# Generated Django migrations are ignored for local prototype churn.
-# Existing tracked migrations stay in git history until explicitly removed.
-**/migrations/*.py
-!**/migrations/__init__.py
