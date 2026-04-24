@@ -112,27 +112,27 @@
 <label class="drawer-label" for="filter-status">Status</label>
 <select class="drawer-field" id="filter-status" data-filter-field data-filter-kind="status">
 <option value="all">All statuses</option>
-<option value="low">Low Risk</option>
-<option value="medium">Medium Risk</option>
-<option value="critical">Critical</option>
 <option value="paid">Paid</option>
 <option value="debtor">Debtors</option>
 </select>
 </div>
 <div>
-<label class="drawer-label" for="filter-period">Period</label>
-<select class="drawer-field" id="filter-period" data-filter-field data-filter-kind="period">
-<option value="90">Last 90 days</option>
-<option value="30">Last 30 days</option>
-<option value="month">Current month</option>
-<option value="all">All time</option>
-</select>
+<label class="drawer-label" for="filter-period-start">Period</label>
+<div class="period-range-shell" data-filter-period-range>
+<div class="period-range-track">
+<span class="period-range-track-active" data-filter-period-track></span>
+</div>
+<input aria-label="Period from" class="period-range-input period-range-input-start" data-filter-period-start id="filter-period-start" max="365" min="0" step="1" type="range" value="0"/>
+<input aria-label="Period to" class="period-range-input period-range-input-end" data-filter-period-end id="filter-period-end" max="365" min="0" step="1" type="range" value="365"/>
+<div class="period-range-values">
+<span data-filter-period-start-label>—</span>
+<span data-filter-period-end-label>—</span>
+</div>
+</div>
 </div>
 <div class="space-y-2">
 <p class="drawer-label">Selected filters</p>
-<div class="flex flex-wrap gap-2" data-filter-drawer-chips>
-<span class="filter-chip">Last 90 days</span>
-</div>
+<div class="flex flex-wrap gap-2" data-filter-drawer-chips></div>
 </div>
 <div class="empty-state hidden" data-filter-empty>
 <span class="material-symbols-outlined">filter_alt_off</span>
@@ -1117,6 +1117,107 @@ This form writes directly to Django admin and database.
 </button>
 </div>
 </form>
+</div>
+</div>
+
+<div aria-labelledby="billing-notice-title" aria-hidden="true" class="app-modal fixed inset-0 z-[80] hidden items-start justify-center overflow-y-auto p-4 md:p-6" id="billing-notice-modal" role="dialog">
+<div class="modal-panel flex max-h-[calc(100dvh-2rem)] w-full max-w-5xl flex-col overflow-hidden rounded-[28px] border border-outline-variant/20 bg-white shadow-2xl">
+<div class="px-8 py-6 border-b border-surface-container flex items-start justify-between gap-4">
+<div>
+<p class="text-[11px] font-black uppercase tracking-[0.18em] text-primary" data-i18n-key="Billing notice">Billing notice</p>
+<h2 class="text-[28px] font-black text-on-surface leading-none mt-2" id="billing-notice-title" data-i18n-key="Generate Billing Notice">Generate Billing Notice</h2>
+<p class="text-sm text-on-surface-variant mt-3" data-i18n-key="Select a debtor, review the generated notice and copy or send it later.">Select a debtor, review the generated notice and copy or send it later.</p>
+</div>
+<div class="flex items-center gap-3">
+<div class="inline-flex items-center gap-2 rounded-xl bg-surface-container p-1" data-billing-notice-language>
+<button class="px-4 py-2 rounded-lg text-sm font-bold bg-primary text-white" data-billing-notice-lang="uz" type="button">UZ</button>
+<button class="px-4 py-2 rounded-lg text-sm font-bold text-on-surface-variant" data-billing-notice-lang="ru" type="button">RU</button>
+</div>
+<button aria-label="Close modal" class="p-2 rounded-lg hover:bg-surface-container transition-colors" data-close-overlay type="button">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+</div>
+<div class="min-h-0 overflow-y-auto px-8 py-6">
+<div class="flex flex-col gap-4">
+<div class="flex flex-col lg:flex-row gap-3 lg:items-center lg:justify-between">
+<div class="flex-1 max-w-xl">
+<label class="relative block">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]">search</span>
+<input class="w-full h-12 rounded-2xl border border-outline-variant/20 bg-surface-container-lowest pl-12 pr-12 text-sm text-on-surface placeholder:text-on-surface-variant/70 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30" data-billing-notice-search placeholder="Search debtors..." type="search"/>
+<button aria-label="Clear debtor search" class="absolute right-3 top-1/2 -translate-y-1/2 hidden h-8 w-8 rounded-full bg-surface-container text-on-surface-variant transition-colors hover:text-on-surface" data-billing-notice-search-clear type="button">
+<span class="material-symbols-outlined text-[18px]">close</span>
+</button>
+</label>
+</div>
+<div class="inline-flex flex-wrap items-center gap-2 rounded-2xl border border-outline-variant/15 bg-surface-container-lowest px-3 py-2" data-billing-notice-filter-group>
+<span class="text-[11px] font-black uppercase tracking-[0.18em] text-on-surface-variant" data-i18n-key="Debt order">Debt order</span>
+<button class="px-4 py-2 rounded-xl text-xs font-black tracking-[0.12em] uppercase bg-primary/10 text-primary inline-flex items-center gap-2" data-billing-notice-sort type="button">
+<span class="material-symbols-outlined text-[16px]">swap_vert</span>
+<span data-billing-notice-sort-label>Largest first</span>
+</button>
+<span class="ml-1 rounded-full border border-outline-variant/20 px-3 py-1 text-[11px] font-black uppercase tracking-[0.12em] text-on-surface-variant" data-billing-notice-count>0 shown</span>
+</div>
+</div>
+<div class="grid grid-cols-1 xl:grid-cols-[340px_minmax(0,1fr)] gap-6">
+<section class="rounded-[20px] border border-outline-variant/15 bg-surface-container-lowest overflow-hidden">
+<div class="px-5 py-4 border-b border-outline-variant/10 flex items-center justify-between gap-3">
+<div>
+<p class="text-[11px] font-black uppercase tracking-[0.18em] text-on-surface-variant" data-i18n-key="Debtors">Debtors</p>
+<p class="text-sm text-on-surface-variant mt-1" data-i18n-key="Choose a resident to preview the billing notice.">Choose a resident to preview the billing notice.</p>
+</div>
+</div>
+<div class="max-h-[520px] overflow-y-auto divide-y divide-outline-variant/10" data-billing-notice-list></div>
+<div class="hidden px-5 py-10 text-center" data-billing-notice-empty>
+<span class="material-symbols-outlined text-[30px] text-on-surface-variant">person_search</span>
+<p class="mt-3 text-sm font-bold text-on-surface" data-i18n-key="No debtors found">No debtors found</p>
+<p class="mt-1 text-xs text-on-surface-variant" data-i18n-key="Adjust search or filters to find a resident with overdue balance.">Adjust search or filters to find a resident with overdue balance.</p>
+</div>
+</section>
+<section class="rounded-[20px] border border-outline-variant/15 bg-white p-8 shadow-sm" data-billing-notice-sheet>
+<div class="border-b border-outline-variant/15 pb-5 mb-8 flex items-start justify-between gap-6">
+<div>
+<p class="text-[13px] font-black uppercase tracking-[0.18em] text-on-surface" data-billing-notice-doc-title>TO'LOV XABARNOMASI</p>
+<p class="text-sm text-on-surface-variant mt-2" data-billing-notice-company>MIRABAD AVENUE SERVICE MCHJ</p>
+</div>
+<div class="text-right">
+<div class="text-sm font-black text-error" data-billing-notice-preview-balance></div>
+<div class="text-sm text-on-surface-variant mt-2" data-billing-notice-generated-at></div>
+</div>
+</div>
+<div class="space-y-6 text-on-surface">
+<div class="text-center space-y-1">
+<p class="text-[28px] font-black tracking-tight" data-billing-notice-heading>TO'LOV XABARNOMASI</p>
+<p class="text-lg font-semibold" data-billing-notice-complex></p>
+<p class="text-base text-on-surface-variant" data-billing-notice-subheading>Majburiy to'lovlardan bo'lgan qarzdorlikni to'lash to'g'risida</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-[17px] leading-7">
+<div class="space-y-2">
+<p><span class="font-black" data-billing-notice-account-label>Hisob raqami:</span> <span data-billing-notice-account></span></p>
+<p><span class="font-black" data-billing-notice-address-label>Manzili:</span> <span data-billing-notice-address></span></p>
+<p><span class="font-black" data-billing-notice-owner-label>Uy egasi:</span> <span data-billing-notice-owner></span></p>
+</div>
+<div class="space-y-2">
+<p><span class="font-black" data-billing-notice-apartment-label>Apartment:</span> <span data-billing-notice-apartment></span></p>
+<p><span class="font-black" data-billing-notice-phone-label>Phone:</span> <span data-billing-notice-phone></span></p>
+<p><span class="font-black" data-billing-notice-balance-label>Balance:</span> <span class="text-error font-black" data-billing-notice-balance></span></p>
+</div>
+</div>
+<div class="space-y-5 text-[18px] leading-8" data-billing-notice-body></div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 text-[17px]">
+<p><span class="font-black" data-billing-notice-director-label>Korxona rahbari:</span> <span data-billing-notice-director></span></p>
+<p><span class="font-black" data-billing-notice-manager-label>Mas'ul xodim:</span> <span data-billing-notice-manager></span></p>
+</div>
+</div>
+</section>
+</div>
+</div>
+</div>
+<div class="px-8 py-5 border-t border-surface-container flex justify-end gap-3 bg-surface-container-lowest">
+<button class="px-5 py-3 rounded-xl bg-surface-container text-sm font-bold text-on-surface" data-close-overlay type="button" data-i18n-key="Close">Close</button>
+<button class="px-5 py-3 rounded-xl bg-surface-container text-sm font-bold text-on-surface" data-billing-notice-copy type="button" data-i18n-key="Copy notice">Copy notice</button>
+<button class="px-5 py-3 rounded-xl bg-primary text-sm font-bold text-white" data-billing-notice-telegram type="button" data-i18n-key="Notify in Telegram">Notify in Telegram</button>
+</div>
 </div>
 </div>
 

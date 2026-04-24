@@ -81,7 +81,10 @@ class BillingPeriod(models.Model):
         ordering = ["-start_date"]
 
     def __str__(self):
-        return f"{self.title} ({self.start_date} — {self.end_date})"
+        title = self.title or "Billing period"
+        if self.start_date and self.end_date:
+            return f"{title} ({self.start_date} — {self.end_date})"
+        return title
 
     @property
     def title(self):
@@ -96,11 +99,15 @@ class BillingPeriod(models.Model):
         return self.days_count()
 
     def days_count(self):
+        if not self.start_date or not self.end_date:
+            return 0
         if self.end_date < self.start_date:
             return 0
         return (self.end_date - self.start_date).days + 1
 
     def all_dates(self):
+        if not self.start_date:
+            return []
         total = self.days_count()
         return [self.start_date + timedelta(days=index) for index in range(total)]
 

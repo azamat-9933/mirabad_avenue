@@ -20,11 +20,20 @@ JAZZ_SETTINGS = {
     # ── Asosiy navigatsiya (chap menyu) ─────────────────
     "navigation_expanded": True,
     "hide_apps":  [],
-    "hide_models": [],
+    "hide_models": [
+        "main_app.Complex",
+        "main_app.BuildingSection",
+        "properties.Complex",
+        "properties.BuildingSection",
+    ],
 
     # Menyuni o'z tartibida ko'rsatish
     "order_with_respect_to": [
         "main_app",
+        "main_app.Owner",
+        "main_app.Apartment",
+        "main_app.Building",
+        "portal",
         "billing",
         "payments",
         "auth",

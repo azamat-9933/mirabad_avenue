@@ -107,14 +107,22 @@ class BillingPeriodAdmin(admin.ModelAdmin):
 
     @admin.display(description="Holat")
     def status_badge(self, obj):
-        if obj.status == BillingPeriod.STATUS_CLOSED:
-            return format_html(
-                '<span style="background:#27ae60;color:#fff;padding:3px 12px;'
-                'border-radius:12px;font-size:12px;font-weight:600;">✓ Yopiq</span>'
-            )
+        badge_map = {
+            BillingPeriod.STATUS_DRAFT: ("Ochiq", "#f59e0b", "#ffffff"),
+            BillingPeriod.STATUS_CLOSED: ("Yopiq", "#16a34a", "#ffffff"),
+            BillingPeriod.STATUS_REOPENED: ("Qayta ochilgan", "#2563eb", "#ffffff"),
+        }
+        label, background, color = badge_map.get(
+            obj.status,
+            ("Noma'lum", "#64748b", "#ffffff"),
+        )
         return format_html(
-            '<span style="background:#f39c12;color:#fff;padding:3px 12px;'
-            'border-radius:12px;font-size:12px;font-weight:600;">⏳ Ochiq</span>'
+            '<span style="display:inline-flex;align-items:center;justify-content:center;'
+            'white-space:nowrap;min-width:84px;padding:4px 10px;border-radius:999px;'
+            'background:{};color:{};font-size:12px;font-weight:700;line-height:1;">{}</span>',
+            background,
+            color,
+            label,
         )
 
     @admin.display(description="Uylar")

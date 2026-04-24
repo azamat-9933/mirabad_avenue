@@ -179,6 +179,35 @@
         "Quick Actions": { ru: "Быстрые действия", uz: "Tezkor amallar" },
         "Generate Usage Report": { ru: "Сформировать отчёт потребления", uz: "Iste'mol hisobotini yaratish" },
         "Add New Resident Profile": { ru: "Добавить профиль жильца", uz: "Yangi yashovchi profilini qo'shish" },
+        "Generate Billing Notice": { ru: "Сформировать уведомление", uz: "To'lov xabarnomasini yaratish" },
+        "Billing notice": { ru: "Платёжное уведомление", uz: "To'lov xabarnomasi" },
+        "Preview of the resident debt notice generated from current backend data.": { ru: "Предпросмотр уведомления о долге, собранного из текущих backend-данных.", uz: "Joriy backend ma'lumotlaridan yig'ilgan qarzdorlik xabarnomasi ko'rinishi." },
+        "Select a debtor, review the generated notice and copy or send it later.": { ru: "Выберите должника, проверьте сгенерированное письмо и затем скопируйте или отправьте его позже.", uz: "Qarzdorni tanlang, yaratilgan xabarnomani ko'rib chiqing va keyin nusxa oling yoki keyinroq yuboring." },
+        "Create Billing Period": { ru: "Создать расчётный период", uz: "Hisob davrini yaratish" },
+        "Create a new расчетный период for heating and hot water calculations.": { ru: "Создать новый расчётный период для отопления и горячей воды.", uz: "Isitish va issiq suv hisoblari uchun yangi hisob davrini yarating." },
+        "Open admin form": { ru: "Открыть admin форму", uz: "Admin formasini ochish" },
+        "Back to Billing": { ru: "Назад к биллингу", uz: "Billing sahifasiga qaytish" },
+        "Search debtors...": { ru: "Поиск должников...", uz: "Qarzdorlarni qidirish..." },
+        "Debtors": { ru: "Должники", uz: "Qarzdorlar" },
+        "Choose a resident to preview the billing notice.": { ru: "Выберите резидента, чтобы увидеть платёжное уведомление.", uz: "To'lov xabarnomasini ko'rish uchun rezidentni tanlang." },
+        "Debt order": { ru: "Порядок долга", uz: "Qarz tartibi" },
+        "Largest debt": { ru: "Макс. долг", uz: "Eng katta qarz" },
+        "Smallest debt": { ru: "Мин. долг", uz: "Eng kichik qarz" },
+        "Largest first": { ru: "Сначала большой", uz: "Katta qarz avval" },
+        "Smallest first": { ru: "Сначала малый", uz: "Kichik qarz avval" },
+        "shown": { ru: "показано", uz: "ko'rsatildi" },
+        "Loading debtors...": { ru: "Загрузка должников...", uz: "Qarzdorlar yuklanmoqda..." },
+        "No debtors found": { ru: "Должники не найдены", uz: "Qarzdorlar topilmadi" },
+        "Adjust search or filters to find a resident with overdue balance.": { ru: "Измените поиск или фильтр, чтобы найти резидента с просроченным балансом.", uz: "Muddati o'tgan balansli rezidentni topish uchun qidiruv yoki filtrni o'zgartiring." },
+        "Copy notice": { ru: "Скопировать уведомление", uz: "Xabarnomani nusxalash" },
+        "Notify in Telegram": { ru: "Уведомить в Telegram", uz: "Telegramda xabardor qilish" },
+        "Billing notice copied": { ru: "Уведомление скопировано", uz: "Xabarnoma nusxalandi" },
+        "Notice text was copied to clipboard.": { ru: "Текст уведомления скопирован в буфер обмена.", uz: "Xabarnoma matni almashish buferiga nusxalandi." },
+        "Copy failed": { ru: "Не удалось скопировать", uz: "Nusxalab bo'lmadi" },
+        "Could not copy notice text.": { ru: "Не удалось скопировать текст уведомления.", uz: "Xabarnoma matnini nusxalab bo'lmadi." },
+        "In development": { ru: "В разработке", uz: "Ishlanmoqda" },
+        "Telegram notification flow is not connected yet.": { ru: "Логика уведомления в Telegram пока не подключена.", uz: "Telegram orqali xabardor qilish hali ulanmagan." },
+        "Close": { ru: "Закрыть", uz: "Yopish" },
         "Add district": { ru: "Добавить район", uz: "Hudud qo'shish" },
         "Add house": { ru: "Добавить дом", uz: "Uy qo'shish" },
         "Add apartment": { ru: "Добавить квартиру", uz: "Kvartira qo'shish" },
@@ -860,6 +889,7 @@
         maintenanceTasks: [],
         auditEvents: [],
         checklistItems: [],
+        checklistNotes: [],
         telemetryNodes: [],
         pressureSeries: [],
         profile: {},
@@ -872,7 +902,7 @@
         billingData.complexes.splice(0, billingData.complexes.length, ...payload.complexes);
         billingData.residents.splice(0, billingData.residents.length, ...payload.residents);
         billingData.transactions.splice(0, billingData.transactions.length, ...payload.transactions);
-        ["notifications", "systemAlerts", "maintenanceTasks", "auditEvents", "checklistItems", "telemetryNodes", "pressureSeries"].forEach((key) => {
+        ["notifications", "systemAlerts", "maintenanceTasks", "auditEvents", "checklistItems", "checklistNotes", "telemetryNodes", "pressureSeries"].forEach((key) => {
             billingData[key] = Array.isArray(payload[key]) ? payload[key] : [];
         });
         billingData.profile = payload.profile && typeof payload.profile === "object" ? payload.profile : {};
@@ -1161,49 +1191,108 @@
     window.HydroFlowSyncDashboardStatCards = syncDashboardStatCards;
 
     const filterStorageKey = "hydroflow-global-filters";
-    const defaultFilterState = { district: "all", status: "all", period: "90" };
+    const FILTER_DAY_MS = 24 * 60 * 60 * 1000;
+    const defaultFilterState = { district: "all", status: "all", period: "90", periodStart: "", periodEnd: "" };
+    const toDayTimestamp = (timestamp) => {
+        const safeTimestamp = Number.isFinite(Number(timestamp)) ? Number(timestamp) : Date.now();
+        const date = new Date(safeTimestamp);
+        return new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
+    };
+    const isoDateToTimestamp = (value) => {
+        const [year, month, day] = String(value || "").split("-").map(Number);
+        if (!year || !month || !day) return NaN;
+        return new Date(year, month - 1, day).getTime();
+    };
+    const timestampToIsoDate = (timestamp) => {
+        const date = new Date(toDayTimestamp(timestamp));
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const day = String(date.getDate()).padStart(2, "0");
+        return `${year}-${month}-${day}`;
+    };
+    const timestampToHumanDate = (timestamp) => {
+        const date = new Date(toDayTimestamp(timestamp));
+        const day = String(date.getDate()).padStart(2, "0");
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        return `${day}.${month}.${date.getFullYear()}`;
+    };
+    const latestFilterDataTimestamp = () => {
+        const transactionTimestamps = (billingData.transactions || []).map((transaction) => dateValue(transaction.date)).filter((value) => Number.isFinite(value));
+        return toDayTimestamp(Math.max(...transactionTimestamps, Date.now()));
+    };
+    const defaultPeriodRangeFromLatest = (latestTimestamp = latestFilterDataTimestamp()) => ({
+        start: toDayTimestamp(latestTimestamp - 90 * FILTER_DAY_MS),
+        end: toDayTimestamp(latestTimestamp),
+    });
+    const normalizeFilterState = (raw = {}) => ({
+        ...defaultFilterState,
+        ...(raw || {}),
+        district: "all",
+        periodStart: raw.periodStart || raw.period_start || "",
+        periodEnd: raw.periodEnd || raw.period_end || "",
+    });
     const readFilterState = () => {
         try {
-            return { ...defaultFilterState, ...(JSON.parse(storage.getItem(filterStorageKey) || "{}") || {}), district: "all" };
+            return normalizeFilterState(JSON.parse(storage.getItem(filterStorageKey) || "{}") || {});
         } catch {
             return { ...defaultFilterState };
         }
     };
     const writeFilterState = (state) => {
-        storage.setItem(filterStorageKey, JSON.stringify({ ...defaultFilterState, ...state, district: "all" }));
+        storage.setItem(filterStorageKey, JSON.stringify(normalizeFilterState(state)));
     };
     const filterPeriodLabel = (period) => ({
         "30": "Last 30 days",
         "90": "Last 90 days",
         month: "Current month",
         all: "All time",
+        custom: "Custom range",
     }[period] || "Last 90 days");
     const filterStatusLabel = (status) => ({
         all: "All statuses",
-        low: "Low Risk",
-        medium: "Medium Risk",
-        critical: "Critical",
         paid: "Paid",
         debtor: "Debtors",
     }[status] || "All statuses");
-    const filterStatusValueForComplex = (complex) => {
-        if (complex.risk === "Critical") return "critical";
-        if (complex.risk === "Medium Risk") return "medium";
-        return "low";
+    const resolveStatePeriodRange = (state = readFilterState()) => {
+        const normalized = normalizeFilterState(state);
+        const latest = latestFilterDataTimestamp();
+        const defaultRange = defaultPeriodRangeFromLatest(latest);
+        const fromTimestampRaw = isoDateToTimestamp(normalized.periodStart);
+        const toTimestampRaw = isoDateToTimestamp(normalized.periodEnd);
+        const fromTimestamp = Number.isFinite(fromTimestampRaw) ? toDayTimestamp(fromTimestampRaw) : NaN;
+        const toTimestamp = Number.isFinite(toTimestampRaw) ? toDayTimestamp(toTimestampRaw) : NaN;
+
+        if (Number.isFinite(fromTimestamp) || Number.isFinite(toTimestamp)) {
+            const start = Number.isFinite(fromTimestamp) ? fromTimestamp : defaultRange.start;
+            const end = Number.isFinite(toTimestamp) ? toTimestamp : defaultRange.end;
+            return start <= end ? { start, end } : { start: end, end: start };
+        }
+        if (normalized.period === "all") {
+            return { start: Number.NEGATIVE_INFINITY, end: Number.POSITIVE_INFINITY };
+        }
+        if (normalized.period === "month") {
+            const end = toDayTimestamp(latest);
+            const day = new Date(end);
+            const start = new Date(day.getFullYear(), day.getMonth(), 1).getTime();
+            return { start, end };
+        }
+        if (normalized.period === "30") {
+            return { start: toDayTimestamp(latest - 30 * FILTER_DAY_MS), end: toDayTimestamp(latest) };
+        }
+        return defaultRange;
     };
-    const withinFilterPeriod = (date, period) => {
-        if (!date || period === "all") return true;
+    const withinFilterPeriod = (date, state = readFilterState()) => {
+        if (!date) return true;
         const timestamp = dateValue(date);
-        const latest = Math.max(...billingData.transactions.map((transaction) => dateValue(transaction.date)), Date.now());
-        const days = period === "30" ? 30 : period === "month" ? 31 : 90;
-        return timestamp >= latest - days * 24 * 60 * 60 * 1000;
+        if (!Number.isFinite(timestamp)) return true;
+        const { start, end } = resolveStatePeriodRange(state);
+        return timestamp >= start && timestamp <= end;
     };
     const filterMatchesComplex = (complexId, state = readFilterState()) => {
         const complex = complexId === SINGLE_SECTOR_ID
             ? getSingleSectorStats()
             : getComplexStats().find((item) => item.id === complexId) || getComplexById(complexId);
         if (!complex) return true;
-        if (["low", "medium", "critical"].includes(state.status) && filterStatusValueForComplex(complex) !== state.status) return false;
         if (state.status === "paid" && (complex.paidResidents || 0) <= 0) return false;
         if (state.status === "debtor" && (complex.debtorResidents || 0) <= 0) return false;
         return true;
@@ -1215,12 +1304,10 @@
         return true;
     };
     const filterMatchesTransaction = (transaction, state = readFilterState()) => {
+        if (!transaction) return true;
         const resident = getResidentById(transaction.residentId);
         if (!filterMatchesResident(resident, state)) return false;
-        if (!withinFilterPeriod(transaction.date, state.period)) return false;
-        if (state.status === "low" || state.status === "medium" || state.status === "critical") {
-            return filterMatchesComplex(transaction.complexId, state);
-        }
+        if (!withinFilterPeriod(transaction.date, state)) return false;
         return true;
     };
 
@@ -2782,7 +2869,12 @@
         const state = typeof readFilterState === "function" ? readFilterState() : { district: "all", period: "all", status: "all" };
         const params = {};
         if (state.district && state.district !== "all") params.district = state.district;
-        if (state.period && state.period !== "all") params.period = state.period;
+        if (state.periodStart && state.periodEnd) {
+            params.period_from = state.periodStart;
+            params.period_to = state.periodEnd;
+        } else if (state.period && state.period !== "all") {
+            params.period = state.period;
+        }
         return { state, params };
     };
     const fetchServerList = async (endpoint, params = {}) => {
@@ -3136,7 +3228,10 @@
         const residentButtons = Array.from(document.querySelectorAll("[data-resident-filter]"));
         const residentTelegramButtons = Array.from(document.querySelectorAll("[data-resident-telegram]"));
         const residentLayout = residentsGrid?.dataset.residentLayout || "card";
+        const residentExpandButton = document.querySelector("[data-resident-expand]");
         const residentPageSize = Number(residentsGrid?.dataset.residentPageSize || residentsGrid?.dataset.residentLimit || 8) || 8;
+        const residentCollapsedSize = Number(residentsGrid?.dataset.residentCollapsedSize || 10) || 10;
+        let residentExpanded = false;
         const residentCountLabel = (visible, total = visible) => {
             const lang = storage.getItem("hydroflow-lang") || "en";
             const count = Number(total || visible || 0);
@@ -3144,22 +3239,34 @@
             if (lang === "uz") return `${count} rezident`;
             return `${count} residents`;
         };
+        const updateResidentExpandButton = (total, shown) => {
+            if (!residentExpandButton) return;
+            const canExpand = !residentExpanded && Number(total || 0) > Number(shown || 0);
+            residentExpandButton.classList.toggle("hidden", !canExpand);
+            residentExpandButton.setAttribute("aria-hidden", canExpand ? "false" : "true");
+        };
         const loadResidents = async () => {
             if (!residentsGrid) return;
             const state = readListUrlState("residents", { page: "1", search: "", status: "all", telegram: "all", ordering: "name" });
-            const { params } = currentGlobalListFilters();
+            const { state: globalState, params } = currentGlobalListFilters();
+            const scopedStatus = ["paid", "debtor"].includes(globalState.status)
+                ? globalState.status
+                : state.status;
+            const effectivePageSize = residentExpanded
+                ? residentPageSize
+                : Math.min(residentCollapsedSize, residentPageSize);
             const payload = await fetchServerList("/api/lists/residents/", {
                 ...params,
                 page: state.page,
-                page_size: residentPageSize,
+                page_size: effectivePageSize,
                 search: state.search,
-                status: state.status,
+                status: scopedStatus,
                 telegram: residentTelegramButtons.length ? state.telegram : "all",
                 ordering: state.ordering,
             });
             residentsGrid.innerHTML = payload.results.map((resident) => renderResidentCardMarkup(resident, residentLayout)).join("");
             residentButtons.forEach((button) => {
-                const active = (button.dataset.residentFilter || "all") === state.status;
+                const active = (button.dataset.residentFilter || "all") === scopedStatus;
                 button.classList.toggle("is-active", active);
                 button.setAttribute("aria-pressed", String(active));
             });
@@ -3171,6 +3278,7 @@
             if (residentSearch) residentSearch.value = state.search || "";
             if (residentCount) residentCount.textContent = residentCountLabel(payload.results.length, payload.total);
             residentEmpty?.classList.toggle("hidden", payload.results.length > 0);
+            updateResidentExpandButton(payload.total, payload.results.length);
             window.HydroFlowSyncLocale?.();
         };
         if (residentsGrid) {
@@ -3190,6 +3298,11 @@
                 if (!residentSearch) return;
                 residentSearch.value = "";
                 writeListUrlState("residents", { search: "", page: 1 });
+                loadResidents();
+            });
+            residentExpandButton?.addEventListener("click", () => {
+                residentExpanded = true;
+                writeListUrlState("residents", { page: 1 });
                 loadResidents();
             });
             serverListControllers.residents = { name: "residents", load: loadResidents, refresh: () => loadResidents() };
@@ -3302,15 +3415,13 @@
             };
             const loadMaintenance = async () => {
                 const state = readListUrlState("maintenance", { page: "1", search: "", ordering: "-priority,-scheduled_at" });
-                const { state: globalState, params } = currentGlobalListFilters();
-                const priority = globalState.status === "critical" ? "high" : globalState.status === "medium" ? "medium" : globalState.status === "low" ? "low" : "";
+                const { params } = currentGlobalListFilters();
                 const payload = await fetchServerList("/api/lists/maintenance/", {
                     ...params,
                     page: state.page,
                     page_size: 6,
                     search: state.search,
                     ordering: state.ordering,
-                    priority,
                 });
                 maintenanceChrome.body.innerHTML = renderMaintenance(payload.results || []);
                 maintenanceChrome.syncMeta(payload);
@@ -3882,46 +3993,158 @@
 
         const statusOptions = [
             ["all", "All statuses"],
-            ["low", "Low Risk"],
-            ["medium", "Medium Risk"],
-            ["critical", "Critical"],
             ["paid", "Paid"],
             ["debtor", "Debtors"],
-        ];
-        const periodOptions = [
-            ["90", "Last 90 days"],
-            ["30", "Last 30 days"],
-            ["month", "Current month"],
-            ["all", "All time"],
         ];
         const optionMarkup = (options) => options
             .map(([value, label]) => `<option value="${escapeHtml(value)}" data-i18n-key="${escapeHtml(label)}">${escapeHtml(label)}</option>`)
             .join("");
         const districtFields = () => Array.from(document.querySelectorAll("[data-global-district-filter]"));
         const statusFields = () => Array.from(document.querySelectorAll("#filter-status"));
-        const periodFields = () => Array.from(document.querySelectorAll("#filter-period"));
+        const periodStartField = document.querySelector("[data-filter-period-start]");
+        const periodEndField = document.querySelector("[data-filter-period-end]");
+        const periodTrackActive = document.querySelector("[data-filter-period-track]");
+        const periodStartLabel = document.querySelector("[data-filter-period-start-label]");
+        const periodEndLabel = document.querySelector("[data-filter-period-end-label]");
+        let periodBounds = null;
+        const collectPeriodTimestamps = () => {
+            const values = [];
+            (billingData.transactions || []).forEach((transaction) => {
+                const timestamp = dateValue(transaction.date);
+                if (Number.isFinite(timestamp)) values.push(timestamp);
+            });
+            (billingData.maintenanceTasks || []).forEach((task) => {
+                const timestamp = dateValue(task.date || task.scheduledAt || "");
+                if (Number.isFinite(timestamp)) values.push(timestamp);
+            });
+            (billingData.notifications || []).forEach((alert) => {
+                const timestamp = dateValue(alert.eventAt || "");
+                if (Number.isFinite(timestamp)) values.push(timestamp);
+            });
+            (billingData.auditEvents || []).forEach((event) => {
+                const timestamp = dateValue(event.time || event.createdAt || "");
+                if (Number.isFinite(timestamp)) values.push(timestamp);
+            });
+            return values;
+        };
+        const buildPeriodBounds = () => {
+            const timestamps = collectPeriodTimestamps().map((value) => toDayTimestamp(value));
+            const max = Math.max(...timestamps, toDayTimestamp(Date.now()));
+            let min = Math.min(...timestamps, toDayTimestamp(max - 365 * FILTER_DAY_MS));
+            if (max - min > 730 * FILTER_DAY_MS) {
+                min = toDayTimestamp(max - 730 * FILTER_DAY_MS);
+            }
+            if (max - min < 30 * FILTER_DAY_MS) {
+                min = toDayTimestamp(max - 30 * FILTER_DAY_MS);
+            }
+            const spanDays = Math.max(30, Math.round((max - min) / FILTER_DAY_MS));
+            return { min, max, spanDays };
+        };
+        const defaultSliderRange = (bounds) => {
+            const defaultRange = defaultPeriodRangeFromLatest(bounds.max);
+            const startValue = Math.max(0, Math.min(bounds.spanDays, Math.round((Math.max(bounds.min, defaultRange.start) - bounds.min) / FILTER_DAY_MS)));
+            const endValue = Math.max(startValue, Math.min(bounds.spanDays, Math.round((Math.min(bounds.max, defaultRange.end) - bounds.min) / FILTER_DAY_MS)));
+            return { startValue, endValue };
+        };
+        const sliderValues = () => {
+            const startValue = Number(periodStartField?.value || 0);
+            const endValue = Number(periodEndField?.value || 0);
+            return startValue <= endValue
+                ? { startValue, endValue }
+                : { startValue: endValue, endValue: startValue };
+        };
+        const syncPeriodTrack = () => {
+            if (!periodTrackActive || !periodBounds) return;
+            const { startValue, endValue } = sliderValues();
+            const max = Math.max(1, periodBounds.spanDays);
+            const left = (startValue / max) * 100;
+            const right = 100 - (endValue / max) * 100;
+            periodTrackActive.style.left = `${left}%`;
+            periodTrackActive.style.right = `${right}%`;
+        };
+        const syncPeriodLabels = () => {
+            if (!periodBounds) return;
+            const { startValue, endValue } = sliderValues();
+            const startTimestamp = toDayTimestamp(periodBounds.min + startValue * FILTER_DAY_MS);
+            const endTimestamp = toDayTimestamp(periodBounds.min + endValue * FILTER_DAY_MS);
+            if (periodStartLabel) periodStartLabel.textContent = timestampToHumanDate(startTimestamp);
+            if (periodEndLabel) periodEndLabel.textContent = timestampToHumanDate(endTimestamp);
+        };
+        const applyPeriodStateToControls = (state = readFilterState()) => {
+            if (!periodStartField || !periodEndField) return;
+            periodBounds = buildPeriodBounds();
+            periodStartField.min = "0";
+            periodEndField.min = "0";
+            periodStartField.max = String(periodBounds.spanDays);
+            periodEndField.max = String(periodBounds.spanDays);
+            let targetRange = defaultSliderRange(periodBounds);
+            const startTimestamp = isoDateToTimestamp(state.periodStart);
+            const endTimestamp = isoDateToTimestamp(state.periodEnd);
+            if (Number.isFinite(startTimestamp) || Number.isFinite(endTimestamp)) {
+                const normalizedStart = Number.isFinite(startTimestamp) ? toDayTimestamp(startTimestamp) : periodBounds.min;
+                const normalizedEnd = Number.isFinite(endTimestamp) ? toDayTimestamp(endTimestamp) : periodBounds.max;
+                const clampedStart = Math.max(periodBounds.min, Math.min(periodBounds.max, normalizedStart));
+                const clampedEnd = Math.max(periodBounds.min, Math.min(periodBounds.max, normalizedEnd));
+                const startValue = Math.max(0, Math.min(periodBounds.spanDays, Math.round((Math.min(clampedStart, clampedEnd) - periodBounds.min) / FILTER_DAY_MS)));
+                const endValue = Math.max(startValue, Math.min(periodBounds.spanDays, Math.round((Math.max(clampedStart, clampedEnd) - periodBounds.min) / FILTER_DAY_MS)));
+                targetRange = { startValue, endValue };
+            }
+            periodStartField.value = String(targetRange.startValue);
+            periodEndField.value = String(targetRange.endValue);
+            syncPeriodTrack();
+            syncPeriodLabels();
+        };
+        const periodStateFromControls = (baseState = readFilterState()) => {
+            if (!periodBounds || !periodStartField || !periodEndField) {
+                return { ...baseState, period: "90", periodStart: "", periodEnd: "" };
+            }
+            const { startValue, endValue } = sliderValues();
+            const defaults = defaultSliderRange(periodBounds);
+            if (startValue === defaults.startValue && endValue === defaults.endValue) {
+                return { ...baseState, period: "90", periodStart: "", periodEnd: "" };
+            }
+            const startTimestamp = toDayTimestamp(periodBounds.min + startValue * FILTER_DAY_MS);
+            const endTimestamp = toDayTimestamp(periodBounds.min + endValue * FILTER_DAY_MS);
+            return {
+                ...baseState,
+                period: "custom",
+                periodStart: timestampToIsoDate(startTimestamp),
+                periodEnd: timestampToIsoDate(endTimestamp),
+            };
+        };
+        const periodChipLabel = (state = readFilterState()) => {
+            if (state.periodStart && state.periodEnd) {
+                const startTimestamp = isoDateToTimestamp(state.periodStart);
+                const endTimestamp = isoDateToTimestamp(state.periodEnd);
+                if (Number.isFinite(startTimestamp) && Number.isFinite(endTimestamp)) {
+                    return `${timestampToHumanDate(startTimestamp)} - ${timestampToHumanDate(endTimestamp)}`;
+                }
+            }
+            return filterPeriodLabel(state.period);
+        };
         const setFieldOptions = (fields, options) => fields.forEach((field) => {
             const current = field.value || readFilterState()[field.dataset.filterKind] || "all";
             field.innerHTML = optionMarkup(options);
             field.value = options.some(([value]) => value === current) ? current : options[0][0];
         });
-        const visibleLabel = (value, fallback) => {
-            const state = readFilterState();
-            if (fallback === "status") return filterStatusLabel(value || state.status);
-            return filterPeriodLabel(value || state.period);
-        };
         const syncFields = (state = readFilterState()) => {
             setFieldOptions(statusFields(), statusOptions);
-            setFieldOptions(periodFields(), periodOptions);
             districtFields().forEach((field) => { field.value = "all"; });
             statusFields().forEach((field) => { field.value = state.status; });
-            periodFields().forEach((field) => { field.value = state.period; });
+            applyPeriodStateToControls(state);
+        };
+        const stateFromControls = () => {
+            const baseState = {
+                ...readFilterState(),
+                district: "all",
+                status: document.getElementById("filter-status")?.value || readFilterState().status,
+            };
+            return periodStateFromControls(baseState);
         };
         const updateChips = (state = readFilterState()) => {
-            const chips = [
-                ["period", filterPeriodLabel(state.period)],
-            ];
-            if (state.status !== "all") chips.unshift(["status", filterStatusLabel(state.status)]);
+            const chips = [];
+            if (state.status !== defaultFilterState.status) chips.push(["status", filterStatusLabel(state.status)]);
+            if ((state.periodStart && state.periodEnd) || state.period !== defaultFilterState.period) chips.push(["period", periodChipLabel(state)]);
             const html = chips.map(([kind, label]) => `
                 <button class="filter-chip" type="button" data-filter-chip-remove="${escapeHtml(kind)}">
                     <span data-i18n-key="${escapeHtml(label)}">${escapeHtml(label)}</span>
@@ -3930,8 +4153,12 @@
             document.querySelectorAll("[data-filter-chips], [data-filter-drawer-chips]").forEach((target) => {
                 target.innerHTML = html;
             });
+            document.querySelectorAll("[data-filter-chips]").forEach((target) => {
+                target.style.display = chips.length ? "" : "none";
+            });
             document.querySelectorAll(".filter-trigger-count").forEach((target) => {
                 target.textContent = String(chips.length);
+                target.classList.toggle("hidden", chips.length === 0);
             });
             window.HydroFlowSyncLocale?.();
         };
@@ -3949,16 +4176,12 @@
         };
         const filterMatchesMaintenanceRow = (row, state) => {
             const complexId = row.dataset.complexId || "";
-            const priority = String(row.dataset.priority || "").toLowerCase();
             const taskStatus = String(row.dataset.statusKey || "").toLowerCase();
             if (complexId && !filterMatchesComplex(complexId, { ...state, status: ["paid", "debtor"].includes(state.status) ? state.status : "all" })) return false;
             if (!complexId && state.district !== "all") return false;
-            if (state.status === "critical" && priority !== "high") return false;
-            if (state.status === "medium" && priority !== "medium") return false;
-            if (state.status === "low" && priority !== "low") return false;
             if (state.status === "paid" && taskStatus !== "completed" && complexId && !filterMatchesComplex(complexId, state)) return false;
             if (state.status === "debtor" && complexId && !filterMatchesComplex(complexId, state)) return false;
-            if (!withinFilterPeriod(row.dataset.date || "", state.period)) return false;
+            if (!withinFilterPeriod(row.dataset.date || "", state)) return false;
             return true;
         };
         const updateEmptyState = (visibleRows) => {
@@ -3967,15 +4190,11 @@
             empty.classList.toggle("hidden", visibleRows > 0);
         };
         const applyFilters = (state = readFilterState(), options = {}) => {
-            const normalized = { ...defaultFilterState, ...state };
+            const normalized = normalizeFilterState(state);
             writeFilterState(normalized);
             syncFields(normalized);
             updateChips(normalized);
             clearGeneratedRows();
-
-            const serverDrivenResidents = document.querySelector("[data-resident-grid]")?.dataset.serverList === "residents";
-            const serverDrivenTransactions = Boolean(document.querySelector("table[data-server-list='transactions']"));
-            const serverDrivenMaintenance = Boolean(document.querySelector("table[data-server-list='maintenance']"));
 
             let visibleRows = 0;
             document.querySelectorAll("[data-drill-row='district']").forEach((row) => {
@@ -3983,27 +4202,21 @@
                 if (visible) visibleRows += 1;
                 setRowFilterState(row, visible);
             });
-            if (!serverDrivenResidents) {
-                document.querySelectorAll("[data-resident-card]").forEach((card) => {
-                    const resident = billingData.residents.find((item) => item.id === card.dataset.residentId);
-                    const visible = filterMatchesResident(resident, normalized);
-                    card.dataset.globalFilterHidden = visible ? "false" : "true";
-                    card.classList.toggle("hidden", !visible);
-                });
-            }
-            if (!serverDrivenTransactions) {
-                document.querySelectorAll("[data-transaction-id]").forEach((row) => {
-                    const transaction = billingData.transactions.find((item) => item.id === row.dataset.transactionId);
-                    const visible = filterMatchesTransaction(transaction, normalized);
-                    setRowFilterState(row, visible);
-                });
-            }
-            if (!serverDrivenMaintenance) {
-                document.querySelectorAll("[data-maintenance-row]").forEach((row) => {
-                    const visible = filterMatchesMaintenanceRow(row, normalized);
-                    setRowFilterState(row, visible);
-                });
-            }
+            document.querySelectorAll("[data-resident-card]").forEach((card) => {
+                const resident = billingData.residents.find((item) => item.id === card.dataset.residentId);
+                const visible = filterMatchesResident(resident, normalized);
+                card.dataset.globalFilterHidden = visible ? "false" : "true";
+                card.classList.toggle("hidden", !visible);
+            });
+            document.querySelectorAll("[data-transaction-id]").forEach((row) => {
+                const transaction = billingData.transactions.find((item) => item.id === row.dataset.transactionId);
+                const visible = filterMatchesTransaction(transaction, normalized);
+                setRowFilterState(row, visible);
+            });
+            document.querySelectorAll("[data-maintenance-row]").forEach((row) => {
+                const visible = filterMatchesMaintenanceRow(row, normalized);
+                setRowFilterState(row, visible);
+            });
             document.querySelectorAll(".revenue-debt-item, .debtor-complex-item, .debtor-row, .complex-health-row, .network-node").forEach((item) => {
                 const visible = filterMatchesComplex(item.dataset.complexId || item.dataset.node, normalized);
                 item.classList.toggle("hidden", !visible);
@@ -4033,22 +4246,32 @@
             const state = { ...readFilterState(), district: "all" };
             applyFilters(state, { toast: false });
         }));
+        const syncPeriodPreview = () => {
+            if (!periodStartField || !periodEndField) return;
+            let startValue = Number(periodStartField.value || 0);
+            let endValue = Number(periodEndField.value || 0);
+            if (startValue > endValue) {
+                if (document.activeElement === periodStartField) {
+                    endValue = startValue;
+                    periodEndField.value = String(endValue);
+                } else {
+                    startValue = endValue;
+                    periodStartField.value = String(startValue);
+                }
+            }
+            syncPeriodTrack();
+            syncPeriodLabels();
+            updateChips(stateFromControls());
+        };
         document.querySelectorAll("[data-filter-field]").forEach((field) => field.addEventListener("change", () => {
-            const state = {
-                ...readFilterState(),
-                district: "all",
-                status: document.getElementById("filter-status")?.value || readFilterState().status,
-                period: document.getElementById("filter-period")?.value || readFilterState().period,
-            };
-            syncFields(state);
-            updateChips(state);
+            updateChips(stateFromControls());
         }));
+        periodStartField?.addEventListener("input", syncPeriodPreview);
+        periodEndField?.addEventListener("input", syncPeriodPreview);
+        periodStartField?.addEventListener("change", syncPeriodPreview);
+        periodEndField?.addEventListener("change", syncPeriodPreview);
         document.querySelector("[data-apply-filters]")?.addEventListener("click", () => {
-            applyFilters({
-                district: "all",
-                status: document.getElementById("filter-status")?.value || "all",
-                period: document.getElementById("filter-period")?.value || "90",
-            });
+            applyFilters(stateFromControls());
         });
         document.querySelector("[data-reset-filters]")?.addEventListener("click", () => {
             const button = document.querySelector("[data-reset-filters]");
@@ -4064,7 +4287,11 @@
             const kind = chip.dataset.filterChipRemove;
             if (kind === "district") state.district = "all";
             if (kind === "status") state.status = "all";
-            if (kind === "period") state.period = "90";
+            if (kind === "period") {
+                state.period = "90";
+                state.periodStart = "";
+                state.periodEnd = "";
+            }
             applyFilters(state);
         });
         document.addEventListener("hydroflow:data-rendered", () => applyFilters(readFilterState(), { toast: false }));
@@ -5689,6 +5916,501 @@
                 button.textContent = mode === "resolve" ? t("Resolve") : t("Acknowledge");
             }
         });
+    };
+
+    const setupBillingNoticeQuickAction = () => {
+        const modal = document.getElementById("billing-notice-modal");
+        if (!modal || modal.dataset.ready === "true") return;
+        modal.dataset.ready = "true";
+        const ensureBillingNoticeLayout = () => {
+            const body = modal.querySelector(".px-8.py-6");
+            if (body && !modal.querySelector("[data-billing-notice-search]")) {
+                const toolbar = document.createElement("div");
+                toolbar.dataset.billingNoticeToolbar = "true";
+                toolbar.className = "flex flex-col lg:flex-row gap-3 lg:items-center lg:justify-between mb-4";
+                toolbar.innerHTML = `
+                    <div class="flex-1 max-w-xl">
+                        <label class="relative block">
+                            <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]">search</span>
+                            <input class="w-full h-12 rounded-2xl border border-outline-variant/20 bg-surface-container-lowest pl-12 pr-12 text-sm text-on-surface placeholder:text-on-surface-variant/70 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30" data-billing-notice-search placeholder="Search debtors..." type="search"/>
+                            <button aria-label="Clear debtor search" class="absolute right-3 top-1/2 -translate-y-1/2 hidden h-8 w-8 rounded-full bg-surface-container text-on-surface-variant transition-colors hover:text-on-surface" data-billing-notice-search-clear type="button">
+                                <span class="material-symbols-outlined text-[18px]">close</span>
+                            </button>
+                        </label>
+                    </div>
+                    <div class="inline-flex flex-wrap items-center gap-2 rounded-2xl border border-outline-variant/15 bg-surface-container-lowest px-3 py-2" data-billing-notice-filter-group>
+                        <span class="text-[11px] font-black uppercase tracking-[0.18em] text-on-surface-variant" data-i18n-key="Debt order">Debt order</span>
+                        <button class="px-4 py-2 rounded-xl text-xs font-black tracking-[0.12em] uppercase bg-primary/10 text-primary inline-flex items-center gap-2" data-billing-notice-sort type="button">
+                            <span class="material-symbols-outlined text-[16px]">swap_vert</span>
+                            <span data-billing-notice-sort-label>Largest first</span>
+                        </button>
+                        <span class="ml-1 rounded-full border border-outline-variant/20 px-3 py-1 text-[11px] font-black uppercase tracking-[0.12em] text-on-surface-variant" data-billing-notice-count>0 shown</span>
+                    </div>
+                `;
+                const grid = body.querySelector(".grid");
+                if (grid) {
+                    body.insertBefore(toolbar, grid);
+                } else {
+                    body.prepend(toolbar);
+                }
+            }
+
+            if (!modal.querySelector("[data-billing-notice-copy]") || !modal.querySelector("[data-billing-notice-telegram]")) {
+                const panel = modal.querySelector(".modal-panel");
+                if (panel) {
+                    const footer = document.createElement("div");
+                    footer.dataset.billingNoticeFooter = "true";
+                    footer.className = "px-8 py-5 border-t border-surface-container flex justify-end gap-3 bg-surface-container-lowest";
+                    footer.innerHTML = `
+                        <button class="px-5 py-3 rounded-xl bg-surface-container text-sm font-bold text-on-surface" data-close-overlay type="button" data-i18n-key="Close">Close</button>
+                        <button class="px-5 py-3 rounded-xl bg-surface-container text-sm font-bold text-on-surface" data-billing-notice-copy type="button" data-i18n-key="Copy notice">Copy notice</button>
+                        <button class="px-5 py-3 rounded-xl bg-primary text-sm font-bold text-white" data-billing-notice-telegram type="button" data-i18n-key="Notify in Telegram">Notify in Telegram</button>
+                    `;
+                    panel.appendChild(footer);
+                }
+            }
+        };
+
+        ensureBillingNoticeLayout();
+        const langButtons = Array.from(modal.querySelectorAll("[data-billing-notice-lang]"));
+        const searchInput = modal.querySelector("[data-billing-notice-search]");
+        const searchClear = modal.querySelector("[data-billing-notice-search-clear]");
+        const sortButton = modal.querySelector("[data-billing-notice-sort]");
+        const sortLabel = modal.querySelector("[data-billing-notice-sort-label]");
+        const countNode = modal.querySelector("[data-billing-notice-count]");
+        const listNode = modal.querySelector("[data-billing-notice-list]");
+        const emptyNode = modal.querySelector("[data-billing-notice-empty]");
+        const copyButton = modal.querySelector("[data-billing-notice-copy]");
+        const telegramButton = modal.querySelector("[data-billing-notice-telegram]");
+        let activeLang = "uz";
+        let activeSort = "desc";
+        let activeResidentId = "";
+        let noticeResidents = [];
+
+        const noticeCopy = {
+            uz: {
+                docTitle: "TO'LOV XABARNOMASI",
+                company: "MIRABAD AVENUE SERVICE MCHJ",
+                heading: "TO'LOV XABARNOMASI",
+                subheading: "Majburiy to'lovlardan bo'lgan qarzdorlikni to'lash to'g'risida",
+                accountLabel: "Hisob raqami:",
+                addressLabel: "Manzili:",
+                ownerLabel: "Uy egasi:",
+                apartmentLabel: "Kvartira:",
+                phoneLabel: "Telefon:",
+                balanceLabel: "Qarz miqdori:",
+                directorLabel: "Korxona rahbari:",
+                managerLabel: "Mas'ul xodim:",
+                director: "ERGASHEV DILSHOD TURAVOY O'G'LI",
+                manager: "Billing Desk",
+                bodyHtml: (resident, amount) => [
+                    `Sizga ushbu orqali ma'lum qilamizki, ${resident.lastPayment || "31.03.2026"} holatiga ko'ra majburiy to'lovlar bo'yicha <span class="font-black text-error">${amount}</span> qarzdorlik mavjud.`,
+                    "<span class=\"block text-center font-black tracking-tight\">ESLATMA!!!</span>",
+                    "Majburiy to'lovlarni belgilangan muddatda to'lamaslik penya va keyingi undirish choralariga olib keladi.",
+                    "<span class=\"block text-center font-black tracking-tight\">OGOHLANTIRAMIZ!!!</span>",
+                    "Mavjud qarzdorlik sud tartibida undiruv choralariga yuborilishi mumkin. Sud xarajatlari va kechikish jarimalari qarzdor tomon zimmasiga o'tadi.",
+                    "Iltimos, qarzdorlikni qisqa muddat ichida to'lang yoki billing bo'limi bilan bog'lanib to'lov grafig'ini aniqlashtiring.",
+                ],
+                bodyText: (resident, amount) => [
+                    `Sizga ushbu orqali ma'lum qilamizki, ${resident.lastPayment || "31.03.2026"} holatiga ko'ra majburiy to'lovlar bo'yicha ${amount} qarzdorlik mavjud.`,
+                    "ESLATMA!!!",
+                    "Majburiy to'lovlarni belgilangan muddatda to'lamaslik penya va keyingi undirish choralariga olib keladi.",
+                    "OGOHLANTIRAMIZ!!!",
+                    "Mavjud qarzdorlik sud tartibida undiruv choralariga yuborilishi mumkin. Sud xarajatlari va kechikish jarimalari qarzdor tomon zimmasiga o'tadi.",
+                    "Iltimos, qarzdorlikni qisqa muddat ichida to'lang yoki billing bo'limi bilan bog'lanib to'lov grafig'ini aniqlashtiring.",
+                ],
+            },
+            ru: {
+                docTitle: "ПЛАТЁЖНОЕ УВЕДОМЛЕНИЕ",
+                company: "MIRABAD AVENUE SERVICE MCHJ",
+                heading: "ПЛАТЁЖНОЕ УВЕДОМЛЕНИЕ",
+                subheading: "О необходимости погашения задолженности по обязательным платежам",
+                accountLabel: "Лицевой счёт:",
+                addressLabel: "Адрес:",
+                ownerLabel: "Собственник:",
+                apartmentLabel: "Квартира:",
+                phoneLabel: "Телефон:",
+                balanceLabel: "Сумма долга:",
+                directorLabel: "Руководитель:",
+                managerLabel: "Ответственный сотрудник:",
+                director: "ЭРГАШЕВ ДИЛШОД ТУРАВОЙ УГЛИ",
+                manager: "Billing Desk",
+                bodyHtml: (resident, amount) => [
+                    `Сообщаем, что по состоянию на ${resident.lastPayment || "31.03.2026"} по обязательным платежам зафиксирована задолженность в размере <span class="font-black text-error">${amount}</span>.`,
+                    "<span class=\"block text-center font-black tracking-tight\">ВНИМАНИЕ!!!</span>",
+                    "При отсутствии оплаты в установленный срок сумма задолженности может быть передана в дальнейшую работу и сопровождаться начислением пени.",
+                    "<span class=\"block text-center font-black tracking-tight\">ПРЕДУПРЕЖДАЕМ!!!</span>",
+                    "При дальнейшем отсутствии оплаты материалы могут быть переданы на взыскание. Все сопутствующие расходы и штрафные начисления относятся на должника.",
+                    "Просим погасить задолженность в ближайший срок либо связаться с billing-отделом для уточнения графика оплаты.",
+                ],
+                bodyText: (resident, amount) => [
+                    `Сообщаем, что по состоянию на ${resident.lastPayment || "31.03.2026"} по обязательным платежам зафиксирована задолженность в размере ${amount}.`,
+                    "ВНИМАНИЕ!!!",
+                    "При отсутствии оплаты в установленный срок сумма задолженности может быть передана в дальнейшую работу и сопровождаться начислением пени.",
+                    "ПРЕДУПРЕЖДАЕМ!!!",
+                    "При дальнейшем отсутствии оплаты материалы могут быть переданы на взыскание. Все сопутствующие расходы и штрафные начисления относятся на должника.",
+                    "Просим погасить задолженность в ближайший срок либо связаться с billing-отделом для уточнения графика оплаты.",
+                ],
+            },
+        };
+
+        const debtValue = (resident) => {
+            const value = Number(resident?.balance ?? 0);
+            return Number.isFinite(value) ? Math.abs(Math.min(value, 0)) : 0;
+        };
+        const searchNoticeText = (...values) => values
+            .filter((value) => value !== null && value !== undefined)
+            .map((value) => String(value))
+            .join(" ")
+            .toLowerCase();
+
+        const assignNoticeResidents = (rows) => {
+            noticeResidents = Array.isArray(rows) ? rows.filter(Boolean).slice() : [];
+        };
+
+        const hydrateNoticeResidentsFromState = () => {
+            if (Array.isArray(window.HydroFlowBackendData?.residents) && window.HydroFlowBackendData.residents.length) {
+                assignNoticeResidents(window.HydroFlowBackendData.residents);
+                return;
+            }
+            if (Array.isArray(billingData.residents) && billingData.residents.length) {
+                assignNoticeResidents(billingData.residents);
+                return;
+            }
+            assignNoticeResidents([]);
+        };
+
+        const getDebtors = () => noticeResidents.filter((resident) => debtValue(resident) > 0);
+
+        const renderLoading = () => {
+            if (!listNode) return;
+            listNode.innerHTML = `
+                <div class="px-5 py-8 text-sm font-bold text-on-surface-variant">
+                    ${escapeHtml(t("Loading debtors..."))}
+                </div>
+            `;
+            emptyNode?.classList.add("hidden");
+            if (countNode) countNode.textContent = `0 ${t("shown")}`;
+        };
+
+        const refreshBillingNoticeData = async () => {
+            try {
+                const response = await fetch("/api/portal-data/", {
+                    credentials: "same-origin",
+                    headers: { Accept: "application/json" },
+                });
+                if (!response.ok) throw new Error(`Request failed (${response.status})`);
+                const payload = await response.json();
+                applyBackendBillingData(payload);
+                assignNoticeResidents(payload?.residents);
+                window.HydroFlowBackendData = payload;
+                return payload;
+            } catch (error) {
+                console.warn("Billing notice backend refresh failed", error);
+                return null;
+            }
+        };
+
+        const sortDebtors = (rows) => {
+            const sorted = rows.slice();
+            if (activeSort === "asc") {
+                sorted.sort((a, b) => debtValue(a) - debtValue(b));
+                return sorted;
+            }
+            sorted.sort((a, b) => debtValue(b) - debtValue(a));
+            return sorted;
+        };
+
+        const filteredDebtors = () => {
+            const query = searchNoticeText(searchInput?.value || "");
+            const rows = getDebtors().filter((resident) => {
+                if (!query) return true;
+                return searchNoticeText(
+                    resident.name,
+                    resident.apartment,
+                    resident.building,
+                    resident.phone,
+                    resident.complex,
+                    resident.telegramUser,
+                    resident.telegramStatus,
+                ).includes(query);
+            });
+            return sortDebtors(rows);
+        };
+
+        const buildAccount = (resident) => `ACC-${resident?.ownerBackendId || resident?.backendId || resident?.id || "000"}`;
+
+        const buildNoticeText = (resident) => {
+            const copy = noticeCopy[activeLang] || noticeCopy.uz;
+            const amount = formatBillingUzs(debtValue(resident));
+            const address = [resident?.complexAddress, resident?.building, resident?.apartment].filter(Boolean).join(", ");
+            return [
+                copy.docTitle,
+                copy.company,
+                "",
+                copy.heading,
+                resident?.complex || "Mirabad Avenue",
+                copy.subheading,
+                "",
+                `${copy.accountLabel} ${buildAccount(resident)}`,
+                `${copy.addressLabel} ${address || "-"}`,
+                `${copy.ownerLabel} ${resident?.name || "-"}`,
+                `${copy.apartmentLabel} ${resident?.apartment || "-"}`,
+                `${copy.phoneLabel} ${resident?.phone || "-"}`,
+                `${copy.balanceLabel} ${amount}`,
+                "",
+                ...copy.bodyText(resident || {}, amount),
+                "",
+                `${copy.directorLabel} ${copy.director}`,
+                `${copy.managerLabel} ${copy.manager}`,
+            ].join("\n");
+        };
+
+        const resolveActiveResident = (rows) => {
+            if (!rows.length) {
+                activeResidentId = "";
+                return null;
+            }
+            const current = rows.find((resident) => String(resident.ownerBackendId || resident.backendId || resident.id) === String(activeResidentId));
+            if (current) return current;
+            const next = rows[0];
+            activeResidentId = String(next.ownerBackendId || next.backendId || next.id);
+            return next;
+        };
+
+        const renderList = (rows) => {
+            if (!listNode || !emptyNode) return;
+            if (!rows.length) {
+                listNode.innerHTML = "";
+                emptyNode.classList.remove("hidden");
+                return;
+            }
+            emptyNode.classList.add("hidden");
+            listNode.innerHTML = rows.map((resident) => {
+                const residentId = String(resident.ownerBackendId || resident.backendId || resident.id);
+                const isActive = residentId === String(activeResidentId);
+                return `
+                    <button
+                        class="w-full text-left px-5 py-4 transition-colors ${isActive ? "bg-primary/5" : "bg-white hover:bg-surface-container-low"}"
+                        data-billing-notice-resident="${escapeHtml(residentId)}"
+                        type="button"
+                    >
+                        <div class="flex items-start justify-between gap-3">
+                            <div class="min-w-0">
+                                <p class="text-sm font-black text-on-surface truncate">${escapeHtml(resident.name || "-")}</p>
+                                <p class="text-xs text-on-surface-variant mt-1 truncate">${escapeHtml([resident.building, resident.apartment].filter(Boolean).join(" • ") || resident.apartment || "-")}</p>
+                                <p class="text-xs text-on-surface-variant mt-2 truncate">${escapeHtml(resident.phone || "-")}</p>
+                            </div>
+                            <div class="shrink-0 text-right">
+                                <p class="text-sm font-black text-error">${escapeHtml(formatBillingUzs(debtValue(resident)))}</p>
+                                <p class="text-[11px] font-bold uppercase tracking-[0.14em] text-on-surface-variant mt-1">${escapeHtml(resident.lastPayment || "-")}</p>
+                            </div>
+                        </div>
+                    </button>
+                `;
+            }).join("");
+        };
+
+        const renderPreview = (resident) => {
+            const copy = noticeCopy[activeLang] || noticeCopy.uz;
+            const generatedAt = new Date().toLocaleString(activeLang === "ru" ? "ru-RU" : "uz-UZ", {
+                day: "2-digit",
+                month: "2-digit",
+                year: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+            });
+            const amount = resident ? formatBillingUzs(debtValue(resident)) : "";
+            const address = [
+                resident?.complexAddress,
+                resident?.building,
+                resident?.apartment,
+            ].filter(Boolean).join(", ");
+            const account = resident ? buildAccount(resident) : "ACC-000";
+
+            modal.querySelector("[data-billing-notice-doc-title]").textContent = copy.docTitle;
+            modal.querySelector("[data-billing-notice-company]").textContent = copy.company;
+            modal.querySelector("[data-billing-notice-generated-at]").textContent = generatedAt;
+            modal.querySelector("[data-billing-notice-preview-balance]").textContent = resident ? amount : "";
+            modal.querySelector("[data-billing-notice-heading]").textContent = copy.heading;
+            modal.querySelector("[data-billing-notice-complex]").textContent = resident?.complex || "Mirabad Avenue";
+            modal.querySelector("[data-billing-notice-subheading]").textContent = copy.subheading;
+            modal.querySelector("[data-billing-notice-account-label]").textContent = copy.accountLabel;
+            modal.querySelector("[data-billing-notice-address-label]").textContent = copy.addressLabel;
+            modal.querySelector("[data-billing-notice-owner-label]").textContent = copy.ownerLabel;
+            modal.querySelector("[data-billing-notice-apartment-label]").textContent = copy.apartmentLabel;
+            modal.querySelector("[data-billing-notice-phone-label]").textContent = copy.phoneLabel;
+            modal.querySelector("[data-billing-notice-balance-label]").textContent = copy.balanceLabel;
+            modal.querySelector("[data-billing-notice-director-label]").textContent = copy.directorLabel;
+            modal.querySelector("[data-billing-notice-manager-label]").textContent = copy.managerLabel;
+            modal.querySelector("[data-billing-notice-director]").textContent = copy.director;
+            modal.querySelector("[data-billing-notice-manager]").textContent = copy.manager;
+            modal.querySelector("[data-billing-notice-account]").textContent = resident ? account : "";
+            modal.querySelector("[data-billing-notice-address]").textContent = resident ? (address || "-") : "";
+            modal.querySelector("[data-billing-notice-owner]").textContent = resident?.name || "";
+            modal.querySelector("[data-billing-notice-apartment]").textContent = resident?.apartment || "";
+            modal.querySelector("[data-billing-notice-phone]").textContent = resident?.phone || "";
+            modal.querySelector("[data-billing-notice-balance]").textContent = resident ? amount : "";
+            modal.querySelector("[data-billing-notice-body]").innerHTML = resident ? copy.bodyHtml(resident || {}, amount)
+                .map((paragraph) => `<p>${paragraph}</p>`)
+                .join("") : "";
+
+            langButtons.forEach((button) => {
+                const isActive = button.dataset.billingNoticeLang === activeLang;
+                button.classList.toggle("bg-primary", isActive);
+                button.classList.toggle("text-white", isActive);
+                button.classList.toggle("text-on-surface-variant", !isActive);
+            });
+        };
+
+        const syncFilters = () => {
+            if (!sortButton || !sortLabel) return;
+            const descending = activeSort !== "asc";
+            sortButton.classList.toggle("bg-primary/10", true);
+            sortButton.classList.toggle("text-primary", true);
+            sortLabel.textContent = descending ? t("Largest first") : t("Smallest first");
+        };
+
+        const render = () => {
+            const rows = filteredDebtors();
+            const resident = resolveActiveResident(rows);
+            renderList(rows);
+            renderPreview(resident);
+            syncFilters();
+            if (countNode) countNode.textContent = `${rows.length} ${t("shown")}`;
+            if (searchClear) searchClear.classList.toggle("hidden", !(searchInput?.value || "").trim());
+        };
+
+        const openNoticeModal = () => {
+            openOverlayById("billing-notice-modal");
+            activeSort = "desc";
+            if (searchInput) searchInput.value = "";
+            activeResidentId = "";
+            hydrateNoticeResidentsFromState();
+            if (noticeResidents.length) {
+                render();
+            } else {
+                renderLoading();
+            }
+            refreshBillingNoticeData()
+                .then(() => {
+                    render();
+                })
+                .catch((error) => {
+                    console.error("Billing notice modal render failed", error);
+                    toast("Billing notice", "Could not prepare debtor list.", "warning");
+                });
+        };
+
+        document.querySelectorAll("[data-billing-notice-open]").forEach((button) => {
+            if (button.dataset.billingNoticeReady === "true") return;
+            button.dataset.billingNoticeReady = "true";
+            button.addEventListener("click", (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                openNoticeModal();
+            });
+        });
+
+        if (document.body.dataset.billingNoticeDelegated !== "true") {
+            document.body.dataset.billingNoticeDelegated = "true";
+            document.addEventListener("click", (event) => {
+                const trigger = event.target.closest("[data-billing-notice-open]");
+                if (!trigger) return;
+                event.preventDefault();
+                openNoticeModal();
+            }, true);
+        }
+
+        langButtons.forEach((button) => {
+            button.addEventListener("click", () => {
+                activeLang = button.dataset.billingNoticeLang || "uz";
+                render();
+            });
+        });
+
+        sortButton?.addEventListener("click", () => {
+            activeSort = activeSort === "desc" ? "asc" : "desc";
+            render();
+        });
+
+        listNode?.addEventListener("click", (event) => {
+            const item = event.target.closest("[data-billing-notice-resident]");
+            if (!item) return;
+            activeResidentId = item.dataset.billingNoticeResident || "";
+            render();
+        });
+
+        searchInput?.addEventListener("input", () => render());
+        searchClear?.addEventListener("click", () => {
+            if (searchInput) searchInput.value = "";
+            render();
+            searchInput?.focus();
+        });
+
+        copyButton?.addEventListener("click", async () => {
+            const resident = resolveActiveResident(filteredDebtors());
+            if (!resident) return;
+            try {
+                await navigator.clipboard.writeText(buildNoticeText(resident));
+                toast("Billing notice copied", "Notice text was copied to clipboard.", "success");
+            } catch {
+                toast("Copy failed", "Could not copy notice text.", "warning");
+            }
+        });
+
+        telegramButton?.addEventListener("click", () => {
+            toast("In development", "Telegram notification flow is not connected yet.", "info");
+        });
+
+        document.addEventListener("hydroflow:backend-refreshed", () => {
+            if (!modal.classList.contains("hidden")) render();
+        });
+    };
+
+    const setupBillingPeriodQuickAction = () => {
+        const closeBillingPeriodMenus = () => {
+            document.querySelectorAll("[data-billing-period-menu]").forEach((menu) => {
+                menu.classList.add("hidden");
+            });
+            document.querySelectorAll("[data-quick-action='create-billing-period']").forEach((button) => {
+                button.setAttribute("aria-expanded", "false");
+            });
+        };
+
+        document.querySelectorAll("[data-quick-action='create-billing-period']").forEach((button) => {
+            if (button.dataset.ready === "true") return;
+            button.dataset.ready = "true";
+            button.setAttribute("aria-haspopup", "true");
+            button.setAttribute("aria-expanded", "false");
+            const menu = button.parentElement?.querySelector("[data-billing-period-menu]");
+            button.addEventListener("click", (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                if (!menu) {
+                    window.location.assign("/billing/periods/create");
+                    return;
+                }
+                const shouldOpen = menu.classList.contains("hidden");
+                closeBillingPeriodMenus();
+                if (shouldOpen) {
+                    menu.classList.remove("hidden");
+                    button.setAttribute("aria-expanded", "true");
+                }
+            });
+        });
+
+        if (document.body.dataset.billingPeriodMenuDelegated !== "true") {
+            document.body.dataset.billingPeriodMenuDelegated = "true";
+            document.addEventListener("click", (event) => {
+                if (event.target.closest("[data-billing-period-menu], [data-quick-action='create-billing-period']")) return;
+                closeBillingPeriodMenus();
+            });
+            document.addEventListener("keydown", (event) => {
+                if (event.key !== "Escape") return;
+                closeBillingPeriodMenus();
+            });
+        }
     };
 
     setupBuildingCreateForm();
@@ -8319,6 +9041,8 @@ ${sheets}
     setupChecklist();
     setupAuditTools();
     setupSupportTools();
+    setupBillingNoticeQuickAction();
+    setupBillingPeriodQuickAction();
     window.HydroFlowRenderSupport = renderSupportDrawer;
 
     document.addEventListener("click", (event) => {

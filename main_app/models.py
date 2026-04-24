@@ -44,8 +44,8 @@ class Building(models.Model):
         return sum(a.area for a in self.apartments.all())
 
     class Meta:
-        verbose_name = "Uy"
-        verbose_name_plural = "Uylar"
+        verbose_name = "House"
+        verbose_name_plural = "Houses"
 
 
 class BuildingSection(models.Model):
@@ -96,8 +96,8 @@ class Apartment(models.Model):
         return f"Kv. {self.number} ({self.building})"
 
     class Meta:
-        verbose_name = "Kvartira"
-        verbose_name_plural = "Kvartiralar"
+        verbose_name = "Apartment"
+        verbose_name_plural = "Apartments"
 
 
 class Owner(models.Model):
@@ -128,5 +128,5 @@ class Owner(models.Model):
         return self.fio
 
     class Meta:
-        verbose_name = "Ega"
-        verbose_name_plural = "Egalar"
+        verbose_name = "Resident"
+        verbose_name_plural = "Residents"

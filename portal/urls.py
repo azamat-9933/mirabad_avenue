@@ -9,6 +9,7 @@ urlpatterns = [
     path("residential/", views.ResidentialView.as_view(), name="residential"),
     path("system-health/", views.SystemHealthView.as_view(), name="system_health"),
     path("billing/", views.BillingView.as_view(), name="billing"),
+    path("billing/periods/create", views.BillingPeriodCreateView.as_view(), name="billing_period_create"),
     path("analytics/", views.AnalyticsView.as_view(), name="analytics"),
     path("api/health/", views.api_health, name="api_health"),
     path("api/portal-data/", views.api_portal_data, name="api_portal_data"),

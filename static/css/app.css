@@ -4128,6 +4128,89 @@ html.dark .app-topbar form[role="search"]:focus-within {
     box-shadow: 0 12px 26px rgba(79, 142, 247, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.86);
 }
 
+.period-range-shell {
+    position: relative;
+    margin-top: 6px;
+    padding-top: 10px;
+}
+
+.period-range-track {
+    position: relative;
+    height: 8px;
+    border-radius: 999px;
+    background: rgba(15, 23, 42, 0.10);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45);
+}
+
+.period-range-track-active {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    border-radius: 999px;
+    background: linear-gradient(90deg, rgba(79, 142, 247, 0.24), rgba(79, 142, 247, 0.80));
+}
+
+.period-range-input {
+    position: absolute;
+    top: 7px;
+    left: 0;
+    width: 100%;
+    height: 14px;
+    margin: 0;
+    background: none;
+    appearance: none;
+    pointer-events: none;
+}
+
+.period-range-input::-webkit-slider-runnable-track {
+    height: 8px;
+    background: transparent;
+}
+
+.period-range-input::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 17px;
+    height: 17px;
+    border-radius: 999px;
+    border: 2px solid #4F8EF7;
+    background: #ffffff;
+    box-shadow: 0 6px 14px rgba(79, 142, 247, 0.24);
+    cursor: pointer;
+    pointer-events: auto;
+}
+
+.period-range-input::-moz-range-track {
+    height: 8px;
+    background: transparent;
+}
+
+.period-range-input::-moz-range-thumb {
+    width: 17px;
+    height: 17px;
+    border-radius: 999px;
+    border: 2px solid #4F8EF7;
+    background: #ffffff;
+    box-shadow: 0 6px 14px rgba(79, 142, 247, 0.24);
+    cursor: pointer;
+    pointer-events: auto;
+}
+
+.period-range-values {
+    margin-top: 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+}
+
+.period-range-values span {
+    font-size: 12px;
+    font-weight: 700;
+    color: #41536A;
+}
+
 .topbar-action-button.filter-trigger {
     width: auto !important;
     min-width: 7.4rem;
@@ -4323,6 +4406,29 @@ html.dark .filter-chip {
     border-color: rgba(79, 142, 247, 0.18) !important;
     color: #C9D8F8 !important;
     box-shadow: 0 8px 22px rgba(0, 0, 0, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+html.dark .period-range-track {
+    background: rgba(255, 255, 255, 0.10);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+html.dark .period-range-track-active {
+    background: linear-gradient(90deg, rgba(114, 167, 255, 0.28), rgba(114, 167, 255, 0.86));
+}
+
+html.dark .period-range-input::-webkit-slider-thumb {
+    background: #0F172A;
+    border-color: #72A7FF;
+}
+
+html.dark .period-range-input::-moz-range-thumb {
+    background: #0F172A;
+    border-color: #72A7FF;
+}
+
+html.dark .period-range-values span {
+    color: #C9D8F8;
 }
 
 .checklist-drawer {

@@ -17,8 +17,8 @@ class Complex(LegacyComplex):
 class Building(LegacyBuilding):
     class Meta:
         proxy = True
-        verbose_name = "Uy"
-        verbose_name_plural = "Uylar"
+        verbose_name = "House"
+        verbose_name_plural = "Houses"
 
 
 class BuildingSection(LegacyBuildingSection):
@@ -31,12 +31,12 @@ class BuildingSection(LegacyBuildingSection):
 class Apartment(LegacyApartment):
     class Meta:
         proxy = True
-        verbose_name = "Kvartira"
-        verbose_name_plural = "Kvartiralar"
+        verbose_name = "Apartment"
+        verbose_name_plural = "Apartments"
 
 
 class Owner(LegacyOwner):
     class Meta:
         proxy = True
-        verbose_name = "Ega"
-        verbose_name_plural = "Egalar"
+        verbose_name = "Resident"
+        verbose_name_plural = "Residents"

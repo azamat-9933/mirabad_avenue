@@ -4,7 +4,7 @@ import io
 import re
 import zipfile
 from decimal import Decimal, InvalidOperation
-from datetime import timedelta
+from datetime import datetime, time, timedelta
 
 from django.contrib.auth import logout
 from django.core.paginator import EmptyPage, Paginator
@@ -13,7 +13,7 @@ from django.db import DatabaseError, OperationalError, transaction
 from django.db.models import Case, Count, F, IntegerField, Max, Prefetch, Q, Sum, Value, When
 from django.http import JsonResponse
 from django.utils import timezone
-from django.utils.dateparse import parse_datetime
+from django.utils.dateparse import parse_date, parse_datetime
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_POST
@@ -96,6 +96,12 @@ class SystemHealthView(PortalPageView):
 class BillingView(PortalPageView):
     template_name = "portal/billing.html"
     page_title = "Residential Complex Management | HydroFlow"
+    active_page = "billing"
+
+
+class BillingPeriodCreateView(PortalPageView):
+    template_name = "portal/billing_period_create.html"
+    page_title = "Create Billing Period | HydroFlow"
     active_page = "billing"
 
 
@@ -184,7 +190,18 @@ def _paginate_queryset(queryset, page, page_size):
     return page_obj
 
 
-def _apply_period_filter(queryset, field_name, period):
+def _apply_period_filter(queryset, field_name, period, period_from="", period_to=""):
+    from_date = parse_date(str(period_from or "").strip()) if period_from else None
+    to_date = parse_date(str(period_to or "").strip()) if period_to else None
+    if from_date or to_date:
+        current_tz = timezone.get_current_timezone()
+        if from_date:
+            start_dt = timezone.make_aware(datetime.combine(from_date, time.min), current_tz)
+            queryset = queryset.filter(**{f"{field_name}__gte": start_dt})
+        if to_date:
+            end_dt = timezone.make_aware(datetime.combine(to_date, time.max), current_tz)
+            queryset = queryset.filter(**{f"{field_name}__lte": end_dt})
+        return queryset
     period_value = str(period or "").strip().lower()
     if not period_value or period_value == "all":
         return queryset
@@ -294,6 +311,7 @@ def _serialize_transaction_row(transaction_row, override_map=None):
         "complexBackendId": complex_obj.id,
         "residentId": f"owner-{owner.id}",
         "residentName": owner.fio,
+        "apartment": apartment.number,
         "complexId": f"complex-{complex_obj.id}",
         "buildingId": f"building-{building.id}",
         "type": _transaction_type(transaction_row),
@@ -546,6 +564,8 @@ def api_list_residents(request):
     telegram_value = _query_param(request, "telegram", "all").lower()
     district_value = _query_param(request, "district", "")
     period_value = _query_param(request, "period", "all").lower()
+    period_from = _query_param(request, "period_from", "")
+    period_to = _query_param(request, "period_to", "")
     ordering_raw = _query_param(request, "ordering", "name")
     allowed_ordering = {
         "name": "fio",
@@ -608,7 +628,7 @@ def api_list_residents(request):
         "apartment__building__complex__title",
         "apartment__building__complex__address",
     )
-    queryset = _apply_period_filter(queryset, "created_at", period_value)
+    queryset = _apply_period_filter(queryset, "created_at", period_value, period_from, period_to)
     complex_id = _query_int(request, "complex_id", 0)
     building_id = _query_int(request, "building_id", 0)
     apartment_id = _query_int(request, "apartment_id", 0)
@@ -631,6 +651,8 @@ def api_list_transactions(request):
     payment_type = _query_param(request, "payment_type", "").lower()
     district_value = _query_param(request, "district", "")
     period_value = _query_param(request, "period", "all").lower()
+    period_from = _query_param(request, "period_from", "")
+    period_to = _query_param(request, "period_to", "")
     ordering_raw = _query_param(request, "ordering", "-created_at")
     allowed_ordering = {
         "id": "id",
@@ -683,7 +705,7 @@ def api_list_transactions(request):
         "owner__apartment__building__complex__title",
         "owner__apartment__building__complex__address",
     )
-    queryset = _apply_period_filter(queryset, "created_at", period_value)
+    queryset = _apply_period_filter(queryset, "created_at", period_value, period_from, period_to)
     if status_value in {"success", "paid"}:
         queryset = queryset.filter(amount__gt=0)
     elif status_value in {"pending", "overdue", "debt"}:
@@ -709,6 +731,8 @@ def api_list_maintenance(request):
     priority_value = _query_param(request, "priority", "").lower()
     district_value = _query_param(request, "district", "")
     period_value = _query_param(request, "period", "all").lower()
+    period_from = _query_param(request, "period_from", "")
+    period_to = _query_param(request, "period_to", "")
     ordering_raw = _query_param(request, "ordering", "priority,-scheduled_at")
     allowed_ordering = {
         "title": "title",
@@ -740,7 +764,7 @@ def api_list_maintenance(request):
     if priority_value:
         queryset = queryset.filter(priority=priority_value)
     queryset = _apply_related_district_filter(queryset, district_value, "complex__title", "complex__address", "location")
-    queryset = _apply_period_filter(queryset, "scheduled_at", period_value)
+    queryset = _apply_period_filter(queryset, "scheduled_at", period_value, period_from, period_to)
     ordering = _normalize_ordering(ordering_raw, allowed_ordering, "priority")
     page_obj = _paginate_queryset(queryset.order_by(*ordering, "id"), page, page_size)
     results = [_serialize_maintenance_row(item) for item in page_obj.object_list]
@@ -755,6 +779,8 @@ def api_list_alerts(request):
     pinned = _query_bool(request, "pinned", None)
     district_value = _query_param(request, "district", "")
     period_value = _query_param(request, "period", "all").lower()
+    period_from = _query_param(request, "period_from", "")
+    period_to = _query_param(request, "period_to", "")
     ordering_raw = _query_param(request, "ordering", "-pinned,-event_at")
     allowed_ordering = {
         "event_at": "event_at",
@@ -785,7 +811,7 @@ def api_list_alerts(request):
     if pinned is not None:
         queryset = queryset.filter(pinned=pinned)
     queryset = _apply_related_district_filter(queryset, district_value, "complex__title", "complex__address", "message")
-    queryset = _apply_period_filter(queryset, "event_at", period_value)
+    queryset = _apply_period_filter(queryset, "event_at", period_value, period_from, period_to)
     ordering = _normalize_ordering(ordering_raw, allowed_ordering, "-pinned")
     page_obj = _paginate_queryset(queryset.order_by(*ordering, "-id"), page, page_size)
     results = [_serialize_alert_row(item) for item in page_obj.object_list]
@@ -799,6 +825,8 @@ def api_list_audit(request):
     actor = _query_param(request, "actor", "")
     district_value = _query_param(request, "district", "")
     period_value = _query_param(request, "period", "all").lower()
+    period_from = _query_param(request, "period_from", "")
+    period_to = _query_param(request, "period_to", "")
     ordering_raw = _query_param(request, "ordering", "-created_at")
     allowed_ordering = {
         "created_at": "created_at",
@@ -833,7 +861,7 @@ def api_list_audit(request):
         if owner_id:
             queryset = queryset.filter(owner_id=owner_id)
         queryset = _apply_related_district_filter(queryset, district_value, "complex__title", "complex__address", "message")
-        queryset = _apply_period_filter(queryset, "created_at", period_value)
+        queryset = _apply_period_filter(queryset, "created_at", period_value, period_from, period_to)
         page_obj = _paginate_queryset(queryset.order_by(*ordering, "-id"), page, page_size)
         results = [_serialize_audit_row(item) for item in page_obj.object_list]
         return _paginated_response(results, page_obj.number, page_size, queryset.count(), ordering_raw)
