@@ -1,12 +1,9 @@
 <div class="fixed inset-0 z-[60] hidden overlay-backdrop" data-overlay-backdrop></div>
 <button class="hidden" data-drawer-open="details-drawer" type="button">Open details</button>
 <button class="hidden" data-drawer-open="apartment-details-drawer" type="button">Open apartment details</button>
-<button aria-label="Open checklist" class="checklist-floating-button" data-checklist-fab type="button">
-<span class="material-symbols-outlined">fact_check</span>
-<span class="checklist-floating-copy"><strong data-i18n-key="Checklist">Checklist</strong><small data-checklist-fab-text><b data-checklist-fab-count>5</b> tasks left</small></span>
-</button>
 
-<aside aria-labelledby="notifications-title" aria-hidden="true" class="app-drawer fixed top-0 right-0 z-[70] h-screen w-full max-w-md bg-white shadow-2xl border-l border-outline-variant/20 translate-x-full" id="notifications-drawer" role="dialog">
+<div aria-labelledby="notifications-title" aria-hidden="true" class="app-modal premium-center-modal fixed inset-0 z-[84] hidden items-center justify-center p-4 sm:p-6" id="notifications-drawer" role="dialog">
+<div class="premium-center-panel premium-notifications-panel">
 <div class="h-full flex flex-col">
 <div class="px-6 py-5 border-b border-surface-container flex items-center justify-between">
 <div>
@@ -94,67 +91,7 @@
 </div>
 </div>
 </div>
-</aside>
-
-<aside aria-labelledby="filter-title" aria-hidden="true" class="app-drawer fixed top-0 right-0 z-[70] h-screen w-full max-w-md bg-white shadow-2xl border-l border-outline-variant/20 translate-x-full" id="filter-drawer" role="dialog">
-<div class="h-full flex flex-col">
-<div class="px-6 py-5 border-b border-surface-container flex items-center justify-between">
-<div>
-<h2 class="text-lg font-black text-on-surface" id="filter-title">Filters</h2>
-<p class="text-xs text-on-surface-variant mt-1">Filters apply to the current backend data set and saved view state.</p>
 </div>
-<button aria-label="Close filters" class="p-2 rounded-lg hover:bg-surface-container transition-colors" data-close-overlay type="button">
-<span class="material-symbols-outlined">close</span>
-</button>
-</div>
-<div class="p-6 space-y-6 overflow-y-auto">
-<div>
-<label class="drawer-label" for="filter-status">Status</label>
-<select class="drawer-field" id="filter-status" data-filter-field data-filter-kind="status">
-<option value="all">All statuses</option>
-<option value="paid">Paid</option>
-<option value="debtor">Debtors</option>
-</select>
-</div>
-<div>
-<label class="drawer-label" for="filter-period-start">Period</label>
-<div class="period-range-shell" data-filter-period-range>
-<div class="period-range-track">
-<span class="period-range-track-active" data-filter-period-track></span>
-</div>
-<input aria-label="Period from" class="period-range-input period-range-input-start" data-filter-period-start id="filter-period-start" max="365" min="0" step="1" type="range" value="0"/>
-<input aria-label="Period to" class="period-range-input period-range-input-end" data-filter-period-end id="filter-period-end" max="365" min="0" step="1" type="range" value="365"/>
-<div class="period-range-values">
-<span data-filter-period-start-label>—</span>
-<span data-filter-period-end-label>—</span>
-</div>
-</div>
-</div>
-<div class="space-y-2">
-<p class="drawer-label">Selected filters</p>
-<div class="flex flex-wrap gap-2" data-filter-drawer-chips></div>
-</div>
-<div class="empty-state hidden" data-filter-empty>
-<span class="material-symbols-outlined">filter_alt_off</span>
-<div>
-<p data-i18n-key="No objects match these filters">No objects match these filters</p>
-<span data-i18n-key="Change status or period to restore data.">Change status or period to restore data.</span>
-</div>
-</div>
-<div class="error-state hidden" data-filter-error>
-<span class="material-symbols-outlined">error</span>
-<div>
-<p>Не удалось загрузить данные</p>
-<span>Проверьте подключение к backend и повторите попытку.</span>
-</div>
-</div>
-</div>
-<div class="p-6 border-t border-surface-container flex gap-3">
-<button class="flex-1 py-3 rounded-lg bg-surface-container text-primary text-sm font-bold" data-confirm-action="reset-filters" data-needs-confirm="true" data-reset-filters type="button">Reset filters</button>
-<button class="flex-1 py-3 rounded-lg bg-primary text-white text-sm font-bold" data-apply-filters type="button">Apply filters</button>
-</div>
-</div>
-</aside>
 
 <aside aria-labelledby="details-title" aria-hidden="true" class="app-drawer fixed top-0 right-0 z-[70] h-screen w-full max-w-xl bg-white shadow-2xl border-l border-outline-variant/20 translate-x-full" id="details-drawer" role="dialog">
 <div class="h-full flex flex-col">
@@ -386,9 +323,11 @@
 </div>
 </div>
 </div>
+</div>
 </aside>
 
-<aside aria-labelledby="checklist-title" aria-hidden="true" class="app-drawer checklist-drawer fixed top-0 right-0 z-[70] h-screen w-full max-w-lg bg-white shadow-2xl border-l border-outline-variant/20 translate-x-full" id="checklist-drawer" role="dialog">
+<div aria-labelledby="checklist-title" aria-hidden="true" class="app-modal premium-center-modal fixed inset-0 z-[84] hidden items-center justify-center p-4 sm:p-6" id="checklist-drawer" role="dialog">
+<div class="premium-center-panel premium-checklist-panel checklist-drawer">
 <div class="h-full flex flex-col">
 <div class="checklist-hero">
 <button aria-label="Close checklist" class="profile-drawer-close" data-close-overlay type="button">
@@ -459,7 +398,38 @@
 <button data-checklist-action="mark-reviewed" type="button"><span class="material-symbols-outlined">task_alt</span><span data-i18n-key="Mark reviewed">Mark reviewed</span></button>
 </div>
 </div>
-</aside>
+</div>
+</div>
+
+<div aria-labelledby="resident-transactions-title" aria-hidden="true" class="app-modal fixed inset-0 z-[84] hidden items-center justify-center p-6" id="resident-transactions-modal" role="dialog">
+<div class="modal-panel export-preview-panel resident-transactions-panel w-full max-w-3xl bg-white rounded-lg shadow-2xl border border-outline-variant/20 overflow-hidden">
+<div class="export-preview-hero">
+<span class="material-symbols-outlined">history</span>
+<div>
+<p class="profile-kicker" data-i18n-key="History">History</p>
+<h2 id="resident-transactions-title">Resident transactions</h2>
+<small data-resident-transactions-subtitle>Live transaction history from database.</small>
+</div>
+<button aria-label="Close resident transactions" class="profile-drawer-close" data-close-overlay type="button">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<div class="resident-transactions-summary" data-resident-transactions-summary>
+<div><span data-i18n-key="Resident ID">Resident ID</span><strong data-resident-transactions-id>--</strong></div>
+<div><span data-i18n-key="Phone">Phone</span><strong data-resident-transactions-phone>--</strong></div>
+<div><span data-i18n-key="House">House</span><strong data-resident-transactions-house>--</strong></div>
+<div><span data-i18n-key="Apartment">Apartment</span><strong data-resident-transactions-apartment>--</strong></div>
+<div><span data-i18n-key="Current Balance">Current Balance</span><strong data-resident-transactions-balance>0 UZS</strong></div>
+</div>
+<div class="resident-transactions-body">
+<div class="resident-transactions-list" data-resident-transactions-list></div>
+<div class="resident-transactions-empty hidden" data-resident-transactions-empty>
+<span class="material-symbols-outlined">receipt_long</span>
+<p data-i18n-key="No transactions found">No transactions found</p>
+</div>
+</div>
+</div>
+</div>
 
 <aside aria-labelledby="profile-title" aria-hidden="true" class="app-drawer profile-drawer fixed top-0 right-0 z-[70] h-screen w-full max-w-md bg-white shadow-2xl border-l border-outline-variant/20 translate-x-full" id="profile-drawer" role="dialog">
 <div class="h-full flex flex-col">
@@ -532,6 +502,7 @@
 </button>
 </div>
 </div>
+</div>
 </aside>
 
 <div aria-labelledby="command-title" aria-hidden="true" class="app-modal fixed inset-0 z-[80] hidden items-start justify-center p-6 pt-24" id="command-palette" role="dialog">
@@ -550,6 +521,87 @@
 <span class="material-symbols-outlined">search_off</span>
 <p data-i18n-key="No results">No results</p>
 </div>
+</div>
+</div>
+</div>
+
+<div aria-labelledby="resident-command-profile-title" aria-hidden="true" class="app-modal fixed inset-0 z-[86] hidden items-center justify-center p-4 md:p-6" id="resident-command-profile-modal" role="dialog">
+<div class="modal-panel resident-command-profile-panel w-full max-w-5xl bg-white rounded-lg shadow-2xl border border-outline-variant/20 overflow-hidden">
+<div class="resident-command-profile-hero">
+<span class="material-symbols-outlined" aria-hidden="true">person_search</span>
+<div>
+<p class="profile-kicker" data-i18n-key="Resident profile">Resident profile</p>
+<h2 id="resident-command-profile-title" data-resident-profile-name>Resident</h2>
+<small data-resident-profile-subtitle data-i18n-key="Loaded from database">Loaded from database</small>
+</div>
+<button aria-label="Close resident profile" class="profile-drawer-close" data-close-overlay type="button">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<div class="resident-command-profile-body">
+<aside class="resident-command-profile-media">
+<div class="resident-command-profile-photo-shell">
+<img alt="" class="resident-command-profile-photo hidden" data-resident-profile-photo src=""/>
+<div class="resident-command-profile-fallback" data-resident-profile-fallback>
+<span class="material-symbols-outlined" aria-hidden="true">account_circle</span>
+<p data-i18n-key="No photo">No photo</p>
+</div>
+</div>
+<div class="resident-command-profile-id-card">
+<span data-i18n-key="Resident ID">Resident ID</span>
+<strong data-resident-profile-id>--</strong>
+</div>
+</aside>
+<section class="resident-command-profile-sheet">
+<div class="resident-command-profile-grid">
+<article class="resident-command-profile-field">
+<span data-i18n-key="Name">Name</span>
+<strong data-resident-profile-name-copy>--</strong>
+</article>
+<article class="resident-command-profile-field">
+<span data-i18n-key="Phone">Phone</span>
+<strong data-resident-profile-phone>--</strong>
+</article>
+<article class="resident-command-profile-field">
+<span data-i18n-key="Current Balance">Current Balance</span>
+<strong class="resident-command-profile-balance is-positive" data-resident-profile-balance-wrap><span class="material-symbols-outlined" data-resident-profile-balance-icon>verified</span><span data-resident-profile-balance>0 UZS</span></strong>
+</article>
+<article class="resident-command-profile-field">
+<span data-i18n-key="Telegram user">Telegram user</span>
+<strong class="resident-command-profile-chip is-connected" data-resident-profile-tg-user>--</strong>
+</article>
+<article class="resident-command-profile-field">
+<span data-i18n-key="Contract">Contract</span>
+<strong class="resident-command-profile-chip is-contract-true" data-resident-profile-contract>True</strong>
+</article>
+<article class="resident-command-profile-field">
+<span data-i18n-key="Telegram status">Telegram status</span>
+<strong class="resident-command-profile-chip is-connected" data-resident-profile-tg-status>Connected</strong>
+</article>
+<article class="resident-command-profile-field">
+<span data-i18n-key="House">House</span>
+<strong data-resident-profile-house>--</strong>
+</article>
+<article class="resident-command-profile-field">
+<span data-i18n-key="Apartment">Apartment</span>
+<strong data-resident-profile-apartment>--</strong>
+</article>
+</div>
+<div class="resident-command-profile-actions">
+<button class="resident-command-profile-action is-history" data-resident-profile-history type="button">
+<span class="material-symbols-outlined" aria-hidden="true">history</span>
+<span data-i18n-key="History">History</span>
+</button>
+<a class="resident-command-profile-action is-edit" data-resident-profile-edit href="#">
+<span class="material-symbols-outlined" aria-hidden="true">edit</span>
+<span data-i18n-key="Edit">Edit</span>
+</a>
+<button class="resident-command-profile-action is-notice" data-resident-profile-billing-notice type="button">
+<span class="material-symbols-outlined" aria-hidden="true">description</span>
+<span data-i18n-key="Create Billing Notice">Create Billing Notice</span>
+</button>
+</div>
+</section>
 </div>
 </div>
 </div>
@@ -917,6 +969,7 @@
 </button>
 </div>
 </div>
+</div>
 </aside>
 
 <div aria-labelledby="all-residents-title" aria-hidden="true" class="app-modal fixed inset-0 z-[88] hidden items-center justify-center p-6" id="all-residents-modal" role="dialog">
@@ -1091,10 +1144,17 @@ This form writes directly to Django admin and database.
 <input name="balance" inputmode="decimal" placeholder="0" type="number" step="0.01"/>
 </label>
 <label class="resident-create-field">
+<span data-i18n-key="Contract status">Contract status</span>
+<select name="has_contract">
+<option data-i18n-key="True" value="true">True</option>
+<option data-i18n-key="False" selected value="false">False</option>
+</select>
+</label>
+<label class="resident-create-field">
 <span data-i18n-key="Telegram status">Telegram status</span>
 <select name="telegram_status">
-<option value="pending">pending</option>
-<option value="connected">connected</option>
+<option data-i18n-key="False" selected value="not_linked">False</option>
+<option data-i18n-key="True" value="connected">True</option>
 </select>
 </label>
 <label class="resident-create-field">

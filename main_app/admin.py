@@ -339,8 +339,9 @@ class OwnerAdminForm(forms.ModelForm):
 class OwnerAdmin(admin.ModelAdmin):
     form = OwnerAdminForm
     list_display  = (
-        "fio", "phone",
+        "id", "fio", "phone",
         "apartment_link",
+        "has_contract",
         "balance_display",
         "telegram_status",
         "created_at",
@@ -394,6 +395,7 @@ class OwnerAdmin(admin.ModelAdmin):
                     "fields": (
                         "fio",
                         "phone",
+                        "has_contract",
                         "complex_selector",
                         "building_selector",
                         "section_selector",

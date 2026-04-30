@@ -12,12 +12,16 @@ from django.core.exceptions import ImproperlyConfigured
 from django.db import DatabaseError, OperationalError, transaction
 from django.db.models import Case, Count, F, IntegerField, Max, Prefetch, Q, Sum, Value, When
 from django.http import JsonResponse
+from django.http.request import RawPostDataException
+from django.urls import reverse
 from django.utils import timezone
 from django.utils.dateparse import parse_date, parse_datetime
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import ensure_csrf_cookie
-from django.views.decorators.http import require_POST
 from django.views.generic import TemplateView
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import extend_schema
+from rest_framework.decorators import api_view
 
 from billing.models import HotWaterMeterReading
 from main_app.models import DEFAULT_SECTOR_NAME
@@ -111,10 +115,28 @@ class AnalyticsView(PortalPageView):
     active_page = "analytics"
 
 
+@extend_schema(responses=OpenApiTypes.OBJECT)
+@api_view(["GET"])
 def api_health(request):
     return JsonResponse({"status": "ok"})
 
 
+@extend_schema(responses=OpenApiTypes.OBJECT)
+@api_view(["GET"])
+def api_root(request):
+    return JsonResponse(
+        {
+            "name": "HydroFlow API",
+            "docs": "/api/docs/",
+            "schema": "/api/schema/",
+            "health": "/api/health/",
+            "portal_data": "/api/portal-data/",
+        }
+    )
+
+
+@extend_schema(responses=OpenApiTypes.OBJECT)
+@api_view(["GET"])
 def api_portal_data(request):
     return JsonResponse(safe_portal_data(request))
 
@@ -231,31 +253,49 @@ def _resident_status_value(owner):
     return "debtor" if balance < 0 else "paid"
 
 
+def _normalized_telegram_status(value):
+    raw = str(value or "").strip().lower()
+    if raw in {"connected", "active", "verified", "true", "yes", "1", "linked"}:
+        return "connected"
+    return "not_linked"
+
+
+def _telegram_status_value(owner):
+    telegram_status = _normalized_telegram_status(owner.telegram_status)
+    telegram_user = str(owner.telegram_user or "").strip()
+    telegram_id = str(owner.telegram_id or "").strip()
+    telegram_connected = bool(telegram_user or telegram_id or telegram_status == "connected")
+    if telegram_connected:
+        return "connected", True
+    return "not_linked", False
+
+
 def _serialize_resident_row(owner):
     apartment = owner.apartment
     building = apartment.building
     complex_obj = building.complex
     balance = _money(owner.balance)
     last_payment_at = getattr(owner, "last_payment_at", None)
-    telegram_status = str(owner.telegram_status or "").strip().lower()
     telegram_user = str(owner.telegram_user or "").strip()
     telegram_id = str(owner.telegram_id or "").strip()
-    telegram_connected = bool(telegram_user or telegram_id or telegram_status in {"connected", "active", "verified"})
+    telegram_status, telegram_connected = _telegram_status_value(owner)
     return {
         "id": f"owner-{owner.id}",
         "backendId": owner.id,
         "ownerBackendId": owner.id,
+        "displayId": owner.id,
         "complexId": f"complex-{complex_obj.id}",
         "complexBackendId": complex_obj.id,
         "buildingId": f"building-{building.id}",
         "buildingBackendId": building.id,
         "apartmentId": f"apartment-{apartment.id}",
         "apartmentBackendId": apartment.id,
+        "adminUrl": reverse("admin:main_app_owner_change", args=[owner.id]),
         "name": owner.fio,
-        "apartment": f"Apartment {apartment.number}",
+        "apartment": str(apartment.number),
         "apartmentNumber": apartment.number,
         "section": apartment.section.name if apartment.section_id else "",
-        "building": f"House {building.number}",
+        "building": str(building.number),
         "buildingNumber": building.number,
         "complex": complex_obj.title,
         "complexAddress": complex_obj.address or "",
@@ -268,10 +308,12 @@ def _serialize_resident_row(owner):
         "area": f"{apartment.area:g} m²",
         "rooms": "Apartment",
         "charge": "",
-        "contract": f"APT-{apartment.id}",
+        "contract": "True" if owner.has_contract else "False",
+        "hasContract": bool(owner.has_contract),
+        "contractStatus": "True" if owner.has_contract else "False",
         "meter": apartment.section.name if apartment.section_id else "",
         "email": "",
-        "telegramStatus": telegram_status or "not_linked",
+        "telegramStatus": telegram_status,
         "telegramUser": telegram_user,
         "telegramId": telegram_id,
         "telegramConnected": telegram_connected,
@@ -557,18 +599,32 @@ def _serialize_complex_row(complex_obj, override_maps=None, hot_water_by_complex
     }
 
 
+@extend_schema(responses=OpenApiTypes.OBJECT)
+@api_view(["GET"])
 def api_list_residents(request):
     page, page_size = _page_params(request)
-    search = _query_param(request, "search", "")
     status_value = _query_param(request, "status", "all").lower()
     telegram_value = _query_param(request, "telegram", "all").lower()
+    contract_value = _query_param(request, "contract", "all").lower()
+    owner_id_value = _query_param(request, "owner_id", "")
+    name_value = _query_param(request, "name", "")
+    phone_value = _query_param(request, "phone", "")
+    telegram_user_value = _query_param(request, "telegram_user", "")
+    building_value = _query_param(request, "building", "")
+    apartment_value = _query_param(request, "apartment", "")
     district_value = _query_param(request, "district", "")
     period_value = _query_param(request, "period", "all").lower()
     period_from = _query_param(request, "period_from", "")
     period_to = _query_param(request, "period_to", "")
     ordering_raw = _query_param(request, "ordering", "name")
     allowed_ordering = {
+        "id": "id",
         "name": "fio",
+        "phone": "phone",
+        "telegram_user": "telegram_user",
+        "telegram_status": "telegram_status",
+        "contract": "has_contract",
+        "building": "apartment__building__number",
         "balance": "balance",
         "created_at": "created_at",
         "last_payment": "last_payment_at",
@@ -583,45 +639,44 @@ def api_list_residents(request):
     ).annotate(
         last_payment_at=Max("transactions__created_at", filter=Q(transactions__amount__gt=0))
     )
-    if search:
-        normalized_search = re.sub(
-            r"\b(apartment|apt|house|home|unit|flat|квартира|кв|дом|уй|uy|kvartira)\b\.?",
-            "",
-            search,
-            flags=re.IGNORECASE,
-        ).strip()
-        search_filter = (
-            Q(fio__icontains=search)
-            | Q(phone__icontains=search)
-            | Q(apartment__number__icontains=search)
-            | Q(apartment__building__number__icontains=search)
-            | Q(apartment__building__complex__title__icontains=search)
-            | Q(apartment__building__complex__address__icontains=search)
-        )
-        if normalized_search and normalized_search != search:
-            search_filter |= (
-                Q(apartment__number__icontains=normalized_search)
-                | Q(apartment__building__number__icontains=normalized_search)
-            )
-        queryset = queryset.filter(search_filter)
+    if owner_id_value:
+        owner_id_digits = re.sub(r"[^\d]", "", owner_id_value)
+        if owner_id_digits:
+            queryset = queryset.filter(id=int(owner_id_digits))
+    if name_value:
+        queryset = queryset.filter(fio__icontains=name_value)
+    if phone_value:
+        queryset = queryset.filter(phone__icontains=phone_value)
+    if telegram_user_value:
+        queryset = queryset.filter(telegram_user__icontains=telegram_user_value)
     if status_value == "debtor":
         queryset = queryset.filter(balance__lt=0)
     elif status_value == "paid":
         queryset = queryset.filter(balance__gte=0)
-    if telegram_value == "connected":
+    if telegram_value in {"connected", "true", "yes"}:
         queryset = queryset.filter(
             (Q(telegram_user__isnull=False) & ~Q(telegram_user=""))
             | (Q(telegram_id__isnull=False) & ~Q(telegram_id=""))
             | Q(telegram_status__in=["connected", "active", "verified"])
         )
-    elif telegram_value in {"pending", "review"}:
-        queryset = queryset.filter(telegram_status__in=["pending", "review"])
-    elif telegram_value in {"not_linked", "offline"}:
+    elif telegram_value in {"not_linked", "offline", "false", "no", "pending", "review"}:
         queryset = queryset.filter(
             Q(telegram_user__isnull=True) | Q(telegram_user="")
         ).filter(
             Q(telegram_id__isnull=True) | Q(telegram_id="")
-        ).exclude(telegram_status__in=["connected", "active", "verified", "pending", "review"])
+        ).exclude(telegram_status__in=["connected", "active", "verified"])
+    if contract_value == "true":
+        queryset = queryset.filter(has_contract=True)
+    elif contract_value == "false":
+        queryset = queryset.filter(Q(has_contract=False) | Q(has_contract__isnull=True))
+    if building_value:
+        queryset = queryset.filter(
+            Q(apartment__building__number__icontains=building_value)
+            | Q(apartment__building__address__icontains=building_value)
+            | Q(apartment__building__complex__title__icontains=building_value)
+        )
+    if apartment_value:
+        queryset = queryset.filter(apartment__number__icontains=apartment_value)
     queryset = _apply_related_district_filter(
         queryset,
         district_value,
@@ -644,6 +699,8 @@ def api_list_residents(request):
     return _paginated_response(results, page_obj.number, page_size, queryset.count(), ordering_raw)
 
 
+@extend_schema(responses=OpenApiTypes.OBJECT)
+@api_view(["GET"])
 def api_list_transactions(request):
     page, page_size = _page_params(request)
     search = _query_param(request, "search", "")
@@ -724,6 +781,8 @@ def api_list_transactions(request):
     return _paginated_response(results, page_obj.number, page_size, queryset.count(), ordering_raw)
 
 
+@extend_schema(responses=OpenApiTypes.OBJECT)
+@api_view(["GET"])
 def api_list_maintenance(request):
     page, page_size = _page_params(request)
     search = _query_param(request, "search", "")
@@ -771,6 +830,8 @@ def api_list_maintenance(request):
     return _paginated_response(results, page_obj.number, page_size, queryset.count(), ordering_raw)
 
 
+@extend_schema(responses=OpenApiTypes.OBJECT)
+@api_view(["GET"])
 def api_list_alerts(request):
     page, page_size = _page_params(request)
     search = _query_param(request, "search", "")
@@ -818,6 +879,8 @@ def api_list_alerts(request):
     return _paginated_response(results, page_obj.number, page_size, queryset.count(), ordering_raw)
 
 
+@extend_schema(responses=OpenApiTypes.OBJECT)
+@api_view(["GET"])
 def api_list_audit(request):
     page, page_size = _page_params(request)
     search = _query_param(request, "search", "")
@@ -871,6 +934,8 @@ def api_list_audit(request):
         return _paginated_response([], page, page_size, 0, ordering_raw)
 
 
+@extend_schema(responses=OpenApiTypes.OBJECT)
+@api_view(["GET"])
 def api_list_complexes(request):
     page, page_size = _page_params(request)
     search = _query_param(request, "search", "")
@@ -966,9 +1031,16 @@ def api_list_complexes(request):
 
 
 def _json_payload(request):
+    parsed_data = getattr(request, "data", None)
+    if parsed_data is not None:
+        if hasattr(parsed_data, "dict"):
+            return parsed_data.dict()
+        if isinstance(parsed_data, dict):
+            return dict(parsed_data)
+        return parsed_data
     try:
         return json.loads(request.body.decode("utf-8") or "{}")
-    except (UnicodeDecodeError, json.JSONDecodeError):
+    except (RawPostDataException, UnicodeDecodeError, json.JSONDecodeError):
         return {}
 
 
@@ -977,6 +1049,12 @@ def _decimal_or_zero(value):
         return Decimal(str(value or "0").replace(",", "").strip() or "0")
     except (InvalidOperation, ValueError):
         return Decimal("0")
+
+
+def _to_bool(value):
+    if isinstance(value, bool):
+        return value
+    return str(value or "").strip().lower() in {"1", "true", "yes", "on"}
 
 
 def _actor(request):
@@ -1324,7 +1402,8 @@ def _render_export_payload(portal_data, context, export_format, source, language
     return _encode_download(f"{filename_base}.pdf", "application/pdf", pdf_bytes)
 
 
-@require_POST
+@extend_schema(request=OpenApiTypes.OBJECT, responses=OpenApiTypes.OBJECT)
+@api_view(["POST"])
 def api_audit_note(request):
     payload = _json_payload(request)
     message = str(payload.get("message") or "").strip()
@@ -1366,7 +1445,8 @@ def api_audit_note(request):
     )
 
 
-@require_POST
+@extend_schema(request=OpenApiTypes.OBJECT, responses=OpenApiTypes.OBJECT)
+@api_view(["POST"])
 def api_checklist_note(request):
     payload = _json_payload(request)
     mode = str(payload.get("mode") or "create").strip().lower()
@@ -1415,7 +1495,8 @@ def api_checklist_note(request):
     return JsonResponse({"ok": False, "error": "Unknown checklist note mode."}, status=400)
 
 
-@require_POST
+@extend_schema(request=OpenApiTypes.OBJECT, responses=OpenApiTypes.OBJECT)
+@api_view(["POST"])
 def api_support_ticket(request):
     payload = _json_payload(request)
     title = str(payload.get("title") or "").strip() or "Portal support request"
@@ -1478,13 +1559,15 @@ def api_support_ticket(request):
     )
 
 
-@require_POST
+@extend_schema(request=OpenApiTypes.OBJECT, responses=OpenApiTypes.OBJECT)
+@api_view(["POST"])
 def api_logout(request):
     logout(request)
     return JsonResponse({"ok": True, "redirectUrl": "/"})
 
 
-@require_POST
+@extend_schema(request=OpenApiTypes.OBJECT, responses=OpenApiTypes.OBJECT)
+@api_view(["POST"])
 def api_create_complex(request):
     return JsonResponse(
         {
@@ -1495,7 +1578,8 @@ def api_create_complex(request):
     )
 
 
-@require_POST
+@extend_schema(request=OpenApiTypes.OBJECT, responses=OpenApiTypes.OBJECT)
+@api_view(["POST"])
 def api_create_building(request):
     payload = _json_payload(request)
     complex_id = payload.get("complex_id")
@@ -1544,7 +1628,8 @@ def api_create_building(request):
     )
 
 
-@require_POST
+@extend_schema(request=OpenApiTypes.OBJECT, responses=OpenApiTypes.OBJECT)
+@api_view(["POST"])
 def api_create_apartment(request):
     payload = _json_payload(request)
     building_id = payload.get("building_id")
@@ -1613,7 +1698,8 @@ def api_create_apartment(request):
     )
 
 
-@require_POST
+@extend_schema(request=OpenApiTypes.OBJECT, responses=OpenApiTypes.OBJECT)
+@api_view(["POST"])
 def api_create_resident(request):
     payload = _json_payload(request)
     fio = str(payload.get("fio") or "").strip()
@@ -1641,15 +1727,22 @@ def api_create_resident(request):
             status=409,
         )
 
+    telegram_id = str(payload.get("telegram_id") or "").strip() or None
+    telegram_user = str(payload.get("telegram_user") or "").strip() or None
+    telegram_status = _normalized_telegram_status(payload.get("telegram_status"))
+    if telegram_id or telegram_user:
+        telegram_status = "connected"
+
     with transaction.atomic():
         owner = Owner.objects.create(
             fio=fio,
             phone=phone[:20],
             apartment=apartment,
             balance=_decimal_or_zero(payload.get("balance")),
-            telegram_id=str(payload.get("telegram_id") or "").strip() or None,
-            telegram_user=str(payload.get("telegram_user") or "").strip() or None,
-            telegram_status=str(payload.get("telegram_status") or "").strip() or "pending",
+            has_contract=_to_bool(payload.get("has_contract")),
+            telegram_id=telegram_id,
+            telegram_user=telegram_user,
+            telegram_status=telegram_status,
         )
         AuditEvent.objects.create(
             event_type=AuditEvent.TYPE_SYSTEM,
@@ -1673,7 +1766,8 @@ def api_create_resident(request):
     )
 
 
-@require_POST
+@extend_schema(request=OpenApiTypes.OBJECT, responses=OpenApiTypes.OBJECT)
+@api_view(["POST"])
 def api_resident_kit_action(request):
     payload = _json_payload(request)
     action = str(payload.get("action") or "").strip().lower()
@@ -1732,7 +1826,8 @@ def api_resident_kit_action(request):
     )
 
 
-@require_POST
+@extend_schema(request=OpenApiTypes.OBJECT, responses=OpenApiTypes.OBJECT)
+@api_view(["POST"])
 def api_deploy_maintenance(request):
     payload = _json_payload(request)
     complex_id = payload.get("complex_id")
@@ -1817,7 +1912,8 @@ def api_deploy_maintenance(request):
     )
 
 
-@require_POST
+@extend_schema(request=OpenApiTypes.OBJECT, responses=OpenApiTypes.OBJECT)
+@api_view(["POST"])
 def api_usage_report_export(request):
     payload = _json_payload(request)
     export_format = str(payload.get("format") or "CSV").strip().upper()
@@ -1841,11 +1937,23 @@ def api_usage_report_export(request):
     return JsonResponse({"ok": True, "portalData": safe_portal_data(request)})
 
 
-@require_POST
+@extend_schema(request=OpenApiTypes.OBJECT, responses=OpenApiTypes.OBJECT)
+@api_view(["POST"])
 def api_system_alerts_configure(request):
     payload = _json_payload(request)
     mode = str(payload.get("mode") or "create").strip().lower()
     alert = _optional_instance(SystemAlert, payload.get("alert_id"))
+
+    def portal_response(extra):
+        response_payload = {"ok": True, **extra}
+        try:
+            response_payload["portalData"] = safe_portal_data(request)
+        except Exception as exc:
+            # The database write has already succeeded. Do not turn a saved
+            # alert into a 500 just because the dashboard refresh snapshot failed.
+            response_payload["portalData"] = None
+            response_payload["warning"] = f"Portal refresh failed after saving: {exc}"
+        return JsonResponse(response_payload)
 
     if mode in {"acknowledge", "resolve"}:
         if not alert:
@@ -1873,12 +1981,10 @@ def api_system_alerts_configure(request):
             owner=alert.owner,
             metadata={"source": "portal_system_alerts", "mode": mode, "alertId": alert.id},
         )
-        return JsonResponse(
+        return portal_response(
             {
-                "ok": True,
                 "alertId": alert.id,
                 "adminUrl": f"/admin/portal/systemalert/{alert.id}/change/",
-                "portalData": safe_portal_data(request),
             }
         )
 
@@ -1970,17 +2076,16 @@ def api_system_alerts_configure(request):
             metadata={"source": "portal_system_alerts", "alertId": alert.id},
         )
 
-    return JsonResponse(
+    return portal_response(
         {
-            "ok": True,
             "alertId": alert.id,
             "adminUrl": f"/admin/portal/systemalert/{alert.id}/change/",
-            "portalData": safe_portal_data(request),
         }
     )
 
 
-@require_POST
+@extend_schema(request=OpenApiTypes.OBJECT, responses=OpenApiTypes.OBJECT)
+@api_view(["POST"])
 def api_export_report(request):
     payload = _json_payload(request)
     context = str(payload.get("context") or payload.get("source_context") or "residential").strip().lower()
@@ -2019,7 +2124,8 @@ def api_export_report(request):
     return JsonResponse({"ok": True, "download": download, "portalData": safe_portal_data(request)})
 
 
-@require_POST
+@extend_schema(request=OpenApiTypes.OBJECT, responses=OpenApiTypes.OBJECT)
+@api_view(["POST"])
 def api_send_reminder(request):
     payload = _json_payload(request)
     owners = _collect_owner_targets(payload)
@@ -2069,7 +2175,8 @@ def api_send_reminder(request):
     return JsonResponse({"ok": True, "count": created, "portalData": safe_portal_data(request)})
 
 
-@require_POST
+@extend_schema(request=OpenApiTypes.OBJECT, responses=OpenApiTypes.OBJECT)
+@api_view(["POST"])
 def api_assign_technician(request):
     payload = _json_payload(request)
     technician = str(payload.get("technician") or "Field Team A").strip() or "Field Team A"
@@ -2184,7 +2291,8 @@ def api_assign_technician(request):
     return JsonResponse({"ok": False, "error": "No backend target was resolved for assignment."}, status=400)
 
 
-@require_POST
+@extend_schema(request=OpenApiTypes.OBJECT, responses=OpenApiTypes.OBJECT)
+@api_view(["POST"])
 def api_assign_status(request):
     payload = _json_payload(request)
     context = str(payload.get("context") or "").strip().lower()
@@ -2256,3 +2364,4 @@ def api_assign_status(request):
         metadata={"source": "portal_assign_status", "context": context, "updated": updated},
     )
     return JsonResponse({"ok": True, "updated": updated, "portalData": safe_portal_data(request)})
+

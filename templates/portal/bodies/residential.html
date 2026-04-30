@@ -89,10 +89,10 @@
 <!-- Main Layout with Sidebar -->
 <div class="grid grid-cols-12 gap-8">
 <!-- Main Table Section -->
-<div class="col-span-12 xl:col-span-9 bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden">
+<div class="col-span-12 xl:col-span-9 bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden" data-residential-performance-card>
 <div class="px-6 py-5 flex flex-col gap-4 border-b border-surface-container-low xl:flex-row xl:items-center xl:justify-between">
 <div class="flex flex-col gap-3">
-<h3 class="text-lg font-bold text-primary">Complex Performance Overview</h3>
+<h3 class="text-lg font-bold text-primary" data-residential-performance-heading>Complex Performance Overview</h3>
 <div class="residential-admin-actions" data-structure-create-actions>
 <button class="residential-admin-action" data-modal-open="create-building-modal" type="button">
 <span class="material-symbols-outlined">home_work</span>
@@ -108,13 +108,13 @@
 </button>
 </div>
 </div>
-<button class="text-xs font-bold text-primary flex items-center gap-1 hover:underline shrink-0" data-export-open data-export-source="Complex Performance Overview" type="button">
+<button class="text-xs font-bold text-primary flex items-center gap-1 hover:underline shrink-0" data-export-context="residential" data-export-open data-export-source="Complex Performance Overview" type="button">
 <span>Export CSV</span>
 <span class="material-symbols-outlined text-[14px]">download</span>
 </button>
 </div>
 <div class="overflow-x-auto residential-table-fit">
-<table class="w-full border-collapse text-left residential-performance-table">
+<table class="w-full border-collapse text-left residential-performance-table" data-residential-performance-table>
 <thead>
 <tr class="bg-surface-container-low/50">
 <th class="px-6 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-wider">Complex Name</th>

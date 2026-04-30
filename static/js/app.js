@@ -5,17 +5,15 @@
     const translations = {
         "Utility Management": { ru: "Управление коммунальными услугами", uz: "Kommunal boshqaruv" },
         "Dashboard": { ru: "Обзор", uz: "Boshqaruv paneli" },
-        "Residents": { ru: "Резиденты", uz: "Rezidentlar" },
+        "Residents": { ru: "Абоненты", uz: "Abonentlar" },
         "Residential Units": { ru: "Жилые объекты", uz: "Turar joy obyektlari" },
-        "Properties": { ru: "Объекты", uz: "Obyektlar" },
+        "Properties": { ru: "Дома", uz: "Uylar" },
         "System Health": { ru: "Состояние систем", uz: "Tizim holati" },
         "Billing & Debt": { ru: "Платежи и долги", uz: "To'lovlar va qarzlar" },
-        "Payments": { ru: "Платежи", uz: "To'lovlar" },
+        "Payments": { ru: "Платежи и долги", uz: "To'lovlar va qarzlar" },
         "Analytics": { ru: "Аналитика", uz: "Tahlil" },
-        "Reports": { ru: "Отчеты", uz: "Hisobotlar" },
-        "New Unit Request": { ru: "Новая заявка", uz: "Yangi ariza" },
+        "Reports": { ru: "Статистика", uz: "Statistika" },
         "Settings": { ru: "Настройки", uz: "Sozlamalar" },
-        "Support": { ru: "Поддержка", uz: "Yordam" },
         "Recent requests": { ru: "Недавние запросы", uz: "So'nggi so'rovlar" },
         "No results": { ru: "Ничего не найдено", uz: "Natija topilmadi" },
         "Admin User": { ru: "Администратор", uz: "Administrator" },
@@ -50,6 +48,7 @@
         "Profile update queued": { ru: "Обновление профиля поставлено в очередь", uz: "Profil yangilanishi navbatga qo'yildi" },
         "Sign out unavailable": { ru: "Выход пока недоступен", uz: "Chiqish hozircha mavjud emas" },
         "Notifications": { ru: "Уведомления", uz: "Bildirishnomalar" },
+        "To do": { ru: "Задачи", uz: "Vazifalar" },
         "Unread operational events and assigned actions.": { ru: "Непрочитанные события и назначенные действия.", uz: "O'qilmagan hodisalar va tayinlangan amallar." },
         "3 unread": { ru: "3 непрочитанных", uz: "3 ta o'qilmagan" },
         "Mark all as read": { ru: "Отметить все как прочитанные", uz: "Hammasini o'qilgan qilish" },
@@ -114,6 +113,9 @@
         "No filters": { ru: "Фильтров нет", uz: "Filtrlar yo'q" },
         "All homes connected": { ru: "Все дома подключены", uz: "Barcha uylar ulangan" },
         "All": { ru: "Все", uz: "Hammasi" },
+        "All short": { ru: "Все", uz: "Jami" },
+        "Debtors short": { ru: "Долг", uz: "Qarz" },
+        "Paid short": { ru: "Оплата", uz: "To'lov" },
         "Close alert": { ru: "Закрыть alert", uz: "Alertni yopish" },
         "Confirm action": { ru: "Подтвердите действие", uz: "Amalni tasdiqlang" },
         "Confirm": { ru: "Подтвердить", uz: "Tasdiqlash" },
@@ -148,11 +150,18 @@
         "Residents with overdue balance": { ru: "Резиденты с просроченным балансом", uz: "Muddati o'tgan balansli rezidentlar" },
         "Current resident liabilities": { ru: "Текущие обязательства резидентов", uz: "Rezidentlarning joriy majburiyatlari" },
         "Resident Directory": { ru: "Каталог резидентов", uz: "Rezidentlar katalogi" },
+        "Name": { ru: "Имя", uz: "Ism" },
+        "Actions": { ru: "Действия", uz: "Amallar" },
+        "Reset": { ru: "Сбросить", uz: "Tozalash" },
+        "Adjust filters to show matching resident profiles.": { ru: "Измените фильтры, чтобы показать подходящие профили резидентов.", uz: "Mos rezident profillarini ko'rsatish uchun filtrlarni o'zgartiring." },
         "Linked resident profiles with contact, apartment and Telegram sync details.": { ru: "Привязанные профили резидентов с контактами, квартирой и Telegram-статусом.", uz: "Kontakt, kvartira va Telegram holati bilan ulangan rezident profillari." },
         "Telegram": { ru: "Telegram", uz: "Telegram" },
         "Connected": { ru: "Подключён", uz: "Ulangan" },
         "Pending": { ru: "Ожидает", uz: "Kutilmoqda" },
         "Not linked": { ru: "Не подключён", uz: "Ulanmagan" },
+        "Review": { ru: "Проверка", uz: "Tekshiruv" },
+        "True": { ru: "Есть", uz: "Bor" },
+        "False": { ru: "Нет", uz: "Yo'q" },
         "No residents found": { ru: "Резиденты не найдены", uz: "Rezidentlar topilmadi" },
         "Adjust search or filters to show matching resident profiles.": { ru: "Измените поиск или фильтры, чтобы показать подходящие профили.", uz: "Mos profillarni ko'rsatish uchun qidiruv yoki filtrlarni o'zgartiring." },
         "Contract": { ru: "Договор", uz: "Shartnoma" },
@@ -160,21 +169,21 @@
         "Telegram user": { ru: "Telegram user", uz: "Telegram foydalanuvchi" },
         "Section": { ru: "Секция", uz: "Seksiya" },
         "Current Balance": { ru: "Текущий баланс", uz: "Joriy balans" },
-        "Total Complexes": { ru: "Всего комплексов", uz: "Jami komplekslar" },
+        "Total Complexes": { ru: "Всего домов", uz: "Jami uylar" },
         "Active Buildings": { ru: "Активные здания", uz: "Faol binolar" },
         "Occupancy Rate": { ru: "Заполняемость", uz: "Bandlik darajasi" },
         "Critical Debt Units": { ru: "Критичные должники", uz: "Jiddiy qarzdor obyektlar" },
         "Active Subscribers": { ru: "Активные абоненты", uz: "Faol abonentlar" },
         "new this month": { ru: "новых за месяц", uz: "bu oy yangi" },
         "Consumption Rate": { ru: "Потребление", uz: "Iste'mol darajasi" },
-        "Efficient flow across 8 complexes": { ru: "Стабильный поток по 8 комплексам", uz: "8 kompleks bo'ylab barqaror oqim" },
+        "Efficient flow across 8 complexes": { ru: "Стабильный поток по 8 домам", uz: "8 uy bo'ylab barqaror oqim" },
         "Outstanding Debt": { ru: "Текущая задолженность", uz: "Joriy qarzdorlik" },
         "Requires Action": { ru: "Требует действия", uz: "Amal talab qiladi" },
         "Consumption Trends": { ru: "Динамика потребления", uz: "Iste'mol dinamikasi" },
         "Seasonal water vs. heating throughput (FY24)": { ru: "Сезонная динамика воды и отопления (FY24)", uz: "Suv va isitish bo'yicha mavsumiy o'tkazuvchanlik (FY24)" },
         "Water": { ru: "Вода", uz: "Suv" },
         "Heating": { ru: "Отопление", uz: "Isitish" },
-        "Complex Status Health Scores": { ru: "Индекс состояния комплексов", uz: "Komplekslar holati indeksi" },
+        "Complex Status Health Scores": { ru: "Индекс состояния домов", uz: "Uylar holati indeksi" },
         "Optimal": { ru: "Оптимально", uz: "Optimal" },
         "Leak Alert": { ru: "Утечка", uz: "Oqish signali" },
         "Central District": { ru: "Центральный район", uz: "Markaziy tuman" },
@@ -214,6 +223,8 @@
         "Close": { ru: "Закрыть", uz: "Yopish" },
         "Add district": { ru: "Добавить район", uz: "Hudud qo'shish" },
         "Add house": { ru: "Добавить дом", uz: "Uy qo'shish" },
+        "Add notification": { ru: "Добавить уведомление", uz: "Bildirishnoma qo'shish" },
+        "Add payment": { ru: "Добавить оплату", uz: "To'lov qo'shish" },
         "Add apartment": { ru: "Добавить квартиру", uz: "Kvartira qo'shish" },
         "Add resident": { ru: "Добавить резидента", uz: "Rezident qo'shish" },
         "Create district": { ru: "Создать район", uz: "Hudud yaratish" },
@@ -242,7 +253,7 @@
         "Active alerts": { ru: "Активные уведомления", uz: "Faol ogohlantirishlar" },
         "Create alert": { ru: "Создать уведомление", uz: "Ogohlantirish yaratish" },
         "Ready to create a live system alert.": { ru: "Готово к созданию live system alert.", uz: "Jonli tizim ogohlantirishini yaratishga tayyor." },
-        "Whole complex": { ru: "Весь комплекс", uz: "Butun kompleks" },
+        "Whole complex": { ru: "Весь дом", uz: "Butun uy" },
         "System alert": { ru: "Системное уведомление", uz: "Tizim ogohlantirishi" },
         "Acknowledge": { ru: "Подтвердить", uz: "Tasdiqlash" },
         "Resolve": { ru: "Решить", uz: "Hal qilish" },
@@ -302,27 +313,38 @@
         "View All": { ru: "Смотреть все", uz: "Hammasini ko'rish" },
         "Resident directory": { ru: "Каталог жильцов", uz: "Yashovchilar katalogi" },
         "No residents available": { ru: "Нет доступных жильцов", uz: "Mavjud yashovchilar yo'q" },
-        "Residential Complex Management": { ru: "Управление жилым комплексом", uz: "Turar joy kompleksini boshqarish" },
+        "Residential Complex Management": { ru: "Управление домами", uz: "Uylarni boshqarish" },
         "Managing 124 active residents across 48 units.": { ru: "124 активных жильца в 48 объектах.", uz: "48 obyekt bo'yicha 124 faol yashovchi." },
         "Add New Resident": { ru: "Добавить жильца", uz: "Yangi yashovchi qo'shish" },
         "Resident admin form": { ru: "Форма admin panel", uz: "Admin panel formasi" },
         "This form writes directly to Django admin and database.": { ru: "Эта форма напрямую записывает данные в Django admin и DB.", uz: "Bu forma ma'lumotlarni Django admin va DB ga to'g'ridan-to'g'ri yozadi." },
         "Full name": { ru: "Полное имя", uz: "To'liq ism" },
         "Phone": { ru: "Телефон", uz: "Telefon" },
-        "Complex": { ru: "ЖК", uz: "Kompleks" },
+        "Complex": { ru: "Дом", uz: "Uy" },
         "Building": { ru: "Дом", uz: "Uy" },
         "Section": { ru: "Секция", uz: "Seksiya" },
         "Apartment": { ru: "Квартира", uz: "Kvartira" },
+        "Contract status": { ru: "Статус договора", uz: "Shartnoma holati" },
         "Telegram status": { ru: "Статус Telegram", uz: "Telegram holati" },
         "Telegram id": { ru: "Telegram ID", uz: "Telegram ID" },
         "Telegram user": { ru: "Telegram user", uz: "Telegram foydalanuvchi" },
+        "TG user": { ru: "TG user", uz: "TG user" },
+        "TG status": { ru: "TG status", uz: "TG status" },
+        "Contract": { ru: "Договор", uz: "Shartnoma" },
+        "History": { ru: "История", uz: "Tarix" },
+        "Edit": { ru: "Изменить", uz: "Tahrirlash" },
+        "Resident ID": { ru: "ID абонента", uz: "Abonent ID" },
+        "Resident profile": { ru: "Профиль абонента", uz: "Abonent profili" },
+        "Loaded from database": { ru: "Загружено из базы данных", uz: "Bazada yuklangan" },
+        "No photo": { ru: "Нет фото", uz: "Rasm yo'q" },
+        "No transactions found": { ru: "Транзакции не найдены", uz: "Tranzaksiyalar topilmadi" },
         "Only free apartments are shown. Occupied apartments must be edited in admin.": { ru: "Показаны только свободные квартиры. Занятые квартиры редактируются в admin.", uz: "Faqat bo'sh kvartiralar ko'rsatiladi. Band kvartiralar adminda tahrirlanadi." },
         "Create resident": { ru: "Создать жильца", uz: "Yashovchi yaratish" },
         "Consumption & Collections Overview": { ru: "Потребление и сборы", uz: "Iste'mol va tushumlar sharhi" },
         "Active Debtors": { ru: "Активные должники", uz: "Faol qarzdorlar" },
         "Total Outstanding": { ru: "Общая задолженность", uz: "Jami qarzdorlik" },
         "Collection Rate": { ru: "Уровень сборов", uz: "Yig'im darajasi" },
-        "Total Complex Usage": { ru: "Общее потребление комплекса", uz: "Kompleks bo'yicha jami iste'mol" },
+        "Total Complex Usage": { ru: "Общее потребление дома", uz: "Uy bo'yicha jami iste'mol" },
         "Nominal Flow Detected": { ru: "Номинальный поток", uz: "Nominal oqim aniqlandi" },
         "Active Residents": { ru: "Активные жильцы", uz: "Faol yashovchilar" },
         "Filter:": { ru: "Фильтр:", uz: "Filtr:" },
@@ -343,8 +365,8 @@
         "Utility Payment": { ru: "Коммунальный платёж", uz: "Kommunal to'lov" },
         "Usage Payment": { ru: "Оплата потребления", uz: "Iste'mol to'lovi" },
         "Export CSV": { ru: "Экспорт CSV", uz: "CSV eksport" },
-        "Complex Performance Overview": { ru: "Обзор эффективности комплексов", uz: "Komplekslar samaradorligi sharhi" },
-        "Complex Name": { ru: "Название комплекса", uz: "Kompleks nomi" },
+        "Complex Performance Overview": { ru: "Обзор эффективности домов", uz: "Uylar samaradorligi sharhi" },
+        "Complex Name": { ru: "Название дома", uz: "Uy nomi" },
         "Infrastructure": { ru: "Инфраструктура", uz: "Infratuzilma" },
         "Finances": { ru: "Финансы", uz: "Moliya" },
         "Debt Status": { ru: "Статус долга", uz: "Qarz holati" },
@@ -371,7 +393,7 @@
         "Water: Leak Alert": { ru: "Вода: утечка", uz: "Suv: sizib chiqish" },
         "Heating: Maintenance": { ru: "Отопление: обслуживание", uz: "Isitish: xizmat" },
         "Static activity trail for future backend events.": { ru: "Демо-лента для будущих событий backend.", uz: "Kelajak backend hodisalari uchun demo tarix." },
-        "Residential complex detail preview.": { ru: "Демо-детали жилого комплекса.", uz: "Turar joy kompleksi tafsilotlari." },
+        "Residential complex detail preview.": { ru: "Демо-детали дома.", uz: "Uy tafsilotlari." },
         "Heating maintenance window pending": { ru: "Ожидается окно обслуживания отопления", uz: "Isitish xizmati oynasi kutilmoqda" },
         "Schedule technician assignment before 15 Apr 2026.": { ru: "Назначьте техника до 15 Apr 2026.", uz: "Texnikni 15 Apr 2026 gacha tayinlang." },
         "Balance report exported by Admin User.": { ru: "Администратор экспортировал отчёт баланса.", uz: "Administrator balans hisobotini eksport qildi." },
@@ -381,7 +403,7 @@
         "Debt reminder sent to Harbor View Heights.": { ru: "Напоминание о долге отправлено в Harbor View Heights.", uz: "Harbor View Heights uchun qarz eslatmasi yuborildi." },
         "Pressure alert closed after technician confirmation.": { ru: "Alert давления закрыт после подтверждения техника.", uz: "Bosim alerti texnik tasdig'idan keyin yopildi." },
         "Balance adjustment queued for Residential Unit 402B.": { ru: "Корректировка баланса для объекта 402B поставлена в очередь.", uz: "402B obyekt balansi tuzatishi navbatga qo'yildi." },
-        "Open complex details": { ru: "Открыть детали комплекса", uz: "Kompleks tafsilotlarini ochish" },
+        "Open complex details": { ru: "Открыть детали дома", uz: "Uy tafsilotlarini ochish" },
         "Open details": { ru: "Открыть детали", uz: "Tafsilotlarni ochish" },
         "Open filters": { ru: "Открыть фильтры", uz: "Filtrlarni ochish" },
         "Review notifications": { ru: "Проверить уведомления", uz: "Bildirishnomalarni ko'rish" },
@@ -639,7 +661,7 @@
         "Critical alert opened": { ru: "Критичный alert открыт", uz: "Jiddiy alert ochildi" },
         "Maintenance task opened": { ru: "Задача обслуживания открыта", uz: "Texnik xizmat vazifasi ochildi" },
         "Checklist opened": { ru: "Чеклист открыт", uz: "Ro'yxat ochildi" },
-        "Complex": { ru: "Комплекс", uz: "Kompleks" },
+        "Complex": { ru: "Дом", uz: "Uy" },
         "Infra": { ru: "Инфра", uz: "Infra" },
         "Systems": { ru: "Системы", uz: "Tizim" },
         "Finance": { ru: "Финансы", uz: "Moliya" },
@@ -929,8 +951,8 @@
             role: profile.role || "Operator",
             email: profile.email || "No email in admin",
             status: profile.status || "Active",
-            workspace: profile.workspace || "HydroFlow",
-            organization: profile.organization || "HydroFlow",
+            workspace: profile.workspace || "Mirabad Avenue",
+            organization: profile.organization || "Mirabad Avenue",
             accessLevel: profile.accessLevel || "Staff access",
             timezone: profile.timezone || "Asia/Tashkent",
             lastActive: profile.lastActive || billingData.generatedAt || "Backend session",
@@ -1196,126 +1218,14 @@
     };
     window.HydroFlowSyncDashboardStatCards = syncDashboardStatCards;
 
-    const filterStorageKey = "hydroflow-global-filters";
-    const FILTER_DAY_MS = 24 * 60 * 60 * 1000;
-    const defaultFilterState = { district: "all", status: "all", period: "90", periodStart: "", periodEnd: "" };
-    const toDayTimestamp = (timestamp) => {
-        const safeTimestamp = Number.isFinite(Number(timestamp)) ? Number(timestamp) : Date.now();
-        const date = new Date(safeTimestamp);
-        return new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
-    };
-    const isoDateToTimestamp = (value) => {
-        const [year, month, day] = String(value || "").split("-").map(Number);
-        if (!year || !month || !day) return NaN;
-        return new Date(year, month - 1, day).getTime();
-    };
-    const timestampToIsoDate = (timestamp) => {
-        const date = new Date(toDayTimestamp(timestamp));
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, "0");
-        const day = String(date.getDate()).padStart(2, "0");
-        return `${year}-${month}-${day}`;
-    };
-    const timestampToHumanDate = (timestamp) => {
-        const date = new Date(toDayTimestamp(timestamp));
-        const day = String(date.getDate()).padStart(2, "0");
-        const month = String(date.getMonth() + 1).padStart(2, "0");
-        return `${day}.${month}.${date.getFullYear()}`;
-    };
-    const latestFilterDataTimestamp = () => {
-        const transactionTimestamps = (billingData.transactions || []).map((transaction) => dateValue(transaction.date)).filter((value) => Number.isFinite(value));
-        return toDayTimestamp(Math.max(...transactionTimestamps, Date.now()));
-    };
-    const defaultPeriodRangeFromLatest = (latestTimestamp = latestFilterDataTimestamp()) => ({
-        start: toDayTimestamp(latestTimestamp - 90 * FILTER_DAY_MS),
-        end: toDayTimestamp(latestTimestamp),
-    });
-    const normalizeFilterState = (raw = {}) => ({
-        ...defaultFilterState,
-        ...(raw || {}),
-        district: "all",
-        periodStart: raw.periodStart || raw.period_start || "",
-        periodEnd: raw.periodEnd || raw.period_end || "",
-    });
-    const readFilterState = () => {
-        try {
-            return normalizeFilterState(JSON.parse(storage.getItem(filterStorageKey) || "{}") || {});
-        } catch {
-            return { ...defaultFilterState };
-        }
-    };
-    const writeFilterState = (state) => {
-        storage.setItem(filterStorageKey, JSON.stringify(normalizeFilterState(state)));
-    };
-    const filterPeriodLabel = (period) => ({
-        "30": "Last 30 days",
-        "90": "Last 90 days",
-        month: "Current month",
-        all: "All time",
-        custom: "Custom range",
-    }[period] || "Last 90 days");
-    const filterStatusLabel = (status) => ({
-        all: "All statuses",
-        paid: "Paid",
-        debtor: "Debtors",
-    }[status] || "All statuses");
-    const resolveStatePeriodRange = (state = readFilterState()) => {
-        const normalized = normalizeFilterState(state);
-        const latest = latestFilterDataTimestamp();
-        const defaultRange = defaultPeriodRangeFromLatest(latest);
-        const fromTimestampRaw = isoDateToTimestamp(normalized.periodStart);
-        const toTimestampRaw = isoDateToTimestamp(normalized.periodEnd);
-        const fromTimestamp = Number.isFinite(fromTimestampRaw) ? toDayTimestamp(fromTimestampRaw) : NaN;
-        const toTimestamp = Number.isFinite(toTimestampRaw) ? toDayTimestamp(toTimestampRaw) : NaN;
-
-        if (Number.isFinite(fromTimestamp) || Number.isFinite(toTimestamp)) {
-            const start = Number.isFinite(fromTimestamp) ? fromTimestamp : defaultRange.start;
-            const end = Number.isFinite(toTimestamp) ? toTimestamp : defaultRange.end;
-            return start <= end ? { start, end } : { start: end, end: start };
-        }
-        if (normalized.period === "all") {
-            return { start: Number.NEGATIVE_INFINITY, end: Number.POSITIVE_INFINITY };
-        }
-        if (normalized.period === "month") {
-            const end = toDayTimestamp(latest);
-            const day = new Date(end);
-            const start = new Date(day.getFullYear(), day.getMonth(), 1).getTime();
-            return { start, end };
-        }
-        if (normalized.period === "30") {
-            return { start: toDayTimestamp(latest - 30 * FILTER_DAY_MS), end: toDayTimestamp(latest) };
-        }
-        return defaultRange;
-    };
-    const withinFilterPeriod = (date, state = readFilterState()) => {
-        if (!date) return true;
-        const timestamp = dateValue(date);
-        if (!Number.isFinite(timestamp)) return true;
-        const { start, end } = resolveStatePeriodRange(state);
-        return timestamp >= start && timestamp <= end;
-    };
-    const filterMatchesComplex = (complexId, state = readFilterState()) => {
-        const complex = complexId === SINGLE_SECTOR_ID
-            ? getSingleSectorStats()
-            : getComplexStats().find((item) => item.id === complexId) || getComplexById(complexId);
-        if (!complex) return true;
-        if (state.status === "paid" && (complex.paidResidents || 0) <= 0) return false;
-        if (state.status === "debtor" && (complex.debtorResidents || 0) <= 0) return false;
-        return true;
-    };
-    const filterMatchesResident = (resident, state = readFilterState()) => {
-        if (!resident || !filterMatchesComplex(resident.complexId, { ...state, status: ["paid", "debtor"].includes(state.status) ? "all" : state.status })) return false;
-        if (state.status === "paid" && resident.status !== "paid") return false;
-        if (state.status === "debtor" && resident.status !== "debtor") return false;
-        return true;
-    };
-    const filterMatchesTransaction = (transaction, state = readFilterState()) => {
-        if (!transaction) return true;
-        const resident = getResidentById(transaction.residentId);
-        if (!filterMatchesResident(resident, state)) return false;
-        if (!withinFilterPeriod(transaction.date, state)) return false;
-        return true;
-    };
+    const defaultFilterState = { district: "all", status: "all", period: "all", periodStart: "", periodEnd: "" };
+    const normalizeFilterState = () => ({ ...defaultFilterState });
+    const readFilterState = () => ({ ...defaultFilterState });
+    const writeFilterState = () => {};
+    const withinFilterPeriod = () => true;
+    const filterMatchesComplex = () => true;
+    const filterMatchesResident = (resident) => Boolean(resident);
+    const filterMatchesTransaction = () => true;
 
     const fakeData = {
         complexes: Object.fromEntries(getComplexStats().map((complex) => [complex.name, {
@@ -1409,6 +1319,58 @@
             tone({ frequency: 720, duration: 0.060, delay: 0.045, volume: 0.026 });
             return;
         }
+        if (kind === "soft-click") {
+            tone({ frequency: 540, endFrequency: 620, duration: 0.032, volume: 0.012, type: "sine" });
+            tone({ frequency: 760, endFrequency: 700, duration: 0.036, delay: 0.018, volume: 0.008, type: "triangle" });
+            return;
+        }
+        if (kind === "modal-open") {
+            tone({ frequency: 430, endFrequency: 560, duration: 0.070, volume: 0.018, type: "triangle" });
+            tone({ frequency: 760, endFrequency: 920, duration: 0.085, delay: 0.028, volume: 0.014, type: "sine" });
+            return;
+        }
+        if (kind === "modal-close-water") {
+            tone({ frequency: 760, endFrequency: 520, duration: 0.080, volume: 0.013, type: "sine" });
+            tone({ frequency: 540, endFrequency: 350, duration: 0.105, delay: 0.032, volume: 0.010, type: "triangle" });
+            return;
+        }
+        if (kind === "success") {
+            tone({ frequency: 620, endFrequency: 760, duration: 0.052, volume: 0.020, type: "sine" });
+            tone({ frequency: 920, endFrequency: 1120, duration: 0.074, delay: 0.048, volume: 0.022, type: "sine" });
+            return;
+        }
+        if (kind === "payment-success") {
+            tone({ frequency: 660, endFrequency: 820, duration: 0.050, volume: 0.019, type: "triangle" });
+            tone({ frequency: 980, endFrequency: 1240, duration: 0.082, delay: 0.050, volume: 0.024, type: "sine" });
+            tone({ frequency: 1420, endFrequency: 1540, duration: 0.060, delay: 0.105, volume: 0.014, type: "sine" });
+            return;
+        }
+        if (kind === "notification") {
+            tone({ frequency: 880, endFrequency: 1040, duration: 0.042, volume: 0.014, type: "sine" });
+            tone({ frequency: 1220, endFrequency: 1380, duration: 0.060, delay: 0.036, volume: 0.010, type: "sine" });
+            return;
+        }
+        if (kind === "warning") {
+            tone({ frequency: 330, endFrequency: 280, duration: 0.055, volume: 0.022, type: "triangle" });
+            tone({ frequency: 470, endFrequency: 390, duration: 0.070, delay: 0.050, volume: 0.016, type: "triangle" });
+            return;
+        }
+        if (kind === "error") {
+            tone({ frequency: 250, endFrequency: 200, duration: 0.075, volume: 0.030, type: "triangle" });
+            tone({ frequency: 190, endFrequency: 150, duration: 0.090, delay: 0.062, volume: 0.024, type: "sawtooth" });
+            return;
+        }
+        if (kind === "danger") {
+            tone({ frequency: 240, endFrequency: 180, duration: 0.080, volume: 0.032, type: "triangle" });
+            tone({ frequency: 320, endFrequency: 210, duration: 0.090, delay: 0.070, volume: 0.020, type: "sawtooth" });
+            return;
+        }
+        if (kind === "export-ready") {
+            tone({ frequency: 520, endFrequency: 620, duration: 0.040, volume: 0.015, type: "triangle" });
+            tone({ frequency: 760, endFrequency: 940, duration: 0.060, delay: 0.040, volume: 0.018, type: "sine" });
+            tone({ frequency: 1080, endFrequency: 1320, duration: 0.080, delay: 0.088, volume: 0.020, type: "sine" });
+            return;
+        }
         if (kind === "toast") {
             tone({ frequency: 620, duration: 0.050, volume: 0.022 });
             tone({ frequency: 880, duration: 0.070, delay: 0.055, volume: 0.024 });
@@ -1421,6 +1383,27 @@
         }
         tone({ frequency: 520, duration: 0.040, volume: 0.018 });
         tone({ frequency: 680, duration: 0.040, delay: 0.035, volume: 0.014 });
+    };
+
+    const detectToastSound = (title = "", message = "", kind = "success") => {
+        const text = `${String(title)} ${String(message)}`.toLowerCase();
+        if (kind === "danger") return "danger";
+        if (/\b(payment|to'lov|оплат)\b/.test(text) && /\b(created|completed|success|saved|imported|confirmed|downloaded|generated|ready|processed)\b/.test(text)) {
+            return "payment-success";
+        }
+        if (/\b(export|csv|xlsx|pdf|download)\b/.test(text) && /\b(ready|copied|downloaded|generated|exported|checked)\b/.test(text)) {
+            return "export-ready";
+        }
+        if (/\b(notification|alert|reminder|bildirish|уведомл|ogohlant)\b/.test(text) && /\b(created|updated|pinned|unpinned|closed|resolved|ready|queued)\b/.test(text)) {
+            return "notification";
+        }
+        if (/\b(failed|error|could not|not created|not updated|save failed|request failed)\b/.test(text)) {
+            return kind === "warning" ? "warning" : "error";
+        }
+        if (kind === "warning") return "warning";
+        if (kind === "success") return "success";
+        if (kind === "info") return "toast";
+        return "toast";
     };
 
     const updateSoundControls = () => {
@@ -1456,7 +1439,7 @@
     window.HydroFlowPlaySound = playSound;
     const toast = (title, message = "", kind = "success", options = {}) => {
         if (!toastRegion) return;
-        if (options.sound !== false) playSound(kind === "danger" ? "critical" : "toast");
+        if (options.sound !== false) playSound(options.sound || detectToastSound(title, message, kind));
         const key = normalizeText(`${title}|${message}|${kind}`);
         const existing = activeToasts.get(key);
         if (existing?.item?.isConnected) {
@@ -1599,6 +1582,7 @@
 
     document.querySelectorAll("[data-theme-toggle]").forEach((button) => button.addEventListener("click", () => {
         const next = root.classList.contains("dark") ? "light" : "dark";
+        playSound("soft-click");
         applyTheme(next, { instant: true });
         const lang = storage.getItem("hydroflow-lang") || "en";
         const modeMessage = {
@@ -1689,6 +1673,7 @@
     document.querySelectorAll("[data-lang-option]").forEach((option) => option.addEventListener("click", (event) => {
         event.stopPropagation();
         const next = option.dataset.langOption || "en";
+        playSound("soft-click");
         applyLanguage(next);
         closeLanguageMenus();
         toast(translateValue("Language changed", next), next === "uz" ? "O'zbek tili yoqildi." : next === "ru" ? "Русский язык включен." : "English interface selected.");
@@ -1787,7 +1772,7 @@
             owner: resident.name,
             technician: "Billing Team",
             sla: isDebtor ? "24h" : "Closed",
-            payments: payments.length ? payments : [{ method: "No payments", amount: "0 UZS", date: resident.lastPayment || "13.04.2026" }],
+            payments: payments.length ? payments : [{ method: "No payments", amount: "0 UZS", date: "" }],
             ownerBackendId: resident.ownerBackendId || resident.backendId || "",
             apartmentBackendId: resident.apartmentBackendId || "",
             buildingBackendId: resident.buildingBackendId || "",
@@ -1875,7 +1860,7 @@
         const message = button.dataset.confirmAction === "reset-filters"
             ? "This will restore default district, status and period filters."
             : "The alert will be marked as resolved in this prototype session.";
-        if (button.dataset.confirmAction === "close-critical-alert") playSound("critical");
+        playSound(button.dataset.confirmAction === "close-critical-alert" ? "critical" : "modal-open");
         confirmModal.querySelector("#confirm-title").textContent = translateValue(title, lang);
         confirmModal.querySelector("[data-confirm-message]").textContent = message;
         confirmModal.classList.remove("hidden");
@@ -2042,7 +2027,12 @@
         const lang = storage.getItem("hydroflow-lang") || "en";
         const unreadLabel = lang === "ru" ? `${unread} непрочитанных` : lang === "uz" ? `${unread} ta o'qilmagan` : `${unread} unread`;
         document.querySelector("[data-notification-count]")?.replaceChildren(document.createTextNode(unreadLabel));
-        document.querySelector("[data-notification-dot]")?.classList.toggle("hidden", unread === 0);
+        document.querySelectorAll("[data-notification-dot]").forEach((dot) => {
+            dot.classList.toggle("hidden", unread === 0);
+        });
+        document.querySelectorAll("[data-sidebar-notification-item]").forEach((item) => {
+            item.classList.toggle("is-unread", unread > 0);
+        });
         const activeFilter = document.querySelector("[data-notification-filter].is-active")?.dataset.notificationFilter || "all";
         let visible = 0;
         items.forEach((item) => {
@@ -2336,7 +2326,7 @@
             const viewAlertsButton = systemCriticalSection.querySelector("button");
             if (viewAlertsButton) {
                 viewAlertsButton.type = "button";
-                viewAlertsButton.dataset.drawerOpen = "notifications-drawer";
+                viewAlertsButton.dataset.modalOpen = "notifications-drawer";
             }
         }
 
@@ -2891,18 +2881,7 @@
             timer = window.setTimeout(() => fn(...args), delay);
         };
     };
-    const currentGlobalListFilters = () => {
-        const state = typeof readFilterState === "function" ? readFilterState() : { district: "all", period: "all", status: "all" };
-        const params = {};
-        if (state.district && state.district !== "all") params.district = state.district;
-        if (state.periodStart && state.periodEnd) {
-            params.period_from = state.periodStart;
-            params.period_to = state.periodEnd;
-        } else if (state.period && state.period !== "all") {
-            params.period = state.period;
-        }
-        return { state, params };
-    };
+    const currentGlobalListFilters = () => ({ state: readFilterState(), params: {} });
     const fetchServerList = async (endpoint, params = {}) => {
         const url = new URL(endpoint, window.location.origin);
         Object.entries(params).forEach(([key, value]) => {
@@ -2928,17 +2907,14 @@
     const renderTableStatus = (value) => `<span class="table-assigned-status ${tableStatusClass(value)}">${escapeHtml(value)}</span>`;
     const renderResidentCardMarkup = (resident, layout = "card") => {
         const isDebtor = String(resident.status || "").toLowerCase() === "debtor";
-        const balanceClass = isDebtor ? "text-error" : Number(resident.balance || 0) > 0 ? "text-secondary" : "text-on-surface";
-        const telegramKey = resident.telegramConnected
-            ? "Connected"
-            : resident.telegramStatus === "pending" || resident.telegramStatus === "review"
-            ? "Pending"
-            : "Not linked";
-        const telegramClass = resident.telegramConnected
-            ? "is-telegram-connected"
-            : resident.telegramStatus === "pending" || resident.telegramStatus === "review"
-            ? "is-telegram-pending"
-            : "is-telegram-empty";
+        const isPositiveBalance = Number(resident.balance || 0) >= 0;
+        const balanceClass = isPositiveBalance ? "is-positive" : "is-negative";
+        const balanceIcon = isPositiveBalance ? "verified" : "error";
+        const telegramUser = String(resident.telegramUser || "").trim();
+        const telegramClass = telegramUser ? "is-telegram-connected" : "is-telegram-empty";
+        const contractTranslationKey = resident.hasContract ? "True" : "False";
+        const contractValue = t(contractTranslationKey);
+        const contractClass = resident.hasContract ? "is-contract-true" : "is-contract-false";
         const avatar = resident.photo
             ? `<img class="h-12 w-12 rounded-lg object-cover" src="${escapeAttr(resident.photo)}" alt="">`
             : `<div class="h-12 w-12 rounded-lg ${isDebtor ? "bg-error/20 text-error" : "bg-secondary/20 text-secondary"} flex items-center justify-center font-bold text-xl">${escapeHtml(initialsFor(resident.name || "R"))}</div>`;
@@ -2947,41 +2923,56 @@
                 <article class="resident-list-row"
                     data-resident-card
                     data-resident-id="${escapeAttr(resident.id)}"
+                    data-resident-name="${escapeAttr(resident.name || "")}"
+                    data-resident-phone="${escapeAttr(resident.phone || "")}"
+                    data-resident-apartment-label="${escapeAttr(resident.apartment || "")}"
+                    data-resident-building="${escapeAttr(resident.building || "")}"
+                    data-resident-complex="${escapeAttr(resident.complex || "")}"
+                    data-resident-admin-url="${escapeAttr(resident.adminUrl || "")}"
                     data-resident-status="${escapeAttr(resident.status)}"
                     data-owner-backend-id="${escapeAttr(resident.ownerBackendId || resident.backendId || "")}"
                     data-apartment-backend-id="${escapeAttr(resident.apartmentBackendId || "")}"
                     data-building-backend-id="${escapeAttr(resident.buildingBackendId || "")}"
                     data-complex-backend-id="${escapeAttr(resident.complexBackendId || "")}"
                     data-complex-id="${escapeAttr(resident.complexId || "")}">
+                    <div class="resident-list-id">
+                        <span>ID</span>
+                        <strong>${escapeHtml(String(resident.displayId || resident.ownerBackendId || resident.backendId || ""))}</strong>
+                    </div>
                     <div class="resident-list-person">
-                        ${avatar}
                         <div>
                             <h4>${escapeHtml(resident.name || "Resident")}</h4>
-                            <p>${escapeHtml(resident.apartment || "-")}</p>
+                            <p>${escapeHtml([resident.complex || "-", resident.building || ""].filter(Boolean).join(" · "))}</p>
                         </div>
                     </div>
-                    <div class="resident-list-cell resident-list-property">
-                        <span data-i18n-key="Property">Property</span>
-                        <strong>${escapeHtml(resident.building || "-")}</strong>
-                        <small>${escapeHtml(resident.complex || "-")}</small>
+                    <div class="resident-list-cell">
+                        <span data-i18n-key="TG user">TG user</span>
+                        <strong class="resident-list-telegram ${telegramClass}">${escapeHtml(telegramUser || "-")}</strong>
                     </div>
                     <div class="resident-list-cell">
-                        <span data-i18n-key="Phone">Phone</span>
-                        <strong>${escapeHtml(resident.phone || "-")}</strong>
+                        <span data-i18n-key="Contract">Contract</span>
+                        <strong class="resident-list-pill-wrap"><span class="resident-status-pill ${contractClass}"><span class="resident-status-pill__label" data-i18n-key="${escapeAttr(contractTranslationKey)}">${escapeHtml(contractValue)}</span></span></strong>
                     </div>
                     <div class="resident-list-cell">
-                        <span data-i18n-key="Last Payment">Last Payment</span>
-                        <strong>${escapeHtml(resident.lastPayment || "-")}</strong>
+                        <span data-i18n-key="Apartment">Apartment</span>
+                        <strong>${escapeHtml(resident.apartmentNumber || resident.apartment || "-")}</strong>
                     </div>
-                    <div class="resident-list-cell">
-                        <span data-i18n-key="Telegram">Telegram</span>
-                        <strong class="resident-list-telegram ${telegramClass}">${escapeHtml(resident.telegramUser || telegramKey || "-")}</strong>
+                    <div class="resident-list-balance resident-list-balance-panel">
+                        <div class="resident-list-balance-main">
+                            <span data-i18n-key="Current Balance">Current Balance</span>
+                            <strong class="${balanceClass}"><span class="material-symbols-outlined" aria-hidden="true">${balanceIcon}</span>${formatBillingUzs(resident.balance || 0)}</strong>
+                        </div>
+                        <div class="resident-list-actions">
+                            <a class="resident-list-action is-edit" href="${escapeAttr(resident.adminUrl || "#")}">
+                                <span class="material-symbols-outlined" aria-hidden="true">edit</span>
+                                <span data-i18n-key="Edit">Edit</span>
+                            </a>
+                            <button class="resident-list-action is-history" data-resident-billing-history type="button">
+                                <span class="material-symbols-outlined" aria-hidden="true">history</span>
+                                <span data-i18n-key="History">History</span>
+                            </button>
+                        </div>
                     </div>
-                    <div class="resident-list-balance">
-                        <span data-i18n-key="Current Balance">Current Balance</span>
-                        <strong class="${balanceClass}">${formatBillingUzs(resident.balance || 0)}</strong>
-                    </div>
-                    <button class="resident-list-action" data-resident-billing-history type="button" data-i18n-key="Details">Details</button>
                 </article>
             `;
         }
@@ -3100,7 +3091,7 @@
             config.load();
         }));
         tools?.querySelector("[data-table-action='reminders']")?.addEventListener("click", () => {
-            document.querySelector("[data-drawer-open='notifications-drawer']")?.click();
+            document.querySelector("[data-modal-open='notifications-drawer'], [data-drawer-open='notifications-drawer']")?.click();
         });
         pagination?.querySelector("[data-prev-page]")?.addEventListener("click", () => {
             const state = readListUrlState(config.name, { page: "1" });
@@ -3246,24 +3237,117 @@
         document.body.dataset.serverListsReady = "true";
 
         const residentsGrid = document.querySelector("[data-resident-grid]");
-        const residentFilterGroup = document.querySelector("[data-resident-filter-group]");
-        const residentSearch = document.querySelector("[data-resident-search]");
-        const residentClear = document.querySelector("[data-resident-search-clear]");
+        const residentSortButtons = Array.from(document.querySelectorAll("[data-resident-sort]"));
         const residentEmpty = document.querySelector("[data-resident-filter-empty]");
-        const residentCount = residentFilterGroup?.querySelector("[data-resident-filter-count]");
+        const residentCount = document.querySelector("[data-resident-filter-count]");
         const residentButtons = Array.from(document.querySelectorAll("[data-resident-filter]"));
-        const residentTelegramButtons = Array.from(document.querySelectorAll("[data-resident-telegram]"));
         const residentLayout = residentsGrid?.dataset.residentLayout || "card";
         const residentExpandButton = document.querySelector("[data-resident-expand]");
         const residentPageSize = Number(residentsGrid?.dataset.residentPageSize || residentsGrid?.dataset.residentLimit || 8) || 8;
         const residentCollapsedSize = Number(residentsGrid?.dataset.residentCollapsedSize || 10) || 10;
         let residentExpanded = false;
+        let residentFilterSortState = { filter: "all", direction: "" };
+        const residentFilterDefaults = {
+            page: "1",
+            status: "all",
+            ordering: "name",
+        };
+        const residentLegacyFilterKeys = ["telegram", "contract", "owner_id", "name", "phone", "telegram_user", "building", "apartment"];
+        const residentSortDirections = {
+            id: "desc",
+            name: "asc",
+            phone: "asc",
+            telegram_user: "asc",
+            telegram_status: "desc",
+            contract: "desc",
+            building: "asc",
+            apartment: "asc",
+            balance: "desc",
+        };
         const residentCountLabel = (visible, total = visible) => {
             const lang = storage.getItem("hydroflow-lang") || "en";
             const count = Number(total || visible || 0);
-            if (lang === "ru") return `${count} жителей`;
-            if (lang === "uz") return `${count} rezident`;
-            return `${count} residents`;
+            if (lang === "ru") return `${count} чел.`;
+            if (lang === "uz") return `${count} ab.`;
+            return `${count} res.`;
+        };
+        const syncResidentMetaLabels = (total = residentCount?.dataset.total || 0) => {
+            if (residentCount) {
+                residentCount.dataset.total = String(Number(total || 0));
+                residentCount.textContent = residentCountLabel(total, total);
+                residentCount.title = residentCount.textContent;
+            }
+        };
+        const residentOrderingForStatus = (status) => {
+            if (status === "debtor") return "balance";
+            if (status === "paid") return "-balance";
+            return "name";
+        };
+        const ensureResidentFilterIcons = () => {
+            residentButtons.forEach((button) => {
+                if (button.querySelector("[data-resident-filter-sort-icon]")) return;
+                const icon = document.createElement("span");
+                icon.className = "material-symbols-outlined resident-filter-sort-icon";
+                icon.dataset.residentFilterSortIcon = "true";
+                icon.setAttribute("aria-hidden", "true");
+                icon.textContent = "north";
+                button.appendChild(icon);
+            });
+        };
+        const syncResidentFilterSortIndicators = () => {
+            residentButtons.forEach((button) => {
+                const filter = button.dataset.residentFilter || "all";
+                const direction = residentFilterSortState.filter === filter ? residentFilterSortState.direction : "";
+                button.dataset.filterSortDirection = direction || "none";
+                const icon = button.querySelector("[data-resident-filter-sort-icon]");
+                if (icon) {
+                    icon.textContent = direction === "desc" ? "south" : "north";
+                }
+            });
+        };
+        const syncResidentSortButtons = (ordering) => {
+            const normalized = String(ordering || "name");
+            const descending = normalized.startsWith("-");
+            const activeKey = descending ? normalized.slice(1) : normalized;
+            residentSortButtons.forEach((button) => {
+                const sortKey = button.dataset.residentSort || "";
+                const active = sortKey === activeKey;
+                const icon = button.querySelector("[data-resident-sort-icon]");
+                button.classList.toggle("is-active", active);
+                button.classList.toggle("is-desc", active && descending);
+                button.classList.toggle("is-asc", active && !descending);
+                button.setAttribute("aria-pressed", String(active));
+                if (icon) {
+                    icon.textContent = active ? (descending ? "south" : "north") : "unfold_more";
+                }
+            });
+        };
+        const clearLegacyResidentFilters = () => {
+            const url = new URL(window.location.href);
+            let changed = false;
+            residentLegacyFilterKeys.forEach((key) => {
+                const param = listUrlKey("residents", key);
+                if (!url.searchParams.has(param)) return;
+                url.searchParams.delete(param);
+                changed = true;
+            });
+            if (changed) {
+                window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
+            }
+        };
+        const toggleResidentOrdering = (sortKey) => {
+            if (!sortKey) return;
+            const current = readListUrlState("residents", residentFilterDefaults).ordering;
+            const normalized = String(current || "name");
+            const currentKey = normalized.startsWith("-") ? normalized.slice(1) : normalized;
+            const currentDesc = normalized.startsWith("-");
+            const defaultDesc = residentSortDirections[sortKey] === "desc";
+            let next = defaultDesc ? `-${sortKey}` : sortKey;
+            if (currentKey === sortKey) {
+                next = currentDesc ? sortKey : `-${sortKey}`;
+            }
+            writeListUrlState("residents", { ordering: next, page: 1 });
+            loadResidents();
         };
         const updateResidentExpandButton = (total, shown) => {
             if (!residentExpandButton) return;
@@ -3273,7 +3357,7 @@
         };
         const loadResidents = async () => {
             if (!residentsGrid) return;
-            const state = readListUrlState("residents", { page: "1", search: "", status: "all", telegram: "all", ordering: "name" });
+            const state = readListUrlState("residents", residentFilterDefaults);
             const { state: globalState, params } = currentGlobalListFilters();
             const scopedStatus = ["paid", "debtor"].includes(globalState.status)
                 ? globalState.status
@@ -3285,9 +3369,7 @@
                 ...params,
                 page: state.page,
                 page_size: effectivePageSize,
-                search: state.search,
                 status: scopedStatus,
-                telegram: residentTelegramButtons.length ? state.telegram : "all",
                 ordering: state.ordering,
             });
             residentsGrid.innerHTML = payload.results.map((resident) => renderResidentCardMarkup(resident, residentLayout)).join("");
@@ -3296,40 +3378,52 @@
                 button.classList.toggle("is-active", active);
                 button.setAttribute("aria-pressed", String(active));
             });
-            residentTelegramButtons.forEach((button) => {
-                const active = (button.dataset.residentTelegram || "all") === state.telegram;
-                button.classList.toggle("is-active", active);
-                button.setAttribute("aria-pressed", String(active));
-            });
-            if (residentSearch) residentSearch.value = state.search || "";
-            if (residentCount) residentCount.textContent = residentCountLabel(payload.results.length, payload.total);
+            syncResidentFilterSortIndicators();
+            syncResidentSortButtons(state.ordering);
+            syncResidentMetaLabels(payload.total);
             residentEmpty?.classList.toggle("hidden", payload.results.length > 0);
             updateResidentExpandButton(payload.total, payload.results.length);
             window.HydroFlowSyncLocale?.();
         };
         if (residentsGrid) {
+            clearLegacyResidentFilters();
+            ensureResidentFilterIcons();
             residentButtons.forEach((button) => button.addEventListener("click", () => {
-                writeListUrlState("residents", { status: button.dataset.residentFilter || "all", page: 1 });
+                playSound("soft-click");
+                const nextStatus = button.dataset.residentFilter || "all";
+                if (residentFilterSortState.filter !== nextStatus) {
+                    residentFilterSortState = { filter: nextStatus, direction: "" };
+                } else if (residentFilterSortState.direction === "") {
+                    residentFilterSortState.direction = "asc";
+                } else if (residentFilterSortState.direction === "asc") {
+                    residentFilterSortState.direction = "desc";
+                } else {
+                    residentFilterSortState.direction = "";
+                }
+                let ordering = "name";
+                if (residentFilterSortState.direction === "asc") ordering = "balance";
+                if (residentFilterSortState.direction === "desc") ordering = "-balance";
+                writeListUrlState("residents", {
+                    status: nextStatus,
+                    ordering,
+                    page: 1,
+                });
                 loadResidents();
             }));
-            residentTelegramButtons.forEach((button) => button.addEventListener("click", () => {
-                writeListUrlState("residents", { telegram: button.dataset.residentTelegram || "all", page: 1 });
-                loadResidents();
-            }));
-            residentSearch?.addEventListener("input", debounce(() => {
-                writeListUrlState("residents", { search: residentSearch.value.trim(), page: 1 });
-                loadResidents();
-            }));
-            residentClear?.addEventListener("click", () => {
-                if (!residentSearch) return;
-                residentSearch.value = "";
-                writeListUrlState("residents", { search: "", page: 1 });
-                loadResidents();
+            residentSortButtons.forEach((button) => {
+                button.addEventListener("click", () => {
+                    playSound("soft-click");
+                    toggleResidentOrdering(button.dataset.residentSort || "");
+                });
             });
             residentExpandButton?.addEventListener("click", () => {
+                playSound("soft-click");
                 residentExpanded = true;
                 writeListUrlState("residents", { page: 1 });
                 loadResidents();
+            });
+            document.addEventListener("hydroflow:language-changed", () => {
+                window.requestAnimationFrame(() => syncResidentMetaLabels(residentCount?.dataset.total || 0));
             });
             serverListControllers.residents = { name: "residents", load: loadResidents, refresh: () => loadResidents() };
         }
@@ -3701,7 +3795,7 @@
                 updateVisibleRows();
             });
             tools.querySelector("[data-table-action='reminders']")?.addEventListener("click", () => {
-                document.querySelector("[data-drawer-open='notifications-drawer']")?.click();
+                document.querySelector("[data-modal-open='notifications-drawer'], [data-drawer-open='notifications-drawer']")?.click();
             });
             selectAll?.addEventListener("change", (event) => {
                 currentRows().forEach((row) => {
@@ -3915,8 +4009,10 @@
                 }).join("");
         }
 
-        const performanceHeading = findHeading("Complex Performance Overview");
-        const performanceTable = performanceHeading?.closest(".bg-surface-container-lowest")?.querySelector("table");
+        const performanceCard = document.querySelector("[data-residential-performance-card]")
+            || findHeading("Complex Performance Overview")?.closest(".bg-surface-container-lowest");
+        const performanceTable = performanceCard?.querySelector("[data-residential-performance-table]")
+            || performanceCard?.querySelector("table");
         const performanceBody = performanceTable?.querySelector("tbody");
         if (performanceBody) {
             const hasSelect = Boolean(performanceTable.querySelector("[data-select-all]"));
@@ -4014,315 +4110,8 @@
     };
 
     const setupGlobalFilters = () => {
-        if (document.body.dataset.globalFiltersReady === "true") return;
         document.body.dataset.globalFiltersReady = "true";
-
-        const statusOptions = [
-            ["all", "All statuses"],
-            ["paid", "Paid"],
-            ["debtor", "Debtors"],
-        ];
-        const optionMarkup = (options) => options
-            .map(([value, label]) => `<option value="${escapeHtml(value)}" data-i18n-key="${escapeHtml(label)}">${escapeHtml(label)}</option>`)
-            .join("");
-        const districtFields = () => Array.from(document.querySelectorAll("[data-global-district-filter]"));
-        const statusFields = () => Array.from(document.querySelectorAll("#filter-status"));
-        const periodStartField = document.querySelector("[data-filter-period-start]");
-        const periodEndField = document.querySelector("[data-filter-period-end]");
-        const periodTrackActive = document.querySelector("[data-filter-period-track]");
-        const periodStartLabel = document.querySelector("[data-filter-period-start-label]");
-        const periodEndLabel = document.querySelector("[data-filter-period-end-label]");
-        let periodBounds = null;
-        const collectPeriodTimestamps = () => {
-            const values = [];
-            (billingData.transactions || []).forEach((transaction) => {
-                const timestamp = dateValue(transaction.date);
-                if (Number.isFinite(timestamp)) values.push(timestamp);
-            });
-            (billingData.maintenanceTasks || []).forEach((task) => {
-                const timestamp = dateValue(task.date || task.scheduledAt || "");
-                if (Number.isFinite(timestamp)) values.push(timestamp);
-            });
-            (billingData.notifications || []).forEach((alert) => {
-                const timestamp = dateValue(alert.eventAt || "");
-                if (Number.isFinite(timestamp)) values.push(timestamp);
-            });
-            (billingData.auditEvents || []).forEach((event) => {
-                const timestamp = dateValue(event.time || event.createdAt || "");
-                if (Number.isFinite(timestamp)) values.push(timestamp);
-            });
-            return values;
-        };
-        const buildPeriodBounds = () => {
-            const timestamps = collectPeriodTimestamps().map((value) => toDayTimestamp(value));
-            const max = Math.max(...timestamps, toDayTimestamp(Date.now()));
-            let min = Math.min(...timestamps, toDayTimestamp(max - 365 * FILTER_DAY_MS));
-            if (max - min > 730 * FILTER_DAY_MS) {
-                min = toDayTimestamp(max - 730 * FILTER_DAY_MS);
-            }
-            if (max - min < 30 * FILTER_DAY_MS) {
-                min = toDayTimestamp(max - 30 * FILTER_DAY_MS);
-            }
-            const spanDays = Math.max(30, Math.round((max - min) / FILTER_DAY_MS));
-            return { min, max, spanDays };
-        };
-        const defaultSliderRange = (bounds) => {
-            const defaultRange = defaultPeriodRangeFromLatest(bounds.max);
-            const startValue = Math.max(0, Math.min(bounds.spanDays, Math.round((Math.max(bounds.min, defaultRange.start) - bounds.min) / FILTER_DAY_MS)));
-            const endValue = Math.max(startValue, Math.min(bounds.spanDays, Math.round((Math.min(bounds.max, defaultRange.end) - bounds.min) / FILTER_DAY_MS)));
-            return { startValue, endValue };
-        };
-        const sliderValues = () => {
-            const startValue = Number(periodStartField?.value || 0);
-            const endValue = Number(periodEndField?.value || 0);
-            return startValue <= endValue
-                ? { startValue, endValue }
-                : { startValue: endValue, endValue: startValue };
-        };
-        const syncPeriodTrack = () => {
-            if (!periodTrackActive || !periodBounds) return;
-            const { startValue, endValue } = sliderValues();
-            const max = Math.max(1, periodBounds.spanDays);
-            const left = (startValue / max) * 100;
-            const right = 100 - (endValue / max) * 100;
-            periodTrackActive.style.left = `${left}%`;
-            periodTrackActive.style.right = `${right}%`;
-        };
-        const syncPeriodLabels = () => {
-            if (!periodBounds) return;
-            const { startValue, endValue } = sliderValues();
-            const startTimestamp = toDayTimestamp(periodBounds.min + startValue * FILTER_DAY_MS);
-            const endTimestamp = toDayTimestamp(periodBounds.min + endValue * FILTER_DAY_MS);
-            if (periodStartLabel) periodStartLabel.textContent = timestampToHumanDate(startTimestamp);
-            if (periodEndLabel) periodEndLabel.textContent = timestampToHumanDate(endTimestamp);
-        };
-        const applyPeriodStateToControls = (state = readFilterState()) => {
-            if (!periodStartField || !periodEndField) return;
-            periodBounds = buildPeriodBounds();
-            periodStartField.min = "0";
-            periodEndField.min = "0";
-            periodStartField.max = String(periodBounds.spanDays);
-            periodEndField.max = String(periodBounds.spanDays);
-            let targetRange = defaultSliderRange(periodBounds);
-            const startTimestamp = isoDateToTimestamp(state.periodStart);
-            const endTimestamp = isoDateToTimestamp(state.periodEnd);
-            if (Number.isFinite(startTimestamp) || Number.isFinite(endTimestamp)) {
-                const normalizedStart = Number.isFinite(startTimestamp) ? toDayTimestamp(startTimestamp) : periodBounds.min;
-                const normalizedEnd = Number.isFinite(endTimestamp) ? toDayTimestamp(endTimestamp) : periodBounds.max;
-                const clampedStart = Math.max(periodBounds.min, Math.min(periodBounds.max, normalizedStart));
-                const clampedEnd = Math.max(periodBounds.min, Math.min(periodBounds.max, normalizedEnd));
-                const startValue = Math.max(0, Math.min(periodBounds.spanDays, Math.round((Math.min(clampedStart, clampedEnd) - periodBounds.min) / FILTER_DAY_MS)));
-                const endValue = Math.max(startValue, Math.min(periodBounds.spanDays, Math.round((Math.max(clampedStart, clampedEnd) - periodBounds.min) / FILTER_DAY_MS)));
-                targetRange = { startValue, endValue };
-            }
-            periodStartField.value = String(targetRange.startValue);
-            periodEndField.value = String(targetRange.endValue);
-            syncPeriodTrack();
-            syncPeriodLabels();
-        };
-        const periodStateFromControls = (baseState = readFilterState()) => {
-            if (!periodBounds || !periodStartField || !periodEndField) {
-                return { ...baseState, period: "90", periodStart: "", periodEnd: "" };
-            }
-            const { startValue, endValue } = sliderValues();
-            const defaults = defaultSliderRange(periodBounds);
-            if (startValue === defaults.startValue && endValue === defaults.endValue) {
-                return { ...baseState, period: "90", periodStart: "", periodEnd: "" };
-            }
-            const startTimestamp = toDayTimestamp(periodBounds.min + startValue * FILTER_DAY_MS);
-            const endTimestamp = toDayTimestamp(periodBounds.min + endValue * FILTER_DAY_MS);
-            return {
-                ...baseState,
-                period: "custom",
-                periodStart: timestampToIsoDate(startTimestamp),
-                periodEnd: timestampToIsoDate(endTimestamp),
-            };
-        };
-        const periodChipLabel = (state = readFilterState()) => {
-            if (state.periodStart && state.periodEnd) {
-                const startTimestamp = isoDateToTimestamp(state.periodStart);
-                const endTimestamp = isoDateToTimestamp(state.periodEnd);
-                if (Number.isFinite(startTimestamp) && Number.isFinite(endTimestamp)) {
-                    return `${timestampToHumanDate(startTimestamp)} - ${timestampToHumanDate(endTimestamp)}`;
-                }
-            }
-            return filterPeriodLabel(state.period);
-        };
-        const setFieldOptions = (fields, options) => fields.forEach((field) => {
-            const current = field.value || readFilterState()[field.dataset.filterKind] || "all";
-            field.innerHTML = optionMarkup(options);
-            field.value = options.some(([value]) => value === current) ? current : options[0][0];
-        });
-        const syncFields = (state = readFilterState()) => {
-            setFieldOptions(statusFields(), statusOptions);
-            districtFields().forEach((field) => { field.value = "all"; });
-            statusFields().forEach((field) => { field.value = state.status; });
-            applyPeriodStateToControls(state);
-        };
-        const stateFromControls = () => {
-            const baseState = {
-                ...readFilterState(),
-                district: "all",
-                status: document.getElementById("filter-status")?.value || readFilterState().status,
-            };
-            return periodStateFromControls(baseState);
-        };
-        const updateChips = (state = readFilterState()) => {
-            const chips = [];
-            if (state.status !== defaultFilterState.status) chips.push(["status", filterStatusLabel(state.status)]);
-            if ((state.periodStart && state.periodEnd) || state.period !== defaultFilterState.period) chips.push(["period", periodChipLabel(state)]);
-            const html = chips.map(([kind, label]) => `
-                <button class="filter-chip" type="button" data-filter-chip-remove="${escapeHtml(kind)}">
-                    <span data-i18n-key="${escapeHtml(label)}">${escapeHtml(label)}</span>
-                </button>
-            `).join("");
-            document.querySelectorAll("[data-filter-chips], [data-filter-drawer-chips]").forEach((target) => {
-                target.innerHTML = html;
-            });
-            document.querySelectorAll("[data-filter-chips]").forEach((target) => {
-                target.style.display = chips.length ? "" : "none";
-            });
-            document.querySelectorAll(".filter-trigger-count").forEach((target) => {
-                target.textContent = String(chips.length);
-                target.classList.toggle("hidden", chips.length === 0);
-            });
-            window.HydroFlowSyncLocale?.();
-        };
-        const clearGeneratedRows = () => {
-            document.querySelectorAll("[data-drill-child='true'], [data-smart-empty='true']").forEach((row) => row.remove());
-            document.querySelectorAll("[data-drill-row='district'], [data-drill-row='building']").forEach((row) => {
-                row.classList.remove("is-expanded");
-                row.setAttribute("aria-expanded", "false");
-            });
-        };
-        const setRowFilterState = (row, visible) => {
-            row.dataset.globalFilterHidden = visible ? "false" : "true";
-            const isRootSector = row.dataset.drillRow === "district" && row.dataset.districtId === SINGLE_SECTOR_ID;
-            row.classList.toggle("hidden", isRootSector || !visible);
-        };
-        const filterMatchesMaintenanceRow = (row, state) => {
-            const complexId = row.dataset.complexId || "";
-            const taskStatus = String(row.dataset.statusKey || "").toLowerCase();
-            if (complexId && !filterMatchesComplex(complexId, { ...state, status: ["paid", "debtor"].includes(state.status) ? state.status : "all" })) return false;
-            if (!complexId && state.district !== "all") return false;
-            if (state.status === "paid" && taskStatus !== "completed" && complexId && !filterMatchesComplex(complexId, state)) return false;
-            if (state.status === "debtor" && complexId && !filterMatchesComplex(complexId, state)) return false;
-            if (!withinFilterPeriod(row.dataset.date || "", state)) return false;
-            return true;
-        };
-        const updateEmptyState = (visibleRows) => {
-            const empty = document.querySelector("[data-filter-empty]");
-            if (!empty) return;
-            empty.classList.toggle("hidden", visibleRows > 0);
-        };
-        const applyFilters = (state = readFilterState(), options = {}) => {
-            const normalized = normalizeFilterState(state);
-            writeFilterState(normalized);
-            syncFields(normalized);
-            updateChips(normalized);
-            clearGeneratedRows();
-
-            let visibleRows = 0;
-            document.querySelectorAll("[data-drill-row='district']").forEach((row) => {
-                const visible = filterMatchesComplex(row.dataset.districtId, normalized);
-                if (visible) visibleRows += 1;
-                setRowFilterState(row, visible);
-            });
-            document.querySelectorAll("[data-resident-card]").forEach((card) => {
-                const resident = billingData.residents.find((item) => item.id === card.dataset.residentId);
-                const visible = filterMatchesResident(resident, normalized);
-                card.dataset.globalFilterHidden = visible ? "false" : "true";
-                card.classList.toggle("hidden", !visible);
-            });
-            document.querySelectorAll("[data-transaction-id]").forEach((row) => {
-                const transaction = billingData.transactions.find((item) => item.id === row.dataset.transactionId);
-                const visible = filterMatchesTransaction(transaction, normalized);
-                setRowFilterState(row, visible);
-            });
-            document.querySelectorAll("[data-maintenance-row]").forEach((row) => {
-                const visible = filterMatchesMaintenanceRow(row, normalized);
-                setRowFilterState(row, visible);
-            });
-            document.querySelectorAll(".revenue-debt-item, .debtor-complex-item, .debtor-row, .complex-health-row, .network-node").forEach((item) => {
-                const visible = filterMatchesComplex(item.dataset.complexId || item.dataset.node, normalized);
-                item.classList.toggle("hidden", !visible);
-                item.classList.toggle("is-hidden", !visible && item.classList.contains("network-node"));
-                item.dataset.globalFilterHidden = visible ? "false" : "true";
-            });
-            document.querySelectorAll(".table-search").forEach((input) => {
-                const tools = input.closest(".table-tools");
-                const workspace = tools?.nextElementSibling;
-                const table = workspace?.querySelector?.("table");
-                if (table?.dataset.serverList) return;
-                input.dispatchEvent(new Event("input", { bubbles: true }));
-            });
-            if (options.refreshServer !== false) {
-                window.HydroFlowServerLists?.refreshAll?.({ resetPage: options.resetPage !== false });
-            }
-            document.dispatchEvent(new CustomEvent("hydroflow:filters-applied", { detail: normalized }));
-            updateEmptyState(visibleRows);
-            if (options.toast !== false) {
-                toast(translateValue("Filters applied", storage.getItem("hydroflow-lang") || "en"), `${visibleRows} complexes visible`, "success");
-            }
-        };
-
-        syncFields();
-        updateChips();
-        Array.from(document.querySelectorAll("[data-global-district-filter]")).forEach((field) => field.addEventListener("change", () => {
-            const state = { ...readFilterState(), district: "all" };
-            applyFilters(state, { toast: false });
-        }));
-        const syncPeriodPreview = () => {
-            if (!periodStartField || !periodEndField) return;
-            let startValue = Number(periodStartField.value || 0);
-            let endValue = Number(periodEndField.value || 0);
-            if (startValue > endValue) {
-                if (document.activeElement === periodStartField) {
-                    endValue = startValue;
-                    periodEndField.value = String(endValue);
-                } else {
-                    startValue = endValue;
-                    periodStartField.value = String(startValue);
-                }
-            }
-            syncPeriodTrack();
-            syncPeriodLabels();
-            updateChips(stateFromControls());
-        };
-        document.querySelectorAll("[data-filter-field]").forEach((field) => field.addEventListener("change", () => {
-            updateChips(stateFromControls());
-        }));
-        periodStartField?.addEventListener("input", syncPeriodPreview);
-        periodEndField?.addEventListener("input", syncPeriodPreview);
-        periodStartField?.addEventListener("change", syncPeriodPreview);
-        periodEndField?.addEventListener("change", syncPeriodPreview);
-        document.querySelector("[data-apply-filters]")?.addEventListener("click", () => {
-            applyFilters(stateFromControls());
-        });
-        document.querySelector("[data-reset-filters]")?.addEventListener("click", () => {
-            const button = document.querySelector("[data-reset-filters]");
-            if (button?.dataset.needsConfirm === "true" && button.dataset.confirmed !== "true") return;
-            if (button) button.dataset.confirmed = "false";
-            applyFilters({ ...defaultFilterState });
-            document.querySelector("[data-filter-error]")?.classList.add("hidden");
-        });
-        document.addEventListener("click", (event) => {
-            const chip = event.target.closest("[data-filter-chip-remove]");
-            if (!chip) return;
-            const state = readFilterState();
-            const kind = chip.dataset.filterChipRemove;
-            if (kind === "district") state.district = "all";
-            if (kind === "status") state.status = "all";
-            if (kind === "period") {
-                state.period = "90";
-                state.periodStart = "";
-                state.periodEnd = "";
-            }
-            applyFilters(state);
-        });
-        document.addEventListener("hydroflow:data-rendered", () => applyFilters(readFilterState(), { toast: false }));
-        window.HydroFlowApplyFilters = (nextState = readFilterState(), options = {}) => applyFilters(nextState, { toast: false, ...options });
-        applyFilters(readFilterState(), { toast: false, refreshServer: false });
+        window.HydroFlowApplyFilters = () => {};
     };
 
     document.querySelectorAll("[data-notification-filter]").forEach((button) => button.addEventListener("click", () => {
@@ -4455,15 +4244,15 @@
         };
 
         const readResidentCard = (sourceCard) => {
-            const name = sourceCard.querySelector("h4")?.textContent?.trim() || "Resident";
-            const apartment = sourceCard.querySelector("h4 + p")?.textContent?.trim() || "";
-            const phone = sourceCard.querySelector("p span:last-child")?.textContent?.trim() || "";
-            const lastPayment = sourceCard.querySelectorAll("p span:last-child")?.[1]?.textContent?.trim() || "";
-            const balance = sourceCard.querySelector(".space-y-3 > .flex span:last-child")?.textContent?.trim() || "";
+            const name = sourceCard.dataset.residentName || sourceCard.querySelector("h4")?.textContent?.trim() || "Resident";
+            const apartment = sourceCard.dataset.residentApartmentLabel || "";
+            const phone = sourceCard.dataset.residentPhone || "";
+            const lastPayment = "";
+            const balance = sourceCard.querySelector(".resident-list-balance strong")?.textContent?.trim() || "";
             const statusValue = sourceCard.dataset.residentStatus || "paid";
             const status = statusValue === "debtor" ? "DEBTORS" : "PAID";
             const avatarImage = sourceCard.querySelector("img.h-12.w-12");
-            const avatarInitials = sourceCard.querySelector(".h-12.w-12:not(img)")?.textContent?.trim() || name.split(" ").map((part) => part[0] || "").join("").slice(0, 2).toUpperCase();
+            const avatarInitials = name.split(" ").map((part) => part[0] || "").join("").slice(0, 2).toUpperCase();
 
             return {
                 name,
@@ -4555,44 +4344,120 @@
         grid.querySelectorAll("[data-resident-billing-history]").forEach((button) => {
             button.removeAttribute("data-detail-open");
         });
+        const historyModal = document.getElementById("resident-transactions-modal");
+        const historyList = historyModal?.querySelector("[data-resident-transactions-list]");
+        const historyEmpty = historyModal?.querySelector("[data-resident-transactions-empty]");
+        const historyId = historyModal?.querySelector("[data-resident-transactions-id]");
+        const historyPhone = historyModal?.querySelector("[data-resident-transactions-phone]");
+        const historyHouse = historyModal?.querySelector("[data-resident-transactions-house]");
+        const historyApartment = historyModal?.querySelector("[data-resident-transactions-apartment]");
+        const historyBalance = historyModal?.querySelector("[data-resident-transactions-balance]");
+        const historySubtitle = historyModal?.querySelector("[data-resident-transactions-subtitle]");
+        const historyTitle = historyModal?.querySelector("#resident-transactions-title");
 
         const parseResident = (card) => {
             const resident = getResidentById(card.dataset.residentId);
             if (resident) return resident;
-            const detailRows = card.querySelectorAll(".bg-white\\/40 p");
-            const parsedName = card.querySelector("h4")?.textContent.trim() || "Resident";
-            const parsedPhone = detailRows[0]?.querySelectorAll("span")[1]?.textContent.trim() || "";
             const ownerBackendId = Number(card.dataset.ownerBackendId || 0);
+            const parsedName = card.dataset.residentName || card.querySelector("h4")?.textContent.trim() || "Resident";
+            const parsedPhone = card.dataset.residentPhone || "";
             const fallbackResident = billingData.residents.find((item) =>
                 (ownerBackendId && Number(item.ownerBackendId || item.backendId || 0) === ownerBackendId)
                 || (item.name === parsedName && (!parsedPhone || item.phone === parsedPhone))
             );
             if (fallbackResident) return fallbackResident;
-            const balance = Number(card.querySelector(".text-xl.font-black")?.textContent.replace(/[^\d.-]/g, "")) || 0;
+            const balanceText = card.querySelector(".resident-list-balance strong")?.textContent || "";
+            const balance = Number(balanceText.replace(/[^\d.-]/g, "")) || 0;
             return {
                 id: card.dataset.residentId || "",
+                displayId: card.querySelector(".resident-list-id strong")?.textContent.trim() || "",
                 backendId: card.dataset.ownerBackendId || "",
                 ownerBackendId: card.dataset.ownerBackendId || "",
                 name: parsedName,
-                apartment: card.querySelector("h4 + p")?.textContent.trim() || "",
+                apartment: card.dataset.residentApartmentLabel || "",
+                apartmentNumber: card.dataset.residentApartmentLabel || "",
                 phone: parsedPhone,
-                lastPayment: detailRows[1]?.querySelectorAll("span")[1]?.textContent.trim() || "",
+                building: card.dataset.residentBuilding || "",
+                complex: card.dataset.residentComplex || "",
                 balance,
                 status: card.dataset.residentStatus === "debtor" ? "debtor" : "paid",
                 complexId: card.dataset.complexId || "",
             };
         };
-
-        const residentPayments = (resident) => {
-            const payments = getResidentTransactions(resident.id).slice().sort((a, b) => dateValue(b.date) - dateValue(a.date));
-            if (!payments.length) {
-                return [{ method: "No payments", amount: "0 UZS", date: resident.lastPayment || "13.04.2026" }];
+        const openResidentHistory = (resident) => {
+            if (!historyModal || !resident) return;
+            const residentTransactions = getResidentTransactions(resident.id)
+                .slice()
+                .sort((a, b) => dateValue(b.date) - dateValue(a.date));
+            if (historyTitle) historyTitle.textContent = resident.name || "Resident transactions";
+            if (historySubtitle) {
+                historySubtitle.textContent = [resident.building, resident.apartment].filter(Boolean).join(" · ") || "Live transaction history from database.";
             }
-            return payments.map((payment) => ({
-                method: payment.method,
-                amount: formatBillingUzs(payment.amount),
-                date: payment.date,
-            }));
+            if (historyId) historyId.textContent = String(resident.displayId || resident.ownerBackendId || resident.backendId || "--");
+            if (historyPhone) historyPhone.textContent = resident.phone || "--";
+            if (historyHouse) historyHouse.textContent = resident.building || "--";
+            if (historyApartment) historyApartment.textContent = resident.apartmentNumber || resident.apartment || "--";
+            if (historyBalance) {
+                historyBalance.textContent = formatBillingUzs(resident.balance || 0);
+                historyBalance.classList.toggle("is-negative", Number(resident.balance || 0) < 0);
+                historyBalance.classList.toggle("is-positive", Number(resident.balance || 0) >= 0);
+            }
+            if (historyList) {
+                historyList.innerHTML = residentTransactions.map((payment) => {
+                    const signedAmount = Number(payment.signedAmount ?? payment.amount ?? 0);
+                    const positive = signedAmount >= 0;
+                    return `
+                        <div class="resident-transaction-item">
+                            <div class="resident-transaction-main">
+                                <strong>${escapeHtml(payment.method || payment.type || "Transaction")}</strong>
+                                <small>${escapeHtml(payment.description || payment.externalId || payment.type || "")}</small>
+                            </div>
+                            <div class="resident-transaction-meta">
+                                <time>${escapeHtml(payment.date || "")}</time>
+                                <span class="resident-transaction-amount ${positive ? "is-positive" : "is-negative"}">${positive ? "+" : ""}${formatBillingUzs(Math.abs(signedAmount))}</span>
+                            </div>
+                        </div>
+                    `;
+                }).join("");
+            }
+            historyEmpty?.classList.toggle("hidden", residentTransactions.length > 0);
+            openOverlayById("resident-transactions-modal");
+        };
+        const pickResidentByOwnerId = (value) => {
+            const ownerId = String(value || "").replace(/[^\d]/g, "");
+            if (!ownerId) return null;
+            return billingData.residents.find((item) => String(item.ownerBackendId || item.backendId || "").replace(/[^\d]/g, "") === ownerId) || null;
+        };
+        const resolveResidentForHistory = (source) => {
+            if (!source) return null;
+            if (typeof source === "string") {
+                return getResidentById(source) || pickResidentByOwnerId(source);
+            }
+            const byId = source.id ? getResidentById(source.id) : null;
+            if (byId) return byId;
+            const ownerId = source.ownerBackendId || source.backendId || source.displayId || source.residentBackendId || source.ownerId || "";
+            const byOwner = pickResidentByOwnerId(ownerId);
+            if (byOwner) return byOwner;
+            if (typeof source !== "object") return null;
+            const normalizedOwnerId = String(ownerId || "").replace(/[^\d]/g, "");
+            return {
+                ...source,
+                id: source.id || (normalizedOwnerId ? `owner-${normalizedOwnerId}` : ""),
+                displayId: source.displayId || normalizedOwnerId || "--",
+                ownerBackendId: source.ownerBackendId || normalizedOwnerId,
+                backendId: source.backendId || normalizedOwnerId,
+                apartment: source.apartment || source.apartmentNumber || "",
+                apartmentNumber: source.apartmentNumber || source.apartment || "",
+                building: source.building || "",
+                phone: source.phone || "",
+                name: source.name || "Resident",
+                balance: Number(source.balance || 0),
+            };
+        };
+        window.HydroFlowOpenResidentHistory = (source) => {
+            const resolved = resolveResidentForHistory(source);
+            if (!resolved) return;
+            openResidentHistory(resolved);
         };
 
         grid.addEventListener("click", (event) => {
@@ -4603,10 +4468,7 @@
             event.preventDefault();
             event.stopPropagation();
             const resident = parseResident(card);
-            const details = detailsFromResident(resident);
-            if (!details) return;
-            fillDetails(details);
-            openOverlayById("details-drawer");
+            openResidentHistory(resident);
         });
     };
 
@@ -4947,11 +4809,11 @@
         }
         const syncResidentialLabels = (lang = storage.getItem("hydroflow-lang") || "en") => {
             const labels = {
-                en: ["Complex", "Infra", "Systems", "Finance", "Debt", "Actions"],
-                ru: ["Комплекс", "Инфра", "Системы", "Финансы", "Долг", "Действия"],
-                uz: ["Kompleks", "Infra", "Tizim", "Moliya", "Qarz", "Amal"],
+                en: ["House", "Infra", "Systems", "Finance", "Debt", "Actions"],
+                ru: ["Дом", "Инфра", "Системы", "Финансы", "Долг", "Действия"],
+                uz: ["Uy", "Infra", "Tizim", "Moliya", "Qarz", "Amal"],
             };
-            const fullLabels = ["Complex Name", "Infrastructure", "System Health", "Finances", "Debt Status", "Actions"];
+            const fullLabels = ["House Name", "Infrastructure", "System Health", "Finances", "Debt Status", "Actions"];
             table.querySelectorAll(".table-filter-heading-text").forEach((label, index) => {
                 label.textContent = labels[lang]?.[index] || labels.en[index] || label.textContent;
                 label.title = fullLabels[index] || label.textContent;
@@ -5280,6 +5142,7 @@
         const overlay = document.getElementById(id);
         const backdrop = document.querySelector("[data-overlay-backdrop]");
         if (!overlay) return;
+        playSound("modal-open");
         document.querySelectorAll(".app-drawer.is-open").forEach((drawer) => {
             drawer.classList.remove("is-open");
             drawer.setAttribute("aria-hidden", "true");
@@ -5348,11 +5211,49 @@
             },
             body: JSON.stringify(payload),
         });
-        const data = await response.json().catch(() => ({}));
+        const raw = await response.text();
+        let data = {};
+        try {
+            data = raw ? JSON.parse(raw) : {};
+        } catch (error) {
+            data = {};
+        }
         if (!response.ok || data.ok === false) {
+            console.error("Portal API request failed", {
+                url,
+                status: response.status,
+                payload,
+                response: data.error || raw.slice(0, 600),
+            });
             throw new Error(data.error || `Request failed (${response.status})`);
         }
         return data;
+    };
+
+    const refreshPortalDataSnapshot = async () => {
+        const response = await fetch("/api/portal-data/", {
+            credentials: "same-origin",
+            cache: "no-store",
+            headers: { Accept: "application/json" },
+        });
+        if (!response.ok) return false;
+        const portalData = await response.json().catch(() => null);
+        return portalData ? rehydrateFromPortalData(portalData) : false;
+    };
+
+    const normalizeSystemAlertText = (value) => String(value || "").trim().toLowerCase();
+
+    const findRecoveredSystemAlert = (requestPayload, previousIds = new Set()) => {
+        const title = normalizeSystemAlertText(requestPayload.title);
+        const message = normalizeSystemAlertText(requestPayload.message);
+        if (!title) return null;
+        return (Array.isArray(billingData.systemAlerts) ? billingData.systemAlerts : []).find((alert) => {
+            const backendId = String(alert.backendId || "");
+            if (backendId && previousIds.has(backendId)) return false;
+            const sameTitle = normalizeSystemAlertText(alert.title) === title;
+            const sameMessage = !message || normalizeSystemAlertText(alert.message || alert.subtitle) === message;
+            return sameTitle && sameMessage;
+        }) || null;
     };
 
     const setupResidentCreateForm = () => {
@@ -5492,6 +5393,7 @@
                     phone: formData.get("phone"),
                     apartment_id: formData.get("apartment_id"),
                     balance: formData.get("balance"),
+                    has_contract: formData.get("has_contract"),
                     telegram_id: formData.get("telegram_id"),
                     telegram_user: formData.get("telegram_user"),
                     telegram_status: formData.get("telegram_status"),
@@ -5880,21 +5782,30 @@
         form.addEventListener("submit", async (event) => {
             event.preventDefault();
             const formData = new FormData(form);
+            const previousAlertIds = new Set((Array.isArray(billingData.systemAlerts) ? billingData.systemAlerts : [])
+                .map((alert) => String(alert.backendId || ""))
+                .filter(Boolean));
+            const requestPayload = {
+                mode: "create",
+                title: formData.get("title"),
+                severity: formData.get("severity"),
+                category: formData.get("category"),
+                complex_id: formData.get("complex_id"),
+                building_id: formData.get("building_id"),
+                assigned_to: formData.get("assigned_to"),
+                action_label: formData.get("action_label"),
+                message: formData.get("message"),
+            };
             submit.disabled = true;
             setStatus("Creating system alert in Django admin and database...");
             try {
-                const payload = await postPortalJson("/api/system-alerts/configure/", {
-                    mode: "create",
-                    title: formData.get("title"),
-                    severity: formData.get("severity"),
-                    category: formData.get("category"),
-                    complex_id: formData.get("complex_id"),
-                    building_id: formData.get("building_id"),
-                    assigned_to: formData.get("assigned_to"),
-                    action_label: formData.get("action_label"),
-                    message: formData.get("message"),
-                });
-                rehydrateFromPortalData(payload.portalData);
+                const payload = await postPortalJson("/api/system-alerts/configure/", requestPayload);
+                if (payload.portalData) {
+                    rehydrateFromPortalData(payload.portalData);
+                } else {
+                    await refreshPortalDataSnapshot();
+                    if (payload.warning) console.warn(payload.warning);
+                }
                 renderAlerts();
                 setStatus("System alert created and synced.", "success");
                 form.reset();
@@ -5903,6 +5814,17 @@
                 form.querySelector("input[name='action_label']").value = t("Review alert");
                 toast("System alert created", "The alert is now stored in Django admin and visible in the portal.", "success");
             } catch (error) {
+                const recovered = await refreshPortalDataSnapshot().then(() => findRecoveredSystemAlert(requestPayload, previousAlertIds)).catch(() => null);
+                if (recovered) {
+                    renderAlerts();
+                    setStatus("System alert created and synced.", "success");
+                    form.reset();
+                    syncComplexOptions();
+                    form.querySelector("input[name='assigned_to']").value = t("Operations Team");
+                    form.querySelector("input[name='action_label']").value = t("Review alert");
+                    toast("System alert created", "The alert was saved in Django admin and recovered after refresh.", "success");
+                    return;
+                }
                 setStatus(error.message || "Could not create system alert.", "error");
                 toast("System alert not created", error.message || "Check the selected data.", "warning");
             } finally {
@@ -5924,7 +5846,12 @@
                     mode,
                     alert_id: alertId,
                 });
-                rehydrateFromPortalData(payload.portalData);
+                if (payload.portalData) {
+                    rehydrateFromPortalData(payload.portalData);
+                } else {
+                    await refreshPortalDataSnapshot();
+                    if (payload.warning) console.warn(payload.warning);
+                }
                 renderAlerts();
                 const successKey = mode === "resolve"
                     ? "System alert resolved and synced."
@@ -6307,11 +6234,11 @@
             if (searchClear) searchClear.classList.toggle("hidden", !(searchInput?.value || "").trim());
         };
 
-        const openNoticeModal = () => {
+        const openNoticeModal = (preferredResidentId = "") => {
             openOverlayById("billing-notice-modal");
             activeSort = "desc";
             if (searchInput) searchInput.value = "";
-            activeResidentId = "";
+            activeResidentId = preferredResidentId ? String(preferredResidentId).replace(/[^\d]/g, "") : "";
             hydrateNoticeResidentsFromState();
             if (noticeResidents.length) {
                 render();
@@ -6327,6 +6254,11 @@
                     toast("Billing notice", "Could not prepare debtor list.", "warning");
                 });
         };
+        window.HydroFlowOpenBillingNoticeForResident = (ownerBackendId) => {
+            const normalized = String(ownerBackendId || "").replace(/[^\d]/g, "");
+            openNoticeModal(normalized);
+        };
+        window.HydroFlowOpenBillingNotice = () => openNoticeModal();
 
         document.querySelectorAll("[data-billing-notice-open]").forEach((button) => {
             if (button.dataset.billingNoticeReady === "true") return;
@@ -6394,50 +6326,7 @@
         });
     };
 
-    const setupBillingPeriodQuickAction = () => {
-        const closeBillingPeriodMenus = () => {
-            document.querySelectorAll("[data-billing-period-menu]").forEach((menu) => {
-                menu.classList.add("hidden");
-            });
-            document.querySelectorAll("[data-quick-action='create-billing-period']").forEach((button) => {
-                button.setAttribute("aria-expanded", "false");
-            });
-        };
-
-        document.querySelectorAll("[data-quick-action='create-billing-period']").forEach((button) => {
-            if (button.dataset.ready === "true") return;
-            button.dataset.ready = "true";
-            button.setAttribute("aria-haspopup", "true");
-            button.setAttribute("aria-expanded", "false");
-            const menu = button.parentElement?.querySelector("[data-billing-period-menu]");
-            button.addEventListener("click", (event) => {
-                event.preventDefault();
-                event.stopPropagation();
-                if (!menu) {
-                    window.location.assign("/billing/periods/create");
-                    return;
-                }
-                const shouldOpen = menu.classList.contains("hidden");
-                closeBillingPeriodMenus();
-                if (shouldOpen) {
-                    menu.classList.remove("hidden");
-                    button.setAttribute("aria-expanded", "true");
-                }
-            });
-        });
-
-        if (document.body.dataset.billingPeriodMenuDelegated !== "true") {
-            document.body.dataset.billingPeriodMenuDelegated = "true";
-            document.addEventListener("click", (event) => {
-                if (event.target.closest("[data-billing-period-menu], [data-quick-action='create-billing-period']")) return;
-                closeBillingPeriodMenus();
-            });
-            document.addEventListener("keydown", (event) => {
-                if (event.key !== "Escape") return;
-                closeBillingPeriodMenus();
-            });
-        }
-    };
+    const setupBillingPeriodQuickAction = () => {};
 
     setupBuildingCreateForm();
     setupApartmentCreateForm();
@@ -6810,6 +6699,10 @@
             document.querySelectorAll("[data-checklist-fab] small").forEach((target) => {
                 target.innerHTML = `<b data-checklist-fab-count>${left}</b> ${suffix}`;
             });
+            const sidebarSuffix = lang === "ru" ? "ост." : lang === "uz" ? "qoldi" : "left";
+            document.querySelectorAll("[data-sidebar-todo-count]").forEach((target) => {
+                target.textContent = `${left} ${sidebarSuffix}`;
+            });
             document.querySelectorAll("[data-checklist-fab]").forEach((button) => {
                 button.classList.toggle("is-complete", left === 0);
                 button.setAttribute("aria-label", `Open checklist, ${left} tasks left`);
@@ -7034,6 +6927,22 @@
     const commandInput = document.querySelector("[data-command-input]");
     const commandResults = document.querySelector("[data-command-results]");
     const commandEmpty = document.querySelector("[data-command-empty]");
+    const closeCommandPalette = ({ withWater = true } = {}) => {
+        if (!commandPalette || !commandPalette.classList.contains("is-open")) return;
+        if (!withWater || reducedMotionQuery?.matches) {
+            closeOverlayById("command-palette");
+            return;
+        }
+        if (commandPalette.dataset.closing === "true") return;
+        commandPalette.dataset.closing = "true";
+        commandPalette.classList.add("command-palette-closing");
+        playSound("modal-close-water");
+        window.setTimeout(() => {
+            closeOverlayById("command-palette");
+            commandPalette.classList.remove("command-palette-closing");
+            delete commandPalette.dataset.closing;
+        }, 240);
+    };
     const getCommandItems = () => Array.from(document.querySelectorAll("[data-command-results] .command-item"));
     const getRecentCommands = () => {
         try {
@@ -7127,6 +7036,9 @@
                 meta: [apartmentLabel, buildingLabel || complex?.name].filter(Boolean).join(" · "),
                 search: normalizeCommandSearch(search),
                 residentId: resident.id,
+                ownerBackendId: resident.ownerBackendId || resident.backendId || resident.displayId || "",
+                adminUrl: resident.adminUrl || "",
+                commandQuery: title || apartmentLabel || buildingLabel || "",
             };
         });
         const buildingEntries = buildings.map(({ complex, building }) => ({
@@ -7190,24 +7102,41 @@
         });
         return [...residentEntries, ...apartmentEntries, ...buildingEntries];
     };
+    const commandTypeToken = (type) => {
+        if (type === "resident") return { icon: "person", label: "Person", tone: "is-resident" };
+        if (type === "apartment") return { icon: "door_front", label: "Apartment", tone: "is-apartment" };
+        if (type === "building") return { icon: "home_work", label: "House", tone: "is-building" };
+        return { icon: "travel_explore", label: "Result", tone: "is-generic" };
+    };
     const renderCommandResults = (entries) => {
         if (!commandResults) return;
         commandResults.innerHTML = entries.map((entry) => `
+            ${(() => {
+                const token = commandTypeToken(entry.type);
+                return `
             <button
-                class="command-item"
+                class="command-item ${token.tone}"
                 data-command-id="${escapeAttr(entry.id)}"
                 data-command-target-type="${escapeAttr(entry.type)}"
                 data-command-resident-id="${escapeAttr(entry.residentId || "")}"
+                data-command-owner-backend-id="${escapeAttr(entry.ownerBackendId || "")}"
                 data-command-building-id="${escapeAttr(entry.buildingId || "")}"
                 data-command-complex-id="${escapeAttr(entry.complexId || "")}"
                 data-command-query="${escapeAttr(entry.commandQuery || "")}"
                 data-command-search="${escapeAttr(entry.search || "")}"
                 data-command-url="${escapeAttr(entry.url || "")}"
+                data-command-admin-url="${escapeAttr(entry.adminUrl || "")}"
                 type="button"
             >
-                <span>${escapeHtml(entry.title)}</span>
-                ${entry.meta ? `<small>${escapeHtml(entry.meta)}</small>` : ""}
+                <span class="command-item-icon material-symbols-outlined" data-command-icon aria-hidden="true">${token.icon}</span>
+                <span class="command-item-copy">
+                    <span class="command-item-title" data-command-title>${escapeHtml(entry.title)}</span>
+                    ${entry.meta ? `<small class="command-item-meta" data-command-meta>${escapeHtml(entry.meta)}</small>` : ""}
+                </span>
+                <span class="command-item-type">${token.label}</span>
             </button>
+            `;
+            })()}
         `).join("");
     };
     let commandSearchRequestId = 0;
@@ -7241,10 +7170,177 @@
                 resident.complex,
                 resident.contract,
             ].filter(Boolean).join(" ")),
-            residentId: resident.id,
+            residentId: resident.id || (resident.ownerBackendId ? `owner-${resident.ownerBackendId}` : ""),
+            ownerBackendId: resident.ownerBackendId || resident.backendId || "",
+            adminUrl: resident.adminUrl || "",
             commandQuery: resident.name || query,
         }));
     };
+    const residentProfileModal = document.getElementById("resident-command-profile-modal");
+    const residentProfileState = { resident: null };
+    const residentProfileNodes = residentProfileModal ? {
+        nameTitle: residentProfileModal.querySelector("[data-resident-profile-name]"),
+        nameCopy: residentProfileModal.querySelector("[data-resident-profile-name-copy]"),
+        subtitle: residentProfileModal.querySelector("[data-resident-profile-subtitle]"),
+        id: residentProfileModal.querySelector("[data-resident-profile-id]"),
+        phone: residentProfileModal.querySelector("[data-resident-profile-phone]"),
+        balanceWrap: residentProfileModal.querySelector("[data-resident-profile-balance-wrap]"),
+        balance: residentProfileModal.querySelector("[data-resident-profile-balance]"),
+        balanceIcon: residentProfileModal.querySelector("[data-resident-profile-balance-icon]"),
+        tgUser: residentProfileModal.querySelector("[data-resident-profile-tg-user]"),
+        tgStatus: residentProfileModal.querySelector("[data-resident-profile-tg-status]"),
+        contract: residentProfileModal.querySelector("[data-resident-profile-contract]"),
+        house: residentProfileModal.querySelector("[data-resident-profile-house]"),
+        apartment: residentProfileModal.querySelector("[data-resident-profile-apartment]"),
+        photo: residentProfileModal.querySelector("[data-resident-profile-photo]"),
+        fallback: residentProfileModal.querySelector("[data-resident-profile-fallback]"),
+        historyButton: residentProfileModal.querySelector("[data-resident-profile-history]"),
+        editLink: residentProfileModal.querySelector("[data-resident-profile-edit]"),
+        billingButton: residentProfileModal.querySelector("[data-resident-profile-billing-notice]"),
+    } : null;
+    const extractOwnerBackendId = (...values) => {
+        for (const value of values) {
+            const normalized = String(value || "").replace(/[^\d]/g, "");
+            if (normalized) return normalized;
+        }
+        return "";
+    };
+    const residentFromLocalState = (residentId, ownerBackendId) => {
+        const byId = residentId ? getResidentById(residentId) : null;
+        if (byId) return byId;
+        const ownerId = extractOwnerBackendId(ownerBackendId, residentId);
+        if (!ownerId) return null;
+        return billingData.residents.find((resident) => extractOwnerBackendId(resident.ownerBackendId, resident.backendId, resident.id) === ownerId) || null;
+    };
+    const hasResidentContract = (resident) => {
+        if (!resident || typeof resident !== "object") return false;
+        if (resident.hasContract === true) return true;
+        if (resident.hasContract === false) return false;
+        const contractValue = String(resident.contract ?? resident.contractStatus ?? "").toLowerCase();
+        return contractValue === "true" || contractValue === "1" || contractValue === "yes";
+    };
+    const renderResidentCommandProfile = (resident) => {
+        if (!residentProfileNodes || !resident) return;
+        residentProfileState.resident = resident;
+        const displayId = resident.displayId || extractOwnerBackendId(resident.ownerBackendId, resident.backendId, resident.id) || "--";
+        const name = resident.name || "Resident";
+        const phone = resident.phone || "--";
+        const house = resident.building || "--";
+        const apartment = resident.apartmentNumber || resident.apartment || "--";
+        const balanceValue = Number(resident.balance || 0);
+        const isPositiveBalance = balanceValue >= 0;
+        const telegramUser = String(resident.telegramUser || "").trim();
+        const telegramStatusRaw = String(resident.telegramStatus || "").toLowerCase();
+        const telegramConnected = Boolean(resident.telegramConnected)
+            || Boolean(telegramUser)
+            || ["connected", "active", "verified", "true", "yes", "1", "linked"].includes(telegramStatusRaw);
+        const hasContract = hasResidentContract(resident);
+        const ownerBackendId = extractOwnerBackendId(resident.ownerBackendId, resident.backendId, resident.id);
+
+        residentProfileNodes.nameTitle.textContent = name;
+        residentProfileNodes.nameCopy.textContent = name;
+        residentProfileNodes.subtitle.textContent = [resident.complex, house, apartment].filter(Boolean).join(" · ") || t("Loaded from database");
+        residentProfileNodes.id.textContent = String(displayId);
+        residentProfileNodes.phone.textContent = phone;
+        residentProfileNodes.house.textContent = house;
+        residentProfileNodes.apartment.textContent = String(apartment);
+
+        residentProfileNodes.balance.textContent = formatBillingUzs(balanceValue);
+        residentProfileNodes.balanceIcon.textContent = isPositiveBalance ? "verified" : "error";
+        residentProfileNodes.balanceWrap.classList.toggle("is-positive", isPositiveBalance);
+        residentProfileNodes.balanceWrap.classList.toggle("is-negative", !isPositiveBalance);
+
+        residentProfileNodes.tgUser.textContent = telegramUser || t("Not linked");
+        residentProfileNodes.tgUser.classList.toggle("is-connected", Boolean(telegramUser));
+        residentProfileNodes.tgUser.classList.toggle("is-missing", !telegramUser);
+
+        residentProfileNodes.tgStatus.textContent = telegramConnected ? t("Connected") : t("Not linked");
+        residentProfileNodes.tgStatus.classList.toggle("is-connected", telegramConnected);
+        residentProfileNodes.tgStatus.classList.toggle("is-missing", !telegramConnected);
+
+        residentProfileNodes.contract.textContent = hasContract ? t("True") : t("False");
+        residentProfileNodes.contract.classList.toggle("is-contract-true", hasContract);
+        residentProfileNodes.contract.classList.toggle("is-contract-false", !hasContract);
+
+        const photoUrl = String(resident.photo || "").trim();
+        if (photoUrl) {
+            residentProfileNodes.photo.src = photoUrl;
+            residentProfileNodes.photo.alt = `${name}`;
+            residentProfileNodes.photo.classList.remove("hidden");
+            residentProfileNodes.fallback.classList.add("hidden");
+        } else {
+            residentProfileNodes.photo.classList.add("hidden");
+            residentProfileNodes.photo.src = "";
+            residentProfileNodes.fallback.classList.remove("hidden");
+        }
+
+        const editUrl = String(resident.adminUrl || "").trim();
+        residentProfileNodes.editLink.href = editUrl || "#";
+        residentProfileNodes.editLink.classList.toggle("is-disabled", !editUrl);
+        residentProfileNodes.historyButton.dataset.ownerBackendId = ownerBackendId;
+        residentProfileNodes.billingButton.dataset.ownerBackendId = ownerBackendId;
+    };
+    const fetchResidentForCommand = async (ownerBackendId) => {
+        if (!ownerBackendId) return null;
+        const payload = await fetchServerList("/api/lists/residents/", {
+            page: 1,
+            page_size: 1,
+            owner_id: ownerBackendId,
+        });
+        return payload?.results?.[0] || null;
+    };
+    const openResidentCommandProfile = async (button) => {
+        if (!button || !residentProfileModal || !residentProfileNodes) return;
+        const fallback = residentFromLocalState(button.dataset.commandResidentId, button.dataset.commandOwnerBackendId);
+        const ownerBackendId = extractOwnerBackendId(
+            button.dataset.commandOwnerBackendId,
+            button.dataset.commandResidentId,
+            fallback?.ownerBackendId,
+            fallback?.backendId,
+            fallback?.id
+        );
+        closeCommandPalette({ withWater: false });
+        if (!ownerBackendId) {
+            toast("Resident profile", "Could not resolve resident ID for database lookup.", "warning");
+            return;
+        }
+        let resident = null;
+        try {
+            resident = await fetchResidentForCommand(ownerBackendId);
+        } catch (error) {
+            console.warn("Resident profile fetch failed", error);
+        }
+        if (!resident) {
+            toast("Resident profile", "Could not load resident data from database.", "warning");
+            return;
+        }
+        renderResidentCommandProfile(resident);
+        openOverlayById("resident-command-profile-modal");
+    };
+    if (residentProfileModal && residentProfileNodes && residentProfileModal.dataset.commandProfileReady !== "true") {
+        residentProfileModal.dataset.commandProfileReady = "true";
+        residentProfileModal.addEventListener("click", (event) => {
+            if (event.target !== residentProfileModal) return;
+            closeOverlayById("resident-command-profile-modal");
+        });
+        residentProfileNodes.historyButton?.addEventListener("click", () => {
+            if (!residentProfileState.resident) return;
+            window.HydroFlowOpenResidentHistory?.(residentProfileState.resident);
+        });
+        residentProfileNodes.billingButton?.addEventListener("click", () => {
+            if (!residentProfileState.resident) return;
+            const ownerBackendId = extractOwnerBackendId(
+                residentProfileState.resident.ownerBackendId,
+                residentProfileState.resident.backendId,
+                residentProfileState.resident.id
+            );
+            if (window.HydroFlowOpenBillingNoticeForResident) {
+                window.HydroFlowOpenBillingNoticeForResident(ownerBackendId);
+                return;
+            }
+            document.querySelector("[data-billing-notice-open]")?.click();
+        });
+    }
     const setActiveCommand = (items, index) => {
         items.forEach((item, itemIndex) => {
             const active = itemIndex === index;
@@ -7281,7 +7377,7 @@
             if (!item.id) item.id = `command-item-${index}`;
             const show = true;
             item.classList.remove("hidden");
-            item.querySelectorAll("span, small").forEach((part) => {
+            item.querySelectorAll("[data-command-title], [data-command-meta]").forEach((part) => {
                 const original = part.dataset.originalText || part.textContent;
                 part.dataset.originalText = original;
                 if (!query) {
@@ -7321,25 +7417,20 @@
     };
     const executeCommand = (button) => {
         if (!button) return;
-        const queryValue = button.dataset.commandQuery || commandInput?.value || button.querySelector("span")?.textContent || "";
+        const queryValue = button.dataset.commandQuery || commandInput?.value || button.querySelector("[data-command-title]")?.textContent || "";
         saveRecentSearch(queryValue);
         saveRecentCommand(button);
         if (button.dataset.commandTargetType === "resident") {
-            const details = detailsFromResident(getResidentById(button.dataset.commandResidentId));
-            if (details) {
-                fillDetails(details);
-                closeOverlayById("command-palette");
-                openOverlayById("details-drawer");
-                return;
-            }
+            openResidentCommandProfile(button);
+            return;
         }
         if (button.dataset.commandTargetType === "building") {
-            storage.setItem("hydroflow-command-query-pending", button.dataset.commandQuery || button.querySelector("span")?.textContent || "");
+            storage.setItem("hydroflow-command-query-pending", button.dataset.commandQuery || button.querySelector("[data-command-title]")?.textContent || "");
             window.location.href = "/residential/";
             return;
         }
         if (button.dataset.commandTargetType === "apartment") {
-            storage.setItem("hydroflow-command-query-pending", button.dataset.commandQuery || button.querySelector("span")?.textContent || "");
+            storage.setItem("hydroflow-command-query-pending", button.dataset.commandQuery || button.querySelector("[data-command-title]")?.textContent || "");
             window.location.href = "/residential/";
             return;
         }
@@ -7349,12 +7440,16 @@
         }
         if (button.dataset.commandAction === "toggle-theme") {
             document.querySelector("[data-theme-toggle]")?.click();
-            closeOverlayById("command-palette");
+            closeCommandPalette({ withWater: false });
             return;
         }
         if (button.dataset.drawerOpen) {
-            closeOverlayById("command-palette");
-            window.setTimeout(() => document.querySelector(`[data-drawer-open='${button.dataset.drawerOpen}']`)?.click(), 0);
+            closeCommandPalette({ withWater: false });
+            window.setTimeout(() => {
+                document.querySelector(
+                    `[data-drawer-open='${button.dataset.drawerOpen}'], [data-modal-open='${button.dataset.drawerOpen}']`
+                )?.click();
+            }, 0);
             return;
         }
         if (button.hasAttribute("data-export-open")) {
@@ -7393,6 +7488,10 @@
             commandInput.dispatchEvent(new Event("input", { bubbles: true }));
             commandInput.focus();
         }
+    });
+    commandPalette?.addEventListener("click", (event) => {
+        if (event.target !== commandPalette) return;
+        closeCommandPalette({ withWater: true });
     });
 
     const exportModal = document.getElementById("export-preview-modal");
@@ -7463,7 +7562,7 @@
         "BILLING": { ru: "ПЛАТЕЖИ", uz: "TO'LOVLAR" },
         "Maintenance": { ru: "Обслуживание", uz: "Texnik xizmat" },
         "SYSTEM_MAINTENANCE_LOG": { ru: "ЖУРНАЛ ОБСЛУЖИВАНИЯ", uz: "TEXNIK XIZMAT JURNALI" },
-        "COMPLEXES": { ru: "ЖК", uz: "KOMPLEKSLAR" },
+        "COMPLEXES": { ru: "ДОМА", uz: "UYLAR" },
         "HOUSES": { ru: "ДОМА", uz: "UYLAR" },
         "APARTMENTS": { ru: "КВАРТИРЫ", uz: "KVARTIRALAR" },
         "RESIDENTS": { ru: "ЖИЛЬЦЫ", uz: "YASHOVCHILAR" },
@@ -7486,7 +7585,7 @@
         "Total debt": { ru: "Общий долг", uz: "Jami qarz" },
         "Maintenance rows": { ru: "Строк обслуживания", uz: "Texnik qatorlar" },
         "Visible table rows": { ru: "Видимые строки таблицы", uz: "Ko'rinadigan jadval qatorlari" },
-        "Complex": { ru: "ЖК", uz: "Kompleks" },
+        "Complex": { ru: "Дом", uz: "Uy" },
         "Sector": { ru: "Сектор", uz: "Sektor" },
         "Units": { ru: "Квартиры", uz: "Kvartiralar" },
         "Floors": { ru: "Этажи", uz: "Qavatlar" },
@@ -7504,7 +7603,7 @@
         "Phone": { ru: "Телефон", uz: "Telefon" },
         "Last payment": { ru: "Последний платеж", uz: "So'nggi to'lov" },
         "Unit": { ru: "Квартира", uz: "Kvartira" },
-        "Complex debt": { ru: "Долг ЖК", uz: "Kompleks qarzi" },
+        "Complex debt": { ru: "Долг дома", uz: "Uy qarzi" },
         "Debtors": { ru: "Должники", uz: "Qarzdorlar" },
         "Low Risk": { ru: "Низкий риск", uz: "Past xavf" },
         "Medium Risk": { ru: "Средний риск", uz: "O'rtacha xavf" },
@@ -7523,7 +7622,7 @@
         "Источник": { en: "Source", uz: "Manba" },
         "Формат": { en: "Format", uz: "Format" },
         "Таймзона": { en: "Timezone", uz: "Vaqt zonasi" },
-        "ЖК": { en: "Complex", uz: "Kompleks" },
+        "ЖК": { en: "House", uz: "Uy" },
         "Домов": { en: "Houses", uz: "Uylar" },
         "Квартир": { en: "Apartments", uz: "Kvartiralar" },
         "Резидентов": { en: "Residents", uz: "Yashovchilar" },
@@ -7554,12 +7653,12 @@
         "Контракт": { en: "Contract", uz: "Shartnoma" },
         "Статус оплаты": { en: "Payment status", uz: "To'lov holati" },
         "Риск": { en: "Risk", uz: "Xavf" },
-        "Долг ЖК": { en: "Complex debt", uz: "Kompleks qarzi" },
+        "Долг ЖК": { en: "House debt", uz: "Uy qarzi" },
         "Долг дома": { en: "House debt", uz: "Uy qarzi" },
         "Этажей": { en: "Floors", uz: "Qavatlar" },
         "Должников": { en: "Debtors", uz: "Qarzdorlar" },
         "Действие": { en: "Action", uz: "Amal" },
-        "Complexes": { ru: "ЖК", uz: "Komplekslar" },
+        "Complexes": { ru: "Дома", uz: "Uylar" },
         "Generated": { ru: "Дата выгрузки", uz: "Yuklab olish vaqti" },
         "Export date": { ru: "Дата выгрузки", uz: "Yuklab olish sanasi" },
         "Scheduled": { ru: "Запланировано", uz: "Rejalashtirilgan" },
@@ -7587,10 +7686,10 @@
         "Open schedule": { ru: "Открыть график", uz: "Jadvalni ochish" },
         "Plan crew": { ru: "Назначить бригаду", uz: "Brigadani rejalash" },
         "Prepare": { ru: "Подготовить", uz: "Tayyorlash" },
-        "Complex Performance Overview": { ru: "Обзор работы ЖК", uz: "Kompleks ishlashi sharhi" },
+        "Complex Performance Overview": { ru: "Обзор эффективности домов", uz: "Uylar samaradorligi sharhi" },
         "Recent Transaction Log": { ru: "Журнал последних транзакций", uz: "So'nggi tranzaksiyalar jurnali" },
         "System Maintenance Log": { ru: "Журнал обслуживания систем", uz: "Tizim xizmat jurnali" },
-        "Residential Complex Management | HydroFlow": { ru: "Управление жилыми комплексами | HydroFlow", uz: "Turar joy komplekslarini boshqarish | HydroFlow" },
+        "Residential Complex Management | HydroFlow": { ru: "Управление домами | HydroFlow", uz: "Uylar boshqaruvi | HydroFlow" },
         "Billing & Debt | HydroFlow": { ru: "Платежи и долги | HydroFlow", uz: "To'lovlar va qarzlar | HydroFlow" },
         "System Health | HydroFlow": { ru: "Состояние систем | HydroFlow", uz: "Tizim holati | HydroFlow" },
         "Analytics | HydroFlow": { ru: "Аналитика | HydroFlow", uz: "Analitika | HydroFlow" },
@@ -9106,3 +9205,4 @@ ${sheets}
         }
     });
 })();
+

@@ -16,7 +16,7 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<link href="{% static 'css/app.css' %}?v=backend-hydration-20260420" rel="stylesheet"/>
+<link href="{% static 'css/app.css' %}?v=resident-filter-tristate-20260501-6" rel="stylesheet"/>
 <script id="tailwind-config">
         tailwind.config = {
             darkMode: "class",
@@ -945,14 +945,11 @@
     accountMenu?.querySelectorAll("button").forEach((button) => button.addEventListener("click", closeAccountMenu));
     document.querySelector("[data-mark-read]")?.addEventListener("click", () => {
         document.querySelectorAll("[data-notification-list] .notification-item").forEach((item) => item.classList.add("opacity-60"));
-        document.querySelector("[data-notification-dot]")?.classList.add("hidden");
+        document.querySelectorAll("[data-notification-dot]").forEach((dot) => dot.classList.add("hidden"));
     });
 
     document.querySelectorAll("button").forEach((button) => {
         const label = button.textContent.trim().toLowerCase();
-        if (label.includes("filter") || label.includes("last 30 days")) {
-            button.addEventListener("click", () => document.querySelector("[data-drawer-open='filter-drawer']")?.click());
-        }
         if ((label.includes("details") || label.includes("view report") || label.includes("billing history")) && !button.matches("[data-apartment-details]")) {
             button.setAttribute("data-detail-open", "");
         }
@@ -967,6 +964,6 @@
 <script>
     window.HydroFlowBackendData = JSON.parse("{{ backend_billing_data_json|default:'{}'|escapejs }}");
 </script>
-<script src="{% static 'js/app.js' %}?v=backend-hydration-20260424-billing-notice-debtors-fix3"></script>
+<script src="{% static 'js/app.js' %}?v=resident-filter-tristate-20260501-4"></script>
 </body>
 </html>

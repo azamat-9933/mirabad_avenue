@@ -56,26 +56,35 @@
 </div>
 </div>
 </div>
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-<div class="lg:col-span-2">
-<section class="bg-surface-container-lowest p-8 rounded-xl shadow-sm border border-outline-variant/10 space-y-6">
-<div class="resident-directory-header">
-<div class="resident-directory-copy">
-<h3 class="text-lg font-bold text-on-surface" data-i18n-key="Resident Directory">Resident Directory</h3>
-</div>
-<div class="resident-residents-toolbar resident-directory-toolbar">
-<label class="resident-search-shell">
-<span aria-hidden="true" class="material-symbols-outlined">search</span>
-<input aria-label="Search residents" data-resident-search placeholder="Search residents..." type="search"/>
-<button aria-label="Clear resident search" class="resident-search-clear" data-resident-search-clear type="button">
-<span aria-hidden="true" class="material-symbols-outlined">close</span>
+<div class="grid grid-cols-1 gap-8">
+<div>
+<section class="bg-surface-container-lowest p-8 pt-6 rounded-xl shadow-sm border border-outline-variant/10 space-y-4">
+<div class="resident-column-sorts" data-resident-column-sorts>
+<button aria-label="Sort by ID" class="resident-sort-button" data-resident-sort="id" type="button">
+<span data-i18n-key="ID">ID</span>
+<span aria-hidden="true" class="material-symbols-outlined resident-sort-button__icon" data-resident-sort-icon>unfold_more</span>
 </button>
-</label>
-<div class="resident-filter-shell" data-resident-filter-group>
-<span class="resident-filter-label" data-i18n-key="Filter:">Filter:</span>
-<button aria-pressed="true" class="resident-filter-button is-active" data-resident-filter="all" type="button">ALL</button>
-<button aria-pressed="false" class="resident-filter-button" data-resident-filter="debtor" type="button">DEBTORS</button>
-<button aria-pressed="false" class="resident-filter-button" data-resident-filter="paid" type="button">PAID</button>
+<button aria-label="Sort by name" class="resident-sort-button" data-resident-sort="name" type="button">
+<span data-i18n-key="Name">Name</span>
+<span aria-hidden="true" class="material-symbols-outlined resident-sort-button__icon" data-resident-sort-icon>unfold_more</span>
+</button>
+<button aria-label="Sort by Telegram user" class="resident-sort-button" data-resident-sort="telegram_user" type="button">
+<span data-i18n-key="TG user">TG user</span>
+<span aria-hidden="true" class="material-symbols-outlined resident-sort-button__icon" data-resident-sort-icon>unfold_more</span>
+</button>
+<button aria-label="Sort by contract" class="resident-sort-button" data-resident-sort="contract" type="button">
+<span data-i18n-key="Contract">Contract</span>
+<span aria-hidden="true" class="material-symbols-outlined resident-sort-button__icon" data-resident-sort-icon>unfold_more</span>
+</button>
+<button aria-label="Sort by apartment" class="resident-sort-button" data-resident-sort="apartment" type="button">
+<span data-i18n-key="Apartment">Apartment</span>
+<span aria-hidden="true" class="material-symbols-outlined resident-sort-button__icon" data-resident-sort-icon>unfold_more</span>
+</button>
+<div class="resident-sort-balance">
+<div class="resident-filter-shell resident-balance-filter-shell" data-resident-status-group>
+<button aria-pressed="true" class="resident-filter-button is-active" data-i18n-key="All short" data-resident-filter="all" type="button">All</button>
+<button aria-pressed="false" class="resident-filter-button" data-i18n-key="Debtors short" data-resident-filter="debtor" type="button">Debtors</button>
+<button aria-pressed="false" class="resident-filter-button" data-i18n-key="Paid short" data-resident-filter="paid" type="button">Paid</button>
 <span class="resident-filter-count" data-resident-filter-count>0 shown</span>
 </div>
 </div>
@@ -91,101 +100,10 @@
 <span class="material-symbols-outlined">person_search</span>
 <div>
 <p data-i18n-key="No residents found">No residents found</p>
-<span data-i18n-key="Adjust search or filters to show matching resident profiles.">Adjust search or filters to show matching resident profiles.</span>
+<span data-i18n-key="Adjust filters to show matching resident profiles.">Adjust filters to show matching resident profiles.</span>
 </div>
 </div>
 </section>
-</div>
-<!-- Right Sidebar Widgets -->
-<div class="space-y-8">
-<!-- Quick Actions -->
-<div class="quick-actions-card bg-primary text-white p-8 rounded-xl shadow-lg relative overflow-hidden" data-card="quick-actions">
-<h3 class="text-lg font-bold mb-6 relative z-10">
-<span>Quick Actions</span>
-<span class="material-symbols-outlined quick-actions-title-icon" data-icon="bolt" aria-hidden="true">bolt</span>
-</h3>
-<div class="space-y-3 relative z-10">
-<button class="w-full flex items-center justify-between bg-white/10 hover:bg-white/20 transition-all p-4 rounded-lg text-sm font-medium" data-export-context="usage-report" data-export-open data-export-source="Usage Report" type="button">
-<span>Generate Usage Report</span>
-<span class="material-symbols-outlined" data-icon="description">description</span>
-</button>
-<button class="w-full flex items-center justify-between bg-white/10 hover:bg-white/20 transition-all p-4 rounded-lg text-sm font-medium" data-billing-notice-open type="button">
-<span data-i18n-key="Generate Billing Notice">Generate Billing Notice</span>
-<span class="material-symbols-outlined" data-icon="article">article</span>
-</button>
-<button class="w-full flex items-center justify-between bg-white/10 hover:bg-white/20 transition-all p-4 rounded-lg text-sm font-medium" data-quick-action="create-billing-period" type="button">
-<span data-i18n-key="Create Billing Period">Create Billing Period</span>
-<span class="material-symbols-outlined" data-icon="calendar_month">calendar_month</span>
-</button>
-<div class="hidden rounded-lg border border-white/20 bg-white/10 p-3 backdrop-blur-sm" data-billing-period-menu>
-<p class="text-xs text-white/85 leading-5" data-i18n-key="Create a new расчетный период for heating and hot water calculations.">Create a new расчетный период for heating and hot water calculations.</p>
-<div class="mt-3 grid grid-cols-1 gap-2">
-<a class="inline-flex items-center justify-center gap-2 rounded-lg bg-white/15 px-3 py-2 text-xs font-bold text-white hover:bg-white/25 transition-colors" href="/admin/billing/billingperiod/add/">
-<span class="material-symbols-outlined text-[16px]">calendar_month</span>
-<span data-i18n-key="Open admin form">Open admin form</span>
-</a>
-<a class="inline-flex items-center justify-center gap-2 rounded-lg bg-white/10 px-3 py-2 text-xs font-bold text-white/90 hover:bg-white/20 transition-colors" href="/billing/">
-<span class="material-symbols-outlined text-[16px]">arrow_back</span>
-<span data-i18n-key="Back to Billing">Back to Billing</span>
-</a>
-</div>
-</div>
-</div>
-</div>
-<!-- Debtor Trends & Alerts -->
-<div class="debtor-trends-card bg-surface-container-lowest p-8 rounded-xl shadow-sm border border-outline-variant/10">
-<div class="debtor-trends-head flex justify-between items-start mb-6">
-<h3 class="text-lg font-bold text-on-surface">Debtor Trends</h3>
-<span class="debtor-risk-badge text-[10px] font-bold text-error uppercase bg-error-container/20 px-2 py-0.5 rounded">High Risk</span>
-</div>
-<!-- Mini Chart Area -->
-<div class="debtor-trend-chart flex items-end justify-between h-24 gap-1 mb-8" aria-label="Debt trend by month">
-<div class="debtor-trend-bar flex-1 bg-surface-container-high h-[60%] rounded-t-sm group relative" data-label="Jan" data-value="1.38B">
-<div class="debtor-trend-tooltip absolute -top-6 left-1/2 -translate-x-1/2 bg-on-surface text-white text-[10px] py-0.5 px-1.5 rounded opacity-0 group-hover:opacity-100 transition-opacity">1.38B UZS</div>
-</div>
-<div class="debtor-trend-bar flex-1 bg-surface-container-high h-[75%] rounded-t-sm group relative" data-label="Feb" data-value="1.56B">
-<div class="debtor-trend-tooltip absolute -top-6 left-1/2 -translate-x-1/2 bg-on-surface text-white text-[10px] py-0.5 px-1.5 rounded opacity-0 group-hover:opacity-100 transition-opacity">1.56B UZS</div>
-</div>
-<div class="debtor-trend-bar flex-1 bg-surface-container-high h-[65%] rounded-t-sm group relative" data-label="Mar" data-value="1.49B">
-<div class="debtor-trend-tooltip absolute -top-6 left-1/2 -translate-x-1/2 bg-on-surface text-white text-[10px] py-0.5 px-1.5 rounded opacity-0 group-hover:opacity-100 transition-opacity">1.49B UZS</div>
-</div>
-<div class="debtor-trend-bar flex-1 bg-surface-container-high h-[80%] rounded-t-sm group relative" data-label="Apr" data-value="1.64B">
-<div class="debtor-trend-tooltip absolute -top-6 left-1/2 -translate-x-1/2 bg-on-surface text-white text-[10px] py-0.5 px-1.5 rounded opacity-0 group-hover:opacity-100 transition-opacity">1.64B UZS</div>
-</div>
-<div class="debtor-trend-bar flex-1 bg-surface-container-high h-[90%] rounded-t-sm group relative" data-label="May" data-value="1.74B">
-<div class="debtor-trend-tooltip absolute -top-6 left-1/2 -translate-x-1/2 bg-on-surface text-white text-[10px] py-0.5 px-1.5 rounded opacity-0 group-hover:opacity-100 transition-opacity">1.74B UZS</div>
-</div>
-<div class="debtor-trend-bar debtor-trend-bar-risk flex-1 bg-error/40 h-[100%] rounded-t-sm group relative" data-label="Jun" data-value="1.78B">
-<div class="debtor-trend-tooltip absolute -top-6 left-1/2 -translate-x-1/2 bg-on-surface text-white text-[10px] py-0.5 px-1.5 rounded opacity-0 group-hover:opacity-100 transition-opacity">1.78B UZS</div>
-</div>
-</div>
-<div class="debtor-list space-y-4 mb-8">
-<p class="debtor-list-title text-[10px] font-bold uppercase tracking-widest text-on-surface-variant" data-i18n-key="Critical Houses (Top 5)">Critical Houses (Top 5)</p>
-<div class="space-y-2">
-<div class="debtor-row flex items-center justify-between p-2.5 bg-surface-container-low rounded-lg border border-outline-variant/5">
-<span class="text-xs font-semibold">Evergreen Heights</span>
-<div class="percent-meter percent-meter-red percent-meter-row" style="--progress: 18.2%;" data-value="+18.2%">
-<span class="percent-meter-track"><span class="percent-meter-fill"></span></span>
-</div>
-</div>
-<div class="debtor-row flex items-center justify-between p-2.5 bg-surface-container-low rounded-lg border border-outline-variant/5">
-<span class="text-xs font-semibold">Park View Tower</span>
-<div class="percent-meter percent-meter-red percent-meter-row" style="--progress: 12.5%;" data-value="+12.5%">
-<span class="percent-meter-track"><span class="percent-meter-fill"></span></span>
-</div>
-</div>
-<div class="debtor-row flex items-center justify-between p-2.5 bg-surface-container-low rounded-lg border border-outline-variant/5">
-<span class="text-xs font-semibold">River Side Flats</span>
-<div class="percent-meter percent-meter-red percent-meter-row" style="--progress: 9.8%;" data-value="+9.8%">
-<span class="percent-meter-track"><span class="percent-meter-fill"></span></span>
-</div>
-</div>
-</div>
-</div>
-<button class="debtor-secondary-action w-full mt-2 py-2 text-xs font-semibold text-on-surface-variant hover:text-primary transition-colors" data-i18n-key="View All Houses">
-                        View All Houses
-                    </button>
-</div>
 </div>
 </div>
 </div>

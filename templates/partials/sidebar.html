@@ -1,9 +1,14 @@
 {# Unified sidebar — design from stitch_/system_overview_standardized_nav #}
-<aside class="h-screen w-64 fixed left-0 top-0 bg-[#eff4f8] dark:bg-slate-900 flex flex-col p-4 space-y-2 z-50 overflow-hidden" data-sidebar>
-<div class="px-2 py-4 mb-4">
-<h1 class="text-lg font-black text-[#004354] dark:text-cyan-500 tracking-tight">HydroFlow</h1>
-<p class="text-xs text-on-surface-variant font-medium">Utility Management</p>
+<aside class="h-screen w-64 fixed left-0 top-0 bg-[#eff4f8] dark:bg-slate-900 flex flex-col p-4 space-y-2 z-50 overflow-y-auto overflow-x-hidden" data-sidebar>
+<a class="sidebar-brand-block px-2 py-2 mb-2 block" href="{% url 'portal:dashboard' %}">
+<div class="sidebar-brand-main">
+<div class="sidebar-brand-copy">
+<h1 class="text-lg font-black text-[#004354] dark:text-cyan-500 tracking-tight">Mirabad Avenue</h1>
+<p class="sidebar-brand-subtitle text-xs text-on-surface-variant font-medium">Utility Management</p>
 </div>
+</div>
+<span class="sidebar-brand-accent" aria-hidden="true"></span>
+</a>
 <nav class="relative flex-1 space-y-1">
 <a class="nav-item sidebar-link relative flex items-center gap-3 px-4 py-3 rounded-lg {% if active_page == 'dashboard' %}active is-active font-bold{% else %}dark:text-slate-400{% endif %}" data-nav-link href="{% url 'portal:dashboard' %}">
 <span class="material-symbols-outlined" data-icon="dashboard" {% if active_page == 'dashboard' %}style="font-variation-settings: 'FILL' 1;"{% endif %}>dashboard</span>
@@ -22,18 +27,61 @@
 <span class="font-medium" data-i18n-key="Reports">Reports</span>
 </a>
 </nav>
-<div class="pt-4 mt-4 border-t border-outline-variant/15 space-y-1">
-<button type="button" class="w-full flex items-center justify-center gap-2 bg-primary text-white py-3 rounded-lg font-bold shadow-sm active:scale-95 transition-transform" data-modal-open="request-modal" data-liquid-action="new-unit-request">
-<span class="material-symbols-outlined text-sm">add_circle</span>
-<span>New Unit Request</span>
+<div class="mt-auto pt-4 border-t border-outline-variant/15">
+<div class="space-y-3">
+<div class="sidebar-premium-hub">
+<button class="sidebar-premium-item" data-modal-open="notifications-drawer" data-sidebar-notification-item type="button">
+<span class="sidebar-premium-icon">
+<span class="material-symbols-outlined sidebar-premium-bell" data-icon="notifications">notifications</span>
+<span class="sidebar-premium-notification-dot sidebar-premium-dot" data-notification-dot></span>
+</span>
+<span class="sidebar-premium-copy" data-i18n-key="Notifications">Notifications</span>
 </button>
-<button class="nav-item sidebar-link relative flex items-center gap-3 px-4 py-3 dark:text-slate-400 rounded-lg mt-4 w-full text-left" data-drawer-open="settings-drawer" type="button">
-<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<button class="sidebar-premium-item" data-modal-open="checklist-drawer" type="button">
+<span class="sidebar-premium-icon">
+<span class="material-symbols-outlined" data-icon="fact_check">fact_check</span>
+</span>
+<span class="sidebar-premium-copy" data-i18n-key="To do">To do</span>
+<span class="sidebar-premium-count" data-sidebar-todo-count>0 left</span>
+</button>
+</div>
+<div class="mx-1 rounded-[24px] border border-white/75 bg-[linear-gradient(180deg,rgba(255,255,255,0.9),rgba(225,241,247,0.8))] px-3 py-2.5 shadow-[0_18px_34px_rgba(0,92,114,0.12)] backdrop-blur-xl ring-1 ring-[rgba(255,255,255,0.55)] dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(23,29,40,0.78),rgba(15,20,29,0.72))] dark:shadow-[0_18px_34px_rgba(0,0,0,0.34)] dark:ring-[rgba(255,255,255,0.06)]">
+<div class="px-1 pb-2">
+<p class="text-[10px] font-black uppercase tracking-[0.16em] text-[#6a7e88] dark:text-slate-400" data-i18n-key="Quick Actions">Quick Actions</p>
+</div>
+<div class="space-y-2">
+<button class="flex w-full items-center justify-between rounded-[18px] border border-white/80 bg-[linear-gradient(135deg,rgba(255,255,255,0.96),rgba(242,250,252,0.9))] px-3 py-2 text-left text-[12px] font-bold leading-4 text-[#0a5f7a] shadow-[0_10px_20px_rgba(0,92,114,0.08)] transition-all hover:translate-x-1 hover:shadow-[0_14px_24px_rgba(0,92,114,0.14)] dark:border-white/8 dark:bg-[linear-gradient(135deg,rgba(40,48,64,0.88),rgba(28,34,46,0.82))] dark:text-slate-100 dark:shadow-[0_10px_20px_rgba(0,0,0,0.22)] dark:hover:shadow-[0_14px_24px_rgba(0,0,0,0.3)]" data-export-context="usage-report" data-export-open data-export-source="Usage Report" type="button">
+<span data-i18n-key="Generate Usage Report">Generate Usage Report</span>
+<span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-[rgba(10,95,122,0.08)] dark:bg-white/10 dark:text-slate-200"><span class="material-symbols-outlined text-[16px]" data-icon="description">description</span></span>
+</button>
+<button class="flex w-full items-center justify-between rounded-[18px] border border-white/80 bg-[linear-gradient(135deg,rgba(255,255,255,0.96),rgba(242,250,252,0.9))] px-3 py-2 text-left text-[12px] font-bold leading-4 text-[#0a5f7a] shadow-[0_10px_20px_rgba(0,92,114,0.08)] transition-all hover:translate-x-1 hover:shadow-[0_14px_24px_rgba(0,92,114,0.14)] dark:border-white/8 dark:bg-[linear-gradient(135deg,rgba(40,48,64,0.88),rgba(28,34,46,0.82))] dark:text-slate-100 dark:shadow-[0_10px_20px_rgba(0,0,0,0.22)] dark:hover:shadow-[0_14px_24px_rgba(0,0,0,0.3)]" data-billing-notice-open type="button">
+<span data-i18n-key="Generate Billing Notice">Generate Billing Notice</span>
+<span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-[rgba(10,95,122,0.08)] dark:bg-white/10 dark:text-slate-200"><span class="material-symbols-outlined text-[16px]" data-icon="article">article</span></span>
+</button>
+                    <a class="flex w-full items-center justify-between rounded-[18px] border border-white/80 bg-[linear-gradient(135deg,rgba(255,255,255,0.96),rgba(242,250,252,0.9))] px-3 py-2 text-left text-[12px] font-bold leading-4 text-[#0a5f7a] shadow-[0_10px_20px_rgba(0,92,114,0.08)] transition-all hover:translate-x-1 hover:shadow-[0_14px_24px_rgba(0,92,114,0.14)] dark:border-white/8 dark:bg-[linear-gradient(135deg,rgba(40,48,64,0.88),rgba(28,34,46,0.82))] dark:text-slate-100 dark:shadow-[0_10px_20px_rgba(0,0,0,0.22)] dark:hover:shadow-[0_14px_24px_rgba(0,0,0,0.3)]" href="/admin/billing/billingperiod/add/">
+                        <span data-i18n-key="Create Billing Period">Create Billing Period</span>
+                        <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-[rgba(10,95,122,0.08)] dark:bg-white/10 dark:text-slate-200"><span class="material-symbols-outlined text-[16px]" data-icon="calendar_month">calendar_month</span></span>
+                    </a>
+</div>
+</div>
+<button class="nav-item relative flex items-center gap-3 px-4 py-3 w-full text-left rounded-2xl border border-white/75 bg-[linear-gradient(135deg,rgba(255,255,255,0.95),rgba(228,242,255,0.84))] shadow-[0_16px_34px_rgba(14,84,140,0.16)] backdrop-blur-xl text-[#0a5f7a] hover:translate-x-1 hover:shadow-[0_20px_40px_rgba(14,84,140,0.22)] transition-all duration-200" data-modal-open="system-alerts-config-modal" type="button">
+<span class="flex h-9 w-9 items-center justify-center rounded-xl bg-[rgba(14,84,140,0.12)] text-[#0a5f7a]">
+<span class="material-symbols-outlined" data-icon="notifications_active">notifications_active</span>
+</span>
+<span class="font-extrabold text-[15px] leading-tight" data-i18n-key="Add notification">Add notification</span>
+</button>
+<a class="nav-item relative flex items-center gap-3 px-4 py-3 w-full text-left rounded-2xl border border-white/70 bg-[linear-gradient(135deg,rgba(255,255,255,0.93),rgba(214,240,247,0.8))] shadow-[0_14px_30px_rgba(0,92,114,0.14)] backdrop-blur-xl text-[#005c72] hover:translate-x-1 hover:shadow-[0_18px_36px_rgba(0,92,114,0.2)] transition-all duration-200" href="{% url 'portal:billing' %}">
+<span class="flex h-9 w-9 items-center justify-center rounded-xl bg-[rgba(0,92,114,0.12)] text-[#005c72]">
+<span class="material-symbols-outlined" data-icon="add_card">add_card</span>
+</span>
+<span class="font-extrabold text-[15px] leading-tight" data-i18n-key="Add payment">Add payment</span>
+</a>
+</div>
+<button class="nav-item sidebar-link sidebar-settings-button relative flex items-center gap-3 px-4 py-3 dark:text-slate-400 rounded-lg mt-4 w-full text-left" data-drawer-open="settings-drawer" type="button">
+<span class="sidebar-settings-gear-wrap" aria-hidden="true">
+<span class="material-symbols-outlined sidebar-settings-gear" data-icon="settings">settings</span>
+</span>
 <span class="font-medium">Settings</span>
-</button>
-<button class="nav-item sidebar-link relative flex items-center gap-3 px-4 py-3 dark:text-slate-400 rounded-lg w-full text-left" data-drawer-open="support-drawer" type="button">
-<span class="material-symbols-outlined" data-icon="contact_support">contact_support</span>
-<span class="font-medium">Support</span>
 </button>
 </div>
 </aside>

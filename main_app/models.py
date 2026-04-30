@@ -117,6 +117,10 @@ class Owner(models.Model):
         default=0,
         verbose_name="Balans (so'm)",
     )
+    has_contract = models.BooleanField(
+        default=False,
+        verbose_name="Dogovor bor",
+    )
     # Payme / Click uchun unikal ID — owner.id dan foydalanamiz
     # Telegram integratsiyasi
     telegram_id = models.CharField(max_length=255, null=True, blank=True)

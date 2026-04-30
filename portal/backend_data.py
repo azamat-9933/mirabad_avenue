@@ -5,6 +5,7 @@ from decimal import Decimal
 
 from django.contrib.auth import get_user_model
 from django.db.models import Prefetch, Sum
+from django.urls import reverse
 from django.utils import timezone
 
 from billing.models import HotWaterMeterReading
@@ -545,17 +546,19 @@ def build_portal_data(user=None) -> dict:
                     "id": resident_id,
                     "backendId": owner.id if owner else None,
                     "ownerBackendId": owner.id if owner else None,
+                    "displayId": owner.id if owner else apartment.id,
                     "complexId": _slug("complex", complex_obj.id),
                     "complexBackendId": complex_obj.id,
                     "buildingId": _slug("building", building.id),
                     "buildingBackendId": building.id,
                     "apartmentId": _slug("apartment", apartment.id),
                     "apartmentBackendId": apartment.id,
+                    "adminUrl": reverse("admin:main_app_owner_change", args=[owner.id]) if owner else "",
                     "name": owner.fio if owner else "Unassigned owner",
-                    "apartment": f"Apartment {apartment.number}",
+                    "apartment": str(apartment.number),
                     "apartmentNumber": apartment.number,
                     "section": apartment.section.name if apartment.section else "",
-                    "building": f"House {building.number}",
+                    "building": str(building.number),
                     "buildingNumber": building.number,
                     "complex": complex_obj.title,
                     "complexAddress": complex_obj.address or "",
@@ -568,7 +571,9 @@ def build_portal_data(user=None) -> dict:
                     "area": f"{apartment.area:g} m²",
                     "rooms": "Apartment",
                     "charge": "",
-                    "contract": f"APT-{apartment.id}",
+                    "contract": "True" if bool(getattr(owner, "has_contract", False)) else "False",
+                    "hasContract": bool(getattr(owner, "has_contract", False)),
+                    "contractStatus": "True" if bool(getattr(owner, "has_contract", False)) else "False",
                     "meter": apartment.section.name if apartment.section else "",
                     "email": "",
                     "telegramStatus": telegram_status or "not_linked",
