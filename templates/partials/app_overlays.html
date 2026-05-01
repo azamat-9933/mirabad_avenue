@@ -92,6 +92,7 @@
 </div>
 </div>
 </div>
+</div>
 
 <aside aria-labelledby="details-title" aria-hidden="true" class="app-drawer fixed top-0 right-0 z-[70] h-screen w-full max-w-xl bg-white shadow-2xl border-l border-outline-variant/20 translate-x-full" id="details-drawer" role="dialog">
 <div class="h-full flex flex-col">
@@ -284,6 +285,43 @@
 </div>
 </aside>
 
+<aside aria-labelledby="click-logs-title" aria-hidden="true" class="app-drawer audit-drawer fixed top-0 right-0 z-[70] h-screen w-full max-w-xl bg-white shadow-2xl border-l border-outline-variant/20 translate-x-full" id="click-logs-drawer" role="dialog">
+<div class="h-full flex flex-col">
+<div class="px-6 py-5 border-b border-surface-container flex items-center justify-between">
+<div>
+<h2 class="text-lg font-black text-on-surface" id="click-logs-title">Logs</h2>
+<p class="text-xs text-on-surface-variant mt-1">When, where and what actions were clicked in this workspace.</p>
+</div>
+<button aria-label="Close logs" class="p-2 rounded-lg hover:bg-surface-container transition-colors" data-close-overlay type="button">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<div class="audit-drawer-body p-6 overflow-y-auto">
+<div class="audit-summary-grid">
+<div><span>Total actions</span><strong data-click-logs-total>0</strong></div>
+<div><span>Visible</span><strong data-click-logs-visible>0</strong></div>
+<div><span>Storage</span><strong>Local</strong></div>
+<div><span>Scope</span><strong>Current browser</strong></div>
+</div>
+<div class="audit-toolbox">
+<label class="audit-search-shell">
+<span class="material-symbols-outlined" aria-hidden="true">search</span>
+<input aria-label="Search logs" data-click-logs-search placeholder="Search actions, labels or routes..." type="search"/>
+</label>
+<div class="audit-action-row">
+<button data-click-logs-action="clear" type="button"><span class="material-symbols-outlined">delete_sweep</span><span>Clear logs</span></button>
+</div>
+</div>
+<div class="audit-timeline" data-click-logs-list></div>
+<div class="audit-empty-state hidden" data-click-logs-empty>
+<span class="material-symbols-outlined">history_toggle_off</span>
+<strong>No actions yet</strong>
+<small>Start interacting with the interface to build the log.</small>
+</div>
+</div>
+</div>
+</aside>
+
 <aside aria-labelledby="support-title" aria-hidden="true" class="app-drawer support-drawer fixed top-0 right-0 z-[70] h-screen w-full max-w-md bg-white shadow-2xl border-l border-outline-variant/20 translate-x-full" id="support-drawer" role="dialog">
 <div class="h-full flex flex-col">
 <div class="support-drawer-hero">
@@ -402,7 +440,7 @@
 </div>
 
 <div aria-labelledby="resident-transactions-title" aria-hidden="true" class="app-modal fixed inset-0 z-[84] hidden items-center justify-center p-6" id="resident-transactions-modal" role="dialog">
-<div class="modal-panel export-preview-panel resident-transactions-panel w-full max-w-3xl bg-white rounded-lg shadow-2xl border border-outline-variant/20 overflow-hidden">
+<div class="modal-panel export-preview-panel resident-transactions-panel w-full bg-white rounded-lg shadow-2xl border border-outline-variant/20 overflow-hidden">
 <div class="export-preview-hero">
 <span class="material-symbols-outlined">history</span>
 <div>
@@ -414,12 +452,12 @@
 <span class="material-symbols-outlined">close</span>
 </button>
 </div>
-<div class="resident-transactions-summary" data-resident-transactions-summary>
-<div><span data-i18n-key="Resident ID">Resident ID</span><strong data-resident-transactions-id>--</strong></div>
-<div><span data-i18n-key="Phone">Phone</span><strong data-resident-transactions-phone>--</strong></div>
-<div><span data-i18n-key="House">House</span><strong data-resident-transactions-house>--</strong></div>
-<div><span data-i18n-key="Apartment">Apartment</span><strong data-resident-transactions-apartment>--</strong></div>
-<div><span data-i18n-key="Current Balance">Current Balance</span><strong data-resident-transactions-balance>0 UZS</strong></div>
+<div class="resident-transactions-columns" data-resident-transactions-columns>
+<span data-i18n-key="ID">ID</span>
+<span data-i18n-key="Date time">Date time</span>
+<span data-i18n-key="Total amount">Total amount</span>
+<span data-i18n-key="Balance before">Balance before</span>
+<span data-i18n-key="Balance after">Balance after</span>
 </div>
 <div class="resident-transactions-body">
 <div class="resident-transactions-list" data-resident-transactions-list></div>
@@ -607,7 +645,7 @@
 </div>
 
 <div aria-labelledby="export-preview-title" aria-hidden="true" class="app-modal fixed inset-0 z-[85] hidden items-center justify-center p-6" id="export-preview-modal" role="dialog">
-<div class="modal-panel export-preview-panel w-full max-w-lg bg-white rounded-lg shadow-2xl border border-outline-variant/20 overflow-hidden">
+<div class="modal-panel export-preview-panel w-full max-w-3xl bg-white rounded-lg shadow-2xl border border-outline-variant/20 overflow-hidden">
 <div class="export-preview-hero">
 <span class="material-symbols-outlined">ios_share</span>
 <div>
@@ -620,27 +658,44 @@
 </button>
 </div>
 <div class="export-preview-body">
-<div class="export-summary-grid">
-<div><span>Source</span><strong data-export-source-label>Current page</strong></div>
-<div><span>Period</span><strong>Last 90 days</strong></div>
-<div><span>Timezone</span><strong>Asia/Tashkent</strong></div>
-<div><span>Rows</span><strong data-export-rows>0 visible rows</strong></div>
+<div class="export-filter-grid">
+<label class="export-filter-field">
+<span data-i18n-key="House">House</span>
+<select data-export-building>
+<option value="">All houses</option>
+</select>
+</label>
+<label class="export-filter-field">
+<span data-i18n-key="Apartment">Apartment</span>
+<select data-export-apartment>
+<option value="">All apartments</option>
+</select>
+</label>
+<label class="export-filter-field export-filter-field-wide">
+<span data-i18n-key="Resident">Resident</span>
+<select data-export-resident>
+<option value="">All residents</option>
+</select>
+</label>
+<label class="export-filter-field">
+<span data-i18n-key="Date from">Date from</span>
+<input data-export-date-from type="datetime-local"/>
+</label>
+<label class="export-filter-field">
+<span data-i18n-key="Date to">Date to</span>
+<input data-export-date-to type="datetime-local"/>
+</label>
 </div>
 <div>
-<p class="drawer-label">Format</p>
+<p class="drawer-label" data-i18n-key="File type">File type</p>
 <div class="export-format-grid" data-export-format>
-<button class="is-active" data-format="CSV" type="button">CSV</button>
-<button data-format="XLSX" type="button">XLSX</button>
+<button class="is-active" data-format="XLSX" type="button">XLSX</button>
 <button data-format="PDF" type="button">PDF</button>
 </div>
 </div>
-<div class="export-preview-note">
-<span class="material-symbols-outlined">info</span>
-<p data-export-summary>Current backend data and visible filters will be exported.</p>
-</div>
 </div>
 <div class="export-preview-actions">
-<button data-export-copy type="button"><span class="material-symbols-outlined">content_copy</span><span>Copy summary</span></button>
+<button data-export-reset type="button"><span class="material-symbols-outlined">restart_alt</span><span data-i18n-key="Reset filters">Reset filters</span></button>
 <button data-export-download type="button"><span class="material-symbols-outlined">download</span><span>Download file</span></button>
 </div>
 </div>
@@ -917,13 +972,6 @@
 </div>
 <div class="settings-drawer-body p-6 space-y-4">
 <div class="settings-section">
-<p class="drawer-label">Interface density</p>
-<div class="density-control" data-density-control>
-<button class="is-active" data-density="comfortable" type="button">Comfortable</button>
-<button data-density="compact" type="button">Compact</button>
-</div>
-</div>
-<div class="settings-section">
 <p class="drawer-label">Interface sound</p>
 <button aria-pressed="false" class="sound-toggle-card" data-sound-toggle type="button">
 <span class="sound-toggle-icon material-symbols-outlined" data-sound-icon>volume_up</span>
@@ -963,10 +1011,10 @@
 <span>Toggle theme</span>
 </button>
 </div>
-<button class="settings-primary-action w-full py-3 bg-primary text-white rounded-lg text-sm font-bold" data-modal-open="request-modal" type="button">
-<span class="material-symbols-outlined">add_circle</span>
-<span>Open request modal</span>
-</button>
+<a class="settings-primary-action w-full py-3 bg-primary text-white rounded-lg text-sm font-bold" href="/admin/">
+<span class="material-symbols-outlined">admin_panel_settings</span>
+<span data-i18n-key="Open admin panel">Open admin panel</span>
+</a>
 </div>
 </div>
 </div>
@@ -1007,6 +1055,131 @@
 <span class="material-symbols-outlined">search_off</span>
 <strong data-i18n-key="No residents available">No residents available</strong>
 </div>
+</div>
+</div>
+</div>
+
+<div aria-labelledby="add-payment-title" aria-hidden="true" class="app-modal fixed inset-0 z-[86] hidden items-center justify-center p-4 md:p-6" id="add-payment-modal" role="dialog">
+<div class="modal-panel add-payment-panel w-full max-w-6xl bg-white rounded-lg shadow-2xl border border-outline-variant/20 overflow-hidden">
+<div class="add-payment-hero">
+<span class="material-symbols-outlined" aria-hidden="true">add_card</span>
+<div>
+<p class="profile-kicker" data-i18n-key="Payment workspace">Payment workspace</p>
+<h2 id="add-payment-title" data-i18n-key="Add payment">Add payment</h2>
+<small data-i18n-key="Find a resident, confirm the profile and write a real payment to the database.">Find a resident, confirm the profile and write a real payment to the database.</small>
+</div>
+<button aria-label="Close add payment" class="profile-drawer-close" data-close-overlay type="button">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<div class="add-payment-body">
+<section class="add-payment-search-column">
+<label class="add-payment-search-shell">
+<span class="material-symbols-outlined" aria-hidden="true">search</span>
+<input aria-label="Search residents for payment" data-add-payment-search data-i18n-placeholder="Search by name, phone, Telegram, house or apartment..." placeholder="Search by name, phone, Telegram, house or apartment..." type="search"/>
+<button aria-label="Clear resident search" class="add-payment-search-clear hidden" data-add-payment-search-clear type="button">
+<span class="material-symbols-outlined" aria-hidden="true">close</span>
+</button>
+</label>
+<div class="add-payment-search-caption">
+<span class="material-symbols-outlined" aria-hidden="true">database</span>
+<p data-i18n-key="Live resident search from current backend data.">Live resident search from current backend data.</p>
+</div>
+<div class="add-payment-search-results" data-add-payment-results></div>
+<div class="add-payment-search-empty hidden" data-add-payment-empty>
+<span class="material-symbols-outlined">person_search</span>
+<strong data-i18n-key="No residents found">No residents found</strong>
+<small data-i18n-key="Adjust the query to find a resident in the database.">Adjust the query to find a resident in the database.</small>
+</div>
+</section>
+<section class="add-payment-sheet">
+<div class="add-payment-sheet-head">
+<p class="profile-kicker" data-i18n-key="Resident payment profile">Resident payment profile</p>
+<div class="add-payment-status hidden" data-add-payment-status role="status"></div>
+</div>
+<div class="add-payment-resident-card hidden" data-add-payment-resident-card>
+<aside class="add-payment-resident-media">
+<div class="add-payment-resident-photo-shell">
+<img alt="" class="add-payment-resident-photo hidden" data-add-payment-photo src=""/>
+<div class="add-payment-resident-fallback" data-add-payment-fallback>
+<span class="material-symbols-outlined" aria-hidden="true">account_circle</span>
+<p data-i18n-key="No photo">No photo</p>
+</div>
+</div>
+<div class="add-payment-resident-id-card">
+<span data-i18n-key="Resident ID">Resident ID</span>
+<strong data-add-payment-display-id>--</strong>
+</div>
+</aside>
+<div class="add-payment-resident-sheet">
+<div class="add-payment-resident-grid">
+<article class="add-payment-resident-field">
+<span data-i18n-key="Name">Name</span>
+<strong data-add-payment-name>--</strong>
+</article>
+<article class="add-payment-resident-field">
+<span data-i18n-key="Phone">Phone</span>
+<strong data-add-payment-phone>--</strong>
+</article>
+<article class="add-payment-resident-field">
+<span data-i18n-key="Telegram user">Telegram user</span>
+<strong class="add-payment-chip is-connected" data-add-payment-tg-user>--</strong>
+</article>
+<article class="add-payment-resident-field">
+<span data-i18n-key="Contract">Contract</span>
+<strong class="add-payment-chip is-contract-true" data-add-payment-contract>True</strong>
+</article>
+<article class="add-payment-resident-field">
+<span data-i18n-key="House">House</span>
+<strong data-add-payment-house>--</strong>
+</article>
+<article class="add-payment-resident-field">
+<span data-i18n-key="Apartment">Apartment</span>
+<strong data-add-payment-apartment>--</strong>
+</article>
+<article class="add-payment-balance-field">
+<span data-i18n-key="Current Balance">Current Balance</span>
+<strong class="add-payment-balance is-positive" data-add-payment-balance-wrap><span class="material-symbols-outlined" data-add-payment-balance-icon>verified</span><span data-add-payment-balance>0 UZS</span></strong>
+</article>
+</div>
+<form class="add-payment-form" data-add-payment-form>
+{% csrf_token %}
+<label class="add-payment-amount-field">
+<span data-i18n-key="Amount">Amount</span>
+<input data-add-payment-amount inputmode="decimal" min="0" placeholder="0" step="0.01" type="number"/>
+</label>
+<div class="add-payment-mode-grid">
+<div class="add-payment-toggle-group" data-add-payment-operation-group>
+<span data-i18n-key="Operation">Operation</span>
+<div class="add-payment-toggle-row">
+<button class="is-active" data-add-payment-operation="credit" type="button"><span class="material-symbols-outlined" aria-hidden="true">south_west</span><span data-i18n-key="Add funds">Add funds</span></button>
+<button data-add-payment-operation="debit" type="button"><span class="material-symbols-outlined" aria-hidden="true">north_east</span><span data-i18n-key="Subtract">Subtract</span></button>
+</div>
+</div>
+<div class="add-payment-toggle-group" data-add-payment-channel-group>
+<span data-i18n-key="Channel">Channel</span>
+<div class="add-payment-toggle-row">
+<button class="is-active" data-add-payment-channel="cash" type="button"><span class="material-symbols-outlined" aria-hidden="true">payments</span><span data-i18n-key="Cash">Cash</span></button>
+<button data-add-payment-channel="terminal" type="button"><span class="material-symbols-outlined" aria-hidden="true">credit_card</span><span data-i18n-key="Terminal">Terminal</span></button>
+</div>
+</div>
+</div>
+<div class="add-payment-submit-row">
+<p class="add-payment-submit-note" data-add-payment-submit-note data-i18n-key="A real transaction will be written to the database and all balances will refresh from backend data.">A real transaction will be written to the database and all balances will refresh from backend data.</p>
+<button class="add-payment-submit" data-add-payment-submit type="submit">
+<span class="material-symbols-outlined" aria-hidden="true">check_circle</span>
+<span data-i18n-key="Save payment">Save payment</span>
+</button>
+</div>
+</form>
+</div>
+</div>
+<div class="add-payment-placeholder" data-add-payment-placeholder>
+<span class="material-symbols-outlined">person_search</span>
+<strong data-i18n-key="Select a resident">Select a resident</strong>
+<small data-i18n-key="Choose a resident on the left to prepare a real payment operation.">Choose a resident on the left to prepare a real payment operation.</small>
+</div>
+</section>
 </div>
 </div>
 </div>

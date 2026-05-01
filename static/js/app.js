@@ -19,6 +19,8 @@
         "Admin User": { ru: "Администратор", uz: "Administrator" },
         "Administrator": { ru: "Администратор", uz: "Administrator" },
         "Profile": { ru: "Профиль", uz: "Profil" },
+        "Logs": { ru: "Логи", uz: "Loglar" },
+        "Action history": { ru: "История действий", uz: "Amallar tarixi" },
         "Preferences": { ru: "Предпочтения", uz: "Afzalliklar" },
         "Organization settings": { ru: "Настройки организации", uz: "Tashkilot sozlamalari" },
         "Audit log": { ru: "Журнал аудита", uz: "Audit jurnali" },
@@ -166,7 +168,7 @@
         "Adjust search or filters to show matching resident profiles.": { ru: "Измените поиск или фильтры, чтобы показать подходящие профили.", uz: "Mos profillarni ko'rsatish uchun qidiruv yoki filtrlarni o'zgartiring." },
         "Contract": { ru: "Договор", uz: "Shartnoma" },
         "Resident since": { ru: "Резидент с", uz: "Rezident sanasi" },
-        "Telegram user": { ru: "Telegram user", uz: "Telegram foydalanuvchi" },
+        "Telegram user": { ru: "Телеграм", uz: "Telegram" },
         "Section": { ru: "Секция", uz: "Seksiya" },
         "Current Balance": { ru: "Текущий баланс", uz: "Joriy balans" },
         "Total Complexes": { ru: "Всего домов", uz: "Jami uylar" },
@@ -193,6 +195,36 @@
         "Generate Usage Report": { ru: "Сформировать отчёт потребления", uz: "Iste'mol hisobotini yaratish" },
         "Add New Resident Profile": { ru: "Добавить профиль жильца", uz: "Yangi yashovchi profilini qo'shish" },
         "Generate Billing Notice": { ru: "Сформировать уведомление", uz: "To'lov xabarnomasini yaratish" },
+        "Payment workspace": { ru: "Платёжное окно", uz: "To'lov oynasi" },
+        "Find a resident, confirm the profile and write a real payment to the database.": { ru: "Найдите абонента, проверьте профиль и запишите реальный платёж в базу данных.", uz: "Abonentni toping, profilni tasdiqlang va haqiqiy to'lovni bazaga yozing." },
+        "Live resident search from current backend data.": { ru: "Живой поиск по текущим backend-данным.", uz: "Joriy backend ma'lumotlari bo'yicha jonli qidiruv." },
+        "Adjust the query to find a resident in the database.": { ru: "Измените запрос, чтобы найти абонента в базе.", uz: "Bazadan abonent topish uchun so'rovni o'zgartiring." },
+        "Resident payment profile": { ru: "Платёжный профиль абонента", uz: "Abonentning to'lov profili" },
+        "Amount": { ru: "Сумма", uz: "Summa" },
+        "Operation": { ru: "Операция", uz: "Amal" },
+        "Add funds": { ru: "Зачислить", uz: "Hisobga kiritish" },
+        "Credit": { ru: "Зачислить", uz: "Hisobga kiritish" },
+        "Subtract": { ru: "Вычесть", uz: "Ayrish" },
+        "Channel": { ru: "Канал", uz: "Kanal" },
+        "Cash": { ru: "Наличные", uz: "Naqd" },
+        "Terminal": { ru: "Терминал", uz: "Terminal" },
+        "Save payment": { ru: "Сохранить платёж", uz: "To'lovni saqlash" },
+        "A real transaction will be written to the database and all balances will refresh from backend data.": { ru: "В базу будет записана реальная транзакция, после чего все балансы обновятся из backend-данных.", uz: "Bazaga haqiqiy tranzaksiya yoziladi va barcha balanslar backend ma'lumotlaridan yangilanadi." },
+        "Select a resident": { ru: "Выберите абонента", uz: "Abonentni tanlang" },
+        "Choose a resident on the left to prepare a real payment operation.": { ru: "Выберите абонента слева, чтобы подготовить реальную платёжную операцию.", uz: "Haqiqiy to'lov amalini tayyorlash uchun chapdan abonentni tanlang." },
+        "Search by name, phone, Telegram, house or apartment...": { ru: "Поиск по имени, телефону, Telegram, дому или квартире...", uz: "Ism, telefon, Telegram, uy yoki xonadon bo'yicha qidiring..." },
+        "Syncing backend data...": { ru: "Синхронизация backend-данных...", uz: "Backend ma'lumotlari sinxronlanmoqda..." },
+        "Saving payment...": { ru: "Сохранение платежа...", uz: "To'lov saqlanmoqda..." },
+        "Resident ID could not be resolved.": { ru: "Не удалось определить ID абонента.", uz: "Abonent ID aniqlanmadi." },
+        "Amount must be greater than zero.": { ru: "Сумма должна быть больше нуля.", uz: "Summa noldan katta bo'lishi kerak." },
+        "Payment saved to database.": { ru: "Платёж записан в базу данных.", uz: "To'lov bazaga yozildi." },
+        "Balance subtraction saved to database.": { ru: "Списание баланса записано в базу данных.", uz: "Balans ayirimi bazaga yozildi." },
+        "A real balance subtraction will be written to the database and resident totals will refresh from backend data.": { ru: "В базу будет записано реальное списание, после чего суммы обновятся из backend-данных.", uz: "Bazaga haqiqiy ayirma yoziladi va summalar backend ma'lumotlaridan yangilanadi." },
+        "Payment saved": { ru: "Платёж сохранён", uz: "To'lov saqlandi" },
+        "Balance updated": { ru: "Баланс обновлён", uz: "Balans yangilandi" },
+        "Cash payment was written to backend database.": { ru: "Платёж наличными записан в backend-базу.", uz: "Naqd to'lov backend bazaga yozildi." },
+        "Terminal payment was written to backend database.": { ru: "Платёж через терминал записан в backend-базу.", uz: "Terminal orqali to'lov backend bazaga yozildi." },
+        "Manual subtraction was written to backend database.": { ru: "Ручное списание записано в backend-базу.", uz: "Qo'lda ayirma backend bazaga yozildi." },
         "Billing notice": { ru: "Платёжное уведомление", uz: "To'lov xabarnomasi" },
         "Preview of the resident debt notice generated from current backend data.": { ru: "Предпросмотр уведомления о долге, собранного из текущих backend-данных.", uz: "Joriy backend ma'lumotlaridan yig'ilgan qarzdorlik xabarnomasi ko'rinishi." },
         "Select a debtor, review the generated notice and copy or send it later.": { ru: "Выберите должника, проверьте сгенерированное письмо и затем скопируйте или отправьте его позже.", uz: "Qarzdorni tanlang, yaratilgan xabarnomani ko'rib chiqing va keyin nusxa oling yoki keyinroq yuboring." },
@@ -301,7 +333,7 @@
         "Balance (Monthly Distribution)": { ru: "Баланс (помесячное распределение)", uz: "Balans (oylik taqsimot)" },
         "System-wide financial overview across core categories": { ru: "Финансовый обзор по основным категориям системы", uz: "Asosiy kategoriyalar bo'yicha moliyaviy sharh" },
         "Debit": { ru: "Дебет", uz: "Debet" },
-        "Credit": { ru: "Кредит", uz: "Kredit" },
+        "Credit": { ru: "Зачислить", uz: "Hisobga kiritish" },
         "Accruals": { ru: "Начисления", uz: "Hisoblangan" },
         "Receipts": { ru: "Поступления", uz: "Kirimlar" },
         "Payment Systems": { ru: "Платёжные системы", uz: "To'lov tizimlari" },
@@ -327,7 +359,7 @@
         "Contract status": { ru: "Статус договора", uz: "Shartnoma holati" },
         "Telegram status": { ru: "Статус Telegram", uz: "Telegram holati" },
         "Telegram id": { ru: "Telegram ID", uz: "Telegram ID" },
-        "Telegram user": { ru: "Telegram user", uz: "Telegram foydalanuvchi" },
+        "Telegram user": { ru: "Телеграм", uz: "Telegram" },
         "TG user": { ru: "TG user", uz: "TG user" },
         "TG status": { ru: "TG status", uz: "TG status" },
         "Contract": { ru: "Договор", uz: "Shartnoma" },
@@ -338,6 +370,17 @@
         "Loaded from database": { ru: "Загружено из базы данных", uz: "Bazada yuklangan" },
         "No photo": { ru: "Нет фото", uz: "Rasm yo'q" },
         "No transactions found": { ru: "Транзакции не найдены", uz: "Tranzaksiyalar topilmadi" },
+        "Date time": { ru: "Дата и время", uz: "Sana va vaqt" },
+        "Total amount": { ru: "Общая сумма", uz: "Umumiy summa" },
+        "Balance before": { ru: "Баланс до", uz: "Oldingi balans" },
+        "Balance after": { ru: "Баланс после", uz: "Keyingi balans" },
+        "Date from": { ru: "Дата с", uz: "Sana dan" },
+        "Date to": { ru: "Дата по", uz: "Sana gacha" },
+        "File type": { ru: "Тип файла", uz: "Fayl turi" },
+        "All houses": { ru: "Все дома", uz: "Barcha uylar" },
+        "All apartments": { ru: "Все квартиры", uz: "Barcha kvartiralar" },
+        "All residents": { ru: "Все абоненты", uz: "Barcha abonentlar" },
+        "Reset filters": { ru: "Сбросить фильтры", uz: "Filtrlarni tiklash" },
         "Only free apartments are shown. Occupied apartments must be edited in admin.": { ru: "Показаны только свободные квартиры. Занятые квартиры редактируются в admin.", uz: "Faqat bo'sh kvartiralar ko'rsatiladi. Band kvartiralar adminda tahrirlanadi." },
         "Create resident": { ru: "Создать жильца", uz: "Yashovchi yaratish" },
         "Consumption & Collections Overview": { ru: "Потребление и сборы", uz: "Iste'mol va tushumlar sharhi" },
@@ -356,6 +399,14 @@
         "Last Payment:": { ru: "Последний платёж:", uz: "Oxirgi to'lov:" },
         "SEND URGENT REMINDER": { ru: "ОТПРАВИТЬ СРОЧНОЕ НАПОМИНАНИЕ", uz: "SHOSHILINCH ESLATMA YUBORISH" },
         "VIEW BILLING HISTORY": { ru: "ИСТОРИЯ НАЧИСЛЕНИЙ", uz: "TO'LOV TARIXI" },
+        "Manual": { ru: "Ручной", uz: "Qo'lda" },
+        "Manual Adjustment": { ru: "Ручная корректировка", uz: "Qo'lda tuzatish" },
+        "Manual adjustment": { ru: "Ручная корректировка", uz: "Qo'lda tuzatish" },
+        "Late penalty": { ru: "Пеня за просрочку", uz: "Kechikish jarimasi" },
+        "Late Penalty": { ru: "Пеня за просрочку", uz: "Kechikish jarimasi" },
+        "Monthly utility payment": { ru: "Ежемесячный коммунальный платёж", uz: "Oylik kommunal to'lov" },
+        "Monthly Charge": { ru: "Ежемесячное начисление", uz: "Oylik hisob" },
+        "Adjustment": { ru: "Корректировка", uz: "Tuzatish" },
         "Resident": { ru: "Жилец", uz: "Yashovchi" },
         "Type": { ru: "Тип", uz: "Turi" },
         "Date": { ru: "Дата", uz: "Sana" },
@@ -427,6 +478,7 @@
         "Switch language": { ru: "Сменить язык", uz: "Tilni almashtirish" },
         "Toggle theme": { ru: "Сменить тему", uz: "Mavzuni almashtirish" },
         "Open request modal": { ru: "Открыть форму заявки", uz: "Ariza oynasini ochish" },
+        "Open admin panel": { ru: "Открыть админ панель", uz: "Admin panelini ochish" },
         "Capture the request first. Details can be assigned after validation.": { ru: "Сначала зафиксируйте заявку. Детали можно назначить после проверки.", uz: "Avval arizani kiriting. Tafsilotlar tekshiruvdan keyin belgilanadi." },
         "Create request": { ru: "Создать заявку", uz: "Ariza yaratish" },
         "Cancel": { ru: "Отмена", uz: "Bekor qilish" },
@@ -700,6 +752,7 @@
         "No results": { ru: "Ничего не найдено", uz: "Natija topilmadi" },
         "Search inside table...": { ru: "Поиск в таблице...", uz: "Jadvaldan qidirish..." },
         "Search residents...": { ru: "Поиск жильцов...", uz: "Yashovchilarni qidirish..." },
+        "Search by name, phone, Telegram, house or apartment...": { ru: "Поиск по имени, телефону, Telegram, дому или квартире...", uz: "Ism, telefon, Telegram, uy yoki xonadon bo'yicha qidiring..." },
         "Search district, house, apartment, resident...": { ru: "Поиск района, дома, квартиры, жильца...", uz: "Hudud, uy, xonadon, yashovchi..." },
         "Search residents, reports, alerts, actions...": { ru: "Поиск жителей, отчетов, уведомлений, действий...", uz: "Rezidentlar, hisobotlar, xabarlar, amallar..." },
         "Pressure drop detected, payment sync delayed...": { ru: "Падение давления, задержка синхронизации платежей...", uz: "Bosim pasaydi, to'lov sinxronizatsiyasi kechikdi..." },
@@ -710,11 +763,21 @@
         "Unit identifier": { ru: "Номер объекта", uz: "Obyekt raqami" },
     };
 
-    const translatableTextNodes = new Map();
     const normalizeText = (value) => value.replace(/\s+/g, " ").trim();
+    const canonicalTranslationKey = (value) => normalizeText(String(value || "")).toLowerCase();
+    const translationKeyIndex = Object.keys(translations).reduce((map, key) => {
+        map.set(canonicalTranslationKey(key), key);
+        return map;
+    }, new Map());
+    const resolveTranslationKey = (key) => {
+        const canonical = translationKeyIndex.get(canonicalTranslationKey(key));
+        return canonical || String(key || "");
+    };
+    const translatableTextNodes = new Map();
     const translateValue = (key, lang) => {
         if (lang === "en") return key;
-        return translations[key]?.[lang] || key;
+        const resolvedKey = resolveTranslationKey(key);
+        return translations[resolvedKey]?.[lang] || key;
     };
     const currentInterfaceLang = () => storage.getItem("hydroflow-lang") || "en";
     const t = (key) => translateValue(key, currentInterfaceLang());
@@ -731,13 +794,13 @@
                 ) {
                     return NodeFilter.FILTER_REJECT;
                 }
-                const key = normalizeText(node.nodeValue);
+                const key = resolveTranslationKey(node.nodeValue);
                 return translations[key] ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
             },
         });
         while (walker.nextNode()) {
             const node = walker.currentNode;
-            const key = normalizeText(node.nodeValue);
+            const key = resolveTranslationKey(node.nodeValue);
             if (!translatableTextNodes.has(node)) {
                 translatableTextNodes.set(node, {
                     key,
@@ -795,6 +858,11 @@
 
     const moneyFormatter = new Intl.NumberFormat("en-US");
     const formatBillingUzs = (value) => `${moneyFormatter.format(Math.round(Number(value) || 0))} UZS`;
+    const formatTelegramHandle = (value) => {
+        const raw = String(value || "").trim();
+        if (!raw) return "";
+        return raw.startsWith("@") ? raw : `@${raw}`;
+    };
     const escapeHtml = (value) => String(value ?? "").replace(/[&<>"']/g, (char) => ({
         "&": "&amp;",
         "<": "&lt;",
@@ -992,6 +1060,14 @@
     const dateValue = (date) => {
         const [day, month, year] = String(date || "").split("|")[0].trim().split(".").map(Number);
         return new Date(year || 1970, (month || 1) - 1, day || 1).getTime();
+    };
+    const transactionDateValue = (value) => {
+        const normalized = String(value || "").trim();
+        if (!normalized) return 0;
+        const [datePart = "", timePart = ""] = normalized.split(",");
+        const [day, month, year] = datePart.trim().split(".").map(Number);
+        const [hours, minutes] = timePart.trim().split(":").map(Number);
+        return new Date(year || 1970, (month || 1) - 1, day || 1, hours || 0, minutes || 0).getTime();
     };
     const riskForHealth = (health) => health < 55 ? "Critical" : health < 80 ? "Medium Risk" : "Low Risk";
     const toneForRisk = (risk) => risk === "Critical" ? "red" : risk === "Medium Risk" ? "amber" : "blue";
@@ -1560,25 +1636,6 @@
 
     const initialTheme = storage.getItem("hydroflow-theme") || "light";
     applyTheme(initialTheme);
-
-    const applyDensity = (density) => {
-        const safeDensity = density === "compact" ? "compact" : "comfortable";
-        root.dataset.density = safeDensity;
-        document.querySelectorAll("[data-density]").forEach((button) => {
-            button.classList.toggle("is-active", button.dataset.density === safeDensity);
-        });
-        storage.setItem("hydroflow-density", safeDensity);
-    };
-
-    applyDensity(storage.getItem("hydroflow-density") || "comfortable");
-
-    document.querySelectorAll("[data-density]").forEach((button) => button.addEventListener("click", () => {
-        const previousDensity = root.dataset.density || "comfortable";
-        if (button.dataset.density === previousDensity) return;
-        applyDensity(button.dataset.density);
-        const lang = storage.getItem("hydroflow-lang") || "en";
-        toast(translateValue("Density updated", lang), button.dataset.density === "compact" ? "Compact density enabled." : "Comfortable density enabled.");
-    }));
 
     document.querySelectorAll("[data-theme-toggle]").forEach((button) => button.addEventListener("click", () => {
         const next = root.classList.contains("dark") ? "light" : "dark";
@@ -2910,7 +2967,7 @@
         const isPositiveBalance = Number(resident.balance || 0) >= 0;
         const balanceClass = isPositiveBalance ? "is-positive" : "is-negative";
         const balanceIcon = isPositiveBalance ? "verified" : "error";
-        const telegramUser = String(resident.telegramUser || "").trim();
+        const telegramUser = formatTelegramHandle(resident.telegramUser);
         const telegramClass = telegramUser ? "is-telegram-connected" : "is-telegram-empty";
         const contractTranslationKey = resident.hasContract ? "True" : "False";
         const contractValue = t(contractTranslationKey);
@@ -2920,7 +2977,7 @@
             : `<div class="h-12 w-12 rounded-lg ${isDebtor ? "bg-error/20 text-error" : "bg-secondary/20 text-secondary"} flex items-center justify-center font-bold text-xl">${escapeHtml(initialsFor(resident.name || "R"))}</div>`;
         if (layout === "flat") {
             return `
-                <article class="resident-list-row"
+                <article class="resident-list-row cursor-pointer"
                     data-resident-card
                     data-resident-id="${escapeAttr(resident.id)}"
                     data-resident-name="${escapeAttr(resident.name || "")}"
@@ -2980,7 +3037,7 @@
             ? `<button class="w-full py-2 bg-error text-white text-xs font-bold rounded-lg hover:bg-red-700 transition-colors" data-reminder-action type="button" data-i18n-key="SEND URGENT REMINDER">SEND URGENT REMINDER</button>`
             : `<button class="w-full py-2 bg-surface-container-high text-on-surface-variant text-xs font-bold rounded-lg hover:bg-surface-container-highest transition-colors" data-resident-billing-history type="button" data-i18n-key="VIEW BILLING HISTORY">VIEW BILLING HISTORY</button>`;
         return `
-            <div class="resident-card group ${isDebtor ? "bg-error-container/30 border-error/20" : "bg-secondary-container/20 border-secondary/10"} border p-5 rounded-xl transition-all hover:shadow-lg relative overflow-hidden"
+            <div class="resident-card group cursor-pointer ${isDebtor ? "bg-error-container/30 border-error/20" : "bg-secondary-container/20 border-secondary/10"} border p-5 rounded-xl transition-all hover:shadow-lg relative overflow-hidden"
                 data-resident-card
                 data-resident-id="${escapeAttr(resident.id)}"
                 data-resident-status="${escapeAttr(resident.status)}"
@@ -3293,6 +3350,12 @@
                 icon.textContent = "north";
                 button.appendChild(icon);
             });
+            const activeButton = residentButtons.find((button) => button.classList.contains("is-active"));
+            if (activeButton && !activeButton.dataset.filterSortDirection) {
+                activeButton.dataset.filterSortDirection = "none";
+                const icon = activeButton.querySelector("[data-resident-filter-sort-icon]");
+                if (icon) icon.textContent = "unfold_more";
+            }
         };
         const syncResidentFilterSortIndicators = () => {
             residentButtons.forEach((button) => {
@@ -3301,7 +3364,9 @@
                 button.dataset.filterSortDirection = direction || "none";
                 const icon = button.querySelector("[data-resident-filter-sort-icon]");
                 if (icon) {
-                    icon.textContent = direction === "desc" ? "south" : "north";
+                    if (direction === "asc") icon.textContent = "north";
+                    else if (direction === "desc") icon.textContent = "south";
+                    else icon.textContent = "unfold_more";
                 }
             });
         };
@@ -3421,6 +3486,23 @@
                 residentExpanded = true;
                 writeListUrlState("residents", { page: 1 });
                 loadResidents();
+            });
+            residentsGrid.addEventListener("click", (event) => {
+                const actionTarget = event.target.closest("a, button, input, select, textarea, label");
+                if (actionTarget) return;
+                const card = event.target.closest("[data-resident-card]");
+                if (!card || !residentsGrid.contains(card)) return;
+                const fallback = residentFromLocalState(card.dataset.residentId, card.dataset.ownerBackendId);
+                const ownerBackendId = extractOwnerBackendId(
+                    card.dataset.ownerBackendId,
+                    card.dataset.residentId,
+                    fallback?.ownerBackendId,
+                    fallback?.backendId,
+                    fallback?.id
+                );
+                if (!ownerBackendId) return;
+                playSound("soft-click");
+                openResidentProfileByOwner({ ownerBackendId, fallback, closePalette: false });
             });
             document.addEventListener("hydroflow:language-changed", () => {
                 window.requestAnimationFrame(() => syncResidentMetaLabels(residentCount?.dataset.total || 0));
@@ -4347,13 +4429,14 @@
         const historyModal = document.getElementById("resident-transactions-modal");
         const historyList = historyModal?.querySelector("[data-resident-transactions-list]");
         const historyEmpty = historyModal?.querySelector("[data-resident-transactions-empty]");
-        const historyId = historyModal?.querySelector("[data-resident-transactions-id]");
-        const historyPhone = historyModal?.querySelector("[data-resident-transactions-phone]");
-        const historyHouse = historyModal?.querySelector("[data-resident-transactions-house]");
-        const historyApartment = historyModal?.querySelector("[data-resident-transactions-apartment]");
-        const historyBalance = historyModal?.querySelector("[data-resident-transactions-balance]");
         const historySubtitle = historyModal?.querySelector("[data-resident-transactions-subtitle]");
         const historyTitle = historyModal?.querySelector("#resident-transactions-title");
+        let activeHistoryResident = null;
+        const historyText = (value) => translateValue(String(value || ""), storage.getItem("hydroflow-lang") || "en");
+        const transactionMetaText = (payment) => [payment.method, payment.description]
+            .filter(Boolean)
+            .map((item) => historyText(item))
+            .join(" · ");
 
         const parseResident = (card) => {
             const resident = getResidentById(card.dataset.residentId);
@@ -4386,35 +4469,42 @@
         };
         const openResidentHistory = (resident) => {
             if (!historyModal || !resident) return;
+            activeHistoryResident = resident;
             const residentTransactions = getResidentTransactions(resident.id)
                 .slice()
-                .sort((a, b) => dateValue(b.date) - dateValue(a.date));
+                .sort((a, b) => transactionDateValue(b.createdAt || b.date) - transactionDateValue(a.createdAt || a.date));
             if (historyTitle) historyTitle.textContent = resident.name || "Resident transactions";
             if (historySubtitle) {
                 historySubtitle.textContent = [resident.building, resident.apartment].filter(Boolean).join(" · ") || "Live transaction history from database.";
             }
-            if (historyId) historyId.textContent = String(resident.displayId || resident.ownerBackendId || resident.backendId || "--");
-            if (historyPhone) historyPhone.textContent = resident.phone || "--";
-            if (historyHouse) historyHouse.textContent = resident.building || "--";
-            if (historyApartment) historyApartment.textContent = resident.apartmentNumber || resident.apartment || "--";
-            if (historyBalance) {
-                historyBalance.textContent = formatBillingUzs(resident.balance || 0);
-                historyBalance.classList.toggle("is-negative", Number(resident.balance || 0) < 0);
-                historyBalance.classList.toggle("is-positive", Number(resident.balance || 0) >= 0);
-            }
             if (historyList) {
                 historyList.innerHTML = residentTransactions.map((payment) => {
                     const signedAmount = Number(payment.signedAmount ?? payment.amount ?? 0);
-                    const positive = signedAmount >= 0;
+                    const amountTone = signedAmount >= 0 ? "is-positive" : "is-negative";
+                    const amountPrefix = signedAmount >= 0 ? "+" : "";
+                    const transactionId = payment.backendId || payment.id || "--";
+                    const paymentTime = payment.createdAt || payment.date || "--";
+                    const balanceBefore = Number(payment.balanceBefore || 0);
+                    const balanceAfter = Number(payment.balanceAfter || 0);
+                    const realMeta = transactionMetaText(payment);
                     return `
                         <div class="resident-transaction-item">
-                            <div class="resident-transaction-main">
-                                <strong>${escapeHtml(payment.method || payment.type || "Transaction")}</strong>
-                                <small>${escapeHtml(payment.description || payment.externalId || payment.type || "")}</small>
+                            <div class="resident-transaction-cell resident-transaction-cell-id">
+                                <strong>#${escapeHtml(transactionId)}</strong>
+                                <small>${escapeHtml(historyText(payment.type || payment.method || "Transaction"))}</small>
                             </div>
-                            <div class="resident-transaction-meta">
-                                <time>${escapeHtml(payment.date || "")}</time>
-                                <span class="resident-transaction-amount ${positive ? "is-positive" : "is-negative"}">${positive ? "+" : ""}${formatBillingUzs(Math.abs(signedAmount))}</span>
+                            <div class="resident-transaction-cell resident-transaction-cell-datetime">
+                                <strong>${escapeHtml(paymentTime)}</strong>
+                                <small>${escapeHtml(realMeta || payment.externalId || "")}</small>
+                            </div>
+                            <div class="resident-transaction-cell resident-transaction-cell-amount">
+                                <strong class="resident-transaction-amount ${amountTone}">${amountPrefix}${formatBillingUzs(Math.abs(signedAmount))}</strong>
+                            </div>
+                            <div class="resident-transaction-cell resident-transaction-cell-balance">
+                                <strong class="${balanceBefore < 0 ? "is-negative" : "is-positive"}">${formatBillingUzs(balanceBefore)}</strong>
+                            </div>
+                            <div class="resident-transaction-cell resident-transaction-cell-balance">
+                                <strong class="${balanceAfter < 0 ? "is-negative" : "is-positive"}">${formatBillingUzs(balanceAfter)}</strong>
                             </div>
                         </div>
                     `;
@@ -4423,6 +4513,11 @@
             historyEmpty?.classList.toggle("hidden", residentTransactions.length > 0);
             openOverlayById("resident-transactions-modal");
         };
+        document.addEventListener("hydroflow:language-changed", () => {
+            if (historyModal?.classList.contains("is-open") && activeHistoryResident) {
+                openResidentHistory(activeHistoryResident);
+            }
+        });
         const pickResidentByOwnerId = (value) => {
             const ownerId = String(value || "").replace(/[^\d]/g, "");
             if (!ownerId) return null;
@@ -5145,6 +5240,11 @@
         playSound("modal-open");
         document.querySelectorAll(".app-drawer.is-open").forEach((drawer) => {
             drawer.classList.remove("is-open");
+            drawer.classList.add("translate-x-full");
+            drawer.style.transform = "";
+            drawer.style.display = "";
+            drawer.style.visibility = "";
+            drawer.style.pointerEvents = "";
             drawer.setAttribute("aria-hidden", "true");
         });
         document.querySelectorAll(".app-modal.is-open").forEach((modal) => {
@@ -5155,7 +5255,16 @@
         backdrop?.classList.remove("hidden");
         window.requestAnimationFrame(() => backdrop?.classList.add("is-visible"));
         overlay.classList.remove("hidden");
-        overlay.classList.add("flex", "is-open");
+        overlay.classList.add("is-open");
+        if (overlay.classList.contains("app-drawer")) {
+            overlay.classList.remove("translate-x-full");
+            overlay.style.display = "block";
+            overlay.style.visibility = "visible";
+            overlay.style.pointerEvents = "auto";
+            overlay.style.transform = "translateX(0)";
+        } else {
+            overlay.classList.add("flex");
+        }
         overlay.setAttribute("aria-hidden", "false");
     };
 
@@ -5165,12 +5274,53 @@
         if (!overlay) return;
         overlay.classList.add("hidden");
         overlay.classList.remove("is-open", "flex");
+        if (overlay.classList.contains("app-drawer")) {
+            overlay.classList.add("translate-x-full");
+            overlay.style.transform = "";
+            overlay.style.display = "";
+            overlay.style.visibility = "";
+            overlay.style.pointerEvents = "";
+        }
         overlay.setAttribute("aria-hidden", "true");
         if (!document.querySelector(".app-drawer.is-open, .app-modal.is-open")) {
             backdrop?.classList.remove("is-visible");
             window.setTimeout(() => backdrop?.classList.add("hidden"), 140);
         }
     };
+
+    const closeAllOverlays = () => {
+        document.querySelectorAll(".app-drawer.is-open").forEach((overlay) => {
+            if (overlay.id) closeOverlayById(overlay.id);
+        });
+        document.querySelectorAll(".app-modal.is-open").forEach((overlay) => {
+            if (overlay.id) closeOverlayById(overlay.id);
+        });
+    };
+
+    window.HydroFlowOpenOverlayById = openOverlayById;
+    window.HydroFlowCloseOverlayById = closeOverlayById;
+    window.HydroFlowCloseAllOverlays = closeAllOverlays;
+    document.querySelector("[data-overlay-backdrop]")?.addEventListener("click", () => {
+        closeAllOverlays();
+    });
+    document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") {
+            closeAllOverlays();
+            return;
+        }
+        if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") {
+            event.preventDefault();
+            openOverlayById("command-palette");
+            window.setTimeout(() => document.querySelector("[data-command-input]")?.focus(), 0);
+        }
+    });
+    document.querySelectorAll("[data-command-open]").forEach((input) => {
+        input.closest("form")?.addEventListener("submit", (event) => event.preventDefault());
+        input.addEventListener("focus", () => {
+            openOverlayById("command-palette");
+            window.setTimeout(() => document.querySelector("[data-command-input]")?.focus(), 0);
+        });
+    });
 
     const csrfToken = () => {
         const tokenInput = document.querySelector("input[name='csrfmiddlewaretoken']");
@@ -6901,18 +7051,16 @@
     };
 
     document.addEventListener("click", (event) => {
-        const openDrawer = event.target.closest("[data-drawer-open]");
-        if (!openDrawer) return;
-        const id = openDrawer.dataset.drawerOpen;
-        if (id) openOverlayById(id);
-    });
-
-    document.addEventListener("click", (event) => {
-        const openButton = event.target.closest("[data-modal-open]");
-        if (!openButton) return;
-        const id = openButton.dataset.modalOpen;
-        if (id) openOverlayById(id);
-    });
+        const openTrigger = event.target.closest("[data-drawer-open], [data-modal-open]");
+        if (!openTrigger) return;
+        const id = openTrigger.dataset.drawerOpen || openTrigger.dataset.modalOpen || "";
+        if (!id) return;
+        event.preventDefault();
+        event.stopPropagation();
+        document.querySelector(".account-menu")?.classList.add("hidden");
+        document.querySelector("[data-account-toggle]")?.setAttribute("aria-expanded", "false");
+        openOverlayById(id);
+    }, true);
 
     document.addEventListener("click", (event) => {
         const closeButton = event.target.closest("[data-close-overlay]");
@@ -7229,7 +7377,7 @@
         const apartment = resident.apartmentNumber || resident.apartment || "--";
         const balanceValue = Number(resident.balance || 0);
         const isPositiveBalance = balanceValue >= 0;
-        const telegramUser = String(resident.telegramUser || "").trim();
+        const telegramUser = formatTelegramHandle(resident.telegramUser);
         const telegramStatusRaw = String(resident.telegramStatus || "").toLowerCase();
         const telegramConnected = Boolean(resident.telegramConnected)
             || Boolean(telegramUser)
@@ -7289,17 +7437,9 @@
         });
         return payload?.results?.[0] || null;
     };
-    const openResidentCommandProfile = async (button) => {
-        if (!button || !residentProfileModal || !residentProfileNodes) return;
-        const fallback = residentFromLocalState(button.dataset.commandResidentId, button.dataset.commandOwnerBackendId);
-        const ownerBackendId = extractOwnerBackendId(
-            button.dataset.commandOwnerBackendId,
-            button.dataset.commandResidentId,
-            fallback?.ownerBackendId,
-            fallback?.backendId,
-            fallback?.id
-        );
-        closeCommandPalette({ withWater: false });
+    const openResidentProfileByOwner = async ({ ownerBackendId = "", fallback = null, closePalette = false } = {}) => {
+        if (!residentProfileModal || !residentProfileNodes) return;
+        if (closePalette) closeCommandPalette({ withWater: false });
         if (!ownerBackendId) {
             toast("Resident profile", "Could not resolve resident ID for database lookup.", "warning");
             return;
@@ -7310,12 +7450,27 @@
         } catch (error) {
             console.warn("Resident profile fetch failed", error);
         }
+        if (!resident && fallback) {
+            resident = fallback;
+        }
         if (!resident) {
             toast("Resident profile", "Could not load resident data from database.", "warning");
             return;
         }
         renderResidentCommandProfile(resident);
         openOverlayById("resident-command-profile-modal");
+    };
+    const openResidentCommandProfile = async (button) => {
+        if (!button || !residentProfileModal || !residentProfileNodes) return;
+        const fallback = residentFromLocalState(button.dataset.commandResidentId, button.dataset.commandOwnerBackendId);
+        const ownerBackendId = extractOwnerBackendId(
+            button.dataset.commandOwnerBackendId,
+            button.dataset.commandResidentId,
+            fallback?.ownerBackendId,
+            fallback?.backendId,
+            fallback?.id
+        );
+        return openResidentProfileByOwner({ ownerBackendId, fallback, closePalette: true });
     };
     if (residentProfileModal && residentProfileNodes && residentProfileModal.dataset.commandProfileReady !== "true") {
         residentProfileModal.dataset.commandProfileReady = "true";
@@ -7340,6 +7495,322 @@
             }
             document.querySelector("[data-billing-notice-open]")?.click();
         });
+    }
+    const addPaymentModal = document.getElementById("add-payment-modal");
+    const addPaymentState = {
+        residents: [],
+        selectedResident: null,
+        operation: "credit",
+        channel: "cash",
+        submitting: false,
+        preselectedOwnerId: "",
+    };
+    const addPaymentNodes = addPaymentModal ? {
+        search: addPaymentModal.querySelector("[data-add-payment-search]"),
+        searchClear: addPaymentModal.querySelector("[data-add-payment-search-clear]"),
+        results: addPaymentModal.querySelector("[data-add-payment-results]"),
+        empty: addPaymentModal.querySelector("[data-add-payment-empty]"),
+        status: addPaymentModal.querySelector("[data-add-payment-status]"),
+        residentCard: addPaymentModal.querySelector("[data-add-payment-resident-card]"),
+        placeholder: addPaymentModal.querySelector("[data-add-payment-placeholder]"),
+        photo: addPaymentModal.querySelector("[data-add-payment-photo]"),
+        fallback: addPaymentModal.querySelector("[data-add-payment-fallback]"),
+        displayId: addPaymentModal.querySelector("[data-add-payment-display-id]"),
+        name: addPaymentModal.querySelector("[data-add-payment-name]"),
+        phone: addPaymentModal.querySelector("[data-add-payment-phone]"),
+        tgUser: addPaymentModal.querySelector("[data-add-payment-tg-user]"),
+        contract: addPaymentModal.querySelector("[data-add-payment-contract]"),
+        house: addPaymentModal.querySelector("[data-add-payment-house]"),
+        apartment: addPaymentModal.querySelector("[data-add-payment-apartment]"),
+        balanceWrap: addPaymentModal.querySelector("[data-add-payment-balance-wrap]"),
+        balance: addPaymentModal.querySelector("[data-add-payment-balance]"),
+        balanceIcon: addPaymentModal.querySelector("[data-add-payment-balance-icon]"),
+        form: addPaymentModal.querySelector("[data-add-payment-form]"),
+        amount: addPaymentModal.querySelector("[data-add-payment-amount]"),
+        submit: addPaymentModal.querySelector("[data-add-payment-submit]"),
+        operationButtons: Array.from(addPaymentModal.querySelectorAll("[data-add-payment-operation]")),
+        channelGroup: addPaymentModal.querySelector("[data-add-payment-channel-group]"),
+        channelButtons: Array.from(addPaymentModal.querySelectorAll("[data-add-payment-channel]")),
+        submitNote: addPaymentModal.querySelector("[data-add-payment-submit-note]"),
+    } : null;
+    const addPaymentSearchText = (resident) => normalizeCommandSearch([
+        resident?.displayId,
+        resident?.name,
+        resident?.phone,
+        resident?.telegramUser,
+        resident?.building,
+        resident?.complex,
+        resident?.apartment,
+        resident?.apartmentNumber,
+    ].filter(Boolean).join(" "));
+    const addPaymentResidentByOwnerId = (ownerBackendId) => {
+        const ownerId = extractOwnerBackendId(ownerBackendId);
+        if (!ownerId) return null;
+        return addPaymentState.residents.find((resident) => (
+            extractOwnerBackendId(resident.ownerBackendId, resident.backendId, resident.id) === ownerId
+        )) || null;
+    };
+    const setAddPaymentStatus = (message = "", kind = "") => {
+        if (!addPaymentNodes?.status) return;
+        if (!message) {
+            addPaymentNodes.status.textContent = "";
+            addPaymentNodes.status.classList.add("hidden");
+            addPaymentNodes.status.classList.remove("is-error", "is-success");
+            return;
+        }
+        addPaymentNodes.status.textContent = message;
+        addPaymentNodes.status.classList.remove("hidden", "is-error", "is-success");
+        if (kind === "error") addPaymentNodes.status.classList.add("is-error");
+        if (kind === "success") addPaymentNodes.status.classList.add("is-success");
+    };
+    const syncAddPaymentSubmitState = () => {
+        if (!addPaymentNodes?.submit) return;
+        const amountValue = Number(addPaymentNodes.amount?.value || 0);
+        const channelReady = addPaymentState.operation === "debit" || ["cash", "terminal"].includes(addPaymentState.channel);
+        addPaymentNodes.submit.disabled = addPaymentState.submitting || !addPaymentState.selectedResident || !(amountValue > 0) || !channelReady;
+    };
+    const syncAddPaymentMode = () => {
+        if (!addPaymentNodes) return;
+        addPaymentNodes.operationButtons.forEach((button) => {
+            button.classList.toggle("is-active", button.dataset.addPaymentOperation === addPaymentState.operation);
+        });
+        addPaymentNodes.channelButtons.forEach((button) => {
+            button.classList.toggle("is-active", button.dataset.addPaymentChannel === addPaymentState.channel);
+        });
+        if (addPaymentNodes.channelGroup) {
+            addPaymentNodes.channelGroup.classList.toggle("hidden", addPaymentState.operation !== "credit");
+        }
+        if (addPaymentNodes.submitNote) {
+            addPaymentNodes.submitNote.textContent = addPaymentState.operation === "credit"
+                ? t("A real transaction will be written to the database and all balances will refresh from backend data.")
+                : t("A real balance subtraction will be written to the database and resident totals will refresh from backend data.");
+        }
+        syncAddPaymentSubmitState();
+    };
+    const renderAddPaymentResident = (resident) => {
+        if (!addPaymentNodes) return;
+        addPaymentState.selectedResident = resident || null;
+        const hasResident = Boolean(resident);
+        addPaymentNodes.residentCard?.classList.toggle("hidden", !hasResident);
+        addPaymentNodes.placeholder?.classList.toggle("hidden", hasResident);
+        if (!resident) {
+            syncAddPaymentSubmitState();
+            return;
+        }
+        const displayId = resident.displayId || extractOwnerBackendId(resident.ownerBackendId, resident.backendId, resident.id) || "--";
+        const phone = resident.phone || "--";
+        const house = resident.building || "--";
+        const apartment = resident.apartmentNumber || resident.apartment || "--";
+        const balanceValue = Number(resident.balance || 0);
+        const isPositiveBalance = balanceValue >= 0;
+        const telegramUser = formatTelegramHandle(resident.telegramUser);
+        const hasContract = hasResidentContract(resident);
+        const photoUrl = String(resident.photo || "").trim();
+
+        addPaymentNodes.displayId.textContent = String(displayId);
+        addPaymentNodes.name.textContent = resident.name || "Resident";
+        addPaymentNodes.phone.textContent = phone;
+        addPaymentNodes.house.textContent = house;
+        addPaymentNodes.apartment.textContent = String(apartment);
+
+        addPaymentNodes.balance.textContent = formatBillingUzs(balanceValue);
+        addPaymentNodes.balanceIcon.textContent = isPositiveBalance ? "verified" : "error";
+        addPaymentNodes.balanceWrap.classList.toggle("is-positive", isPositiveBalance);
+        addPaymentNodes.balanceWrap.classList.toggle("is-negative", !isPositiveBalance);
+
+        addPaymentNodes.tgUser.textContent = telegramUser || t("Not linked");
+        addPaymentNodes.tgUser.classList.toggle("is-connected", Boolean(telegramUser));
+        addPaymentNodes.tgUser.classList.toggle("is-missing", !telegramUser);
+
+        addPaymentNodes.contract.textContent = hasContract ? t("True") : t("False");
+        addPaymentNodes.contract.classList.toggle("is-contract-true", hasContract);
+        addPaymentNodes.contract.classList.toggle("is-contract-false", !hasContract);
+
+        if (photoUrl) {
+            addPaymentNodes.photo.src = photoUrl;
+            addPaymentNodes.photo.alt = resident.name || "Resident";
+            addPaymentNodes.photo.classList.remove("hidden");
+            addPaymentNodes.fallback.classList.add("hidden");
+        } else {
+            addPaymentNodes.photo.classList.add("hidden");
+            addPaymentNodes.photo.src = "";
+            addPaymentNodes.fallback.classList.remove("hidden");
+        }
+        syncAddPaymentSubmitState();
+    };
+    const renderAddPaymentResults = () => {
+        if (!addPaymentNodes?.results) return;
+        const query = normalizeCommandSearch(addPaymentNodes.search?.value || "");
+        const ownerId = extractOwnerBackendId(
+            addPaymentState.selectedResident?.ownerBackendId,
+            addPaymentState.selectedResident?.backendId,
+            addPaymentState.selectedResident?.id
+        );
+        const filtered = addPaymentState.residents
+            .filter((resident) => !query || addPaymentSearchText(resident).includes(query))
+            .sort((left, right) => {
+                const leftName = String(left?.name || "").toLowerCase();
+                const rightName = String(right?.name || "").toLowerCase();
+                const leftStarts = Number(leftName.startsWith(query));
+                const rightStarts = Number(rightName.startsWith(query));
+                if (leftStarts !== rightStarts) return rightStarts - leftStarts;
+                return leftName.localeCompare(rightName);
+            })
+            .slice(0, 10);
+        addPaymentNodes.results.innerHTML = filtered.map((resident) => {
+            const isPositiveBalance = Number(resident.balance || 0) >= 0;
+            const residentOwnerId = extractOwnerBackendId(resident.ownerBackendId, resident.backendId, resident.id);
+            const isSelected = ownerId && residentOwnerId === ownerId;
+            return `
+                <button class="add-payment-result ${isSelected ? "is-active" : ""}"
+                    data-add-payment-select
+                    data-owner-backend-id="${escapeAttr(residentOwnerId)}"
+                    type="button">
+                    <div class="add-payment-result-top">
+                        <strong class="add-payment-result-name">${escapeHtml(resident.name || "Resident")}</strong>
+                        <span class="add-payment-result-balance ${isPositiveBalance ? "is-positive" : "is-negative"}">${escapeHtml(formatBillingUzs(resident.balance || 0))}</span>
+                    </div>
+                    <div class="add-payment-result-meta">${escapeHtml([
+                        resident.phone || "--",
+                        resident.telegramUser || t("Not linked"),
+                        resident.building || resident.complex || "--",
+                        resident.apartmentNumber || resident.apartment || "--",
+                    ].join(" · "))}</div>
+                </button>
+            `;
+        }).join("");
+        addPaymentNodes.empty?.classList.toggle("hidden", filtered.length > 0);
+        addPaymentNodes.searchClear?.classList.toggle("hidden", !(addPaymentNodes.search?.value || "").trim());
+    };
+    const syncAddPaymentResidents = () => {
+        addPaymentState.residents = (Array.isArray(billingData.residents) ? billingData.residents : []).slice();
+    };
+    const prepareAddPaymentModal = async (preselectedOwnerId = "") => {
+        if (!addPaymentModal || !addPaymentNodes) return;
+        addPaymentState.preselectedOwnerId = extractOwnerBackendId(preselectedOwnerId);
+        setAddPaymentStatus(t("Syncing backend data..."));
+        try {
+            await refreshPortalDataSnapshot();
+        } catch {
+            // Existing portal snapshot stays in use when refresh is temporarily unavailable.
+        }
+        syncAddPaymentResidents();
+        const fallbackOwnerId = addPaymentState.preselectedOwnerId
+            || extractOwnerBackendId(addPaymentState.selectedResident?.ownerBackendId, addPaymentState.selectedResident?.backendId, addPaymentState.selectedResident?.id);
+        renderAddPaymentResident(addPaymentResidentByOwnerId(fallbackOwnerId));
+        renderAddPaymentResults();
+        setAddPaymentStatus("");
+        syncAddPaymentMode();
+        window.setTimeout(() => addPaymentNodes.search?.focus(), 0);
+    };
+    const submitAddPayment = async () => {
+        if (!addPaymentNodes || !addPaymentState.selectedResident || addPaymentState.submitting) return;
+        const ownerId = extractOwnerBackendId(
+            addPaymentState.selectedResident.ownerBackendId,
+            addPaymentState.selectedResident.backendId,
+            addPaymentState.selectedResident.id
+        );
+        const amount = Number(addPaymentNodes.amount?.value || 0);
+        if (!ownerId) {
+            setAddPaymentStatus(t("Resident ID could not be resolved."), "error");
+            return;
+        }
+        if (!(amount > 0)) {
+            setAddPaymentStatus(t("Amount must be greater than zero."), "error");
+            return;
+        }
+        addPaymentState.submitting = true;
+        syncAddPaymentSubmitState();
+        setAddPaymentStatus(t("Saving payment..."));
+        try {
+            const payload = await postPortalJson("/api/payments/create/", {
+                owner_id: ownerId,
+                amount,
+                operation: addPaymentState.operation,
+                channel: addPaymentState.operation === "credit" ? addPaymentState.channel : "",
+            });
+            rehydrateFromPortalData(payload.portalData);
+            syncAddPaymentResidents();
+            renderAddPaymentResident(addPaymentResidentByOwnerId(ownerId));
+            renderAddPaymentResults();
+            if (addPaymentNodes.amount) addPaymentNodes.amount.value = "";
+            setAddPaymentStatus(
+                addPaymentState.operation === "credit" ? t("Payment saved to database.") : t("Balance subtraction saved to database."),
+                "success"
+            );
+            playSound("payment-success");
+            toast(
+                addPaymentState.operation === "credit" ? t("Payment saved") : t("Balance updated"),
+                addPaymentState.operation === "credit"
+                    ? t(addPaymentState.channel === "cash" ? "Cash payment was written to backend database." : "Terminal payment was written to backend database.")
+                    : t("Manual subtraction was written to backend database."),
+                "success"
+            );
+        } catch (error) {
+            setAddPaymentStatus(error.message || "Payment request failed.", "error");
+            toast("Payment request failed", error.message || "Backend payment request failed.", "danger");
+        } finally {
+            addPaymentState.submitting = false;
+            syncAddPaymentSubmitState();
+        }
+    };
+    if (addPaymentModal && addPaymentNodes && addPaymentModal.dataset.addPaymentReady !== "true") {
+        addPaymentModal.dataset.addPaymentReady = "true";
+        addPaymentModal.addEventListener("click", (event) => {
+            if (event.target !== addPaymentModal) return;
+            closeOverlayById("add-payment-modal");
+        });
+        addPaymentNodes.search?.addEventListener("input", () => renderAddPaymentResults());
+        addPaymentNodes.searchClear?.addEventListener("click", () => {
+            if (!addPaymentNodes.search) return;
+            addPaymentNodes.search.value = "";
+            renderAddPaymentResults();
+            addPaymentNodes.search.focus();
+        });
+        addPaymentNodes.results?.addEventListener("click", (event) => {
+            const button = event.target.closest("[data-add-payment-select]");
+            if (!button) return;
+            const resident = addPaymentResidentByOwnerId(button.dataset.ownerBackendId);
+            renderAddPaymentResident(resident);
+            renderAddPaymentResults();
+            setAddPaymentStatus("");
+        });
+        addPaymentNodes.amount?.addEventListener("input", () => {
+            setAddPaymentStatus("");
+            syncAddPaymentSubmitState();
+        });
+        addPaymentNodes.operationButtons.forEach((button) => button.addEventListener("click", () => {
+            addPaymentState.operation = button.dataset.addPaymentOperation || "credit";
+            setAddPaymentStatus("");
+            syncAddPaymentMode();
+        }));
+        addPaymentNodes.channelButtons.forEach((button) => button.addEventListener("click", () => {
+            addPaymentState.channel = button.dataset.addPaymentChannel || "cash";
+            setAddPaymentStatus("");
+            syncAddPaymentMode();
+        }));
+        addPaymentNodes.form?.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            await submitAddPayment();
+        });
+        addPaymentNodes.search?.addEventListener("keydown", (event) => {
+            if (event.key !== "Enter") return;
+            const first = addPaymentNodes.results?.querySelector("[data-add-payment-select]");
+            if (!first) return;
+            event.preventDefault();
+            first.click();
+        });
+        document.querySelectorAll("[data-modal-open='add-payment-modal']").forEach((button) => button.addEventListener("click", () => {
+            window.setTimeout(() => prepareAddPaymentModal(), 0);
+        }));
+        window.HydroFlowOpenAddPaymentForResident = (ownerBackendId = "") => {
+            openOverlayById("add-payment-modal");
+            prepareAddPaymentModal(ownerBackendId);
+        };
+        syncAddPaymentResidents();
+        renderAddPaymentResults();
+        renderAddPaymentResident(null);
+        syncAddPaymentMode();
     }
     const setActiveCommand = (items, index) => {
         items.forEach((item, itemIndex) => {
@@ -7495,11 +7966,86 @@
     });
 
     const exportModal = document.getElementById("export-preview-modal");
-    let selectedExportFormat = "CSV";
+    let selectedExportFormat = "XLSX";
     let lastExportSource = document.title;
     let lastExportButton = null;
     let lastExportContext = "default";
+    const exportBuildingSelect = exportModal?.querySelector("[data-export-building]");
+    const exportApartmentSelect = exportModal?.querySelector("[data-export-apartment]");
+    const exportResidentSelect = exportModal?.querySelector("[data-export-resident]");
+    const exportDateFromInput = exportModal?.querySelector("[data-export-date-from]");
+    const exportDateToInput = exportModal?.querySelector("[data-export-date-to]");
     const getVisibleTableRows = (root = document) => Array.from(root.querySelectorAll("tbody tr")).filter((row) => !row.classList.contains("hidden"));
+    const exportText = (key) => translateValue(key, storage.getItem("hydroflow-lang") || "en");
+    const exportDateTimeLocalValue = (date) => {
+        const offsetMs = date.getTimezoneOffset() * 60000;
+        return new Date(date.getTime() - offsetMs).toISOString().slice(0, 16);
+    };
+    const setExportSelectOptions = (select, rows, emptyLabel) => {
+        if (!select) return;
+        const previous = select.value;
+        select.innerHTML = [`<option value="">${escapeHtml(exportText(emptyLabel))}</option>`, ...rows.map((row) => (
+            `<option value="${escapeHtml(row.value)}">${escapeHtml(row.label)}</option>`
+        ))].join("");
+        const canRestore = previous && rows.some((row) => String(row.value) === String(previous));
+        select.value = canRestore ? previous : "";
+    };
+    const getExportResidentPool = () => (Array.isArray(billingData.residents) ? billingData.residents : [])
+        .filter((resident) => resident?.ownerBackendId || resident?.backendId)
+        .map((resident) => ({
+            ownerId: String(resident.ownerBackendId || resident.backendId || ""),
+            apartmentId: String(resident.apartmentBackendId || ""),
+            buildingId: String(resident.buildingBackendId || ""),
+            name: resident.name || "Resident",
+            building: resident.building || "",
+            apartment: resident.apartmentNumber || resident.apartment || "",
+            phone: resident.phone || "",
+        }));
+    const syncExportFilters = () => {
+        const pool = getExportResidentPool();
+        const buildingOptions = Array.from(new Map(pool
+            .filter((item) => item.buildingId)
+            .map((item) => [item.buildingId, { value: item.buildingId, label: item.building || `House ${item.buildingId}` }])).values())
+            .sort((a, b) => a.label.localeCompare(b.label));
+        setExportSelectOptions(exportBuildingSelect, buildingOptions, "All houses");
+
+        const buildingId = exportBuildingSelect?.value || "";
+        const apartmentPool = pool.filter((item) => !buildingId || item.buildingId === buildingId);
+        const apartmentOptions = Array.from(new Map(apartmentPool
+            .filter((item) => item.apartmentId)
+            .map((item) => [item.apartmentId, {
+                value: item.apartmentId,
+                label: [item.apartment, item.building].filter(Boolean).join(" · ") || `Apartment ${item.apartmentId}`,
+            }])).values())
+            .sort((a, b) => a.label.localeCompare(b.label));
+        setExportSelectOptions(exportApartmentSelect, apartmentOptions, "All apartments");
+
+        const apartmentId = exportApartmentSelect?.value || "";
+        const residentPool = apartmentPool.filter((item) => !apartmentId || item.apartmentId === apartmentId);
+        const residentOptions = residentPool
+            .map((item) => ({
+                value: item.ownerId,
+                label: [item.name, item.building, item.apartment].filter(Boolean).join(" · "),
+            }))
+            .sort((a, b) => a.label.localeCompare(b.label));
+        setExportSelectOptions(exportResidentSelect, residentOptions, "All residents");
+    };
+    const resetExportFilters = () => {
+        if (exportBuildingSelect) exportBuildingSelect.value = "";
+        if (exportApartmentSelect) exportApartmentSelect.value = "";
+        if (exportResidentSelect) exportResidentSelect.value = "";
+        if (exportDateFromInput) exportDateFromInput.value = exportDateTimeLocalValue(new Date(Date.now() - 90 * 24 * 60 * 60 * 1000));
+        if (exportDateToInput) exportDateToInput.value = exportDateTimeLocalValue(new Date());
+        syncExportFilters();
+    };
+    const getEffectiveExportContext = (baseContext) => {
+        const forcedScopedContext = Boolean(exportResidentSelect?.value || exportApartmentSelect?.value || exportBuildingSelect?.value);
+        if (forcedScopedContext) return "transactions";
+        if (["usage-report", "billing", "transactions", "debt-letters"].includes(baseContext)) return "transactions";
+        if (baseContext === "maintenance") return "maintenance";
+        if (baseContext === "default") return "residential";
+        return baseContext;
+    };
     const getExportHostFromButton = (sourceButton = null) => {
         if (!sourceButton) return document;
         if (sourceButton.matches("[data-table-action]")) {
@@ -8004,7 +8550,7 @@
             "Долг": formatBillingUzs(complex.debt),
             "Должников": complex.debtorResidents,
         }));
-    const buildRealDebtorRows = () => billingData.residents
+        const buildRealDebtorRows = () => billingData.residents
         .filter((resident) => resident.balance < 0)
         .sort((a, b) => Math.abs(b.balance) - Math.abs(a.balance))
         .map((resident) => {
@@ -8481,53 +9027,21 @@ ${sheets}
         lastExportContext = detectExportContext(sourceButton);
         const source = getExportSourceFromButton(sourceButton);
         lastExportSource = source;
-        const visibleRows = getVisibleTableRows(getExportHostFromButton(sourceButton)).length || getVisibleTableRows().length;
-        const isTransactionLog = lastExportContext === "transactions" || source.toLowerCase().includes("transaction");
         const isMaintenanceLog = lastExportContext === "maintenance" || source.toLowerCase().includes("maintenance log");
-        const isDebtLetters = lastExportContext === "debt-letters" || source.toLowerCase().includes("debt letters");
         const isUsageReport = lastExportContext === "usage-report" || source.toLowerCase().includes("usage report");
-        const maintenanceRows = isMaintenanceLog ? buildRealMaintenanceRows().length || visibleRows : 0;
-        exportModal?.querySelector("[data-export-source-label]")?.replaceChildren(document.createTextNode(source));
+        syncExportFilters();
+        document.querySelectorAll("[data-export-format] button").forEach((item) => item.classList.toggle("is-active", (item.dataset.format || "XLSX") === selectedExportFormat));
         exportModal?.querySelector("[data-export-subtitle]")?.replaceChildren(document.createTextNode(isMaintenanceLog
             ? "Backend maintenance export from Django admin data."
             : isUsageReport
-            ? "Live usage export generated from current backend complexes and telemetry."
-            : "Live export generated from current backend rows and filters."));
-        exportModal?.querySelector("[data-export-rows]")?.replaceChildren(document.createTextNode(isDebtLetters
-            ? `${buildRealDebtorRows().length} debtor rows`
-            : isUsageReport
-            ? `${buildUsageReportExportData().complexes.length} usage rows`
-            : isMaintenanceLog
-            ? `${maintenanceRows} maintenance rows`
-            : visibleRows ? `${visibleRows} visible rows` : "Current page summary"));
-        exportModal?.querySelector("[data-export-summary]")?.replaceChildren(document.createTextNode(isDebtLetters
-            ? `${selectedExportFormat} export includes debtor residents, balances, phones, debt summary and Asia/Tashkent timestamp.`
-            : isUsageReport
-            ? `${selectedExportFormat} export includes complex water/heating usage, total consumption, pressure, alert count and Asia/Tashkent timestamp.`
-            : isMaintenanceLog
-            ? `${selectedExportFormat} export includes maintenance tasks, location, priority, status and Asia/Tashkent timestamp.`
-            : isTransactionLog
-            ? `${selectedExportFormat} export includes visible transaction rows, payment status and Asia/Tashkent timestamp.`
-            : `${selectedExportFormat} export includes visible rows, active filters and Asia/Tashkent timestamp.`));
+            ? "Export real backend rows with custom scope and exact date range."
+            : `Source: ${source}. Export uses real backend rows and selected filters.`));
         openOverlayById("export-preview-modal");
     };
     document.querySelectorAll("[data-export-format] button").forEach((button) => button.addEventListener("click", () => {
-        const requestedFormat = button.dataset.format || "CSV";
+        const requestedFormat = button.dataset.format || "XLSX";
         selectedExportFormat = requestedFormat;
-        document.querySelectorAll("[data-export-format] button").forEach((item) => item.classList.toggle("is-active", (item.dataset.format || "CSV") === selectedExportFormat));
-        const isTransactionLog = lastExportContext === "transactions" || (lastExportSource || "").toLowerCase().includes("transaction");
-        const isMaintenanceLog = lastExportContext === "maintenance" || (lastExportSource || "").toLowerCase().includes("maintenance log");
-        const isDebtLetters = lastExportContext === "debt-letters" || (lastExportSource || "").toLowerCase().includes("debt letters");
-        const isUsageReport = lastExportContext === "usage-report" || (lastExportSource || "").toLowerCase().includes("usage report");
-        exportModal?.querySelector("[data-export-summary]")?.replaceChildren(document.createTextNode(isDebtLetters
-            ? `${selectedExportFormat} export includes debtor residents, balances, phones, debt summary and Asia/Tashkent timestamp.`
-            : isUsageReport
-            ? `${selectedExportFormat} export includes complex water/heating usage, total consumption, pressure, alert count and Asia/Tashkent timestamp.`
-            : isMaintenanceLog
-            ? `${selectedExportFormat} export includes maintenance tasks, location, priority, status and Asia/Tashkent timestamp.`
-            : isTransactionLog
-            ? `${selectedExportFormat} export includes visible transaction rows, payment status and Asia/Tashkent timestamp.`
-            : `${selectedExportFormat} export includes visible rows, active filters and Asia/Tashkent timestamp.`));
+        document.querySelectorAll("[data-export-format] button").forEach((item) => item.classList.toggle("is-active", (item.dataset.format || "XLSX") === selectedExportFormat));
     }));
     document.addEventListener("click", (event) => {
         const exportButton = event.target.closest("[data-export-open], [data-table-action='export']");
@@ -8535,6 +9049,22 @@ ${sheets}
         event.preventDefault();
         openExportPreview(exportButton);
     }, true);
+    exportBuildingSelect?.addEventListener("change", () => syncExportFilters());
+    exportApartmentSelect?.addEventListener("change", () => syncExportFilters());
+    exportResidentSelect?.addEventListener("change", () => {
+        const pool = getExportResidentPool();
+        const resident = pool.find((item) => String(item.ownerId) === String(exportResidentSelect.value || ""));
+        if (!resident) return;
+        if (exportBuildingSelect) exportBuildingSelect.value = resident.buildingId;
+        syncExportFilters();
+        if (exportApartmentSelect) exportApartmentSelect.value = resident.apartmentId;
+        syncExportFilters();
+        if (exportResidentSelect) exportResidentSelect.value = resident.ownerId;
+    });
+    document.querySelector("[data-export-reset]")?.addEventListener("click", () => resetExportFilters());
+    document.addEventListener("hydroflow:backend-refreshed", () => syncExportFilters());
+    document.addEventListener("hydroflow:language-changed", () => syncExportFilters());
+    resetExportFilters();
     document.addEventListener("click", (event) => {
         const viewDebtors = event.target.closest("[data-view-debtors]");
         if (viewDebtors) {
@@ -8557,15 +9087,6 @@ ${sheets}
             }
         }
     }, true);
-    document.querySelector("[data-export-copy]")?.addEventListener("click", async () => {
-        const summary = exportModal?.querySelector("[data-export-summary]")?.textContent || "HydroFlow export preview";
-        try {
-            await navigator.clipboard?.writeText(summary);
-            toast("Export summary copied", summary, "success");
-        } catch {
-            toast("Export summary ready", summary, "info");
-        }
-    });
     const triggerDownloadPayload = (download) => {
         if (!download?.content) return;
         const binary = window.atob(download.content);
@@ -8582,7 +9103,12 @@ ${sheets}
             apartment_backend_ids: [],
             transaction_backend_ids: [],
             maintenance_backend_ids: [],
+            date_from: exportDateFromInput?.value || "",
+            date_to: exportDateToInput?.value || "",
         };
+        if (exportResidentSelect?.value) selection.owner_ids = [Number(exportResidentSelect.value)];
+        if (exportApartmentSelect?.value) selection.apartment_backend_ids = [Number(exportApartmentSelect.value)];
+        if (exportBuildingSelect?.value) selection.building_backend_ids = [Number(exportBuildingSelect.value)];
         const detailsHost = lastExportButton?.closest("#details-drawer");
         if (detailsHost) {
             const ownerId = Number(detailsHost.dataset.ownerBackendId || 0);
@@ -8591,10 +9117,10 @@ ${sheets}
             const complexId = Number(detailsHost.dataset.complexBackendId || 0);
             const maintenanceId = Number(detailsHost.dataset.maintenanceBackendId || 0);
             const alertId = Number(detailsHost.dataset.alertBackendId || 0);
-            if (ownerId) selection.owner_ids = [ownerId];
-            if (apartmentId) selection.apartment_backend_ids = [apartmentId];
-            if (buildingId) selection.building_backend_ids = [buildingId];
-            if (complexId) selection.complex_backend_ids = [complexId];
+            if (ownerId && !selection.owner_ids.length) selection.owner_ids = [ownerId];
+            if (apartmentId && !selection.apartment_backend_ids.length) selection.apartment_backend_ids = [apartmentId];
+            if (buildingId && !selection.building_backend_ids.length) selection.building_backend_ids = [buildingId];
+            if (complexId && !selection.complex_backend_ids.length) selection.complex_backend_ids = [complexId];
             if (maintenanceId) selection.maintenance_backend_ids = [maintenanceId];
             if (context === "transactions" && alertId) selection.source_alert_id = alertId;
             return selection;
@@ -8605,16 +9131,18 @@ ${sheets}
             const apartmentId = Number(apartmentHost.dataset.apartmentBackendId || 0);
             const buildingId = Number(apartmentHost.dataset.buildingBackendId || 0);
             const complexId = Number(apartmentHost.dataset.complexBackendId || 0);
-            if (ownerId) selection.owner_ids = [ownerId];
-            if (apartmentId) selection.apartment_backend_ids = [apartmentId];
-            if (buildingId) selection.building_backend_ids = [buildingId];
-            if (complexId) selection.complex_backend_ids = [complexId];
+            if (ownerId && !selection.owner_ids.length) selection.owner_ids = [ownerId];
+            if (apartmentId && !selection.apartment_backend_ids.length) selection.apartment_backend_ids = [apartmentId];
+            if (buildingId && !selection.building_backend_ids.length) selection.building_backend_ids = [buildingId];
+            if (complexId && !selection.complex_backend_ids.length) selection.complex_backend_ids = [complexId];
             return selection;
         }
         if (context === "transactions") {
-            selection.transaction_backend_ids = Array.from(document.querySelectorAll("[data-transaction-id]:not(.hidden)"))
-                .map((row) => Number(row.dataset.backendId || 0))
-                .filter(Boolean);
+            if (!selection.owner_ids.length && !selection.apartment_backend_ids.length && !selection.building_backend_ids.length) {
+                selection.transaction_backend_ids = Array.from(document.querySelectorAll("[data-transaction-id]:not(.hidden)"))
+                    .map((row) => Number(row.dataset.backendId || 0))
+                    .filter(Boolean);
+            }
             return selection;
         }
         if (context === "maintenance") {
@@ -8634,9 +9162,10 @@ ${sheets}
     };
     document.querySelector("[data-export-download]")?.addEventListener("click", async () => {
         try {
+            const effectiveContext = getEffectiveExportContext(lastExportContext || "default");
             const payload = await postPortalJson("/api/export/report/", {
-                ...buildBackendExportSelection(lastExportContext || "default"),
-                context: lastExportContext || "residential",
+                ...buildBackendExportSelection(effectiveContext),
+                context: effectiveContext,
                 format: selectedExportFormat,
                 source: lastExportSource || "Current page",
                 language: exportLang(),
@@ -9033,6 +9562,106 @@ ${sheets}
         drawer.dataset.latestSupportTicket = tickets[0]?.title || "";
     };
 
+    const clickLogsStorageKey = "hydroflow-click-logs";
+    const maxClickLogs = 400;
+
+    const readClickLogs = () => {
+        try {
+            const parsed = JSON.parse(storage.getItem(clickLogsStorageKey) || "[]");
+            return Array.isArray(parsed) ? parsed : [];
+        } catch {
+            return [];
+        }
+    };
+
+    const writeClickLogs = (logs) => {
+        storage.setItem(clickLogsStorageKey, JSON.stringify(Array.isArray(logs) ? logs.slice(0, maxClickLogs) : []));
+    };
+
+    const getClickTargetLabel = (element) => {
+        if (!element) return "Unknown";
+        const explicit = element.dataset.actionKey
+            || element.dataset.i18nKey
+            || element.getAttribute("aria-label")
+            || element.title
+            || element.textContent;
+        return (explicit || "Unknown").replace(/\s+/g, " ").trim().slice(0, 160);
+    };
+
+    const getClickTargetScope = (element) => {
+        if (!element) return "page";
+        if (element.closest(".account-menu")) return "account-menu";
+        if (element.closest(".app-modal")) return "modal";
+        if (element.closest(".app-drawer")) return "drawer";
+        if (element.closest("aside")) return "sidebar";
+        if (element.closest("header")) return "topbar";
+        if (element.closest("main")) return "main";
+        return "page";
+    };
+
+    const pushClickLog = (element) => {
+        const logs = readClickLogs();
+        const now = new Date();
+        logs.unshift({
+            id: `${now.getTime()}-${Math.random().toString(36).slice(2, 8)}`,
+            at: now.toISOString(),
+            path: `${window.location.pathname}${window.location.search || ""}`,
+            scope: getClickTargetScope(element),
+            label: getClickTargetLabel(element),
+        });
+        writeClickLogs(logs);
+    };
+
+    const renderClickLogs = () => {
+        const drawer = document.getElementById("click-logs-drawer");
+        if (!drawer) return;
+        const list = drawer.querySelector("[data-click-logs-list]");
+        const empty = drawer.querySelector("[data-click-logs-empty]");
+        const total = drawer.querySelector("[data-click-logs-total]");
+        const visible = drawer.querySelector("[data-click-logs-visible]");
+        const search = drawer.querySelector("[data-click-logs-search]");
+        if (!list || !empty) return;
+
+        const query = (search?.value || "").trim().toLowerCase();
+        const allLogs = readClickLogs();
+        const filtered = query
+            ? allLogs.filter((item) => `${item.label} ${item.path} ${item.scope}`.toLowerCase().includes(query))
+            : allLogs;
+
+        list.innerHTML = filtered.map((item) => {
+            const dt = new Date(item.at);
+            const dateText = Number.isNaN(dt.getTime()) ? item.at : dt.toLocaleString();
+            return `
+                <div class="audit-event" data-type="action">
+                    <span class="audit-event-icon material-symbols-outlined">touch_app</span>
+                    <div>
+                        <time>${escapeHtml(dateText)}</time>
+                        <p>${escapeHtml(item.label || "Action")}</p>
+                        <span>${escapeHtml(item.path || "/")} · ${escapeHtml(item.scope || "page")}</span>
+                    </div>
+                </div>
+            `;
+        }).join("");
+
+        if (total) total.textContent = String(allLogs.length);
+        if (visible) visible.textContent = String(filtered.length);
+        empty.classList.toggle("hidden", filtered.length > 0);
+    };
+
+    const setupClickLogsDrawer = () => {
+        const drawer = document.getElementById("click-logs-drawer");
+        if (!drawer || drawer.dataset.clickLogsReady === "true") return;
+        drawer.dataset.clickLogsReady = "true";
+        const search = drawer.querySelector("[data-click-logs-search]");
+        search?.addEventListener("input", renderClickLogs);
+        drawer.querySelector("[data-click-logs-action='clear']")?.addEventListener("click", () => {
+            writeClickLogs([]);
+            renderClickLogs();
+            toast("Logs cleared", "Action history was cleared in this browser.", "info");
+        });
+        renderClickLogs();
+    };
+
     const setupAuditTools = () => {
         const drawer = document.getElementById("audit-drawer");
         if (!drawer || drawer.dataset.auditReady === "true") return;
@@ -9165,10 +9794,26 @@ ${sheets}
     renderBackendAuditEvents();
     setupChecklist();
     setupAuditTools();
+    setupClickLogsDrawer();
     setupSupportTools();
     setupBillingNoticeQuickAction();
     setupBillingPeriodQuickAction();
     window.HydroFlowRenderSupport = renderSupportDrawer;
+
+    document.addEventListener("click", (event) => {
+        const button = event.target.closest("button, a, [role='button']");
+        if (!button) return;
+        if (
+            button.closest("#click-logs-drawer")
+            || button.matches("[data-close-overlay], [data-click-logs-action='clear']")
+        ) {
+            return;
+        }
+        pushClickLog(button);
+        if (document.getElementById("click-logs-drawer")?.classList.contains("is-open")) {
+            renderClickLogs();
+        }
+    }, true);
 
     document.addEventListener("click", (event) => {
         const button = event.target.closest("button");

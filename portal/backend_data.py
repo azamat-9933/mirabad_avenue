@@ -203,6 +203,16 @@ def _transaction_type(transaction: Transaction) -> str:
     return mapping.get(transaction.payment_type, transaction.get_payment_type_display())
 
 
+def _transaction_method_label(transaction: Transaction) -> str:
+    description = str(transaction.description or "").lower()
+    if transaction.payment_type == Transaction.TYPE_MANUAL:
+        if "[portal:terminal-credit]" in description:
+            return "Terminal"
+        if "[portal:balance-debit]" in description:
+            return "Adjustment"
+    return transaction.get_payment_type_display()
+
+
 def _serialize_notifications() -> list[dict]:
     rows = []
     queryset = PortalNotification.objects.select_related(
@@ -706,10 +716,13 @@ def build_portal_data(user=None) -> dict:
             "complexId": _slug("complex", complex_obj.id),
             "buildingId": _slug("building", building.id),
             "type": _transaction_type(transaction),
-            "method": transaction.get_payment_type_display(),
+            "method": _transaction_method_label(transaction),
             "date": _date(transaction.created_at),
+            "createdAt": _datetime(transaction.created_at),
             "amount": abs(amount),
             "signedAmount": amount,
+            "balanceBefore": _money(transaction.balance_before),
+            "balanceAfter": _money(transaction.balance_after),
             "status": "Success" if amount > 0 else "Pending",
             "description": transaction.description,
         })

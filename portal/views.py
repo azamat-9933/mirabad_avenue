@@ -48,6 +48,7 @@ from .backend_data import (
     _risk_from_split,
     _serialize_profile,
     _tone_for_priority,
+    _transaction_method_label,
     _transaction_type,
     build_portal_data,
 )
@@ -357,12 +358,14 @@ def _serialize_transaction_row(transaction_row, override_map=None):
         "complexId": f"complex-{complex_obj.id}",
         "buildingId": f"building-{building.id}",
         "type": _transaction_type(transaction_row),
-        "method": transaction_row.get_payment_type_display(),
+        "method": _transaction_method_label(transaction_row),
         "paymentType": transaction_row.payment_type,
         "date": _date(transaction_row.created_at),
         "createdAt": _datetime(transaction_row.created_at),
         "amount": abs(amount),
         "signedAmount": amount,
+        "balanceBefore": _money(transaction_row.balance_before),
+        "balanceAfter": _money(transaction_row.balance_after),
         "status": status,
         "description": transaction_row.description or "",
         "externalId": transaction_row.external_id or "",
@@ -1113,6 +1116,14 @@ def _current_user_or_none(request):
     return user if getattr(user, "is_authenticated", False) else None
 
 
+def _portal_payment_description(operation: str, channel: str) -> str:
+    if operation == "credit" and channel == "terminal":
+        return "[portal:terminal-credit] Portal credit via terminal/card."
+    if operation == "credit":
+        return "[portal:cash-credit] Portal credit via cash."
+    return "[portal:balance-debit] Portal manual balance subtraction."
+
+
 def _status_choice_value(raw_value, allowed):
     normalized = str(raw_value or "").strip().lower().replace("-", "_").replace(" ", "_")
     if normalized in allowed:
@@ -1203,6 +1214,34 @@ def _backend_id_set(value):
     return {int(item) for item in _unique_ints(value)}
 
 
+def _export_range_start(value):
+    parsed = parse_datetime(str(value or "").strip()) if value else None
+    if not parsed:
+        return None
+    if timezone.is_naive(parsed):
+        parsed = timezone.make_aware(parsed, timezone.get_current_timezone())
+    return timezone.localtime(parsed)
+
+
+def _export_range_end(value):
+    parsed = parse_datetime(str(value or "").strip()) if value else None
+    if not parsed:
+        return None
+    if timezone.is_naive(parsed):
+        parsed = timezone.make_aware(parsed, timezone.get_current_timezone())
+    return timezone.localtime(parsed)
+
+
+def _export_row_datetime(value):
+    if not value:
+        return None
+    try:
+        parsed = datetime.strptime(str(value).strip(), "%d.%m.%Y, %H:%M")
+    except ValueError:
+        return None
+    return timezone.make_aware(parsed, timezone.get_current_timezone())
+
+
 def _portal_export_rows(portal_data, context, filters=None):
     filters = filters or {}
     complex_ids = _backend_id_set(filters.get("complex_backend_ids"))
@@ -1211,6 +1250,8 @@ def _portal_export_rows(portal_data, context, filters=None):
     transaction_ids = _backend_id_set(filters.get("transaction_backend_ids"))
     maintenance_ids = _backend_id_set(filters.get("maintenance_backend_ids"))
     owner_ids = _backend_id_set(filters.get("owner_ids") or [filters.get("owner_id")])
+    date_from = _export_range_start(filters.get("date_from"))
+    date_to = _export_range_end(filters.get("date_to"))
     rows = []
     if context == "residential":
         for complex_row in portal_data.get("complexes", []):
@@ -1226,6 +1267,11 @@ def _portal_export_rows(portal_data, context, filters=None):
             ])
     elif context == "transactions":
         for item in portal_data.get("transactions", []):
+            row_datetime = _export_row_datetime(item.get("createdAt") or item.get("date"))
+            if date_from and row_datetime and row_datetime < date_from:
+                continue
+            if date_to and row_datetime and row_datetime > date_to:
+                continue
             if transaction_ids and int(item.get("backendId") or 0) not in transaction_ids:
                 continue
             if owner_ids and int(item.get("ownerBackendId") or 0) not in owner_ids:
@@ -1246,6 +1292,11 @@ def _portal_export_rows(portal_data, context, filters=None):
             ])
     elif context == "maintenance":
         for item in portal_data.get("maintenanceTasks", []):
+            row_datetime = _export_row_datetime(item.get("scheduledAt") or item.get("date"))
+            if date_from and row_datetime and row_datetime < date_from:
+                continue
+            if date_to and row_datetime and row_datetime > date_to:
+                continue
             if maintenance_ids and int(item.get("backendId") or 0) not in maintenance_ids:
                 continue
             if building_ids and int(item.get("buildingBackendId") or 0) not in building_ids:
@@ -1291,17 +1342,6 @@ def _render_export_payload(portal_data, context, export_format, source, language
     header = headers.get(context, headers["residential"])[lang]
     title = titles.get(context, titles["residential"])[lang]
     filename_base = f"{context or 'export'}-{timezone.localtime():%Y%m%d-%H%M}"
-
-    if export_format == "CSV":
-        csv_lines = []
-        for row in [header, *rows]:
-            escaped = [f'"{str(cell).replace(chr(34), chr(34) * 2)}"' for cell in row]
-            csv_lines.append(",".join(escaped))
-        return _encode_download(
-            f"{filename_base}.csv",
-            "text/csv;charset=utf-8",
-            ("\ufeff" + "\n".join(csv_lines)).encode("utf-8"),
-        )
 
     if export_format == "XLSX":
         def xml_escape(value):
@@ -1768,6 +1808,95 @@ def api_create_resident(request):
 
 @extend_schema(request=OpenApiTypes.OBJECT, responses=OpenApiTypes.OBJECT)
 @api_view(["POST"])
+def api_create_payment(request):
+    payload = _json_payload(request)
+    owner_id_raw = payload.get("owner_id")
+    operation = str(payload.get("operation") or "credit").strip().lower()
+    channel = str(payload.get("channel") or "cash").strip().lower()
+    amount = _decimal_or_zero(payload.get("amount"))
+
+    owner_id_digits = re.sub(r"[^\d]", "", str(owner_id_raw or ""))
+    if not owner_id_digits:
+        return JsonResponse({"ok": False, "error": "Resident ID is required."}, status=400)
+    if amount <= 0:
+        return JsonResponse({"ok": False, "error": "Amount must be greater than zero."}, status=400)
+    if operation not in {"credit", "debit"}:
+        return JsonResponse({"ok": False, "error": "Unknown payment operation."}, status=400)
+    if operation == "credit" and channel not in {"cash", "terminal"}:
+        return JsonResponse({"ok": False, "error": "Payment channel must be cash or terminal."}, status=400)
+
+    try:
+        owner = Owner.objects.select_related(
+            "apartment",
+            "apartment__building",
+            "apartment__building__complex",
+        ).get(pk=int(owner_id_digits))
+    except (Owner.DoesNotExist, ValueError, TypeError):
+        return JsonResponse({"ok": False, "error": "Resident was not found."}, status=404)
+
+    apartment = owner.apartment
+    building = apartment.building if apartment else None
+    complex_obj = building.complex if building else None
+    balance_before = Decimal(owner.balance or 0)
+    signed_amount = amount if operation == "credit" else -amount
+    balance_after = balance_before + signed_amount
+
+    if operation == "credit" and channel == "cash":
+        payment_type = Transaction.TYPE_CASH
+    else:
+        payment_type = Transaction.TYPE_MANUAL
+
+    description = _portal_payment_description(operation, channel)
+    actor = _actor(request)
+
+    with transaction.atomic():
+        owner.balance = balance_after
+        owner.save(update_fields=["balance"])
+        transaction_row = Transaction.objects.create(
+            owner=owner,
+            payment_type=payment_type,
+            amount=signed_amount,
+            balance_before=balance_before,
+            balance_after=balance_after,
+            description=description,
+            created_by=actor,
+        )
+        AuditEvent.objects.create(
+            event_type=AuditEvent.TYPE_BALANCE,
+            title="Resident balance updated",
+            message=(
+                f"{owner.fio}: {'credit' if operation == 'credit' else 'debit'} "
+                f"{amount} UZS via {channel if operation == 'credit' else 'adjustment'}."
+            ),
+            actor=actor,
+            complex=complex_obj,
+            building=building,
+            apartment=apartment,
+            owner=owner,
+            metadata={
+                "source": "portal_add_payment_modal",
+                "transaction_id": transaction_row.id,
+                "operation": operation,
+                "channel": channel if operation == "credit" else "adjustment",
+                "amount": str(amount),
+                "balance_before": str(balance_before),
+                "balance_after": str(balance_after),
+            },
+        )
+
+    return JsonResponse(
+        {
+            "ok": True,
+            "transactionId": transaction_row.id,
+            "ownerId": owner.id,
+            "balance": float(balance_after),
+            "portalData": safe_portal_data(request),
+        }
+    )
+
+
+@extend_schema(request=OpenApiTypes.OBJECT, responses=OpenApiTypes.OBJECT)
+@api_view(["POST"])
 def api_resident_kit_action(request):
     payload = _json_payload(request)
     action = str(payload.get("action") or "").strip().lower()
@@ -1916,7 +2045,9 @@ def api_deploy_maintenance(request):
 @api_view(["POST"])
 def api_usage_report_export(request):
     payload = _json_payload(request)
-    export_format = str(payload.get("format") or "CSV").strip().upper()
+    export_format = str(payload.get("format") or "XLSX").strip().upper()
+    if export_format not in {"XLSX", "PDF"}:
+        export_format = "XLSX"
     source = str(payload.get("source") or "Usage Report").strip() or "Usage Report"
     row_count = int(payload.get("row_count") or 0)
     total_usage = _decimal_or_zero(payload.get("total_usage"))
@@ -2098,9 +2229,9 @@ def api_export_report(request):
         else:
             context = "residential"
 
-    export_format = str(payload.get("format") or "CSV").strip().upper()
-    if export_format not in {"CSV", "XLSX", "PDF"}:
-        export_format = "CSV"
+    export_format = str(payload.get("format") or "XLSX").strip().upper()
+    if export_format not in {"XLSX", "PDF"}:
+        export_format = "XLSX"
 
     language = str(payload.get("language") or "en").strip().lower()
     source = str(payload.get("source") or "Current page").strip() or "Current page"

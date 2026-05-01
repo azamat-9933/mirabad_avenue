@@ -39,6 +39,17 @@ JAZZ_SETTINGS = {
         "auth",
     ],
 
+    "custom_links": {
+        "main_app": [
+            {
+                "name": "Sector",
+                "url": "/admin/main_app/sector/",
+                "icon": "fas fa-map-signs",
+                "permissions": ["main_app.change_complex"],
+            },
+        ],
+    },
+
     # Ikonkalar (Font Awesome 5)
     "icons": {
         # main_app

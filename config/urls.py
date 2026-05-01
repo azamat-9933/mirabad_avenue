@@ -19,10 +19,12 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.urls import include, path
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
+from main_app.views import admin_sector_redirect
 
 urlpatterns = [
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
     path("api/docs/", SpectacularSwaggerView.as_view(url_name="schema"), name="swagger-ui"),
+    path("admin/main_app/sector/", admin_sector_redirect, name="admin_sector_redirect"),
     path("admin/", admin.site.urls),
     path("main-app/", include("main_app.urls")),
     path("backend-billing/", include("billing.urls")),

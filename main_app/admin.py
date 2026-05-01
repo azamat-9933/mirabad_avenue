@@ -1,6 +1,8 @@
 from django import forms
 from django.contrib import admin
+from django.contrib.admin.options import IS_POPUP_VAR
 from django.db.models import Count, Q, Sum
+from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.utils.html import format_html
 
@@ -56,7 +58,6 @@ class ComplexAdmin(admin.ModelAdmin):
     list_display  = ("title", "buildings_count", "author", "created_at")
     search_fields = ("title",)
     readonly_fields = ("created_at",)
-    inlines       = [BuildingInline]
     fields = ("title", "author", "created_at")
 
     def get_readonly_fields(self, request, obj=None):
@@ -65,6 +66,16 @@ class ComplexAdmin(admin.ModelAdmin):
     def save_model(self, request, obj, form, change):
         obj.address = DEFAULT_SECTOR_NAME
         super().save_model(request, obj, form, change)
+
+    def response_add(self, request, obj, post_url_continue=None):
+        if any(key in request.POST for key in ("_continue", "_addanother", IS_POPUP_VAR)):
+            return super().response_add(request, obj, post_url_continue)
+        return HttpResponseRedirect(reverse("admin_sector_redirect"))
+
+    def response_change(self, request, obj):
+        if any(key in request.POST for key in ("_continue", "_addanother", IS_POPUP_VAR)):
+            return super().response_change(request, obj)
+        return HttpResponseRedirect(reverse("admin_sector_redirect"))
 
     # ── kastom kolonka ──────────────────────────────
     @admin.display(description="Uylar soni")
@@ -101,6 +112,22 @@ class BuildingAdmin(admin.ModelAdmin):
 
     def get_readonly_fields(self, request, obj=None):
         return ("created_at", "total_area_display") if obj else ()
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == "complex":
+            sector = Complex.objects.order_by("pk").first()
+            queryset = Complex.objects.none()
+            if sector:
+                queryset = Complex.objects.filter(pk=sector.pk)
+                kwargs.setdefault("initial", sector.pk)
+            kwargs["queryset"] = queryset
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
+    def save_model(self, request, obj, form, change):
+        sector = Complex.objects.order_by("pk").first()
+        if sector:
+            obj.complex = sector
+        super().save_model(request, obj, form, change)
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
@@ -243,6 +270,14 @@ class SectionSelect(forms.Select):
 
 
 class OwnerAdminForm(forms.ModelForm):
+    TELEGRAM_STATUS_CHOICES = [
+        ("", "---------"),
+        ("connected", "Connected"),
+        ("pending", "Pending"),
+        ("review", "Review"),
+        ("not_linked", "Not linked"),
+    ]
+
     complex_selector = forms.ModelChoiceField(
         label="Complex",
         queryset=Complex.objects.none(),
@@ -261,6 +296,11 @@ class OwnerAdminForm(forms.ModelForm):
         required=False,
         help_text="Optional helper filter for selecting the apartment.",
     )
+    telegram_status = forms.ChoiceField(
+        label="Telegram status",
+        choices=TELEGRAM_STATUS_CHOICES,
+        required=False,
+    )
 
     class Meta:
         model = Owner
@@ -270,11 +310,12 @@ class OwnerAdminForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         instance = self.instance if self.instance and self.instance.pk else None
 
-        apartment_qs = Apartment.objects.select_related(
+        structure_qs = Apartment.objects.select_related(
             "building",
             "building__complex",
             "section",
         ).order_by("building__complex__title", "building__number", "section__name", "number")
+        apartment_qs = structure_qs
         if instance:
             apartment_qs = apartment_qs.filter(Q(owner__isnull=True) | Q(pk=instance.apartment_id))
             apartment = instance.apartment
@@ -284,9 +325,9 @@ class OwnerAdminForm(forms.ModelForm):
         else:
             apartment_qs = apartment_qs.filter(owner__isnull=True)
 
-        complex_ids = apartment_qs.values_list("building__complex_id", flat=True).distinct()
-        building_ids = apartment_qs.values_list("building_id", flat=True).distinct()
-        section_ids = apartment_qs.exclude(section__isnull=True).values_list("section_id", flat=True).distinct()
+        complex_ids = structure_qs.values_list("building__complex_id", flat=True).distinct()
+        building_ids = structure_qs.values_list("building_id", flat=True).distinct()
+        section_ids = structure_qs.exclude(section__isnull=True).values_list("section_id", flat=True).distinct()
 
         self.fields["complex_selector"].queryset = Complex.objects.filter(pk__in=complex_ids).order_by("title")
         self.fields["building_selector"].queryset = Building.objects.filter(pk__in=building_ids).select_related(
@@ -302,10 +343,22 @@ class OwnerAdminForm(forms.ModelForm):
         self.fields["section_selector"].widget.choices = self.fields["section_selector"].choices
 
         self.fields["apartment"].queryset = apartment_qs
-        self.fields["apartment"].help_text = (
-            "Only apartments without an assigned owner are shown. "
-            "To change an occupied apartment, edit the existing owner."
-        )
+        if apartment_qs.exists():
+            self.fields["apartment"].help_text = (
+                "Only apartments without an assigned owner are shown. "
+                "To change an occupied apartment, edit the existing owner."
+            )
+        else:
+            self.fields["apartment"].help_text = (
+                "No free apartments are available right now. "
+                "Edit an existing resident if you need to reassign an occupied apartment."
+            )
+            self.fields["apartment"].empty_label = "No free apartments"
+
+        if not instance:
+            sector = Complex.objects.order_by("pk").first()
+            if sector and self.fields["complex_selector"].queryset.filter(pk=sector.pk).exists():
+                self.fields["complex_selector"].initial = sector
 
         def apartment_label(apartment):
             section = apartment.section.name if apartment.section else "No section"

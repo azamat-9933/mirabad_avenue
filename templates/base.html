@@ -854,77 +854,6 @@
     };
     setupCharts();
 
-    const backdrop = document.querySelector("[data-overlay-backdrop]");
-    let backdropTimer = null;
-    const showBackdrop = () => {
-        if (!backdrop) return;
-        if (backdropTimer) window.clearTimeout(backdropTimer);
-        backdrop.classList.remove("hidden");
-        requestAnimationFrame(() => backdrop.classList.add("is-visible"));
-    };
-    const hideBackdrop = () => {
-        if (!backdrop) return;
-        backdrop.classList.remove("is-visible");
-        backdropTimer = window.setTimeout(() => backdrop.classList.add("hidden"), prefersReduced ? 0 : 180);
-    };
-    const closeAll = () => {
-        document.querySelectorAll(".app-drawer.is-open").forEach((drawer) => {
-            drawer.classList.remove("is-open");
-            drawer.setAttribute("aria-hidden", "true");
-        });
-        document.querySelectorAll(".app-modal.is-open").forEach((modal) => {
-            modal.classList.add("hidden");
-            modal.classList.remove("is-open", "flex");
-            modal.setAttribute("aria-hidden", "true");
-        });
-        hideBackdrop();
-    };
-    document.querySelectorAll("[data-drawer-open]").forEach((button) => {
-        button.addEventListener("click", () => {
-            closeAll();
-            document.querySelector(".account-menu")?.classList.add("hidden");
-            const drawer = document.getElementById(button.dataset.drawerOpen);
-            if (!drawer) return;
-            showBackdrop();
-            drawer.classList.add("is-open");
-            drawer.setAttribute("aria-hidden", "false");
-        });
-    });
-    document.querySelectorAll("[data-modal-open]").forEach((button) => {
-        button.addEventListener("click", () => {
-            closeAll();
-            const modal = document.getElementById(button.dataset.modalOpen);
-            if (!modal) return;
-            showBackdrop();
-            modal.classList.remove("hidden");
-            modal.classList.add("flex", "is-open");
-            modal.setAttribute("aria-hidden", "false");
-        });
-    });
-    document.querySelectorAll("[data-close-overlay]").forEach((button) => button.addEventListener("click", closeAll));
-    backdrop?.addEventListener("click", closeAll);
-    document.addEventListener("keydown", (event) => {
-        if (event.key === "Escape") closeAll();
-        if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") {
-            event.preventDefault();
-            document.getElementById("command-palette")?.classList.remove("hidden");
-            document.getElementById("command-palette")?.classList.add("flex", "is-open");
-            document.getElementById("command-palette")?.setAttribute("aria-hidden", "false");
-            showBackdrop();
-            window.setTimeout(() => document.querySelector("[data-command-input]")?.focus(), 0);
-        }
-    });
-
-    document.querySelectorAll("[data-command-open]").forEach((input) => {
-        input.closest("form")?.addEventListener("submit", (event) => event.preventDefault());
-        input.addEventListener("focus", () => {
-            document.getElementById("command-palette")?.classList.remove("hidden");
-            document.getElementById("command-palette")?.classList.add("flex", "is-open");
-            document.getElementById("command-palette")?.setAttribute("aria-hidden", "false");
-            showBackdrop();
-            window.setTimeout(() => document.querySelector("[data-command-input]")?.focus(), 0);
-        });
-    });
     const accountToggle = document.querySelector("[data-account-toggle]");
     const accountMenu = document.querySelector(".account-menu");
     const closeAccountMenu = () => {
@@ -964,6 +893,6 @@
 <script>
     window.HydroFlowBackendData = JSON.parse("{{ backend_billing_data_json|default:'{}'|escapejs }}");
 </script>
-<script src="{% static 'js/app.js' %}?v=resident-filter-tristate-20260501-4"></script>
+<script src="{% static 'js/app.js' %}?v=logs-overlay-fix-20260501-5"></script>
 </body>
 </html>
