@@ -16,6 +16,7 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="{% static 'img/favicon.svg' %}" rel="icon" type="image/svg+xml"/>
 <link href="{% static 'css/app.css' %}?v=resident-filter-tristate-20260501-6" rel="stylesheet"/>
 <script id="tailwind-config">
         tailwind.config = {
@@ -491,7 +492,7 @@
     </style>
 {% block extra_head %}{% endblock %}
 </head>
-<body class="{% block body_class %}bg-surface text-on-surface antialiased{% endblock %}">
+<body class="{% block body_class %}bg-surface text-on-surface antialiased{% endblock %}" data-active-page="{{ active_page|default:'' }}">
 {% include "partials/sidebar.html" %}
 {% include "partials/topbar.html" %}
 <div class="mobile-sidebar-backdrop hidden" data-mobile-sidebar-backdrop></div>

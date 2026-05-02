@@ -7,10 +7,6 @@
 <h2 class="text-3xl font-extrabold text-on-surface tracking-tight">Residential Complex Management</h2>
 <p class="text-on-surface-variant mt-1">Managing 124 active residents across 48 units.</p>
 </header>
-<button class="bg-primary text-white px-5 py-2.5 rounded-lg font-semibold flex items-center gap-2 hover:opacity-90 transition-opacity shadow-lg shadow-primary/20" data-modal-open="request-modal" type="button">
-<span class="material-symbols-outlined text-[20px]">person_add</span>
-<span>Add New Resident</span>
-</button>
 </div>
 <!-- Dashboard Analytics Quick-View (Bento Style) -->
 <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 motion-stagger">
@@ -355,63 +351,38 @@
 <div class="space-y-6">
 <!-- Revenue vs Debt: Top 5 Card -->
 <div class="revenue-debt-card bg-surface-container-lowest p-6 rounded-xl shadow-sm border border-transparent">
-<h4 class="font-bold text-on-surface mb-6 uppercase tracking-wider text-xs">Revenue vs Debt: Top 5</h4>
-<div class="space-y-5">
-<div class="revenue-debt-item space-y-2">
-<div class="flex justify-between items-center text-xs font-bold">
-<span class="text-on-surface">The Metropolitan</span>
-<span class="text-on-surface-variant">99% Healthy</span>
+<h4 class="font-bold text-on-surface mb-6 uppercase tracking-wider text-xs" data-i18n-key="Sector Revenue vs Debt">Sector Revenue vs Debt</h4>
+<div class="revenue-debt-sector space-y-4" data-sector-revenue-health>
+<div class="flex items-start justify-between gap-4">
+<div>
+<p class="text-sm font-black text-on-surface" data-sector-revenue-name>Mirabad Avenue</p>
+<p class="text-[11px] font-bold uppercase tracking-[0.16em] text-on-surface-variant" data-i18n-key="Entire sector">Entire sector</p>
 </div>
-<div class="percent-meter percent-meter-blue" style="--progress: 99%; --remainder: 1%;" data-value="99%">
+<span class="resident-debt-split is-healthy" data-sector-revenue-pill>
+<span><b data-sector-revenue-debtors>0</b><small data-i18n-key="Debt">Debt</small></span>
+<span><b data-sector-revenue-paid>0</b><small data-i18n-key="Paid">Paid</small></span>
+</span>
+</div>
+<div class="percent-meter percent-meter-blue" data-sector-revenue-meter style="--progress: 0%; --remainder: 100%;" data-value="0%">
 <span class="percent-meter-track"><span class="percent-meter-fill"></span><span class="percent-meter-remainder"></span></span>
 </div>
+<div class="grid grid-cols-2 gap-3 revenue-debt-sector-metrics">
+<div class="rounded-2xl border border-outline-variant/10 bg-surface-container-low px-4 py-3">
+<p class="text-[10px] font-black uppercase tracking-[0.16em] text-on-surface-variant" data-i18n-key="Collected">Collected</p>
+<p class="mt-1 text-sm font-black text-primary" data-sector-revenue-collected>0 UZS</p>
 </div>
-<div class="revenue-debt-item space-y-2">
-<div class="flex justify-between items-center text-xs font-bold">
-<span class="text-on-surface">Emerald Garden</span>
-<span class="text-on-surface-variant">100% Healthy</span>
-</div>
-<div class="percent-meter percent-meter-blue" style="--progress: 100%;" data-value="100%">
-<span class="percent-meter-track"><span class="percent-meter-fill"></span></span>
-</div>
-</div>
-<div class="revenue-debt-item space-y-2">
-<div class="flex justify-between items-center text-xs font-bold">
-<span class="text-on-surface">Riverside Towers</span>
-<span class="text-on-surface-variant">98.5% Healthy</span>
-</div>
-<div class="percent-meter percent-meter-blue" style="--progress: 98.5%; --remainder: 1.5%;" data-value="98.5%">
-<span class="percent-meter-track"><span class="percent-meter-fill"></span><span class="percent-meter-remainder"></span></span>
-</div>
-</div>
-<div class="revenue-debt-item space-y-2">
-<div class="flex justify-between items-center text-xs font-bold">
-<span class="text-on-surface">Skyline Heights</span>
-<span class="text-on-surface-variant">78% Healthy</span>
-</div>
-<div class="percent-meter percent-meter-red" style="--progress: 78%; --remainder: 22%;" data-value="78%">
-<span class="percent-meter-track"><span class="percent-meter-fill"></span><span class="percent-meter-remainder"></span></span>
-</div>
-</div>
-<div class="revenue-debt-item space-y-2">
-<div class="flex justify-between items-center text-xs font-bold">
-<span class="text-on-surface">Harbor View</span>
-<span class="text-on-surface-variant">90% Healthy</span>
-</div>
-<div class="percent-meter percent-meter-amber" style="--progress: 90%; --remainder: 10%;" data-value="90%">
-<span class="percent-meter-track"><span class="percent-meter-fill"></span><span class="percent-meter-remainder"></span></span>
+<div class="rounded-2xl border border-outline-variant/10 bg-surface-container-low px-4 py-3">
+<p class="text-[10px] font-black uppercase tracking-[0.16em] text-on-surface-variant" data-i18n-key="Debt">Debt</p>
+<p class="mt-1 text-sm font-black text-error" data-sector-revenue-debt>0 UZS</p>
 </div>
 </div>
 </div>
-<div class="mt-6 flex items-center gap-4 text-[10px] font-black uppercase tracking-widest">
-<div class="flex items-center gap-1.5">
-<span class="w-3 h-3 rounded-full bg-primary"></span>
-<span>Collected</span>
+<div class="mt-6 pt-4 border-t border-outline-variant/10">
+<div class="flex items-center justify-between gap-3 mb-4">
+<p class="text-[11px] font-black uppercase tracking-[0.18em] text-on-surface-variant" data-i18n-key="Top 5 Houses by Debt">Top 5 Houses by Debt</p>
+<p class="text-[11px] font-bold text-on-surface-variant" data-sector-top-caption></p>
 </div>
-<div class="flex items-center gap-1.5">
-<span class="w-3 h-3 rounded-full bg-error"></span>
-<span>Debt</span>
-</div>
+<div class="space-y-2" data-sector-top-houses></div>
 </div>
 </div>
 <!-- Payment Processing Card -->

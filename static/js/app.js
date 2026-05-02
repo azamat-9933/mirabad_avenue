@@ -602,6 +602,10 @@
         "Maintenance Fee": { ru: "Плата за обслуживание", uz: "Xizmat haqi" },
         "Late Penalty": { ru: "Пеня за просрочку", uz: "Kechikish jarimasi" },
         "Revenue vs Debt: Top 5": { ru: "Выручка vs долг: топ 5", uz: "Tushum va qarz: top 5" },
+        "Sector Revenue vs Debt": { ru: "Выручка и долг сектора", uz: "Sektor tushumi va qarzi" },
+        "Entire sector": { ru: "Весь сектор", uz: "Butun sektor" },
+        "Top 5 Houses by Debt": { ru: "Топ 5 домов по долгу", uz: "Qarz bo'yicha top 5 uy" },
+        "houses in debt view": { ru: "домов в выборке долга", uz: "qarz ko'rinishidagi uy" },
         "Collected": { ru: "Собрано", uz: "Yig'ildi" },
         "99% Healthy": { ru: "99% в норме", uz: "99% sog'lom" },
         "100% Healthy": { ru: "100% в норме", uz: "100% sog'lom" },
@@ -2111,6 +2115,7 @@
 
     const syncSiteStatistics = () => {
         const stats = getSiteStats();
+        const t = (key) => translateValue(key, storage.getItem("hydroflow-lang") || "en");
         const labelVariants = (text) => [text, translations[text]?.ru, translations[text]?.uz].filter(Boolean).map((item) => item.toLowerCase());
         const statHostSelector = ".residential-kpi-card, .payment-channel, .debtor-trends-card, .bg-primary-container, [data-card], .bg-surface-container-lowest, .bg-surface-container-low";
         const exactText = (text, selector = "p,h2,h3,h4,span,strong") => {
@@ -3672,7 +3677,12 @@
                 writeListUrlState("alerts", { page: Math.min(Number(pager?.dataset.totalPages || 1), Number(state.page || 1) + 1) });
                 loadAlerts();
             });
-            serverListControllers.alerts = { name: "alerts", load: loadAlerts, refresh: () => loadAlerts() };
+            serverListControllers.alerts = {
+                name: "alerts",
+                autoload: false,
+                load: loadAlerts,
+                refresh: () => loadAlerts(),
+            };
         }
 
         const auditTimeline = document.querySelector("[data-audit-timeline]");
@@ -3727,7 +3737,12 @@
                 writeListUrlState("audit", { page: Math.min(Number(pager?.dataset.totalPages || 1), Number(state.page || 1) + 1) });
                 loadAudit();
             });
-            serverListControllers.audit = { name: "audit", load: loadAudit, refresh: () => loadAudit() };
+            serverListControllers.audit = {
+                name: "audit",
+                autoload: false,
+                load: loadAudit,
+                refresh: () => loadAudit(),
+            };
         }
 
         window.HydroFlowServerLists = {
@@ -3741,7 +3756,10 @@
             ...serverListControllers,
         };
 
-        Object.values(serverListControllers).forEach((controller) => controller?.load?.());
+        Object.values(serverListControllers).forEach((controller) => {
+            if (controller?.autoload === false) return;
+            controller?.load?.();
+        });
     };
 
     const safeSyncSiteStatistics = () => {
@@ -4069,26 +4087,80 @@
             repairEnhancedTableControls(recentTable);
         }
 
-        const revenueList = document.querySelector(".revenue-debt-card .space-y-5");
-        if (revenueList) {
-            revenueList.innerHTML = getComplexStats()
-                .slice()
-                .sort((a, b) => b.finances - a.finances)
-                .slice(0, 5)
-                .map((complex) => {
-                    const remainder = Math.max(0, 100 - complex.health);
+        const revenueCard = document.querySelector(".revenue-debt-card");
+        if (revenueCard) {
+            const sector = getSingleSectorStats();
+            const sectorName = revenueCard.querySelector("[data-sector-revenue-name]");
+            const sectorMeter = revenueCard.querySelector("[data-sector-revenue-meter]");
+            const sectorDebtors = revenueCard.querySelector("[data-sector-revenue-debtors]");
+            const sectorPaid = revenueCard.querySelector("[data-sector-revenue-paid]");
+            const sectorCollected = revenueCard.querySelector("[data-sector-revenue-collected]");
+            const sectorDebt = revenueCard.querySelector("[data-sector-revenue-debt]");
+            const sectorPill = revenueCard.querySelector("[data-sector-revenue-pill]");
+            const topCaption = revenueCard.querySelector("[data-sector-top-caption]");
+            const topHousesHost = revenueCard.querySelector("[data-sector-top-houses]");
+            const debtSplitRatio = sector.paidResidents === 0 ? Infinity : sector.debtorResidents / Math.max(sector.paidResidents, 1);
+            const debtSplitTone = debtSplitRatio > 1 ? "is-danger" : debtSplitRatio >= 0.75 ? "is-caution" : "is-healthy";
+            const buildingRows = (Array.isArray(sector.buildingItems) ? sector.buildingItems : []).map((building, index) => {
+                const apartments = Array.isArray(building.apartments) ? building.apartments : [];
+                const fallbackDebt = apartments.reduce((total, apartment) => {
+                    const balance = Number(apartment.balance || 0);
+                    return total + (balance < 0 ? Math.abs(balance) : 0);
+                }, 0);
+                const fallbackDebtors = apartments.filter((apartment) => Number(apartment.balance || 0) < 0).length;
+                const debt = Number.isFinite(Number(building.debt)) ? Number(building.debt) : fallbackDebt;
+                const debtorResidents = Number.isFinite(Number(building.debtorResidents)) ? Number(building.debtorResidents) : fallbackDebtors;
+                const health = Number.isFinite(Number(building.health)) ? Number(building.health) : Number(sector.health || 0);
+                const risk = building.risk || riskForHealth(health);
+                return {
+                    id: building.backendId || building.id || `sector-house-${index + 1}`,
+                    name: building.name || `House ${building.number || index + 1}`,
+                    debt,
+                    debtorResidents,
+                    health,
+                    tone: building.tone || toneForRisk(risk),
+                };
+            });
+            const totalDebt = buildingRows.reduce((sum, row) => sum + Math.max(0, Number(row.debt) || 0), 0);
+            const topHouses = buildingRows
+                .filter((row) => Math.max(0, Number(row.debt) || 0) > 0)
+                .sort((a, b) => b.debt - a.debt)
+                .slice(0, 5);
+
+            if (sectorName) sectorName.textContent = sector.name || "Mirabad Avenue";
+            if (sectorDebtors) sectorDebtors.textContent = moneyFormatter.format(Number(sector.debtorResidents) || 0);
+            if (sectorPaid) sectorPaid.textContent = moneyFormatter.format(Number(sector.paidResidents) || 0);
+            if (sectorCollected) sectorCollected.textContent = formatBillingUzs(Number(sector.collected) || 0);
+            if (sectorDebt) sectorDebt.textContent = formatBillingUzs(Number(sector.debt) || 0);
+            if (sectorPill) sectorPill.className = `resident-debt-split ${debtSplitTone}`;
+            if (sectorMeter) {
+                const progress = Math.max(0, Math.min(100, Number(sector.health) || 0));
+                const remainder = Math.max(0, 100 - progress);
+                sectorMeter.className = `percent-meter percent-meter-${escapeHtml(sector.tone || "blue")}`;
+                sectorMeter.style.setProperty("--progress", `${progress}%`);
+                sectorMeter.style.setProperty("--remainder", `${remainder}%`);
+                sectorMeter.dataset.value = percentValue(progress);
+                sectorMeter.setAttribute("aria-label", `${sector.name || "Sector"} health ${percentValue(progress)}`);
+            }
+            if (topCaption) {
+                topCaption.textContent = `${moneyFormatter.format(topHouses.length)} ${t("houses in debt view")}`;
+            }
+            if (topHousesHost) {
+                topHousesHost.innerHTML = topHouses.map((house) => {
+                    const share = totalDebt > 0 ? (house.debt / totalDebt) * 100 : 0;
                     return `
-                        <div class="revenue-debt-item space-y-2" data-complex-id="${escapeHtml(complex.id)}">
-                            <div class="flex justify-between items-center text-xs font-bold">
-                                <span class="text-on-surface">${escapeHtml(complex.name)}</span>
-                                <span class="text-on-surface-variant">${complex.health}% Healthy</span>
+                        <div class="debtor-row flex items-center justify-between gap-3 p-3 bg-surface-container-low rounded-lg border border-outline-variant/5" data-sector-top-house-row="${escapeHtml(house.id)}">
+                            <div class="min-w-0">
+                                <span class="block text-xs font-semibold truncate">${escapeHtml(house.name)}</span>
+                                <span class="block text-[10px] font-bold text-on-surface-variant">${formatBillingUzs(house.debt)} · ${moneyFormatter.format(house.debtorResidents)} ${escapeHtml(t("debt residents"))}</span>
                             </div>
-                            <div class="percent-meter percent-meter-${escapeHtml(complex.tone)}" style="--progress: ${complex.health}%; --remainder: ${remainder}%;" data-value="${complex.health}%">
-                                <span class="percent-meter-track"><span class="percent-meter-fill"></span><span class="percent-meter-remainder"></span></span>
+                            <div class="percent-meter percent-meter-${escapeHtml(house.tone)} percent-meter-row shrink-0" style="--progress: ${Math.min(100, share)}%;" data-value="${percentValue(share)}" aria-label="${escapeHtml(house.name)} debt share ${percentValue(share)}">
+                                <span class="percent-meter-track"><span class="percent-meter-fill"></span></span>
                             </div>
                         </div>
                     `;
                 }).join("");
+            }
         }
 
         const performanceCard = document.querySelector("[data-residential-performance-card]")
@@ -5195,6 +5267,48 @@
         root.classList.remove("backend-hydrating");
         root.classList.add("backend-ready");
     });
+    const liveStatsLockKey = "hydroflow-live-stats-lock";
+    const liveStatsLockTtlMs = 20000;
+    const liveStatsTabId = (() => {
+        try {
+            return crypto.randomUUID();
+        } catch {
+            return `tab-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+        }
+    })();
+    const readLiveStatsLock = () => {
+        try {
+            const raw = storage.getItem(liveStatsLockKey);
+            return raw ? JSON.parse(raw) : null;
+        } catch {
+            return null;
+        }
+    };
+    const writeLiveStatsLock = (timestamp = Date.now()) => {
+        storage.setItem(liveStatsLockKey, JSON.stringify({
+            owner: liveStatsTabId,
+            timestamp,
+        }));
+    };
+    const claimLiveStatsLock = () => {
+        const now = Date.now();
+        const current = readLiveStatsLock();
+        const currentOwner = String(current?.owner || "");
+        const currentTimestamp = Number(current?.timestamp || 0);
+        const expired = !currentTimestamp || (now - currentTimestamp) > liveStatsLockTtlMs;
+        if (!currentOwner || expired || currentOwner === liveStatsTabId) {
+            writeLiveStatsLock(now);
+            return true;
+        }
+        return false;
+    };
+    const releaseLiveStatsLock = () => {
+        const current = readLiveStatsLock();
+        if (String(current?.owner || "") !== liveStatsTabId) return;
+        storage.removeItem(liveStatsLockKey);
+    };
+    const liveStatsEnabledPages = new Set(["dashboard", "system_health"]);
+    const liveStatsEnabledForCurrentPage = () => liveStatsEnabledPages.has(String(document.body.dataset.activePage || "").trim());
     const refreshBackendData = async () => {
         if (document.body.dataset.backendRefreshRunning === "true") return;
         document.body.dataset.backendRefreshRunning = "true";
@@ -5225,13 +5339,38 @@
             document.body.dataset.backendRefreshRunning = "false";
         }
     };
-    if (!document.body.dataset.liveStatsTimer) {
+    const refreshBackendDataIfActive = () => {
+        if (!liveStatsEnabledForCurrentPage()) return;
+        if (document.hidden) return;
+        if (typeof document.hasFocus === "function" && !document.hasFocus()) return;
+        if (!claimLiveStatsLock()) return;
+        refreshBackendData();
+    };
+    if (!document.body.dataset.liveStatsTimer && liveStatsEnabledForCurrentPage()) {
         document.body.dataset.liveStatsTimer = "true";
         window.setInterval(() => {
-            if (document.hidden) return;
-            refreshBackendData();
+            refreshBackendDataIfActive();
         }, 15000);
+        window.addEventListener("focus", () => window.setTimeout(refreshBackendDataIfActive, 0));
+        document.addEventListener("visibilitychange", () => {
+            if (document.hidden) {
+                releaseLiveStatsLock();
+                return;
+            }
+            refreshBackendDataIfActive();
+        });
+        window.addEventListener("beforeunload", releaseLiveStatsLock);
     }
+
+    const loadOverlayServerList = (id) => {
+        if (id === "notifications-drawer") {
+            serverListControllers.alerts?.load?.();
+            return;
+        }
+        if (id === "audit-drawer") {
+            serverListControllers.audit?.load?.();
+        }
+    };
 
     const openOverlayById = (id) => {
         const overlay = document.getElementById(id);
@@ -5266,6 +5405,7 @@
             overlay.classList.add("flex");
         }
         overlay.setAttribute("aria-hidden", "false");
+        loadOverlayServerList(id);
     };
 
     const closeOverlayById = (id) => {
@@ -6547,6 +6687,11 @@
         if (!reminderButton) return;
         event.preventDefault();
         const payload = nearestActionPayload(reminderButton);
+        if (payload.owner_id && window.HydroFlowOpenBillingNoticeForResident) {
+            playSound("soft-click");
+            window.HydroFlowOpenBillingNoticeForResident(payload.owner_id);
+            return;
+        }
         try {
             const response = await postPortalJson("/api/reminders/send/", payload);
             rehydrateFromPortalData(response.portalData);
@@ -8404,11 +8549,11 @@
             };
         });
     };
-    const parseDebtHealth = () => Array.from(document.querySelectorAll(".revenue-debt-card .revenue-debt-item")).map((item) => {
-        const labels = item.querySelectorAll(".flex.justify-between.items-center.text-xs.font-bold span");
+    const parseDebtHealth = () => Array.from(document.querySelectorAll(".revenue-debt-card [data-sector-top-house-row]")).map((item) => {
+        const lines = item.querySelectorAll("span.block");
         return {
-            "Объект": labels[0]?.textContent.trim() || "",
-            "Состояние": labels[1]?.textContent.trim() || "",
+            "Объект": lines[0]?.textContent.trim() || "",
+            "Состояние": lines[1]?.textContent.trim() || "",
             "Процент": item.querySelector(".percent-meter")?.dataset.value || "",
         };
     });
@@ -8541,15 +8686,29 @@
             "Сумма": formatBillingUzs(transaction.amount),
             "Статус": transaction.status,
         }));
-    const buildRealDebtRows = () => getComplexStats().slice()
-        .sort((a, b) => b.debt - a.debt)
-        .map((complex) => ({
-            "Объект": complex.name,
-            "Состояние": complex.risk,
-            "Процент": percentValue(complex.health),
-            "Долг": formatBillingUzs(complex.debt),
-            "Должников": complex.debtorResidents,
-        }));
+    const buildRealDebtRows = () => getSingleSectorStats().buildingItems.slice()
+        .map((building, index) => {
+            const apartments = Array.isArray(building.apartments) ? building.apartments : [];
+            const fallbackDebt = apartments.reduce((total, apartment) => {
+                const balance = Number(apartment.balance || 0);
+                return total + (balance < 0 ? Math.abs(balance) : 0);
+            }, 0);
+            const fallbackDebtors = apartments.filter((apartment) => Number(apartment.balance || 0) < 0).length;
+            const debt = Number.isFinite(Number(building.debt)) ? Number(building.debt) : fallbackDebt;
+            const debtors = Number.isFinite(Number(building.debtorResidents)) ? Number(building.debtorResidents) : fallbackDebtors;
+            return {
+                "Объект": building.name || `House ${building.number || index + 1}`,
+                "Состояние": building.risk || riskForHealth(Number(building.health) || 0),
+                "Процент": percentValue(Number(building.health) || 0),
+                "Долг": formatBillingUzs(debt),
+                "Должников": debtors,
+            };
+        })
+        .sort((a, b) => {
+            const left = Number(String(b["Долг"]).replace(/[^\d.-]/g, "")) || 0;
+            const right = Number(String(a["Долг"]).replace(/[^\d.-]/g, "")) || 0;
+            return left - right;
+        });
         const buildRealDebtorRows = () => billingData.residents
         .filter((resident) => resident.balance < 0)
         .sort((a, b) => Math.abs(b.balance) - Math.abs(a.balance))
