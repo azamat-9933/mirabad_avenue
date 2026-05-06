@@ -2,6 +2,7 @@
     "use strict";
 
     const STORAGE_KEY = "hydroflow-admin-lang";
+    const THEME_STORAGE_KEY = "hydroflow-admin-theme";
     const LANGS = [
         ["ru", "RU"],
         ["en", "EN"],
@@ -26,6 +27,7 @@
         "Payments": { en: "Payments", ru: "Платежи", uz: "To'lovlar" },
         "To'lovlar": { en: "Payments", ru: "Платежи", uz: "To'lovlar" },
         "To‘lovlar": { en: "Payments", ru: "Платежи", uz: "To'lovlar" },
+        "Portal": { en: "Portal", ru: "Портал", uz: "Portal" },
         "Authentication and Authorization": { en: "Users and groups", ru: "Пользователи и группы", uz: "Foydalanuvchilar va guruhlar" },
         "Foydalanuvchilar va guruhlar": { en: "Users and groups", ru: "Пользователи и группы", uz: "Foydalanuvchilar va guruhlar" },
         "Groups": { en: "Groups", ru: "Группы", uz: "Guruhlar" },
@@ -58,6 +60,10 @@
         "Owners": { en: "Owners", ru: "Владельцы", uz: "Egalar" },
         "Ega": { en: "Owner", ru: "Владелец", uz: "Ega" },
         "Egalar": { en: "Owners", ru: "Владельцы", uz: "Egalar" },
+        "Resident": { en: "Resident", ru: "Резидент", uz: "Rezident" },
+        "Residents": { en: "Residents", ru: "Резиденты", uz: "Rezidentlar" },
+        "House": { en: "House", ru: "Дом", uz: "Uy" },
+        "Houses": { en: "Houses", ru: "Дома", uz: "Uylar" },
         "Billing period": { en: "Billing period", ru: "Расчётный период", uz: "Xisoblash davri" },
         "Billing periods": { en: "Billing periods", ru: "Расчётные периоды", uz: "Xisoblash davrlari" },
         "Xisoblash davri": { en: "Billing period", ru: "Расчётный период", uz: "Xisoblash davri" },
@@ -100,14 +106,20 @@
         "Workspace profiles": { en: "Workspace profiles", ru: "Профили workspace", uz: "Workspace profillari" },
         "Portal notification": { en: "Portal notification", ru: "Уведомление портала", uz: "Portal bildirishnomasi" },
         "Portal notifications": { en: "Portal notifications", ru: "Уведомления портала", uz: "Portal bildirishnomalari" },
-        "System alert": { en: "System alert", ru: "Системный alert", uz: "Tizim ogohlantirishi" },
-        "System alerts": { en: "System alerts", ru: "Системные alerts", uz: "Tizim ogohlantirishlari" },
+        "System alert": { en: "System alert", ru: "Системное оповещение", uz: "Tizim ogohlantirishi" },
+        "System alerts": { en: "System alerts", ru: "Системные оповещения", uz: "Tizim ogohlantirishlari" },
         "Maintenance task": { en: "Maintenance task", ru: "Задача обслуживания", uz: "Xizmat vazifasi" },
         "Maintenance tasks": { en: "Maintenance tasks", ru: "Задачи обслуживания", uz: "Xizmat vazifalari" },
         "Checklist item": { en: "Checklist item", ru: "Пункт чеклиста", uz: "Ro'yxat bandi" },
         "Checklist items": { en: "Checklist items", ru: "Пункты чеклиста", uz: "Ro'yxat bandlari" },
+        "Checklist note": { en: "Checklist note", ru: "Заметка чеклиста", uz: "Checklist izohi" },
+        "Checklist notes": { en: "Checklist notes", ru: "Заметки чеклиста", uz: "Checklist izohlari" },
         "Audit event": { en: "Audit event", ru: "Событие аудита", uz: "Audit hodisasi" },
         "Audit events": { en: "Audit events", ru: "События аудита", uz: "Audit hodisalari" },
+        "Portal status override": { en: "Portal status override", ru: "Переопределение статуса портала", uz: "Portal statusini almashtirish" },
+        "Portal status overrides": { en: "Portal status overrides", ru: "Переопределения статусов портала", uz: "Portal statuslarini almashtirish" },
+        "Support ticket": { en: "Support ticket", ru: "Тикет поддержки", uz: "Qo'llab-quvvatlash tiketi" },
+        "Support tickets": { en: "Support tickets", ru: "Тикеты поддержки", uz: "Qo'llab-quvvatlash tiketlari" },
         "Telemetry node": { en: "Telemetry node", ru: "Узел телеметрии", uz: "Telemetriya tuguni" },
         "Telemetry nodes": { en: "Telemetry nodes", ru: "Узлы телеметрии", uz: "Telemetriya tugunlari" },
         "Telemetry sample": { en: "Telemetry sample", ru: "Замер телеметрии", uz: "Telemetriya namunasi" },
@@ -178,9 +190,13 @@
         "Личные данные": { en: "Personal data", ru: "Личные данные", uz: "Shaxsiy ma'lumot" },
         "Balance": { en: "Balance", ru: "Баланс", uz: "Balans" },
         "Balans": { en: "Balance", ru: "Баланс", uz: "Balans" },
+        "Dogovor bor": { en: "Has contract", ru: "Есть договор", uz: "Dogovor bor" },
+        "Shartnoma bor": { en: "Has contract", ru: "Есть договор", uz: "Shartnoma bor" },
+        "Has contract": { en: "Has contract", ru: "Есть договор", uz: "Shartnoma bor" },
         "Positive balance means credit. Negative balance means debt.": { en: "Positive balance means credit. Negative balance means debt.", ru: "Положительный баланс — переплата. Отрицательный баланс — долг.", uz: "Musbat balans — ortiqcha to'lov. Manfiy balans — qarz." },
         "Musbat — ortiqcha to'lov. Manfiy — qarz.": { en: "Positive balance means credit. Negative balance means debt.", ru: "Положительный баланс — переплата. Отрицательный баланс — долг.", uz: "Musbat balans — ortiqcha to'lov. Manfiy balans — qarz." },
         "Use complex, building and section as helpers, then select the exact apartment.": { en: "Use complex, building and section as helpers, then select the exact apartment.", ru: "Выберите ЖК, дом и секцию как фильтры, затем выберите точную квартиру.", uz: "Aniq kvartirani tanlash uchun avval kompleks, uy va seksiyani filtr sifatida tanlang." },
+        "Use complex and building as helpers, then select the exact apartment.": { en: "Use complex and building as helpers, then select the exact apartment.", ru: "Выберите ЖК и дом как фильтры, затем выберите точную квартиру.", uz: "Aniq kvartirani tanlash uchun avval kompleks va uyni filtr sifatida tanlang." },
         "Optional helper filter for selecting the apartment.": { en: "Optional helper filter for selecting the apartment.", ru: "Вспомогательный фильтр для выбора квартиры.", uz: "Kvartirani tanlash uchun yordamchi filtr." },
         "Only apartments without an assigned owner are shown. To change an occupied apartment, edit the existing owner.": { en: "Only apartments without an assigned owner are shown. To change an occupied apartment, edit the existing owner.", ru: "Показаны только квартиры без владельца. Чтобы изменить занятую квартиру, откройте существующего владельца.", uz: "Faqat egasi biriktirilmagan kvartiralar ko'rsatiladi. Band kvartirani o'zgartirish uchun mavjud egani tahrirlang." },
         "Selected apartment does not belong to this complex.": { en: "Selected apartment does not belong to this complex.", ru: "Выбранная квартира не относится к этому ЖК.", uz: "Tanlangan kvartira bu kompleksga tegishli emas." },
@@ -361,6 +377,7 @@
         "Ega yo'q": { en: "No owner", ru: "Нет владельца", uz: "Ega yo'q" },
 
         // Fieldsets
+        "General": { en: "General", ru: "Общие", uz: "Umumiy" },
         "Shaxsiy ma'lumot": { en: "Personal data", ru: "Личные данные", uz: "Shaxsiy ma'lumot" },
         "Umumiy ma'lumot": { en: "General data", ru: "Общие данные", uz: "Umumiy ma'lumot" },
         "Sistema": { en: "System", ru: "Система", uz: "Sistema" },
@@ -423,9 +440,26 @@
             const translated = translateExact(sortMatch[1], lang);
             if (translated) return `${translated} ${sortMatch[2]}`;
         }
+        const addAnotherMatch = text.match(/^(\+?\s*)?(Добавить|Add|Qo'shish|Qo‘shish)\s+(ещё|another|yana)\s+(.+)$/i);
+        if (addAnotherMatch) {
+            const modelRaw = addAnotherMatch[4];
+            const model = translateExact(modelRaw, lang) || modelRaw;
+            if (lang === "ru") return `${addAnotherMatch[1] || ""}Добавить ещё ${model}`;
+            if (lang === "uz") return `${addAnotherMatch[1] || ""}Yana ${model} qo'shish`;
+            return `${addAnotherMatch[1] || ""}Add another ${model}`;
+        }
+        const uzAddAnotherMatch = text.match(/^(\+?\s*)?Yana\s+(.+?)\s+qo['‘]shish$/i);
+        if (uzAddAnotherMatch) {
+            const modelRaw = uzAddAnotherMatch[2];
+            const model = translateExact(modelRaw, lang) || modelRaw;
+            if (lang === "ru") return `${uzAddAnotherMatch[1] || ""}Добавить ещё ${model}`;
+            if (lang === "uz") return `${uzAddAnotherMatch[1] || ""}Yana ${model} qo'shish`;
+            return `${uzAddAnotherMatch[1] || ""}Add another ${model}`;
+        }
         const addMatch = text.match(/^(\+?\s*)?(Добавить|Add|Qo'shish|Qo‘shish)\s+(.+)$/i);
         if (addMatch) {
-            const model = translateExact(addMatch[3], lang) || addMatch[3];
+            const modelRaw = addMatch[3].replace(/^(ещё|another|yana)\s+/i, "");
+            const model = translateExact(modelRaw, lang) || modelRaw;
             const verb = catalog.Add[lang];
             return `${addMatch[1] || ""}${verb} ${model}`;
         }
@@ -465,14 +499,14 @@
         const building = document.getElementById("id_building_selector");
         const section = document.getElementById("id_section_selector");
         const apartment = document.getElementById("id_apartment");
-        if (!complex || !building || !section || !apartment || apartment.dataset.ownerFiltersBound === "true") return;
+        if (!complex || !building || !apartment || apartment.dataset.ownerFiltersBound === "true") return;
         apartment.dataset.ownerFiltersBound = "true";
 
         const optionMatches = (option, filters) => {
             if (!option.value) return true;
             if (filters.complex && option.dataset.complex !== filters.complex) return false;
             if (filters.building && option.dataset.building !== filters.building) return false;
-            if (filters.section && option.dataset.section !== filters.section) return false;
+            if (section && filters.section && option.dataset.section !== filters.section) return false;
             return true;
         };
 
@@ -488,14 +522,16 @@
             });
             if (building.selectedOptions[0] && building.selectedOptions[0].disabled) building.value = "";
 
-            Array.from(section.options).forEach((option) => {
-                if (!option.value) return;
-                const matchesComplex = !selectedComplex || option.textContent.includes(`(${complex.selectedOptions[0]?.textContent || ""})`);
-                const matchesBuilding = !selectedBuilding || option.textContent.includes(building.selectedOptions[0]?.textContent || "");
-                option.hidden = !(matchesComplex && matchesBuilding);
-                option.disabled = !(matchesComplex && matchesBuilding);
-            });
-            if (section.selectedOptions[0] && section.selectedOptions[0].disabled) section.value = "";
+            if (section) {
+                Array.from(section.options).forEach((option) => {
+                    if (!option.value) return;
+                    const matchesComplex = !selectedComplex || option.textContent.includes(`(${complex.selectedOptions[0]?.textContent || ""})`);
+                    const matchesBuilding = !selectedBuilding || option.textContent.includes(building.selectedOptions[0]?.textContent || "");
+                    option.hidden = !(matchesComplex && matchesBuilding);
+                    option.disabled = !(matchesComplex && matchesBuilding);
+                });
+                if (section.selectedOptions[0] && section.selectedOptions[0].disabled) section.value = "";
+            }
         };
 
         const syncOptions = () => {
@@ -503,7 +539,7 @@
             const filters = {
                 complex: complex.value,
                 building: building.value,
-                section: section.value,
+                section: section?.value || "",
             };
             Array.from(apartment.options).forEach((option) => {
                 const matches = optionMatches(option, filters);
@@ -516,14 +552,14 @@
             }
         };
 
-        [complex, building, section].forEach((select) => select.addEventListener("change", syncOptions));
+        [complex, building, section].filter(Boolean).forEach((select) => select.addEventListener("change", syncOptions));
         syncOptions();
     };
 
     const shouldSkipNode = (node) => {
         const parent = node.parentElement;
         if (!parent) return true;
-        return Boolean(parent.closest("script, style, textarea, pre, code, .admin-lang-switcher, .select2-search, .select2-container, .select2-results, .related-widget-wrapper"));
+        return Boolean(parent.closest("script, style, textarea, pre, code, .admin-lang-switcher, .admin-theme-toggle, .select2-search, .select2-container, .select2-results, .related-widget-wrapper"));
     };
 
     const translateTextNode = (node, lang) => {
@@ -571,6 +607,30 @@
         });
     };
 
+    const initOwnerBalancePreview = () => {
+        const input = document.getElementById("id_balance");
+        const preview = document.querySelector("[data-owner-balance-preview]");
+        if (!input || !preview || input.dataset.balancePreviewBound === "true") return;
+        input.dataset.balancePreviewBound = "true";
+
+        const formatBalance = (value) => {
+            const normalized = String(value || "").replace(/\s/g, "").replace(",", ".");
+            const number = Number.parseFloat(normalized);
+            const amount = Number.isFinite(number) ? number : 0;
+            const icon = amount > 0 ? "▲" : amount < 0 ? "▼" : "●";
+            const color = amount > 0 ? "#27ae60" : amount < 0 ? "#e74c3c" : "#7f8c8d";
+            preview.style.color = color;
+            preview.textContent = `${icon} ${new Intl.NumberFormat("en-US", {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 2,
+            }).format(amount)} UZS`;
+        };
+
+        input.addEventListener("input", () => formatBalance(input.value));
+        input.addEventListener("change", () => formatBalance(input.value));
+        formatBalance(input.value);
+    };
+
     const translatePage = (lang = selectedLanguage()) => {
         document.documentElement.lang = lang;
         const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
@@ -609,10 +669,84 @@
         });
     };
 
+    const selectedTheme = () => {
+        const stored = localStorage.getItem(THEME_STORAGE_KEY);
+        return ["dark", "light"].includes(stored) ? stored : "dark";
+    };
+
+    const syncSidebarThemeColors = (theme = selectedTheme()) => {
+        const isLight = theme === "light";
+        const currentPath = window.location.pathname.replace(/\/+$/, "/");
+        document.querySelectorAll("#jazzy-sidebar .nav-link, .main-sidebar .nav-link, .sidebar .nav-link").forEach((link) => {
+            let linkPath = "";
+            try {
+                linkPath = new URL(link.getAttribute("href") || "", window.location.origin).pathname.replace(/\/+$/, "/");
+            } catch (_error) {
+                linkPath = "";
+            }
+            const isCurrent = Boolean(linkPath && linkPath !== "/admin/" && currentPath.startsWith(linkPath));
+            const isActive = link.classList.contains("active") || isCurrent;
+            const color = isLight ? (isActive ? "#075f3c" : "#111827") : "";
+            link.style.setProperty("color", color, "important");
+            link.style.setProperty("background", isLight && isActive ? "#e7f5ee" : "", "important");
+            link.style.setProperty("border", isLight && isActive ? "1px solid rgba(8, 121, 75, 0.24)" : "", "important");
+            link.style.setProperty("border-radius", isLight && isActive ? "10px" : "", "important");
+            link.style.setProperty("box-shadow", isLight && isActive ? "inset 4px 0 0 #08794b, 0 6px 16px rgba(24, 39, 52, 0.06)" : "", "important");
+            link.classList.toggle("hf-current-sidebar-link", isLight && isActive);
+            link.querySelectorAll("i, .nav-icon, .fa, .fas, .far, .fab, svg, span, p").forEach((item) => {
+                item.style.setProperty("color", color, "important");
+                if (item instanceof SVGElement) {
+                    item.style.setProperty("fill", color, "important");
+                    item.style.setProperty("stroke", color, "important");
+                }
+            });
+        });
+    };
+
+    const applyTheme = (theme = selectedTheme()) => {
+        const isLight = theme === "light";
+        document.documentElement.classList.toggle("hf-admin-light", isLight);
+        document.documentElement.classList.toggle("hf-admin-dark", !isLight);
+        syncSidebarThemeColors(theme);
+        document.querySelectorAll("[data-admin-theme-toggle]").forEach((button) => {
+            button.classList.toggle("is-light", isLight);
+            button.setAttribute("aria-pressed", String(isLight));
+            button.textContent = isLight ? "Dark" : "Light";
+            button.title = isLight ? "Switch to dark theme" : "Switch to light theme";
+        });
+    };
+
+    const mountThemeToggle = () => {
+        if (document.querySelector(".admin-theme-toggle")) return;
+        const navbar = document.querySelector("#jazzy-navbar")
+            || document.querySelector(".app-header.navbar")
+            || document.querySelector(".main-header.navbar")
+            || document.querySelector(".main-header");
+        const host = navbar || document.body;
+        if (!host) return;
+
+        const button = document.createElement("button");
+        button.className = navbar ? "admin-theme-toggle admin-theme-toggle--in-navbar" : "admin-theme-toggle admin-theme-toggle--fallback";
+        button.type = "button";
+        button.dataset.adminThemeToggle = "true";
+        button.setAttribute("aria-label", "Toggle admin theme");
+        button.addEventListener("click", () => {
+            const nextTheme = selectedTheme() === "light" ? "dark" : "light";
+            localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
+            applyTheme(nextTheme);
+        });
+
+        host.appendChild(button);
+        applyTheme(selectedTheme());
+    };
+
     const boot = () => {
+        applyTheme(selectedTheme());
         mountLanguageSwitcher();
+        mountThemeToggle();
         initOwnerApartmentFilters();
         bindAdminActionSubmit();
+        initOwnerBalancePreview();
         translatePage(selectedLanguage());
         if ("MutationObserver" in window) {
             let scheduled = false;
@@ -621,9 +755,12 @@
                 scheduled = true;
                 window.requestAnimationFrame(() => {
                     scheduled = false;
+                    applyTheme(selectedTheme());
                     mountLanguageSwitcher();
+                    mountThemeToggle();
                     initOwnerApartmentFilters();
                     bindAdminActionSubmit();
+                    initOwnerBalancePreview();
                     translatePage(selectedLanguage());
                 });
             });

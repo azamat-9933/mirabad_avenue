@@ -488,6 +488,7 @@ def _serialize_complex_row(complex_obj, override_maps=None, hot_water_by_complex
     debt_total = 0.0
     collected_total = 0.0
     unit_total = 0
+    total_area = 0.0
 
     for building in complex_obj.buildings.all():
         apartment_rows = []
@@ -497,6 +498,8 @@ def _serialize_complex_row(complex_obj, override_maps=None, hot_water_by_complex
         building_collected = 0.0
         apartments = list(building.apartments.all())
         unit_total += len(apartments)
+        building_total_area = sum(_money(apartment.area) for apartment in apartments)
+        total_area += building_total_area
         for apartment in apartments:
             owner = getattr(apartment, "owner", None)
             owner_transactions = list(getattr(owner, "prefetched_transactions", [])) if owner else []
@@ -559,6 +562,7 @@ def _serialize_complex_row(complex_obj, override_maps=None, hot_water_by_complex
                 "address": building.address,
                 "apartments": apartment_rows,
                 "units": len(apartment_rows),
+                "totalArea": round(building_total_area, 2),
                 "debt": building_debt,
                 "collected": building_collected,
                 "debtorResidents": building_debtors,
@@ -582,6 +586,7 @@ def _serialize_complex_row(complex_obj, override_maps=None, hot_water_by_complex
         "prefix": complex_obj.title,
         "buildings": len(building_rows),
         "units": unit_total,
+        "totalArea": round(total_area, 2),
         "water": "Optimal",
         "heating": "Optimal",
         "health": health,
@@ -1005,7 +1010,7 @@ def api_list_complexes(request):
     sort_map = {
         "complex": lambda item: str(item.get("name", "")).lower(),
         "infra": lambda item: (-int(item.get("buildings", 0)), -int(item.get("units", 0)), str(item.get("name", "")).lower()),
-        "systems": lambda item: (-float(item.get("health", 0) or 0), str(item.get("risk", "")).lower(), str(item.get("name", "")).lower()),
+        "systems": lambda item: (-float(item.get("totalArea", 0) or 0), str(item.get("name", "")).lower()),
         "finances": lambda item: -float(item.get("finances", 0) or 0),
         "debt": lambda item: -float(item.get("debt", 0) or 0),
         "actions": lambda item: (-int(item.get("debtorResidents", 0) or 0), -int(item.get("paidResidents", 0) or 0)),
@@ -1675,7 +1680,6 @@ def api_create_apartment(request):
     building_id = payload.get("building_id")
     number = str(payload.get("number") or "").strip()
     area_raw = payload.get("area")
-    section_name = str(payload.get("section_name") or "").strip()
 
     if not building_id or not number or area_raw in (None, ""):
         return JsonResponse(
@@ -1696,24 +1700,15 @@ def api_create_apartment(request):
     if area <= 0:
         return JsonResponse({"ok": False, "error": "Area must be greater than zero."}, status=400)
 
-    section = None
-    if section_name:
-        section, _created = building.sections.get_or_create(name=section_name)
-
     duplicate_qs = Apartment.objects.filter(building=building, number__iexact=number)
-    if section:
-        duplicate_qs = duplicate_qs.filter(section=section)
-    elif section_name == "":
-        duplicate_qs = duplicate_qs.filter(section__isnull=True)
     if duplicate_qs.exists():
         return JsonResponse(
-            {"ok": False, "error": "This apartment already exists in the selected house/section."},
+            {"ok": False, "error": "This apartment already exists in the selected house."},
             status=409,
         )
 
     apartment = Apartment.objects.create(
         building=building,
-        section=section,
         number=number,
         area=area,
         author=_actor(request),
@@ -2087,35 +2082,68 @@ def api_system_alerts_configure(request):
         return JsonResponse(response_payload)
 
     if mode in {"acknowledge", "resolve"}:
-        if not alert:
+        notification = _optional_instance(PortalNotification, payload.get("notification_id"))
+        if not alert and notification:
+            alert = (
+                SystemAlert.objects.filter(metadata__notification_id=notification.id)
+                .order_by("-detected_at", "-id")
+                .first()
+            )
+        if not alert and not notification:
             return JsonResponse({"ok": False, "error": "System alert was not found."}, status=404)
-        alert.status = SystemAlert.STATUS_ACKNOWLEDGED if mode == "acknowledge" else SystemAlert.STATUS_RESOLVED
-        if mode == "resolve":
-            alert.resolved_at = timezone.now()
-        alert.save(update_fields=["status", "resolved_at"])
 
-        notification_id = (alert.metadata or {}).get("notification_id")
-        notification = _optional_instance(PortalNotification, notification_id)
+        if alert:
+            alert.status = SystemAlert.STATUS_ACKNOWLEDGED if mode == "acknowledge" else SystemAlert.STATUS_RESOLVED
+            if mode == "resolve":
+                alert.resolved_at = timezone.now()
+            alert.save(update_fields=["status", "resolved_at"])
+
+        if not notification and alert:
+            notification_id = (alert.metadata or {}).get("notification_id")
+            notification = _optional_instance(PortalNotification, notification_id)
         if notification:
             notification.status = PortalNotification.STATUS_READ if mode == "acknowledge" else PortalNotification.STATUS_ARCHIVED
             notification.action_state = "Acknowledged from dashboard" if mode == "acknowledge" else "Resolved from dashboard"
             notification.save(update_fields=["status", "action_state"])
 
+        if alert:
+            AuditEvent.objects.create(
+                event_type=AuditEvent.TYPE_ALERT,
+                title="System alert updated",
+                message=f"{alert.title} was {mode}d from the portal.",
+                actor=_actor(request),
+                complex=alert.complex,
+                building=alert.building,
+                apartment=alert.apartment,
+                owner=alert.owner,
+                metadata={"source": "portal_system_alerts", "mode": mode, "alertId": alert.id},
+            )
+            return portal_response(
+                {
+                    "alertId": alert.id,
+                    "adminUrl": f"/admin/portal/systemalert/{alert.id}/change/",
+                }
+            )
+
         AuditEvent.objects.create(
             event_type=AuditEvent.TYPE_ALERT,
-            title="System alert updated",
-            message=f"{alert.title} was {mode}d from the portal.",
+            title="Notification updated",
+            message=f"{notification.title} was {mode}d from the portal.",
             actor=_actor(request),
-            complex=alert.complex,
-            building=alert.building,
-            apartment=alert.apartment,
-            owner=alert.owner,
-            metadata={"source": "portal_system_alerts", "mode": mode, "alertId": alert.id},
+            complex=notification.complex,
+            building=notification.building,
+            apartment=notification.apartment,
+            owner=notification.owner,
+            metadata={
+                "source": "portal_system_alerts",
+                "mode": mode,
+                "notificationId": notification.id,
+            },
         )
         return portal_response(
             {
-                "alertId": alert.id,
-                "adminUrl": f"/admin/portal/systemalert/{alert.id}/change/",
+                "notificationId": notification.id,
+                "adminUrl": f"/admin/portal/portalnotification/{notification.id}/change/",
             }
         )
 

@@ -6,7 +6,7 @@ from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.utils.html import format_html
 
-from .models import DEFAULT_SECTOR_NAME, Apartment, Building, BuildingSection, Complex, Owner
+from .models import DEFAULT_SECTOR_NAME, Apartment, Building, Complex, Owner
 
 
 def admin_number(value, places=0):
@@ -17,26 +17,17 @@ def admin_number(value, places=0):
 #  INLINES
 # ══════════════════════════════════════════════════════
 
-class BuildingSectionInline(admin.TabularInline):
-    """Uyning seksiyalari — 66-uy: A1, A5, A7..."""
-    model = BuildingSection
-    extra = 1
-    fields = ("name",)
-    verbose_name = "Seksiya"
-    verbose_name_plural = "Seksiyalar"
-
-
-class ApartmentInline(admin.TabularInline):
+class ApartmentInline(admin.StackedInline):
     """Uy ichidagi kvartiralar — qisqacha ko'rinish"""
     model = Apartment
     extra = 0
-    fields = ("number", "area", "section")
+    fields = ("number", "area", "author")
     show_change_link = True
     verbose_name = "Kvartira"
     verbose_name_plural = "Kvartiralar"
 
     def get_queryset(self, request):
-        return super().get_queryset(request).select_related("section")
+        return super().get_queryset(request)
 
 
 class BuildingInline(admin.TabularInline):
@@ -102,13 +93,13 @@ class ComplexAdmin(admin.ModelAdmin):
 @admin.register(Building)
 class BuildingAdmin(admin.ModelAdmin):
     list_display  = (
-        "number", "complex", "address",
+        "house_name", "address",
         "apartments_count", "total_area_display", "created_at",
     )
-    list_filter   = ("complex",)
     search_fields = ("number", "address", "complex__title")
     readonly_fields = ("created_at", "total_area_display")
-    inlines       = [BuildingSectionInline, ApartmentInline]
+    exclude = ("complex",)
+    inlines       = [ApartmentInline]
 
     def get_readonly_fields(self, request, obj=None):
         return ("created_at", "total_area_display") if obj else ()
@@ -135,6 +126,10 @@ class BuildingAdmin(admin.ModelAdmin):
             _apt_count=Count("apartments")
         )
 
+    @admin.display(description="Название дома", ordering="number")
+    def house_name(self, obj):
+        return obj.number
+
     @admin.display(description="Kvartiralar soni", ordering="_apt_count")
     def apartments_count(self, obj):
         url = (
@@ -152,40 +147,17 @@ class BuildingAdmin(admin.ModelAdmin):
 
 
 # ══════════════════════════════════════════════════════
-#  BUILDING SECTION
-# ══════════════════════════════════════════════════════
-
-@admin.register(BuildingSection)
-class BuildingSectionAdmin(admin.ModelAdmin):
-    list_display  = ("name", "building", "building__complex", "apartments_count")
-    list_filter   = ("building__complex", "building")
-    search_fields = ("name", "building__number")
-
-    def get_queryset(self, request):
-        return super().get_queryset(request).select_related(
-            "building", "building__complex"
-        ).annotate(_apt_count=Count("apartments"))
-
-    @admin.display(description="Kvartiralar soni")
-    def apartments_count(self, obj):
-        return obj._apt_count
-
-    @admin.display(description="Kompleks")
-    def building__complex(self, obj):
-        return obj.building.complex
-
-
-# ══════════════════════════════════════════════════════
 #  APARTMENT  (Kvartira)
 # ══════════════════════════════════════════════════════
 
 @admin.register(Apartment)
 class ApartmentAdmin(admin.ModelAdmin):
     list_display  = (
-        "number", "building", "section", "area",
+        "number", "building", "area",
         "owner_link", "created_at",
     )
-    list_filter   = ("building__complex", "building", "section")
+    list_display_links = ("number",)
+    list_filter   = ("building__complex", "building")
     search_fields = (
         "number",
         "building__number",
@@ -197,11 +169,16 @@ class ApartmentAdmin(admin.ModelAdmin):
     def get_readonly_fields(self, request, obj=None):
         return ("created_at",) if obj else ()
 
+    def get_fields(self, request, obj=None):
+        if obj:
+            return ("number", "building", "area", "author", "created_at")
+        return ("number", "building", "area", "author")
+
     def get_queryset(self, request):
         return (
             super()
             .get_queryset(request)
-            .select_related("building", "building__complex", "section")
+            .select_related("building", "building__complex")
         )
 
     @admin.display(description="Ega")
@@ -227,7 +204,7 @@ class ApartmentSelect(forms.Select):
         pk = getattr(value, "value", value)
         if pk:
             apartment = (
-                Apartment.objects.select_related("building", "building__complex", "section")
+                Apartment.objects.select_related("building", "building__complex")
                 .filter(pk=pk)
                 .first()
             )
@@ -236,7 +213,6 @@ class ApartmentSelect(forms.Select):
                     {
                         "data-complex": str(apartment.building.complex_id),
                         "data-building": str(apartment.building_id),
-                        "data-section": str(apartment.section_id or ""),
                     }
                 )
         return option
@@ -250,22 +226,6 @@ class BuildingSelect(forms.Select):
             building = Building.objects.filter(pk=pk).only("complex_id").first()
             if building:
                 option["attrs"]["data-complex"] = str(building.complex_id)
-        return option
-
-
-class SectionSelect(forms.Select):
-    def create_option(self, name, value, label, selected, index, subindex=None, attrs=None):
-        option = super().create_option(name, value, label, selected, index, subindex, attrs)
-        pk = getattr(value, "value", value)
-        if pk:
-            section = BuildingSection.objects.select_related("building").filter(pk=pk).first()
-            if section:
-                option["attrs"].update(
-                    {
-                        "data-complex": str(section.building.complex_id),
-                        "data-building": str(section.building_id),
-                    }
-                )
         return option
 
 
@@ -290,12 +250,6 @@ class OwnerAdminForm(forms.ModelForm):
         required=False,
         help_text="Optional helper filter for selecting the apartment.",
     )
-    section_selector = forms.ModelChoiceField(
-        label="Section",
-        queryset=BuildingSection.objects.none(),
-        required=False,
-        help_text="Optional helper filter for selecting the apartment.",
-    )
     telegram_status = forms.ChoiceField(
         label="Telegram status",
         choices=TELEGRAM_STATUS_CHOICES,
@@ -313,21 +267,18 @@ class OwnerAdminForm(forms.ModelForm):
         structure_qs = Apartment.objects.select_related(
             "building",
             "building__complex",
-            "section",
-        ).order_by("building__complex__title", "building__number", "section__name", "number")
+        ).order_by("building__complex__title", "building__number", "number")
         apartment_qs = structure_qs
         if instance:
             apartment_qs = apartment_qs.filter(Q(owner__isnull=True) | Q(pk=instance.apartment_id))
             apartment = instance.apartment
             self.fields["complex_selector"].initial = apartment.building.complex
             self.fields["building_selector"].initial = apartment.building
-            self.fields["section_selector"].initial = apartment.section
         else:
             apartment_qs = apartment_qs.filter(owner__isnull=True)
 
         complex_ids = structure_qs.values_list("building__complex_id", flat=True).distinct()
         building_ids = structure_qs.values_list("building_id", flat=True).distinct()
-        section_ids = structure_qs.exclude(section__isnull=True).values_list("section_id", flat=True).distinct()
 
         self.fields["complex_selector"].queryset = Complex.objects.filter(pk__in=complex_ids).order_by("title")
         self.fields["building_selector"].queryset = Building.objects.filter(pk__in=building_ids).select_related(
@@ -335,12 +286,6 @@ class OwnerAdminForm(forms.ModelForm):
         ).order_by("complex__title", "number")
         self.fields["building_selector"].widget = BuildingSelect(attrs=self.fields["building_selector"].widget.attrs)
         self.fields["building_selector"].widget.choices = self.fields["building_selector"].choices
-        self.fields["section_selector"].queryset = BuildingSection.objects.filter(pk__in=section_ids).select_related(
-            "building",
-            "building__complex",
-        ).order_by("building__complex__title", "building__number", "name")
-        self.fields["section_selector"].widget = SectionSelect(attrs=self.fields["section_selector"].widget.attrs)
-        self.fields["section_selector"].widget.choices = self.fields["section_selector"].choices
 
         self.fields["apartment"].queryset = apartment_qs
         if apartment_qs.exists():
@@ -361,10 +306,9 @@ class OwnerAdminForm(forms.ModelForm):
                 self.fields["complex_selector"].initial = sector
 
         def apartment_label(apartment):
-            section = apartment.section.name if apartment.section else "No section"
             return (
                 f"{apartment.building.complex.title} / "
-                f"{apartment.building.number} / {section} / Apt. {apartment.number}"
+                f"{apartment.building.number} / Apt. {apartment.number}"
             )
 
         self.fields["apartment"].label_from_instance = apartment_label
@@ -376,15 +320,12 @@ class OwnerAdminForm(forms.ModelForm):
         apartment = cleaned.get("apartment")
         complex_obj = cleaned.get("complex_selector")
         building = cleaned.get("building_selector")
-        section = cleaned.get("section_selector")
         if not apartment:
             return cleaned
         if complex_obj and apartment.building.complex_id != complex_obj.pk:
             self.add_error("apartment", "Selected apartment does not belong to this complex.")
         if building and apartment.building_id != building.pk:
             self.add_error("apartment", "Selected apartment does not belong to this building.")
-        if section and apartment.section_id != section.pk:
-            self.add_error("apartment", "Selected apartment does not belong to this section.")
         return cleaned
 
 
@@ -399,6 +340,7 @@ class OwnerAdmin(admin.ModelAdmin):
         "telegram_status",
         "created_at",
     )
+    list_display_links = ("fio",)
     list_filter   = ("apartment__building__complex", "apartment__building")
     search_fields = ("fio", "phone", "telegram_user", "apartment__number")
     readonly_fields = (
@@ -451,10 +393,9 @@ class OwnerAdmin(admin.ModelAdmin):
                         "has_contract",
                         "complex_selector",
                         "building_selector",
-                        "section_selector",
                         "apartment",
                     ),
-                    "description": "Use complex, building and section as helpers, then select the exact apartment.",
+                    "description": "Use complex and building as helpers, then select the exact apartment.",
                 },
             ),
             (
@@ -526,7 +467,7 @@ class OwnerAdmin(admin.ModelAdmin):
             color, icon = "#7f8c8d", "●"
 
         return format_html(
-            '<span style="color:{};font-weight:600;">{} {} UZS</span>',
+            '<span data-owner-balance-preview style="color:{};font-weight:600;">{} {} UZS</span>',
             color,
             icon,
             admin_number(balance),

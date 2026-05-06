@@ -33,7 +33,7 @@ class ExpenseInline(admin.TabularInline):
     """
     model   = Expense
     extra   = 1
-    fields  = ("building", "section", "service_type", "name", "amount")
+    fields  = ("building", "service_type", "name", "amount")
     verbose_name        = "Xarajat"
     verbose_name_plural = "Xarajatlar"
 
@@ -46,17 +46,13 @@ class GasMeterReadingInline(admin.TabularInline):
     model   = GasMeterReading
     extra   = 1
     fields  = (
-        "building", "section", "service_type",
+        "building", "service_type",
         "start_reading", "end_reading", "price_per_m3",
     )
     readonly_fields = ()
     verbose_name        = "Gaz hisoblagich"
     verbose_name_plural = "Gaz hisoblagichlar"
 
-
-# ══════════════════════════════════════════════════════
-#  BILLING PERIOD  (Xisoblash davri)
-# ══════════════════════════════════════════════════════
 
 @admin.register(BillingPeriod)
 class BillingPeriodAdmin(admin.ModelAdmin):
@@ -179,16 +175,17 @@ class BillingPeriodAdmin(admin.ModelAdmin):
 class ExpenseAdmin(admin.ModelAdmin):
     list_display  = (
         "name", "service_type_badge",
-        "building", "section",
+        "building",
         "amount_display", "period",
     )
     list_filter   = ("service_type", "period", "building__complex", "building")
     search_fields = ("name", "building__number", "period__name")
     readonly_fields = ()
+    exclude = ("section",)
 
     def get_queryset(self, request):
         return super().get_queryset(request).select_related(
-            "period", "building", "section"
+            "period", "building"
         )
 
     @admin.display(description="Xizmat turi")
@@ -217,7 +214,7 @@ class ExpenseAdmin(admin.ModelAdmin):
 @admin.register(GasMeterReading)
 class GasMeterReadingAdmin(admin.ModelAdmin):
     list_display  = (
-        "building", "section",
+        "building",
         "service_type_badge",
         "start_reading", "end_reading",
         "consumption_display",
@@ -227,10 +224,11 @@ class GasMeterReadingAdmin(admin.ModelAdmin):
     list_filter   = ("service_type", "period", "building__complex", "building")
     search_fields = ("building__number", "period__name")
     readonly_fields = ("consumption_display", "total_gas_cost_display")
+    exclude = ("section",)
 
     def get_queryset(self, request):
         return super().get_queryset(request).select_related(
-            "period", "building", "section"
+            "period", "building"
         )
 
     @admin.display(description="Xizmat turi")
@@ -276,7 +274,6 @@ class HeatingRecordAdmin(admin.ModelAdmin):
         "period",
         "apartment__building__complex",
         "apartment__building",
-        "apartment__section",
     )
     search_fields = (
         "apartment__number",
@@ -372,7 +369,6 @@ class HotWaterMeterReadingAdmin(admin.ModelAdmin):
         "period",
         "apartment__building__complex",
         "apartment__building",
-        "apartment__section",
     )
     search_fields = (
         "apartment__number",
@@ -547,7 +543,7 @@ class InvoiceAdmin(admin.ModelAdmin):
 @admin.register(HeatingCalculationSummary)
 class HeatingCalculationSummaryAdmin(admin.ModelAdmin):
     list_display  = (
-        "building", "section", "period",
+        "building", "period",
         "total_expenses_display",
         "total_heated_area",
         "cost_per_sqm_display",
@@ -555,7 +551,7 @@ class HeatingCalculationSummaryAdmin(admin.ModelAdmin):
     )
     list_filter   = ("period", "building__complex", "building")
     readonly_fields = (
-        "period", "building", "section",
+        "period", "building",
         "total_expenses", "total_heated_area", "cost_per_sqm",
         "calculated_at",
     )
@@ -588,7 +584,7 @@ class HeatingCalculationSummaryAdmin(admin.ModelAdmin):
 @admin.register(HotWaterCalculationSummary)
 class HotWaterCalculationSummaryAdmin(admin.ModelAdmin):
     list_display  = (
-        "building", "section", "period",
+        "building", "period",
         "total_expenses_display",
         "total_consumption",
         "tariff_per_m3_display",
@@ -596,7 +592,7 @@ class HotWaterCalculationSummaryAdmin(admin.ModelAdmin):
     )
     list_filter   = ("period", "building__complex", "building")
     readonly_fields = (
-        "period", "building", "section",
+        "period", "building",
         "total_expenses", "total_consumption", "tariff_per_m3",
         "calculated_at",
     )

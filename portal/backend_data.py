@@ -512,6 +512,7 @@ def build_portal_data(user=None) -> dict:
         debt_total = 0.0
         collected_total = 0.0
         unit_total = 0
+        total_area = 0.0
 
         for building in complex_obj.buildings.all():
             apartment_rows = []
@@ -522,6 +523,8 @@ def build_portal_data(user=None) -> dict:
 
             apartments = list(building.apartments.all())
             unit_total += len(apartments)
+            building_total_area = sum(_money(apartment.area) for apartment in apartments)
+            total_area += building_total_area
 
             for apartment in apartments:
                 owner = owners_by_apartment.get(apartment.id)
@@ -637,6 +640,7 @@ def build_portal_data(user=None) -> dict:
                 "address": building.address,
                 "apartments": apartment_rows,
                 "units": len(apartment_rows),
+                "totalArea": round(building_total_area, 2),
                 "debt": building_debt,
                 "collected": building_collected,
                 "debtorResidents": building_debtors,
@@ -663,6 +667,7 @@ def build_portal_data(user=None) -> dict:
             "prefix": complex_obj.title,
             "buildings": len(building_rows),
             "units": unit_total,
+            "totalArea": round(total_area, 2),
             "water": "Optimal",
             "heating": "Optimal",
             "health": health,

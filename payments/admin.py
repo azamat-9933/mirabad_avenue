@@ -21,7 +21,6 @@ class TransactionAdmin(admin.ModelAdmin):
         "amount_display",
         "balance_before_display",
         "balance_after_display",
-        "description",
         "created_by",
     )
     list_filter   = (
@@ -32,7 +31,6 @@ class TransactionAdmin(admin.ModelAdmin):
     search_fields = (
         "owner__fio",
         "owner__phone",
-        "description",
         "external_id",
     )
     date_hierarchy = "created_at"
@@ -51,7 +49,7 @@ class TransactionAdmin(admin.ModelAdmin):
             {
                 "fields": (
                     "owner", "payment_type", "amount",
-                    "description", "invoice",
+                    "invoice",
                 )
             },
         ),

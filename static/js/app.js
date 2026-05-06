@@ -148,11 +148,19 @@
         "Paid Residents": { ru: "Оплатили", uz: "To'laganlar" },
         "Total Debtors": { ru: "Всего должников", uz: "Jami qarzdorlar" },
         "Total linked resident profiles": { ru: "Всего привязанных профилей резидентов", uz: "Jami ulangan rezident profillari" },
+        "Total apartments in system": { ru: "Всего квартир в системе", uz: "Tizimdagi jami kvartiralar" },
         "Residents with positive or zero balance": { ru: "Резиденты с положительным или нулевым балансом", uz: "Musbat yoki nol balansli rezidentlar" },
         "Residents with overdue balance": { ru: "Резиденты с просроченным балансом", uz: "Muddati o'tgan balansli rezidentlar" },
         "Current resident liabilities": { ru: "Текущие обязательства резидентов", uz: "Rezidentlarning joriy majburiyatlari" },
         "Resident Directory": { ru: "Каталог резидентов", uz: "Rezidentlar katalogi" },
         "Name": { ru: "Имя", uz: "Ism" },
+        "House overview": { ru: "Сводка по дому", uz: "Uy bo'yicha ko'rinish" },
+        "House name": { ru: "Название дома", uz: "Uy nomi" },
+        "Total area": { ru: "Общая площадь", uz: "Umumiy maydon" },
+        "Apartments and residents": { ru: "Квартиры и абоненты", uz: "Kvartiralar va abonentlar" },
+        "Non-debtors": { ru: "Не должники", uz: "Qarzdor emaslar" },
+        "Periods list": { ru: "Список периодов", uz: "Davrlar ro'yxati" },
+        "Residential building summary from backend data.": { ru: "Сводка по дому из реальных backend-данных.", uz: "Uy bo'yicha haqiqiy backend ma'lumotlari." },
         "Actions": { ru: "Действия", uz: "Amallar" },
         "Reset": { ru: "Сбросить", uz: "Tozalash" },
         "Adjust filters to show matching resident profiles.": { ru: "Измените фильтры, чтобы показать подходящие профили резидентов.", uz: "Mos rezident profillarini ko'rsatish uchun filtrlarni o'zgartiring." },
@@ -172,9 +180,9 @@
         "Section": { ru: "Секция", uz: "Seksiya" },
         "Current Balance": { ru: "Текущий баланс", uz: "Joriy balans" },
         "Total Complexes": { ru: "Всего домов", uz: "Jami uylar" },
-        "Active Buildings": { ru: "Активные здания", uz: "Faol binolar" },
-        "Occupancy Rate": { ru: "Заполняемость", uz: "Bandlik darajasi" },
-        "Critical Debt Units": { ru: "Критичные должники", uz: "Jiddiy qarzdor obyektlar" },
+        "Active Buildings": { ru: "Квартиры", uz: "Kvartiralar" },
+        "Occupancy Rate": { ru: "Жильцы", uz: "Abonentlar" },
+        "Critical Debt Units": { ru: "Должники", uz: "Qarzdorlar" },
         "Active Subscribers": { ru: "Активные абоненты", uz: "Faol abonentlar" },
         "new this month": { ru: "новых за месяц", uz: "bu oy yangi" },
         "Consumption Rate": { ru: "Потребление", uz: "Iste'mol darajasi" },
@@ -718,9 +726,10 @@
         "Maintenance task opened": { ru: "Задача обслуживания открыта", uz: "Texnik xizmat vazifasi ochildi" },
         "Checklist opened": { ru: "Чеклист открыт", uz: "Ro'yxat ochildi" },
         "Complex": { ru: "Дом", uz: "Uy" },
-        "Infra": { ru: "Инфра", uz: "Infra" },
-        "Systems": { ru: "Системы", uz: "Tizim" },
-        "Finance": { ru: "Финансы", uz: "Moliya" },
+    "Infra": { ru: "Инфра", uz: "Infra" },
+    "Systems": { ru: "Системы", uz: "Tizim" },
+    "Area": { ru: "Площадь", uz: "Maydon" },
+    "Finance": { ru: "Финансы", uz: "Moliya" },
         "Actions": { ru: "Действия", uz: "Amal" },
         "House": { ru: "Дом", uz: "Uy" },
         "Apartment": { ru: "Квартира", uz: "Xonadon" },
@@ -862,6 +871,11 @@
 
     const moneyFormatter = new Intl.NumberFormat("en-US");
     const formatBillingUzs = (value) => `${moneyFormatter.format(Math.round(Number(value) || 0))} UZS`;
+    const formatAreaM2 = (value) => {
+        const numeric = Number(value || 0);
+        if (!Number.isFinite(numeric) || numeric <= 0) return "--";
+        return `${numeric.toLocaleString("en-US", { maximumFractionDigits: 2 })} m²`;
+    };
     const formatTelegramHandle = (value) => {
         const raw = String(value || "").trim();
         if (!raw) return "";
@@ -1121,6 +1135,7 @@
         const debtorResidents = complexes.reduce((total, complex) => total + (Number(complex.debtorResidents) || 0), 0);
         const debt = complexes.reduce((total, complex) => total + (Number(complex.debt) || 0), 0);
         const collected = complexes.reduce((total, complex) => total + (Number(complex.collected) || 0), 0);
+        const totalArea = complexes.reduce((total, complex) => total + (Number(complex.totalArea) || 0), 0);
         const weightedHealth = complexes.reduce((total, complex) => total + ((Number(complex.health) || 0) * Math.max(Number(complex.units) || 0, 1)), 0) / Math.max(units, complexes.length, 1);
         const hasCritical = complexes.some((complex) => complex.risk === "Critical");
         const hasMedium = complexes.some((complex) => complex.risk === "Medium Risk");
@@ -1134,6 +1149,7 @@
             buildings,
             count: buildings,
             units,
+            totalArea,
             water: complexes.some((complex) => complex.water !== "Optimal") ? "Review" : "Optimal",
             heating: complexes.some((complex) => complex.heating !== "Optimal") ? "Review" : "Optimal",
             health: Math.round(weightedHealth * 10) / 10,
@@ -1179,6 +1195,22 @@
     const getSiteStats = () => {
         const complexes = getComplexStats();
         const totalComplexes = complexes.length;
+        const now = new Date();
+        const isCurrentMonth = (date) => date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth();
+        const parseBackendDate = (value) => {
+            if (!value) return null;
+            const parsed = new Date(value);
+            if (!Number.isNaN(parsed.getTime())) return parsed;
+            const match = String(value).trim().match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})/);
+            if (!match) return null;
+            const normalized = new Date(Number(match[3]), Number(match[2]) - 1, Number(match[1]));
+            return Number.isNaN(normalized.getTime()) ? null : normalized;
+        };
+        const newComplexesThisMonth = (Array.isArray(billingData.complexes) ? billingData.complexes : [])
+            .filter((complex) => complex && (complex.backendId || complex.id))
+            .map((complex) => parseBackendDate(complex.createdAt || complex.created_at || complex.dateCreated || complex.date_created))
+            .filter((date) => date && isCurrentMonth(date))
+            .length;
         const totalBuildings = complexes.reduce((total, complex) => total + complex.buildings, 0);
         const totalUnits = complexes.reduce((total, complex) => total + complex.units, 0);
         const occupiedUnits = complexes.reduce((total, complex) => total + Math.round(complex.units * Math.min(0.995, 0.86 + (complex.health / 1000))), 0);
@@ -1220,6 +1252,7 @@
         return {
             complexes,
             totalComplexes,
+            newComplexesThisMonth,
             totalBuildings,
             totalUnits,
             occupiedUnits,
@@ -1947,7 +1980,7 @@
         confirmTarget = null;
     });
 
-    confirmModal?.querySelector("[data-confirm-submit]")?.addEventListener("click", () => {
+    confirmModal?.querySelector("[data-confirm-submit]")?.addEventListener("click", async () => {
         const target = confirmTarget;
         confirmModal.classList.add("hidden");
         confirmModal.classList.remove("flex", "is-open");
@@ -1956,14 +1989,36 @@
         target.dataset.confirmed = "true";
         if (target.dataset.confirmAction === "close-critical-alert") {
             const item = target.closest(".notification-item");
-            if (item) {
-                item.dataset.read = "true";
-                item.classList.remove("critical-pulse");
-                item.classList.add("opacity-60");
+            const notificationBackendId = item?.dataset.notificationBackendId || "";
+            const alertBackendId = item?.dataset.alertBackendId || "";
+            try {
+                const payload = await postPortalJson("/api/system-alerts/configure/", {
+                    mode: "resolve",
+                    alert_id: alertBackendId,
+                    notification_id: notificationBackendId,
+                });
+                if (payload.portalData) {
+                    rehydrateFromPortalData(payload.portalData);
+                } else {
+                    await refreshPortalDataSnapshot();
+                    if (payload.warning) console.warn(payload.warning);
+                }
+                const lang = storage.getItem("hydroflow-lang") || "en";
+                toast(translateValue("Alert closed", lang), "The critical alert was moved to the audit timeline.", "success");
+            } catch (error) {
+                if (item) {
+                    item.dataset.read = "true";
+                    item.classList.remove("critical-pulse");
+                    item.classList.add("opacity-60");
+                }
+                updateNotifications();
+                const lang = storage.getItem("hydroflow-lang") || "en";
+                toast(
+                    translateValue("Alert closed", lang),
+                    error.message || "The critical alert was marked as resolved only in this browser session.",
+                    "warning",
+                );
             }
-            const lang = storage.getItem("hydroflow-lang") || "en";
-            toast(translateValue("Alert closed", lang), "The critical alert was moved to the audit timeline.", "warning");
-            updateNotifications();
         } else {
             target.click();
         }
@@ -2210,9 +2265,16 @@
         setStat("Total Debtors", moneyFormatter.format(stats.detailedDebtors), t("Residents with overdue balance"));
         setStat("Outstanding Debt", formatCompactUzs(stats.detailedDebt), t("Current resident liabilities"));
         setStat("Total Complexes", moneyFormatter.format(stats.totalComplexes), t("All homes connected"));
-        setStat("Active Buildings", moneyFormatter.format(stats.totalBuildings), `${moneyFormatter.format(stats.totalUnits)} active units`);
-        setStat("Occupancy Rate", percentValue(stats.occupancyRate), `Across ${stats.totalBuildings} buildings`, stats.occupancyRate);
-        setStat("Critical Debt Units", moneyFormatter.format(stats.criticalDebtUnits), `${stats.totalDebtorUnits} debt units total`);
+        const totalComplexesCard = document.querySelector('[data-stat-card="total-complexes"]');
+        const monthDeltaNode = totalComplexesCard?.querySelector(".kpi-support-row span:last-child");
+        if (monthDeltaNode) {
+            monthDeltaNode.dataset.statSynced = "true";
+            monthDeltaNode.textContent = `+${moneyFormatter.format(Number(stats.newComplexesThisMonth) || 0)} ${t("new this month")}`.toUpperCase();
+        }
+        // Residents KPI row: show real counts (apartments / residents / debtors) instead of demo-like derived labels.
+        setStat("Active Buildings", moneyFormatter.format(stats.totalUnits), t("Total apartments in system"));
+        setStat("Occupancy Rate", moneyFormatter.format(stats.detailedResidents), t("Total linked resident profiles"));
+        setStat("Critical Debt Units", moneyFormatter.format(stats.detailedDebtors), t("Residents with overdue balance"));
         setStat("Total Units", moneyFormatter.format(stats.totalUnits));
         setStat("Total Subscribers", moneyFormatter.format(stats.occupiedUnits));
         setStat("Total YTD Payments", formatBillingUzs(stats.totalCollected));
@@ -3853,11 +3915,16 @@
                 tableHead.replaceWith(cleanHead);
             }
             const selectAll = table.querySelector("[data-select-all]");
+            const isResidentialHouseTable = table.classList.contains("residential-performance-table");
             table.dataset.billingControlsReady = "true";
             let page = 1;
             const pageSize = 6;
             let filteredRows = [];
-            const currentRows = () => Array.from(body.querySelectorAll("tr")).filter((row) => !row.dataset.smartEmpty);
+            const currentRows = () => Array.from(body.querySelectorAll("tr")).filter((row) => {
+                if (row.dataset.smartEmpty) return false;
+                if (!isResidentialHouseTable) return true;
+                return row.dataset.drillRow !== "district" && row.dataset.drillRow !== "apartment";
+            });
             const ensureCheckboxes = () => {
                 if (!selectAll) return;
                 currentRows().forEach((row) => {
@@ -3928,8 +3995,15 @@
                         const value = datasetNumber("sortUnits") || datasetNumber("sortBuildings");
                         if (value) return value;
                     }
-                    if (labelKey.includes("system") || labelKey.includes("систем") || labelKey.includes("tizim")) {
-                        const value = datasetNumber("sortSystemRank") || datasetNumber("sortHealth");
+                    if (
+                        labelKey.includes("system")
+                        || labelKey.includes("систем")
+                        || labelKey.includes("tizim")
+                        || labelKey.includes("area")
+                        || labelKey.includes("площ")
+                        || labelKey.includes("maydon")
+                    ) {
+                        const value = datasetNumber("sortArea") || datasetNumber("sortSystemRank") || datasetNumber("sortHealth");
                         if (value) return value;
                     }
                     if (labelKey.includes("finance") || labelKey.includes("фина") || labelKey.includes("moliya")) {
@@ -3938,10 +4012,6 @@
                     }
                     if (labelKey.includes("debt") || labelKey.includes("долг") || labelKey.includes("qarz")) {
                         const value = datasetNumber("sortDebt");
-                        if (value) return value;
-                    }
-                    if (labelKey.includes("action") || labelKey.includes("действ") || labelKey.includes("amal")) {
-                        const value = datasetNumber("sortDebtors") || datasetNumber("sortPaid");
                         if (value) return value;
                     }
                 }
@@ -3981,6 +4051,15 @@
                 if (!headRow) return;
                 Array.from(headRow.cells).forEach((header, index) => {
                     if (header.querySelector("[data-select-all]")) return;
+                    if (header.classList.contains("no-table-filter")) {
+                        header.classList.remove("table-filter-heading");
+                        header.removeAttribute("role");
+                        header.removeAttribute("tabindex");
+                        header.removeAttribute("aria-label");
+                        const icon = header.querySelector(".table-sort-heading-icon");
+                        if (icon) icon.remove();
+                        return;
+                    }
                     const label = header.querySelector(".table-filter-heading-text")?.textContent.trim() || header.textContent.trim();
                     header.classList.add("table-filter-heading");
                     header.setAttribute("role", "button");
@@ -3998,11 +4077,19 @@
                         });
                         header.dataset.sortDirection = direction;
                         if (sortIcon) sortIcon.textContent = direction === "asc" ? "arrow_upward" : "arrow_downward";
-                        body.querySelectorAll(".residential-drill-row:not([data-drill-row='district'])").forEach((row) => row.remove());
-                        body.querySelectorAll("[data-drill-row='district']").forEach((row) => {
-                            row.classList.remove("is-expanded");
-                            row.setAttribute("aria-expanded", "false");
-                        });
+                        if (isResidentialHouseTable) {
+                            body.querySelectorAll(".residential-drill-row[data-drill-row='apartment']").forEach((row) => row.remove());
+                            body.querySelectorAll("[data-drill-row='building']").forEach((row) => {
+                                row.classList.remove("is-expanded");
+                                row.setAttribute("aria-expanded", "false");
+                            });
+                        } else {
+                            body.querySelectorAll(".residential-drill-row:not([data-drill-row='district'])").forEach((row) => row.remove());
+                            body.querySelectorAll("[data-drill-row='district']").forEach((row) => {
+                                row.classList.remove("is-expanded");
+                                row.setAttribute("aria-expanded", "false");
+                            });
+                        }
                         const rows = currentRows();
                         rows.sort((a, b) => compareSemanticRows(a, b, index, direction, label));
                         rows.forEach((row) => body.appendChild(row));
@@ -4174,6 +4261,21 @@
             const iconMarkup = (complex) => complex.image
                 ? `<div class="w-10 h-10 rounded-lg overflow-hidden shrink-0"><img class="w-full h-full object-cover" src="${escapeHtml(complex.image)}" alt=""></div>`
                 : `<div class="w-10 h-10 rounded-lg overflow-hidden shrink-0 text-primary-container bg-surface-container-high flex items-center justify-center"><span class="material-symbols-outlined" style="font-size: 20px;">${escapeHtml(complex.icon || "domain")}</span></div>`;
+            const systemStatePillClass = (value) => {
+                const normalized = String(value || "").toLowerCase();
+                if (normalized.includes("leak")) return "is-critical";
+                if (normalized.includes("maintenance")) return "is-medium";
+                if (normalized.includes("review")) return "is-review";
+                return "";
+            };
+            const renderSystemState = (labelKey, value) => `
+                <div class="flex items-center gap-2">
+                    <span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-tight">
+                        <span data-i18n-key="${escapeHtml(labelKey)}">${escapeHtml(labelKey)}</span>:
+                    </span>
+                    <span class="residential-risk-pill ${systemStatePillClass(value)}" data-i18n-key="${escapeHtml(value)}">${escapeHtml(value)}</span>
+                </div>
+            `;
             const debtSplitTone = (debtors, paid) => {
                 const ratio = paid ? debtors / paid : Infinity;
                 if (ratio > 1) return "is-danger";
@@ -4187,7 +4289,7 @@
                 const riskTextClass = complex.risk === "Critical" ? "text-error" : "text-on-surface";
                 const splitTone = debtSplitTone(complex.debtorResidents, complex.paidResidents);
                 return `
-                    <tr aria-expanded="false" class="hidden hover:bg-surface-container-low/30 transition-colors residential-district-row residential-sector-root-row"
+                    <tr aria-expanded="false" class="hover:bg-surface-container-low/30 transition-colors residential-district-row residential-sector-root-row"
                         data-district-id="${escapeHtml(complex.id)}"
                         data-backend-id="${escapeHtml(complex.backendId || "")}"
                         data-backend-type="sector"
@@ -4196,7 +4298,7 @@
                         data-sort-buildings="${Number(complex.buildings) || 0}"
                         data-sort-units="${Number(complex.units) || 0}"
                         data-sort-health="${Number(complex.health) || 0}"
-                        data-sort-system-rank="${complex.risk === "Critical" ? 3 : complex.risk === "Medium Risk" ? 2 : 1}"
+                        data-sort-area="${Number(complex.totalArea) || 0}"
                         data-sort-finance="${Number(complex.finances) || 0}"
                         data-sort-debt="${Number(complex.debt) || 0}"
                         data-sort-debtors="${Number(complex.debtorResidents) || 0}"
@@ -4220,9 +4322,9 @@
                             </div>
                         </td>
                         <td class="px-6 py-5">
-                            <div class="flex flex-col gap-2">
-                                <div class="flex items-center gap-2"><span class="w-2 h-2 rounded-full ${waterIssue ? "bg-error" : "bg-secondary"}"></span><span class="text-[10px] font-bold ${waterIssue ? "text-error" : "text-secondary"} uppercase tracking-tight"><span data-i18n-key="Water">Water</span>: <span data-i18n-key="${escapeHtml(complex.water)}">${escapeHtml(complex.water)}</span></span></div>
-                                <div class="flex items-center gap-2"><span class="w-2 h-2 rounded-full ${heatingIssue ? "bg-[#EAB308]" : "bg-secondary"}"></span><span class="text-[10px] font-bold ${heatingIssue ? "text-[#854D0E]" : "text-secondary"} uppercase tracking-tight"><span data-i18n-key="Heating">Heating</span>: <span data-i18n-key="${escapeHtml(complex.heating)}">${escapeHtml(complex.heating)}</span></span></div>
+                            <div class="space-y-1">
+                                <p class="text-sm font-bold text-on-surface">${formatAreaM2(complex.totalArea)}</p>
+                                <p class="text-xs text-on-surface-variant" data-i18n-key="Area (m²)">Area (m²)</p>
                             </div>
                         </td>
                         <td class="px-6 py-5">
@@ -4251,10 +4353,7 @@
                     </tr>
                 `;
             }).join("");
-            const footerText = performanceTable.closest(".bg-surface-container-lowest")?.querySelector(".border-t span.text-xs");
-            if (footerText) footerText.textContent = `Showing 1 sector with ${singleSector.buildings} homes`;
             repairEnhancedTableControls(performanceTable);
-            setupResidentialHierarchy();
         }
 
         safeSyncSiteStatistics();
@@ -4639,7 +4738,7 @@
         });
     };
 
-    const setupResidentialHierarchy = () => {
+    function setupResidentialHierarchy() {
         const table = document.querySelector(".residential-performance-table")
             || document.querySelector("[data-drill-row='district']")?.closest("table");
         if (!table) return;
@@ -4686,6 +4785,21 @@
         const attr = escapeHtml;
         const formatUzs = (value) => `${Number(value || 0).toLocaleString("en-US")} UZS`;
         const initialFor = (name) => name.split(" ").map((part) => part[0]).join("").slice(0, 2).toUpperCase();
+        const systemStatePillClass = (value) => {
+            const normalized = String(value || "").toLowerCase();
+            if (normalized.includes("leak")) return "is-critical";
+            if (normalized.includes("maintenance")) return "is-medium";
+            if (normalized.includes("review")) return "is-review";
+            return "";
+        };
+        const renderSystemState = (labelKey, value) => `
+            <div class="flex items-center gap-2">
+                <span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-tight">
+                    <span data-i18n-key="${attr(labelKey)}">${escapeHtml(labelKey)}</span>:
+                </span>
+                <span class="residential-risk-pill ${systemStatePillClass(value)}" data-i18n-key="${attr(value)}">${escapeHtml(value)}</span>
+            </div>
+        `;
         const unitsForBuilding = (district, index) => {
             const realBuilding = district.buildingItems?.[index - 1];
             if (realBuilding) return realBuilding.apartments?.length || realBuilding.units || 0;
@@ -4757,7 +4871,7 @@
         };
 
         const makeSelectCell = (label) => table.querySelector("[data-select-all]")
-            ? `<td class="px-4 py-4"><input aria-label="${attr(label)}" type="checkbox"></td>`
+            ? `<td class="px-4 py-4"><input aria-label="${attr(label)}" data-row-select type="checkbox"></td>`
             : "";
         const debtSplitMarkup = (debtorCount, paidCount, tone) => `
             <div class="resident-debt-split ${tone}" aria-label="${debtorCount} debtors and ${paidCount} paid residents">
@@ -4765,6 +4879,36 @@
                 <span><b>${paidCount}</b><small data-i18n-key="Paid">Paid</small></span>
             </div>
         `;
+        const fillBuildingSummaryModal = (trigger) => {
+            const modal = document.getElementById("building-summary-modal");
+            if (!modal || !trigger) return;
+            const apartments = Number(trigger.dataset.buildingApartments || 0);
+            const area = Number(trigger.dataset.buildingArea || 0);
+            const debtors = Number(trigger.dataset.buildingDebtors || 0);
+            const paid = Number(trigger.dataset.buildingPaid || 0);
+            const debt = Number(trigger.dataset.buildingDebt || 0);
+            const title = trigger.dataset.buildingName || "House";
+            const complex = trigger.dataset.buildingComplex || "";
+            const subtitle = complex || "Residential building summary from backend data.";
+            const periodsLink = modal.querySelector("[data-building-summary-periods]");
+
+            modal.querySelectorAll("[data-building-summary-title]").forEach((node) => {
+                node.textContent = title;
+            });
+            modal.querySelectorAll("[data-building-summary-subtitle]").forEach((node) => {
+                node.textContent = subtitle;
+            });
+            modal.querySelector("[data-building-summary-apartments]").textContent = moneyFormatter.format(apartments);
+            modal.querySelector("[data-building-summary-area]").textContent = formatAreaM2(area);
+            modal.querySelector("[data-building-summary-debtors]").textContent = moneyFormatter.format(debtors);
+            modal.querySelector("[data-building-summary-paid]").textContent = moneyFormatter.format(paid);
+            modal.querySelector("[data-building-summary-debt]").textContent = formatBillingUzs(debt);
+            if (periodsLink) {
+                periodsLink.href = "/admin/billing/billingperiod/";
+                periodsLink.dataset.buildingBackendId = trigger.dataset.buildingBackendId || "";
+            }
+            window.HydroFlowSyncLocale?.();
+        };
 
         const renderOwner = (owner, unit) => {
             const avatar = owner.photo
@@ -4801,6 +4945,7 @@
             const splitTone = splitRatio > 1 ? "is-danger" : splitRatio >= 0.75 ? "is-caution" : "is-healthy";
             const buildingRisk = realBuilding?.risk || (healthIssue ? "Review" : district.risk);
             const buildingRiskClass = buildingRisk === "Critical" ? "is-critical" : buildingRisk === "Medium Risk" ? "is-medium" : "";
+            const totalArea = Number(realBuilding?.totalArea || 0);
             const row = document.createElement("tr");
             row.className = "residential-drill-row residential-building-row";
             row.dataset.drillChild = "true";
@@ -4814,7 +4959,7 @@
             row.dataset.sortBuildings = "1";
             row.dataset.sortUnits = String(unitCount);
             row.dataset.sortHealth = String(completion);
-            row.dataset.sortSystemRank = buildingRisk === "Critical" ? "3" : buildingRisk === "Medium Risk" || buildingRisk === "Review" ? "2" : "1";
+            row.dataset.sortArea = String(totalArea);
             row.dataset.sortFinance = String(debt);
             row.dataset.sortDebt = String(debt);
             row.dataset.sortDebtors = String(debtorCount);
@@ -4823,11 +4968,21 @@
             row.tabIndex = 0;
             row.innerHTML = `
                 ${makeSelectCell(`Select ${buildingName(district, index)}`)}
-                <td class="px-6 py-4">
+                <td class="px-6 py-4 residential-building-summary-cell"
+                    data-building-summary-open
+                    data-building-name="${attr(buildingName(district, index))}"
+                    data-building-complex="${attr(realBuilding?.parentComplexName || district.complex)}"
+                    data-building-apartments="${attr(unitCount)}"
+                    data-building-area="${attr(totalArea)}"
+                    data-building-residents="${attr(debtorCount + paidCount)}"
+                    data-building-debtors="${attr(debtorCount)}"
+                    data-building-paid="${attr(paidCount)}"
+                    data-building-debt="${attr(debt)}"
+                    data-building-backend-id="${attr(realBuilding?.backendId || "")}">
                     <div class="residential-nested-name">
                         <span class="material-symbols-outlined residential-drill-chevron" aria-hidden="true">expand_more</span>
                         <span class="residential-level-chip" data-i18n-key="House">House</span>
-                        <div>
+                        <div class="residential-building-trigger">
                             <p>${escapeHtml(buildingName(district, index))}</p>
                             <small>${escapeHtml(realBuilding?.parentComplexName || district.complex)}</small>
                         </div>
@@ -4840,9 +4995,9 @@
                     </div>
                 </td>
                 <td class="px-6 py-4">
-                    <div class="flex flex-col gap-2">
-                        <div class="flex items-center gap-2"><span class="w-2 h-2 rounded-full ${healthIssue ? "bg-error" : "bg-secondary"}"></span><span class="text-[10px] font-bold ${healthIssue ? "text-error" : "text-secondary"} uppercase tracking-tight"><span data-i18n-key="Water">Water</span>: <span data-i18n-key="${healthIssue ? "Review" : "Optimal"}">${healthIssue ? "Review" : "Optimal"}</span></span></div>
-                        <div class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-secondary"></span><span class="text-[10px] font-bold text-secondary uppercase tracking-tight"><span data-i18n-key="Heating">Heating</span>: <span data-i18n-key="Optimal">Optimal</span></span></div>
+                    <div class="space-y-1">
+                        <p class="text-sm font-bold text-on-surface">${formatAreaM2(totalArea)}</p>
+                        <p class="text-xs text-on-surface-variant" data-i18n-key="Area (m²)">Area (m²)</p>
                     </div>
                 </td>
                 <td class="px-6 py-4">
@@ -4912,15 +5067,20 @@
         };
 
         const removeRows = (selector) => body.querySelectorAll(selector).forEach((row) => row.remove());
+        const refreshResidentialTableControls = () => {
+            table.HydroFlowRefreshTableControls?.();
+        };
         const collapseBuilding = (row) => {
             row?.classList.remove("is-expanded");
             row?.setAttribute("aria-expanded", "false");
             if (row?.dataset.buildingId) removeRows(`[data-parent-building="${row.dataset.buildingId}"]`);
+            refreshResidentialTableControls();
         };
         const collapseDistrict = (row) => {
             row?.classList.remove("is-expanded");
             row?.setAttribute("aria-expanded", "false");
             if (row?.dataset.districtId) removeRows(`[data-parent-district="${row.dataset.districtId}"]`);
+            refreshResidentialTableControls();
         };
         const collapseAll = () => {
             table.querySelectorAll("[data-drill-row='district']").forEach(collapseDistrict);
@@ -4939,6 +5099,7 @@
             row.classList.add("is-expanded");
             if (isRootSectorRow(row)) row.classList.add("hidden");
             row.setAttribute("aria-expanded", "true");
+            refreshResidentialTableControls();
             window.HydroFlowSyncLocale?.();
         };
         const expandBuilding = (row) => {
@@ -4953,6 +5114,7 @@
             row.after(fragment);
             row.classList.add("is-expanded");
             row.setAttribute("aria-expanded", "true");
+            refreshResidentialTableControls();
             window.HydroFlowSyncLocale?.();
         };
 
@@ -4976,11 +5138,11 @@
         }
         const syncResidentialLabels = (lang = storage.getItem("hydroflow-lang") || "en") => {
             const labels = {
-                en: ["House", "Infra", "Systems", "Finance", "Debt", "Actions"],
-                ru: ["Дом", "Инфра", "Системы", "Финансы", "Долг", "Действия"],
-                uz: ["Uy", "Infra", "Tizim", "Moliya", "Qarz", "Amal"],
+                en: ["House", "Infra", "Area", "Finance", "Debt"],
+                ru: ["Дом", "Инфра", "Площадь", "Финансы", "Долг"],
+                uz: ["Uy", "Infra", "Maydon", "Moliya", "Qarz"],
             };
-            const fullLabels = ["House Name", "Infrastructure", "System Health", "Finances", "Debt Status", "Actions"];
+            const fullLabels = ["House Name", "Infrastructure", "Area", "Finances", "Debt Status"];
             table.querySelectorAll(".table-filter-heading-text").forEach((label, index) => {
                 label.textContent = labels[lang]?.[index] || labels.en[index] || label.textContent;
                 label.title = fullLabels[index] || label.textContent;
@@ -5010,7 +5172,7 @@
             removeRows("[data-drill-child='true'], [data-smart-empty='true']");
             getDistrictRows().forEach((row) => {
                 row.classList.remove("is-expanded", "residential-smart-match");
-                row.classList.toggle("hidden", isRootSectorRow(row) || row.dataset.globalFilterHidden === "true");
+                row.classList.toggle("hidden", row.dataset.globalFilterHidden === "true");
                 row.setAttribute("aria-expanded", "false");
             });
         };
@@ -5023,6 +5185,7 @@
                 if (rootSectorRow && !rootSectorRow.classList.contains("is-expanded")) {
                     expandDistrict(rootSectorRow);
                 }
+                refreshResidentialTableControls();
                 return;
             }
 
@@ -5095,8 +5258,21 @@
             });
 
             if (!visibleCount) showNoResults(searchInput.value.trim());
+            refreshResidentialTableControls();
             window.HydroFlowSyncLocale?.();
         };
+
+        listen(table, "click", (event) => {
+            if (event.target.closest(".residential-drill-chevron")) return;
+            const trigger = event.target.closest("[data-building-summary-open]");
+            if (trigger) {
+                event.preventDefault();
+                event.stopImmediatePropagation();
+                fillBuildingSummaryModal(trigger);
+                openOverlayById("building-summary-modal");
+                return;
+            }
+        });
 
         listen(table, "click", (event) => {
             if (event.target.closest("button, a, input, label, select")) return;
@@ -5130,6 +5306,7 @@
         if (rootSectorRow && !rootSectorRow.classList.contains("is-expanded")) {
             expandDistrict(rootSectorRow);
         }
+        refreshResidentialTableControls();
 
         const fillApartmentDrawer = (data) => {
             const drawer = document.getElementById("apartment-details-drawer");
@@ -5283,7 +5460,7 @@
         } catch {
             return null;
         }
-    };
+    }
     const writeLiveStatsLock = (timestamp = Date.now()) => {
         storage.setItem(liveStatsLockKey, JSON.stringify({
             owner: liveStatsTabId,
@@ -5331,6 +5508,7 @@
             window.HydroFlowRenderSupport?.();
             window.HydroFlowRenderChecklist?.();
             safeSyncSiteStatistics();
+            setupResidentialHierarchy();
             window.HydroFlowApplyFilters?.(readFilterState(), { resetPage: false });
             document.dispatchEvent(new CustomEvent("hydroflow:backend-refreshed"));
         } catch {
@@ -5484,6 +5662,7 @@
         window.HydroFlowRenderSupport?.();
         window.HydroFlowRenderChecklist?.();
         safeSyncSiteStatistics();
+        setupResidentialHierarchy();
         window.HydroFlowApplyFilters?.(readFilterState(), { resetPage: false });
         window.HydroFlowSyncLocale?.();
         document.dispatchEvent(new CustomEvent("hydroflow:backend-refreshed"));
@@ -5552,7 +5731,6 @@
         form.dataset.residentCreateReady = "true";
         const complexSelect = form.querySelector("[data-resident-create-complex]");
         const buildingSelect = form.querySelector("[data-resident-create-building]");
-        const sectionSelect = form.querySelector("[data-resident-create-section]");
         const apartmentSelect = form.querySelector("[data-resident-create-apartment]");
         const status = form.querySelector("[data-resident-create-status]");
         const submit = form.querySelector("[data-resident-create-submit]");
@@ -5576,10 +5754,9 @@
                         buildingId: building.id,
                         buildingBackendId: building.backendId || apartment.buildingBackendId,
                         buildingName: building.name,
-                        section: apartment.meter || "No section",
                         apartmentBackendId: apartment.apartmentBackendId,
                         unit: apartment.unit,
-                        label: `${complex.name} / ${building.name} / ${apartment.meter || "No section"} / Apt. ${apartment.unit}`,
+                        label: `${complex.name} / ${building.name} / Apt. ${apartment.unit}`,
                     }))
             ))
         ));
@@ -5615,7 +5792,6 @@
             const free = allFreeApartments();
             const selectedComplex = complexSelect?.value || "";
             const selectedBuilding = buildingSelect?.value || "";
-            const selectedSection = sectionSelect?.value || "";
 
             fillSelect(
                 complexSelect,
@@ -5642,27 +5818,15 @@
 
             const buildingRows = complexRows.filter((row) => String(row.buildingBackendId) === String(buildingSelect?.value || ""));
             fillSelect(
-                sectionSelect,
-                uniqueBy(buildingRows, "section"),
-                (row) => row.section,
-                (row) => row.section,
-                "No sections",
-            );
-            if (selectedSection && Array.from(sectionSelect.options).some((option) => option.value === selectedSection)) {
-                sectionSelect.value = selectedSection;
-            }
-
-            const apartmentRows = buildingRows.filter((row) => String(row.section) === String(sectionSelect?.value || ""));
-            fillSelect(
                 apartmentSelect,
-                apartmentRows,
+                buildingRows,
                 (row) => row.apartmentBackendId,
                 (row) => row.label,
                 "No free apartments",
             );
         };
 
-        [complexSelect, buildingSelect, sectionSelect].forEach((select) => {
+        [complexSelect, buildingSelect].forEach((select) => {
             select?.addEventListener("change", syncOptions);
         });
         document.addEventListener("hydroflow:backend-refreshed", syncOptions);
@@ -5833,7 +5997,6 @@
                 const payload = await postPortalJson("/api/apartments/create/", {
                     complex_id: formData.get("complex_id"),
                     building_id: formData.get("building_id"),
-                    section_name: formData.get("section_name"),
                     number: formData.get("number"),
                     area: formData.get("area"),
                 });

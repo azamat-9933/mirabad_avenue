@@ -17,7 +17,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
 <link href="{% static 'img/favicon.svg' %}" rel="icon" type="image/svg+xml"/>
-<link href="{% static 'css/app.css' %}?v=resident-filter-tristate-20260501-6" rel="stylesheet"/>
+<link href="{% static 'css/app.css' %}?v=building-summary-modal-20260507-4" rel="stylesheet"/>
 <script id="tailwind-config">
         tailwind.config = {
             darkMode: "class",
@@ -742,6 +742,13 @@
                 header.classList.add("table-select-heading");
                 return;
             }
+            if (header.classList.contains("no-table-filter")) {
+                header.classList.remove("table-filter-heading");
+                header.removeAttribute("role");
+                header.removeAttribute("tabindex");
+                header.removeAttribute("aria-label");
+                return;
+            }
             const label = header.textContent.trim();
             header.classList.add("table-filter-heading");
             header.setAttribute("role", "button");
@@ -894,6 +901,6 @@
 <script>
     window.HydroFlowBackendData = JSON.parse("{{ backend_billing_data_json|default:'{}'|escapejs }}");
 </script>
-<script src="{% static 'js/app.js' %}?v=logs-overlay-fix-20260501-5"></script>
+<script src="{% static 'js/app.js' %}?v=building-summary-modal-20260507-3"></script>
 </body>
 </html>

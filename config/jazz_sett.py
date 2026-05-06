@@ -33,9 +33,9 @@ JAZZ_SETTINGS = {
         "main_app.Owner",
         "main_app.Apartment",
         "main_app.Building",
+        "payments",
         "portal",
         "billing",
-        "payments",
         "auth",
     ],
 

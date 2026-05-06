@@ -555,3 +555,1363 @@ select option {
     overflow: visible !important;
     text-overflow: clip !important;
 }
+
+.admin-theme-toggle {
+    z-index: 1060;
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    min-width: 74px;
+    height: 38px;
+    margin: 0;
+    padding: 0 14px;
+    border: 1px solid rgba(210, 220, 230, 0.18);
+    border-radius: 999px;
+    background: rgba(38, 45, 52, 0.94);
+    color: #dce7ef;
+    font-size: 12px;
+    font-weight: 900;
+    line-height: 1;
+    cursor: pointer;
+    backdrop-filter: blur(10px) saturate(130%);
+    transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+}
+
+#jazzy-navbar .admin-theme-toggle--in-navbar,
+.app-header.navbar .admin-theme-toggle--in-navbar,
+.main-header.navbar .admin-theme-toggle--in-navbar,
+.main-header .admin-theme-toggle--in-navbar {
+    position: absolute !important;
+    top: 50% !important;
+    right: 248px !important;
+    transform: translateY(-50%) !important;
+    flex: 0 0 auto !important;
+}
+
+.admin-theme-toggle--fallback {
+    position: fixed !important;
+    top: 28px !important;
+    right: 236px !important;
+}
+
+.admin-theme-toggle:hover {
+    color: #ffffff;
+    border-color: rgba(210, 220, 230, 0.30);
+    background: rgba(72, 86, 97, 0.98);
+}
+
+html.hf-admin-light {
+    --hf-admin-bg: #f5faf7;
+    --hf-admin-panel: #ffffff;
+    --hf-admin-panel-strong: #eef8f2;
+    --hf-admin-border: rgba(18, 105, 66, 0.16);
+    --hf-admin-text: #17251d;
+    --hf-admin-muted: #617268;
+    --hf-admin-primary: #12804f;
+    --hf-admin-primary-2: #0e6d43;
+    --hf-admin-danger: #c73737;
+    --hf-admin-success: #138a55;
+}
+
+html.hf-admin-light body,
+html.hf-admin-light .content-wrapper,
+html.hf-admin-light .main-footer {
+    color: var(--hf-admin-text) !important;
+    background: linear-gradient(180deg, #f8fcfa 0%, #edf7f1 100%) !important;
+}
+
+html.hf-admin-light #jazzy-navbar,
+html.hf-admin-light .app-header.navbar,
+html.hf-admin-light .main-header.navbar {
+    background: #ffffff !important;
+    border-bottom-color: rgba(18, 105, 66, 0.14) !important;
+}
+
+html.hf-admin-light #jazzy-navbar a,
+html.hf-admin-light .main-header.navbar a,
+html.hf-admin-light .navbar-nav .nav-link {
+    color: #173425 !important;
+}
+
+html.hf-admin-light #jazzy-sidebar,
+html.hf-admin-light .main-sidebar,
+html.hf-admin-light .sidebar-dark-primary {
+    background: #ffffff !important;
+    border-right: 1px solid rgba(18, 105, 66, 0.14) !important;
+}
+
+html.hf-admin-light .brand-link {
+    background: #f0faf4 !important;
+    border-bottom: 1px solid rgba(18, 105, 66, 0.14) !important;
+}
+
+html.hf-admin-light .brand-link .brand-text,
+html.hf-admin-light #jazzy-sidebar .user-panel .info a,
+html.hf-admin-light #jazzy-sidebar .nav-sidebar .nav-link {
+    color: #213529 !important;
+}
+
+html.hf-admin-light #jazzy-sidebar .nav-header {
+    color: #55816a !important;
+}
+
+html.hf-admin-light #jazzy-sidebar .nav-sidebar .nav-link:hover {
+    background: rgba(18, 128, 79, 0.08) !important;
+    color: #0f6d43 !important;
+}
+
+html.hf-admin-light .sidebar-dark-primary .nav-sidebar > .nav-item > .nav-link.active,
+html.hf-admin-light #jazzy-sidebar .nav-sidebar > .nav-item > .nav-link.active {
+    background: #12804f !important;
+    color: #ffffff !important;
+    box-shadow: 0 8px 18px rgba(18, 128, 79, 0.18) !important;
+}
+
+html.hf-admin-light .card,
+html.hf-admin-light .card-body,
+html.hf-admin-light .card-header,
+html.hf-admin-light #changelist-filter,
+html.hf-admin-light #content-main .module,
+html.hf-admin-light .results,
+html.hf-admin-light .change-list .filtered .results,
+html.hf-admin-light .inline-group,
+html.hf-admin-light fieldset.module {
+    color: var(--hf-admin-text) !important;
+    background: #ffffff !important;
+    border-color: rgba(18, 105, 66, 0.14) !important;
+}
+
+html.hf-admin-light .content-header h1,
+html.hf-admin-light .content-header .breadcrumb,
+html.hf-admin-light .content-header .breadcrumb a,
+html.hf-admin-light .card-title,
+html.hf-admin-light .module h2,
+html.hf-admin-light .module caption,
+html.hf-admin-light #changelist .actions,
+html.hf-admin-light .object-tools,
+html.hf-admin-light .results th,
+html.hf-admin-light .results td,
+html.hf-admin-light label,
+html.hf-admin-light .required label,
+html.hf-admin-light .readonly {
+    color: var(--hf-admin-text) !important;
+}
+
+html.hf-admin-light .table,
+html.hf-admin-light .results table {
+    color: var(--hf-admin-text) !important;
+    background: #ffffff !important;
+}
+
+html.hf-admin-light .table thead th,
+html.hf-admin-light .results thead th {
+    color: #244333 !important;
+    background: #e8f6ee !important;
+    border-bottom-color: rgba(18, 105, 66, 0.18) !important;
+}
+
+html.hf-admin-light .table tbody td,
+html.hf-admin-light .results tbody td,
+html.hf-admin-light .table tbody th,
+html.hf-admin-light .results tbody th {
+    color: #20342a !important;
+    background: #ffffff !important;
+    border-color: rgba(18, 105, 66, 0.12) !important;
+}
+
+html.hf-admin-light .table tbody tr:nth-child(even) td,
+html.hf-admin-light .results tbody tr:nth-child(even) td {
+    background: #f5fbf7 !important;
+}
+
+html.hf-admin-light .table tbody tr:hover td,
+html.hf-admin-light .results tbody tr:hover td {
+    background: #eaf7ef !important;
+}
+
+html.hf-admin-light .form-control,
+html.hf-admin-light .custom-select,
+html.hf-admin-light select,
+html.hf-admin-light input[type="text"],
+html.hf-admin-light input[type="search"],
+html.hf-admin-light input[type="number"],
+html.hf-admin-light input[type="email"],
+html.hf-admin-light input[type="url"],
+html.hf-admin-light input[type="password"],
+html.hf-admin-light textarea,
+html.hf-admin-light .select2-container--default .select2-selection--single,
+html.hf-admin-light .select2-container--default .select2-selection--multiple,
+html.hf-admin-light .select2-container--admin-autocomplete .select2-selection--single,
+html.hf-admin-light .select2-container--admin-autocomplete .select2-selection--multiple {
+    color: #17251d !important;
+    background-color: #ffffff !important;
+    border-color: rgba(18, 105, 66, 0.22) !important;
+    box-shadow: inset 0 1px 0 rgba(18, 105, 66, 0.04) !important;
+}
+
+html.hf-admin-light .form-control:focus,
+html.hf-admin-light .custom-select:focus,
+html.hf-admin-light select:focus,
+html.hf-admin-light input[type="text"]:focus,
+html.hf-admin-light input[type="search"]:focus,
+html.hf-admin-light input[type="number"]:focus,
+html.hf-admin-light input[type="email"]:focus,
+html.hf-admin-light input[type="url"]:focus,
+html.hf-admin-light input[type="password"]:focus,
+html.hf-admin-light textarea:focus {
+    color: #102419 !important;
+    background-color: #ffffff !important;
+    border-color: #12804f !important;
+    box-shadow: 0 0 0 3px rgba(18, 128, 79, 0.14) !important;
+}
+
+html.hf-admin-light .select2-container--default .select2-selection--single .select2-selection__rendered,
+html.hf-admin-light .select2-container--default .select2-selection--multiple .select2-selection__rendered,
+html.hf-admin-light .select2-container--admin-autocomplete .select2-selection--single .select2-selection__rendered,
+html.hf-admin-light .select2-container--admin-autocomplete .select2-selection--multiple .select2-selection__rendered,
+html.hf-admin-light .select2-container--default .select2-results__option,
+html.hf-admin-light .select2-container--default .select2-selection__placeholder {
+    color: #17251d !important;
+}
+
+html.hf-admin-light .select2-dropdown {
+    background: #ffffff !important;
+    border-color: rgba(18, 105, 66, 0.18) !important;
+    box-shadow: 0 16px 34px rgba(31, 79, 55, 0.16) !important;
+}
+
+html.hf-admin-light .select2-search__field {
+    color: #17251d !important;
+    background: #f7fbf8 !important;
+    border-color: rgba(18, 105, 66, 0.20) !important;
+}
+
+html.hf-admin-light .select2-container--default .select2-results__option[aria-selected="true"],
+html.hf-admin-light .select2-container--default .select2-results__option--highlighted[aria-selected] {
+    color: #0b3a25 !important;
+    background: #dff3e8 !important;
+}
+
+html.hf-admin-light .btn-primary,
+html.hf-admin-light input[type="submit"],
+html.hf-admin-light .submit-row input.default,
+html.hf-admin-light .object-tools a.addlink,
+html.hf-admin-light a.addlink,
+html.hf-admin-light .btn-success {
+    color: #ffffff !important;
+    border-color: #12804f !important;
+    background: #12804f !important;
+    box-shadow: 0 8px 18px rgba(18, 128, 79, 0.16) !important;
+}
+
+html.hf-admin-light .btn-secondary,
+html.hf-admin-light .button,
+html.hf-admin-light input[type="button"],
+html.hf-admin-light input[type="reset"],
+html.hf-admin-light .actions button,
+html.hf-admin-light .actions .button,
+html.hf-admin-light .btn-outline-primary,
+html.hf-admin-light .btn-outline-secondary {
+    color: #0f6d43 !important;
+    background: #eef8f2 !important;
+    border-color: rgba(18, 105, 66, 0.22) !important;
+}
+
+html.hf-admin-light .admin-lang-switcher,
+html.hf-admin-light .admin-theme-toggle {
+    background: rgba(255, 255, 255, 0.96);
+    border-color: rgba(18, 105, 66, 0.18);
+    color: #15583a;
+    box-shadow: 0 10px 22px rgba(31, 79, 55, 0.10);
+}
+
+html.hf-admin-light .admin-lang-switcher__button {
+    color: #37664d;
+}
+
+html.hf-admin-light .admin-lang-switcher__button:hover,
+html.hf-admin-light .admin-theme-toggle:hover {
+    color: #0f6d43;
+    background: #e7f5ed;
+}
+
+html.hf-admin-light .admin-lang-switcher__button.is-active,
+html.hf-admin-light .admin-theme-toggle.is-light {
+    color: #ffffff;
+    background: #12804f;
+}
+
+html.hf-admin-light a {
+    color: #0f7a4b;
+}
+
+/* Refined light theme: keep green as the action color, not the whole UI. */
+html.hf-admin-light {
+    --hf-admin-bg: #f6f8f7;
+    --hf-admin-panel: #ffffff;
+    --hf-admin-panel-strong: #f2f6f4;
+    --hf-admin-border: rgba(31, 45, 38, 0.12);
+    --hf-admin-text: #18231e;
+    --hf-admin-muted: #66756d;
+    --hf-admin-primary: #0b7a4b;
+    --hf-admin-primary-2: #075f3b;
+}
+
+html.hf-admin-light body,
+html.hf-admin-light .content-wrapper {
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.86) 0%, rgba(244, 248, 246, 0.92) 38%, #eef4f1 100%) !important;
+}
+
+html.hf-admin-light .content-wrapper {
+    border-left: 1px solid rgba(31, 45, 38, 0.08);
+}
+
+html.hf-admin-light .content-header {
+    padding-top: 28px;
+    padding-bottom: 14px;
+}
+
+html.hf-admin-light .content-header h1 {
+    color: #15211b !important;
+    font-size: 30px;
+    font-weight: 800;
+    letter-spacing: 0;
+}
+
+html.hf-admin-light #jazzy-navbar,
+html.hf-admin-light .app-header.navbar,
+html.hf-admin-light .main-header.navbar {
+    min-height: 64px;
+    background: rgba(255, 255, 255, 0.94) !important;
+    border-bottom: 1px solid rgba(31, 45, 38, 0.10) !important;
+    box-shadow: 0 10px 28px rgba(31, 45, 38, 0.06) !important;
+    backdrop-filter: blur(12px) saturate(140%);
+}
+
+html.hf-admin-light .brand-link {
+    background: linear-gradient(90deg, #ffffff 0%, #edf7f1 100%) !important;
+}
+
+html.hf-admin-light .brand-link .brand-text {
+    color: #153324 !important;
+    font-weight: 900 !important;
+}
+
+html.hf-admin-light #jazzy-sidebar,
+html.hf-admin-light .main-sidebar,
+html.hf-admin-light .sidebar-dark-primary {
+    background:
+        linear-gradient(180deg, #ffffff 0%, #fbfcfb 55%, #f1f6f3 100%) !important;
+    box-shadow: 12px 0 30px rgba(31, 45, 38, 0.06) !important;
+}
+
+html.hf-admin-light #jazzy-sidebar .nav-header {
+    margin-top: 12px;
+    color: #697a71 !important;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    text-transform: none;
+}
+
+html.hf-admin-light #jazzy-sidebar .nav-sidebar .nav-link {
+    margin: 2px 10px;
+    color: #33443b !important;
+    border: 1px solid transparent;
+}
+
+html.hf-admin-light #jazzy-sidebar .nav-sidebar .nav-link i,
+html.hf-admin-light #jazzy-sidebar .nav-sidebar .nav-link .nav-icon {
+    color: #607168 !important;
+}
+
+html.hf-admin-light #jazzy-sidebar .nav-sidebar .nav-link:hover {
+    background: #f1f5f3 !important;
+    border-color: rgba(31, 45, 38, 0.08);
+    color: #16251d !important;
+}
+
+html.hf-admin-light #jazzy-sidebar .nav-sidebar .nav-link:hover i,
+html.hf-admin-light #jazzy-sidebar .nav-sidebar .nav-link:hover .nav-icon {
+    color: #0b7a4b !important;
+}
+
+html.hf-admin-light .sidebar-dark-primary .nav-sidebar > .nav-item > .nav-link.active,
+html.hf-admin-light #jazzy-sidebar .nav-sidebar > .nav-item > .nav-link.active {
+    background: linear-gradient(135deg, #0b7a4b, #09623f) !important;
+    border-color: rgba(11, 122, 75, 0.28) !important;
+    color: #ffffff !important;
+    box-shadow: 0 10px 22px rgba(11, 122, 75, 0.18) !important;
+}
+
+html.hf-admin-light #jazzy-sidebar .nav-sidebar > .nav-item > .nav-link.active i,
+html.hf-admin-light #jazzy-sidebar .nav-sidebar > .nav-item > .nav-link.active .nav-icon {
+    color: #ffffff !important;
+}
+
+html.hf-admin-light .breadcrumb,
+html.hf-admin-light .breadcrumb a {
+    color: #6f7f77 !important;
+    font-size: 13px;
+}
+
+html.hf-admin-light .breadcrumb a:hover {
+    color: #0b7a4b !important;
+}
+
+html.hf-admin-light .card,
+html.hf-admin-light .card-body,
+html.hf-admin-light .card-header,
+html.hf-admin-light #content-main .module,
+html.hf-admin-light .results,
+html.hf-admin-light .change-list .filtered .results,
+html.hf-admin-light .inline-group,
+html.hf-admin-light fieldset.module {
+    background: rgba(255, 255, 255, 0.98) !important;
+    border: 1px solid rgba(31, 45, 38, 0.10) !important;
+    box-shadow: 0 14px 34px rgba(31, 45, 38, 0.07) !important;
+}
+
+html.hf-admin-light #changelist {
+    background: transparent !important;
+}
+
+html.hf-admin-light #changelist .actions,
+html.hf-admin-light #changelist-search {
+    color: #485850 !important;
+}
+
+html.hf-admin-light .results {
+    overflow: hidden;
+    border-radius: 12px !important;
+}
+
+html.hf-admin-light .table,
+html.hf-admin-light .results table {
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+}
+
+html.hf-admin-light .table thead th,
+html.hf-admin-light .results thead th {
+    height: 44px;
+    color: #2b3b34 !important;
+    background: #eef2f0 !important;
+    border-bottom: 1px solid rgba(31, 45, 38, 0.14) !important;
+    font-size: 13px;
+    font-weight: 850;
+}
+
+html.hf-admin-light .table tbody td,
+html.hf-admin-light .results tbody td,
+html.hf-admin-light .table tbody th,
+html.hf-admin-light .results tbody th {
+    height: 42px;
+    color: #26352e !important;
+    background: #ffffff !important;
+    border-top: 0 !important;
+    border-bottom: 1px solid rgba(31, 45, 38, 0.09) !important;
+}
+
+html.hf-admin-light .table tbody tr:nth-child(even) td,
+html.hf-admin-light .results tbody tr:nth-child(even) td {
+    background: #f7f9f8 !important;
+}
+
+html.hf-admin-light .table tbody tr:hover td,
+html.hf-admin-light .results tbody tr:hover td {
+    background: #eef6f2 !important;
+}
+
+html.hf-admin-light .results tbody td a,
+html.hf-admin-light .table tbody td a {
+    color: #076b42 !important;
+    font-weight: 750;
+}
+
+html.hf-admin-light .results tbody td a:hover,
+html.hf-admin-light .table tbody td a:hover {
+    color: #034f31 !important;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+html.hf-admin-light .form-control,
+html.hf-admin-light .custom-select,
+html.hf-admin-light select,
+html.hf-admin-light input[type="text"],
+html.hf-admin-light input[type="search"],
+html.hf-admin-light input[type="number"],
+html.hf-admin-light input[type="email"],
+html.hf-admin-light input[type="url"],
+html.hf-admin-light input[type="password"],
+html.hf-admin-light textarea,
+html.hf-admin-light .select2-container--default .select2-selection--single,
+html.hf-admin-light .select2-container--default .select2-selection--multiple,
+html.hf-admin-light .select2-container--admin-autocomplete .select2-selection--single,
+html.hf-admin-light .select2-container--admin-autocomplete .select2-selection--multiple {
+    color: #1b2b23 !important;
+    background: #ffffff !important;
+    border-color: rgba(40, 66, 54, 0.20) !important;
+    box-shadow: 0 1px 0 rgba(31, 45, 38, 0.03) !important;
+}
+
+html.hf-admin-light .form-control:hover,
+html.hf-admin-light .custom-select:hover,
+html.hf-admin-light select:hover,
+html.hf-admin-light input[type="text"]:hover,
+html.hf-admin-light input[type="search"]:hover,
+html.hf-admin-light input[type="number"]:hover {
+    border-color: rgba(11, 122, 75, 0.34) !important;
+}
+
+html.hf-admin-light .form-control:focus,
+html.hf-admin-light .custom-select:focus,
+html.hf-admin-light select:focus,
+html.hf-admin-light input[type="text"]:focus,
+html.hf-admin-light input[type="search"]:focus,
+html.hf-admin-light input[type="number"]:focus,
+html.hf-admin-light input[type="email"]:focus,
+html.hf-admin-light input[type="url"]:focus,
+html.hf-admin-light input[type="password"]:focus,
+html.hf-admin-light textarea:focus {
+    border-color: #0b7a4b !important;
+    box-shadow: 0 0 0 3px rgba(11, 122, 75, 0.12) !important;
+}
+
+html.hf-admin-light .btn-primary,
+html.hf-admin-light input[type="submit"],
+html.hf-admin-light .submit-row input.default,
+html.hf-admin-light .object-tools a.addlink,
+html.hf-admin-light a.addlink,
+html.hf-admin-light .btn-success {
+    background: linear-gradient(135deg, #0b7a4b, #09623f) !important;
+    border-color: #09623f !important;
+    box-shadow: 0 10px 22px rgba(11, 122, 75, 0.20) !important;
+}
+
+html.hf-admin-light .btn-secondary,
+html.hf-admin-light .button,
+html.hf-admin-light input[type="button"],
+html.hf-admin-light input[type="reset"],
+html.hf-admin-light .actions button,
+html.hf-admin-light .actions .button,
+html.hf-admin-light .btn-outline-primary,
+html.hf-admin-light .btn-outline-secondary {
+    color: #244135 !important;
+    background: #ffffff !important;
+    border-color: rgba(40, 66, 54, 0.18) !important;
+    box-shadow: 0 4px 12px rgba(31, 45, 38, 0.06) !important;
+}
+
+html.hf-admin-light .btn-secondary:hover,
+html.hf-admin-light .button:hover,
+html.hf-admin-light input[type="button"]:hover,
+html.hf-admin-light input[type="reset"]:hover,
+html.hf-admin-light .actions button:hover,
+html.hf-admin-light .actions .button:hover {
+    color: #0b7a4b !important;
+    border-color: rgba(11, 122, 75, 0.36) !important;
+    background: #f6faf8 !important;
+}
+
+html.hf-admin-light .admin-lang-switcher,
+html.hf-admin-light .admin-theme-toggle {
+    border-color: rgba(40, 66, 54, 0.14);
+    box-shadow: 0 12px 26px rgba(31, 45, 38, 0.10);
+}
+
+html.hf-admin-light .admin-lang-switcher__button {
+    color: #41564b;
+}
+
+html.hf-admin-light .admin-lang-switcher__button.is-active,
+html.hf-admin-light .admin-theme-toggle.is-light {
+    background: #0b7a4b;
+}
+
+html.hf-admin-light input[type="checkbox"] {
+    accent-color: #0b7a4b;
+}
+
+html.hf-admin-light .object-tools a.addlink,
+html.hf-admin-light a.addlink {
+    border-radius: 11px !important;
+}
+
+/* Light theme v3: neutral workspace, visible navigation, restrained green accents. */
+html.hf-admin-light {
+    --hf-admin-bg: #f4f6f8;
+    --hf-admin-panel: #ffffff;
+    --hf-admin-panel-strong: #f7f9fb;
+    --hf-admin-border: #d9e1e7;
+    --hf-admin-text: #1e2933;
+    --hf-admin-muted: #66737f;
+    --hf-admin-primary: #08794b;
+    --hf-admin-primary-2: #075f3c;
+    color-scheme: light;
+}
+
+html.hf-admin-light body,
+html.hf-admin-light .content-wrapper,
+html.hf-admin-light .main-footer {
+    color: #1e2933 !important;
+    background: #f4f6f8 !important;
+}
+
+html.hf-admin-light .content-wrapper {
+    background:
+        radial-gradient(circle at 18% 0%, rgba(8, 121, 75, 0.07), transparent 28%),
+        linear-gradient(180deg, #f8fafb 0%, #f2f5f7 100%) !important;
+    border-left: 1px solid #d9e1e7 !important;
+}
+
+html.hf-admin-light .content {
+    padding-top: 10px;
+}
+
+html.hf-admin-light .content-header {
+    padding: 26px 28px 12px !important;
+}
+
+html.hf-admin-light .content-header h1 {
+    color: #1d2a33 !important;
+    font-size: 30px !important;
+    font-weight: 850 !important;
+}
+
+html.hf-admin-light #jazzy-navbar,
+html.hf-admin-light .app-header.navbar,
+html.hf-admin-light .main-header.navbar {
+    min-height: 64px !important;
+    background: rgba(255, 255, 255, 0.96) !important;
+    border-bottom: 1px solid #d9e1e7 !important;
+    box-shadow: 0 8px 24px rgba(24, 39, 52, 0.06) !important;
+}
+
+html.hf-admin-light #jazzy-navbar a,
+html.hf-admin-light .main-header.navbar a,
+html.hf-admin-light .navbar-nav .nav-link {
+    color: #263642 !important;
+}
+
+html.hf-admin-light #jazzy-sidebar,
+html.hf-admin-light .main-sidebar,
+html.hf-admin-light .sidebar-dark-primary {
+    background: #ffffff !important;
+    border-right: 1px solid #d9e1e7 !important;
+    box-shadow: 8px 0 24px rgba(24, 39, 52, 0.06) !important;
+}
+
+html.hf-admin-light .brand-link {
+    background: #ffffff !important;
+    border-bottom: 1px solid #d9e1e7 !important;
+}
+
+html.hf-admin-light .brand-link .brand-text {
+    color: #173426 !important;
+    font-weight: 900 !important;
+}
+
+html.hf-admin-light #jazzy-sidebar .user-panel {
+    border-bottom-color: #e4eaee !important;
+}
+
+html.hf-admin-light #jazzy-sidebar .user-panel .info a,
+html.hf-admin-light #jazzy-sidebar .user-panel a {
+    color: #263642 !important;
+}
+
+html.hf-admin-light #jazzy-sidebar .nav-header,
+html.hf-admin-light .main-sidebar .nav-header {
+    margin: 14px 12px 7px !important;
+    padding: 0 10px !important;
+    color: #6f7c87 !important;
+    font-size: 12px !important;
+    font-weight: 850 !important;
+    letter-spacing: 0 !important;
+    text-transform: none !important;
+}
+
+html.hf-admin-light #jazzy-sidebar .nav-sidebar .nav-link,
+html.hf-admin-light .main-sidebar .nav-sidebar .nav-link,
+html.hf-admin-light .sidebar .nav-sidebar .nav-link {
+    min-height: 38px !important;
+    margin: 2px 10px !important;
+    padding: 9px 12px !important;
+    color: #30414d !important;
+    background: transparent !important;
+    border: 1px solid transparent !important;
+    border-radius: 10px !important;
+    box-shadow: none !important;
+}
+
+html.hf-admin-light #jazzy-sidebar .nav-sidebar .nav-link p,
+html.hf-admin-light #jazzy-sidebar .nav-sidebar .nav-link span,
+html.hf-admin-light .main-sidebar .nav-sidebar .nav-link p,
+html.hf-admin-light .main-sidebar .nav-sidebar .nav-link span {
+    color: inherit !important;
+    font-weight: 650 !important;
+}
+
+html.hf-admin-light #jazzy-sidebar .nav-sidebar .nav-link i,
+html.hf-admin-light #jazzy-sidebar .nav-sidebar .nav-link .nav-icon,
+html.hf-admin-light .main-sidebar .nav-sidebar .nav-link i,
+html.hf-admin-light .main-sidebar .nav-sidebar .nav-link .nav-icon {
+    color: #6d7a84 !important;
+}
+
+html.hf-admin-light #jazzy-sidebar .nav-sidebar .nav-link:hover,
+html.hf-admin-light .main-sidebar .nav-sidebar .nav-link:hover {
+    color: #172630 !important;
+    background: #f1f5f7 !important;
+    border-color: #e0e7ec !important;
+}
+
+html.hf-admin-light #jazzy-sidebar .nav-sidebar .nav-link:hover i,
+html.hf-admin-light #jazzy-sidebar .nav-sidebar .nav-link:hover .nav-icon,
+html.hf-admin-light .main-sidebar .nav-sidebar .nav-link:hover i,
+html.hf-admin-light .main-sidebar .nav-sidebar .nav-link:hover .nav-icon {
+    color: #08794b !important;
+}
+
+html.hf-admin-light #jazzy-sidebar .nav-sidebar .nav-link.active,
+html.hf-admin-light .main-sidebar .nav-sidebar .nav-link.active,
+html.hf-admin-light .sidebar .nav-sidebar .nav-link.active,
+html.hf-admin-light .nav-pills .nav-link.active,
+html.hf-admin-light .nav-sidebar > .nav-item > .nav-link.active {
+    color: #ffffff !important;
+    background: linear-gradient(135deg, #08794b 0%, #075f3c 100%) !important;
+    border-color: rgba(8, 121, 75, 0.35) !important;
+    box-shadow: 0 10px 20px rgba(8, 121, 75, 0.22) !important;
+}
+
+html.hf-admin-light #jazzy-sidebar .nav-sidebar .nav-link.active p,
+html.hf-admin-light #jazzy-sidebar .nav-sidebar .nav-link.active span,
+html.hf-admin-light #jazzy-sidebar .nav-sidebar .nav-link.active i,
+html.hf-admin-light #jazzy-sidebar .nav-sidebar .nav-link.active .nav-icon,
+html.hf-admin-light .main-sidebar .nav-sidebar .nav-link.active p,
+html.hf-admin-light .main-sidebar .nav-sidebar .nav-link.active span,
+html.hf-admin-light .main-sidebar .nav-sidebar .nav-link.active i,
+html.hf-admin-light .main-sidebar .nav-sidebar .nav-link.active .nav-icon {
+    color: #ffffff !important;
+}
+
+/* Absolute final sidebar icon override for light theme. */
+html.hf-admin-light #jazzy-sidebar .nav-sidebar .nav-link:not(.active),
+html.hf-admin-light #jazzy-sidebar .nav-sidebar .nav-link:not(.active) *,
+html.hf-admin-light .main-sidebar .nav-sidebar .nav-link:not(.active),
+html.hf-admin-light .main-sidebar .nav-sidebar .nav-link:not(.active) *,
+html.hf-admin-light .sidebar .nav-sidebar .nav-link:not(.active),
+html.hf-admin-light .sidebar .nav-sidebar .nav-link:not(.active) * {
+    color: #111827 !important;
+    fill: #111827 !important;
+    stroke: #111827 !important;
+}
+
+html.hf-admin-light #jazzy-sidebar .nav-sidebar .nav-link:not(.active) i::before,
+html.hf-admin-light #jazzy-sidebar .nav-sidebar .nav-link:not(.active) .nav-icon::before,
+html.hf-admin-light #jazzy-sidebar .nav-sidebar .nav-link:not(.active) .fa::before,
+html.hf-admin-light #jazzy-sidebar .nav-sidebar .nav-link:not(.active) .fas::before,
+html.hf-admin-light #jazzy-sidebar .nav-sidebar .nav-link:not(.active) .far::before,
+html.hf-admin-light #jazzy-sidebar .nav-sidebar .nav-link:not(.active) .fab::before,
+html.hf-admin-light .main-sidebar .nav-sidebar .nav-link:not(.active) i::before,
+html.hf-admin-light .main-sidebar .nav-sidebar .nav-link:not(.active) .nav-icon::before,
+html.hf-admin-light .main-sidebar .nav-sidebar .nav-link:not(.active) .fa::before,
+html.hf-admin-light .main-sidebar .nav-sidebar .nav-link:not(.active) .fas::before,
+html.hf-admin-light .main-sidebar .nav-sidebar .nav-link:not(.active) .far::before,
+html.hf-admin-light .main-sidebar .nav-sidebar .nav-link:not(.active) .fab::before {
+    color: #111827 !important;
+}
+
+html.hf-admin-light #jazzy-sidebar .nav-sidebar .nav-link.active,
+html.hf-admin-light #jazzy-sidebar .nav-sidebar .nav-link.active *,
+html.hf-admin-light .main-sidebar .nav-sidebar .nav-link.active,
+html.hf-admin-light .main-sidebar .nav-sidebar .nav-link.active * {
+    color: #ffffff !important;
+    fill: #ffffff !important;
+    stroke: #ffffff !important;
+}
+
+/* Absolute final sidebar icon override for light theme. */
+html.hf-admin-light #jazzy-sidebar .nav-sidebar .nav-link:not(.active),
+html.hf-admin-light #jazzy-sidebar .nav-sidebar .nav-link:not(.active) *,
+html.hf-admin-light .main-sidebar .nav-sidebar .nav-link:not(.active),
+html.hf-admin-light .main-sidebar .nav-sidebar .nav-link:not(.active) *,
+html.hf-admin-light .sidebar .nav-sidebar .nav-link:not(.active),
+html.hf-admin-light .sidebar .nav-sidebar .nav-link:not(.active) * {
+    color: #111827 !important;
+    fill: #111827 !important;
+    stroke: #111827 !important;
+}
+
+html.hf-admin-light #jazzy-sidebar .nav-sidebar .nav-link:not(.active) i::before,
+html.hf-admin-light #jazzy-sidebar .nav-sidebar .nav-link:not(.active) .nav-icon::before,
+html.hf-admin-light #jazzy-sidebar .nav-sidebar .nav-link:not(.active) .fa::before,
+html.hf-admin-light #jazzy-sidebar .nav-sidebar .nav-link:not(.active) .fas::before,
+html.hf-admin-light #jazzy-sidebar .nav-sidebar .nav-link:not(.active) .far::before,
+html.hf-admin-light #jazzy-sidebar .nav-sidebar .nav-link:not(.active) .fab::before,
+html.hf-admin-light .main-sidebar .nav-sidebar .nav-link:not(.active) i::before,
+html.hf-admin-light .main-sidebar .nav-sidebar .nav-link:not(.active) .nav-icon::before,
+html.hf-admin-light .main-sidebar .nav-sidebar .nav-link:not(.active) .fa::before,
+html.hf-admin-light .main-sidebar .nav-sidebar .nav-link:not(.active) .fas::before,
+html.hf-admin-light .main-sidebar .nav-sidebar .nav-link:not(.active) .far::before,
+html.hf-admin-light .main-sidebar .nav-sidebar .nav-link:not(.active) .fab::before {
+    color: #111827 !important;
+}
+
+html.hf-admin-light #jazzy-sidebar .nav-sidebar .nav-link.active,
+html.hf-admin-light #jazzy-sidebar .nav-sidebar .nav-link.active *,
+html.hf-admin-light .main-sidebar .nav-sidebar .nav-link.active,
+html.hf-admin-light .main-sidebar .nav-sidebar .nav-link.active * {
+    color: #ffffff !important;
+    fill: #ffffff !important;
+    stroke: #ffffff !important;
+}
+
+html.hf-admin-light .dashboard .btn,
+html.hf-admin-light .dashboard a.btn,
+html.hf-admin-light #content-main .app-auth .btn,
+html.hf-admin-light #content-main .app-main_app .btn,
+html.hf-admin-light #content-main .app-portal .btn,
+html.hf-admin-light #content-main .app-billing .btn,
+html.hf-admin-light #content-main .app-payments .btn,
+html.hf-admin-light #content-main a[class*="btn-"],
+html.hf-admin-light .model-addlink,
+html.hf-admin-light .model-changelink,
+html.hf-admin-light .model-viewlink {
+    color: #ffffff !important;
+    text-shadow: none !important;
+}
+
+html.hf-admin-light .dashboard .btn-success,
+html.hf-admin-light .dashboard a.btn-success,
+html.hf-admin-light #content-main a.btn-success,
+html.hf-admin-light #content-main .model-addlink {
+    background: #08794b !important;
+    border-color: #08794b !important;
+}
+
+html.hf-admin-light .dashboard .btn-info,
+html.hf-admin-light .dashboard a.btn-info,
+html.hf-admin-light .dashboard .btn-primary,
+html.hf-admin-light .dashboard a.btn-primary,
+html.hf-admin-light #content-main a.btn-info,
+html.hf-admin-light #content-main a.btn-primary,
+html.hf-admin-light #content-main .model-changelink,
+html.hf-admin-light #content-main .model-viewlink {
+    background: #2563eb !important;
+    border-color: #2563eb !important;
+}
+
+html.hf-admin-light .dashboard .btn.disabled,
+html.hf-admin-light .dashboard .btn:disabled,
+html.hf-admin-light .dashboard a.btn.disabled,
+html.hf-admin-light #content-main a.btn.disabled,
+html.hf-admin-light #content-main a.btn[aria-disabled="true"] {
+    color: #ffffff !important;
+    background: #64748b !important;
+    border-color: #64748b !important;
+    opacity: 0.92 !important;
+}
+
+html.hf-admin-light .dashboard .btn *,
+html.hf-admin-light #content-main a[class*="btn-"] *,
+html.hf-admin-light .model-addlink *,
+html.hf-admin-light .model-changelink *,
+html.hf-admin-light .model-viewlink * {
+    color: #ffffff !important;
+}
+
+html.hf-admin-light .timeline,
+html.hf-admin-light #recent-actions-module,
+html.hf-admin-light .timeline-item,
+html.hf-admin-light .timeline-body {
+    color: #e5edf4 !important;
+}
+
+html.hf-admin-light .timeline h3,
+html.hf-admin-light .timeline a,
+html.hf-admin-light #recent-actions-module a {
+    color: #22c55e !important;
+}
+
+/* Final light-theme sidebar and readonly balance fixes. */
+html.hf-admin-light #jazzy-sidebar .nav-sidebar .nav-link:not(.active) i,
+html.hf-admin-light #jazzy-sidebar .nav-sidebar .nav-link:not(.active) .nav-icon,
+html.hf-admin-light .main-sidebar .nav-sidebar .nav-link:not(.active) i,
+html.hf-admin-light .main-sidebar .nav-sidebar .nav-link:not(.active) .nav-icon,
+html.hf-admin-light .sidebar .nav-sidebar .nav-link:not(.active) i,
+html.hf-admin-light .sidebar .nav-sidebar .nav-link:not(.active) .nav-icon {
+    color: #111827 !important;
+}
+
+html.hf-admin-light .readonly,
+html.hf-admin-light .field-balance_display,
+html.hf-admin-light .field-balance_display div {
+    background: transparent !important;
+}
+
+html.hf-admin-light [data-owner-balance-preview] {
+    display: block !important;
+    width: 100% !important;
+    min-height: 38px !important;
+    padding: 9px 12px !important;
+    border: 1px solid #cfd9e0 !important;
+    border-radius: 8px !important;
+    background: #ffffff !important;
+    box-shadow: inset 0 1px 0 rgba(24, 39, 52, 0.03) !important;
+}
+
+html.hf-admin-light #jazzy-sidebar .nav-sidebar .nav-link:not(.active),
+html.hf-admin-light .main-sidebar .nav-sidebar .nav-link:not(.active),
+html.hf-admin-light .sidebar .nav-sidebar .nav-link:not(.active) {
+    color: #111827 !important;
+}
+
+html.hf-admin-light #jazzy-sidebar .nav-sidebar .nav-link:not(.active) p,
+html.hf-admin-light #jazzy-sidebar .nav-sidebar .nav-link:not(.active) span,
+html.hf-admin-light #jazzy-sidebar .nav-sidebar .nav-link:not(.active) .nav-link-text,
+html.hf-admin-light .main-sidebar .nav-sidebar .nav-link:not(.active) p,
+html.hf-admin-light .main-sidebar .nav-sidebar .nav-link:not(.active) span,
+html.hf-admin-light .main-sidebar .nav-sidebar .nav-link:not(.active) .nav-link-text,
+html.hf-admin-light .sidebar .nav-sidebar .nav-link:not(.active) p,
+html.hf-admin-light .sidebar .nav-sidebar .nav-link:not(.active) span,
+html.hf-admin-light .sidebar .nav-sidebar .nav-link:not(.active) .nav-link-text {
+    color: #111827 !important;
+}
+
+html.hf-admin-light #jazzy-sidebar .nav-sidebar .nav-link:not(.active) i,
+html.hf-admin-light #jazzy-sidebar .nav-sidebar .nav-link:not(.active) .nav-icon,
+html.hf-admin-light .main-sidebar .nav-sidebar .nav-link:not(.active) i,
+html.hf-admin-light .main-sidebar .nav-sidebar .nav-link:not(.active) .nav-icon,
+html.hf-admin-light .sidebar .nav-sidebar .nav-link:not(.active) i,
+html.hf-admin-light .sidebar .nav-sidebar .nav-link:not(.active) .nav-icon {
+    color: #111827 !important;
+}
+
+html.hf-admin-light .readonly,
+html.hf-admin-light .readonly div,
+html.hf-admin-light .readonly span,
+html.hf-admin-light .field-balance_display,
+html.hf-admin-light .field-balance_display div,
+html.hf-admin-light .field-balance_display span,
+html.hf-admin-light [data-owner-balance-preview] {
+    background: transparent !important;
+}
+
+html.hf-admin-light [data-owner-balance-preview] {
+    display: block !important;
+    width: 100% !important;
+    min-height: 38px !important;
+    padding: 9px 12px !important;
+    border: 1px solid #cfd9e0 !important;
+    border-radius: 8px !important;
+    background: #ffffff !important;
+    box-shadow: inset 0 1px 0 rgba(24, 39, 52, 0.03) !important;
+}
+
+html.hf-admin-light .nav-tabs,
+html.hf-admin-light .nav-tabs-custom > .nav-tabs,
+html.hf-admin-light .card-header-tabs {
+    border-bottom: 1px solid #d5dee5 !important;
+}
+
+html.hf-admin-light .nav-tabs .nav-link,
+html.hf-admin-light .nav-tabs-custom > .nav-tabs .nav-link,
+html.hf-admin-light .nav-tabs-custom > .nav-tabs li a,
+html.hf-admin-light .card-header-tabs .nav-link {
+    color: #1f2933 !important;
+    background: transparent !important;
+    border-color: transparent !important;
+    border-radius: 8px 8px 0 0 !important;
+    font-weight: 750 !important;
+}
+
+html.hf-admin-light .nav-tabs .nav-link:hover,
+html.hf-admin-light .nav-tabs-custom > .nav-tabs .nav-link:hover,
+html.hf-admin-light .nav-tabs-custom > .nav-tabs li a:hover,
+html.hf-admin-light .card-header-tabs .nav-link:hover {
+    color: #08794b !important;
+    background: #f3f7f5 !important;
+    border-color: #d5dee5 #d5dee5 transparent !important;
+}
+
+html.hf-admin-light .nav-tabs .nav-link.active,
+html.hf-admin-light .nav-tabs .nav-item.show .nav-link,
+html.hf-admin-light .nav-tabs-custom > .nav-tabs .nav-link.active,
+html.hf-admin-light .nav-tabs-custom > .nav-tabs li.active a,
+html.hf-admin-light .card-header-tabs .nav-link.active {
+    color: #08794b !important;
+    background: #ffffff !important;
+    border-color: #d5dee5 #d5dee5 #ffffff !important;
+    box-shadow: inset 0 3px 0 #08794b !important;
+}
+
+html.hf-admin-light .breadcrumb,
+html.hf-admin-light .breadcrumb a,
+html.hf-admin-light .content-header .breadcrumb,
+html.hf-admin-light .content-header .breadcrumb a {
+    color: #73808a !important;
+}
+
+html.hf-admin-light .card,
+html.hf-admin-light .card-body,
+html.hf-admin-light .card-header,
+html.hf-admin-light #changelist-filter,
+html.hf-admin-light #content-main .module,
+html.hf-admin-light .results,
+html.hf-admin-light .change-list .filtered .results,
+html.hf-admin-light .inline-group,
+html.hf-admin-light fieldset.module {
+    color: #1e2933 !important;
+    background: #ffffff !important;
+    border: 1px solid #dfe6eb !important;
+    border-radius: 12px !important;
+    box-shadow: 0 12px 28px rgba(24, 39, 52, 0.07) !important;
+}
+
+html.hf-admin-light .results {
+    overflow: hidden !important;
+}
+
+html.hf-admin-light #changelist,
+html.hf-admin-light #changelist .actions {
+    color: #4d5b66 !important;
+    background: transparent !important;
+}
+
+html.hf-admin-light .table,
+html.hf-admin-light .results table {
+    color: #1e2933 !important;
+    background: #ffffff !important;
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+}
+
+html.hf-admin-light .table thead th,
+html.hf-admin-light .results thead th {
+    height: 44px !important;
+    color: #24333d !important;
+    background: #eef2f5 !important;
+    border-bottom: 1px solid #d3dde4 !important;
+    font-size: 13px !important;
+    font-weight: 850 !important;
+}
+
+html.hf-admin-light .table tbody td,
+html.hf-admin-light .results tbody td,
+html.hf-admin-light .table tbody th,
+html.hf-admin-light .results tbody th {
+    height: 42px !important;
+    color: #263642 !important;
+    background: #ffffff !important;
+    border-top: 0 !important;
+    border-bottom: 1px solid #e5ebef !important;
+}
+
+html.hf-admin-light .table tbody tr:nth-child(even) td,
+html.hf-admin-light .results tbody tr:nth-child(even) td {
+    background: #f8fafb !important;
+}
+
+html.hf-admin-light .table tbody tr:hover td,
+html.hf-admin-light .results tbody tr:hover td {
+    background: #eef7f2 !important;
+}
+
+html.hf-admin-light .results tbody td a,
+html.hf-admin-light .table tbody td a,
+html.hf-admin-light a {
+    color: #08794b !important;
+}
+
+html.hf-admin-light .form-control,
+html.hf-admin-light .custom-select,
+html.hf-admin-light select,
+html.hf-admin-light input[type="text"],
+html.hf-admin-light input[type="search"],
+html.hf-admin-light input[type="number"],
+html.hf-admin-light input[type="email"],
+html.hf-admin-light input[type="url"],
+html.hf-admin-light input[type="password"],
+html.hf-admin-light textarea,
+html.hf-admin-light .select2-container--default .select2-selection--single,
+html.hf-admin-light .select2-container--default .select2-selection--multiple,
+html.hf-admin-light .select2-container--admin-autocomplete .select2-selection--single,
+html.hf-admin-light .select2-container--admin-autocomplete .select2-selection--multiple {
+    color: #1e2933 !important;
+    background: #ffffff !important;
+    border-color: #cfd9e0 !important;
+    box-shadow: 0 1px 0 rgba(24, 39, 52, 0.03) !important;
+}
+
+html.hf-admin-light .form-control:focus,
+html.hf-admin-light .custom-select:focus,
+html.hf-admin-light select:focus,
+html.hf-admin-light input[type="text"]:focus,
+html.hf-admin-light input[type="search"]:focus,
+html.hf-admin-light input[type="number"]:focus,
+html.hf-admin-light input[type="email"]:focus,
+html.hf-admin-light input[type="url"]:focus,
+html.hf-admin-light input[type="password"]:focus,
+html.hf-admin-light textarea:focus {
+    border-color: #08794b !important;
+    box-shadow: 0 0 0 3px rgba(8, 121, 75, 0.13) !important;
+}
+
+html.hf-admin-light .btn-primary,
+html.hf-admin-light input[type="submit"],
+html.hf-admin-light .submit-row input.default,
+html.hf-admin-light .object-tools a.addlink,
+html.hf-admin-light a.addlink,
+html.hf-admin-light .btn-success {
+    color: #ffffff !important;
+    background: linear-gradient(135deg, #08794b 0%, #075f3c 100%) !important;
+    border-color: #075f3c !important;
+    box-shadow: 0 10px 22px rgba(8, 121, 75, 0.22) !important;
+}
+
+html.hf-admin-light .btn-secondary,
+html.hf-admin-light .button,
+html.hf-admin-light input[type="button"],
+html.hf-admin-light input[type="reset"],
+html.hf-admin-light .actions button,
+html.hf-admin-light .actions .button,
+html.hf-admin-light .btn-outline-primary,
+html.hf-admin-light .btn-outline-secondary {
+    color: #253540 !important;
+    background: #ffffff !important;
+    border-color: #cfd9e0 !important;
+    box-shadow: 0 5px 14px rgba(24, 39, 52, 0.06) !important;
+}
+
+html.hf-admin-light .admin-lang-switcher,
+html.hf-admin-light .admin-theme-toggle {
+    color: #253540 !important;
+    background: #ffffff !important;
+    border-color: #d5dee5 !important;
+    box-shadow: 0 10px 24px rgba(24, 39, 52, 0.10) !important;
+}
+
+html.hf-admin-light .admin-lang-switcher__button {
+    color: #52616d !important;
+}
+
+html.hf-admin-light .admin-lang-switcher__button.is-active,
+html.hf-admin-light .admin-theme-toggle.is-light {
+    color: #ffffff !important;
+    background: #08794b !important;
+}
+
+html.hf-admin-light #jazzy-sidebar .nav-sidebar .nav-link,
+html.hf-admin-light .main-sidebar .nav-sidebar .nav-link,
+html.hf-admin-light .sidebar .nav-sidebar .nav-link {
+    color: #1f2933 !important;
+}
+
+html.hf-admin-light #jazzy-sidebar .nav-sidebar .nav-link p,
+html.hf-admin-light #jazzy-sidebar .nav-sidebar .nav-link span,
+html.hf-admin-light .main-sidebar .nav-sidebar .nav-link p,
+html.hf-admin-light .main-sidebar .nav-sidebar .nav-link span {
+    color: #1f2933 !important;
+}
+
+html.hf-admin-light #jazzy-sidebar .nav-sidebar .nav-link i,
+html.hf-admin-light #jazzy-sidebar .nav-sidebar .nav-link .nav-icon,
+html.hf-admin-light .main-sidebar .nav-sidebar .nav-link i,
+html.hf-admin-light .main-sidebar .nav-sidebar .nav-link .nav-icon {
+    color: #111827 !important;
+}
+
+html.hf-admin-light .readonly,
+html.hf-admin-light .field-balance_display,
+html.hf-admin-light .field-balance_display div {
+    background: transparent !important;
+}
+
+html.hf-admin-light [data-owner-balance-preview] {
+    display: block !important;
+    width: 100% !important;
+    min-height: 38px !important;
+    padding: 9px 12px !important;
+    border: 1px solid #cfd9e0 !important;
+    border-radius: 8px !important;
+    background: #ffffff !important;
+    box-shadow: inset 0 1px 0 rgba(24, 39, 52, 0.03) !important;
+}
+
+html.hf-admin-light #jazzy-sidebar .nav-sidebar .nav-link.active,
+html.hf-admin-light .main-sidebar .nav-sidebar .nav-link.active,
+html.hf-admin-light .sidebar .nav-sidebar .nav-link.active,
+html.hf-admin-light .nav-pills .nav-link.active,
+html.hf-admin-light .nav-sidebar > .nav-item > .nav-link.active {
+    color: #ffffff !important;
+}
+
+html.hf-admin-light #jazzy-sidebar .nav-sidebar .nav-link.active p,
+html.hf-admin-light #jazzy-sidebar .nav-sidebar .nav-link.active span,
+html.hf-admin-light #jazzy-sidebar .nav-sidebar .nav-link.active i,
+html.hf-admin-light #jazzy-sidebar .nav-sidebar .nav-link.active .nav-icon,
+html.hf-admin-light .main-sidebar .nav-sidebar .nav-link.active p,
+html.hf-admin-light .main-sidebar .nav-sidebar .nav-link.active span,
+html.hf-admin-light .main-sidebar .nav-sidebar .nav-link.active i,
+html.hf-admin-light .main-sidebar .nav-sidebar .nav-link.active .nav-icon {
+    color: #ffffff !important;
+}
+
+/* EOF override: light sidebar icons must be black unless active. */
+html.hf-admin-light #jazzy-sidebar .nav-sidebar .nav-link:not(.active) *,
+html.hf-admin-light .main-sidebar .nav-sidebar .nav-link:not(.active) *,
+html.hf-admin-light .sidebar .nav-sidebar .nav-link:not(.active) * {
+    color: #111827 !important;
+    fill: #111827 !important;
+    stroke: #111827 !important;
+}
+
+html.hf-admin-light #jazzy-sidebar .nav-sidebar .nav-link:not(.active) i::before,
+html.hf-admin-light #jazzy-sidebar .nav-sidebar .nav-link:not(.active) .nav-icon::before,
+html.hf-admin-light .main-sidebar .nav-sidebar .nav-link:not(.active) i::before,
+html.hf-admin-light .main-sidebar .nav-sidebar .nav-link:not(.active) .nav-icon::before {
+    color: #111827 !important;
+}
+
+html.hf-admin-light #recent-actions-module,
+html.hf-admin-light #recent-actions-module.module {
+    color: #1f2933 !important;
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+}
+
+html.hf-admin-light #recent-actions-module h4,
+html.hf-admin-light #recent-actions-module .mb-3 {
+    color: #1f2933 !important;
+    font-weight: 850 !important;
+}
+
+html.hf-admin-light #recent-actions-module .timeline::before {
+    background: #94a3b8 !important;
+}
+
+html.hf-admin-light #recent-actions-module .timeline > i,
+html.hf-admin-light #recent-actions-module .timeline > .fa,
+html.hf-admin-light #recent-actions-module .timeline > .fas {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 24px !important;
+    height: 24px !important;
+    border-radius: 999px !important;
+    color: #ffffff !important;
+    background: #08794b !important;
+    border: 3px solid #f4f6f8 !important;
+    box-shadow: 0 0 0 1px rgba(8, 121, 75, 0.18) !important;
+}
+
+html.hf-admin-light #recent-actions-module .timeline > i::before,
+html.hf-admin-light #recent-actions-module .timeline > .fa::before,
+html.hf-admin-light #recent-actions-module .timeline > .fas::before {
+    color: #ffffff !important;
+}
+
+html.hf-admin-light #recent-actions-module .timeline-item {
+    color: #1f2933 !important;
+    background: #ffffff !important;
+    border: 1px solid #d9e1e7 !important;
+    border-radius: 10px !important;
+    box-shadow: 0 8px 20px rgba(24, 39, 52, 0.08) !important;
+}
+
+html.hf-admin-light #recent-actions-module .timeline-header,
+html.hf-admin-light #recent-actions-module .timeline-body {
+    color: #1f2933 !important;
+    background: #ffffff !important;
+    border-color: #d9e1e7 !important;
+}
+
+html.hf-admin-light #recent-actions-module .timeline-header a {
+    color: #08794b !important;
+    font-weight: 850 !important;
+}
+
+html.hf-admin-light #recent-actions-module .timeline-body,
+html.hf-admin-light #recent-actions-module .timeline-body li {
+    color: #334155 !important;
+}
+
+html.hf-admin-light #recent-actions-module .time,
+html.hf-admin-light #recent-actions-module .time i {
+    color: #64748b !important;
+}
+
+/* Current sidebar item fallback based on Django admin body classes. */
+html.hf-admin-light body.model-owner #jazzy-sidebar .nav-sidebar a[href*="/admin/main_app/owner/"],
+html.hf-admin-light body.model-owner .main-sidebar .nav-sidebar a[href*="/admin/main_app/owner/"],
+html.hf-admin-light body.model-apartment #jazzy-sidebar .nav-sidebar a[href*="/admin/main_app/apartment/"],
+html.hf-admin-light body.model-apartment .main-sidebar .nav-sidebar a[href*="/admin/main_app/apartment/"],
+html.hf-admin-light body.model-building #jazzy-sidebar .nav-sidebar a[href*="/admin/main_app/building/"],
+html.hf-admin-light body.model-building .main-sidebar .nav-sidebar a[href*="/admin/main_app/building/"],
+html.hf-admin-light body.model-transaction #jazzy-sidebar .nav-sidebar a[href*="/admin/payments/transaction/"],
+html.hf-admin-light body.model-transaction .main-sidebar .nav-sidebar a[href*="/admin/payments/transaction/"],
+html.hf-admin-light body.model-paymetransaction #jazzy-sidebar .nav-sidebar a[href*="/admin/payments/paymetransaction/"],
+html.hf-admin-light body.model-paymetransaction .main-sidebar .nav-sidebar a[href*="/admin/payments/paymetransaction/"],
+html.hf-admin-light body.model-billingperiod #jazzy-sidebar .nav-sidebar a[href*="/admin/billing/billingperiod/"],
+html.hf-admin-light body.model-billingperiod .main-sidebar .nav-sidebar a[href*="/admin/billing/billingperiod/"],
+html.hf-admin-light body.model-expense #jazzy-sidebar .nav-sidebar a[href*="/admin/billing/expense/"],
+html.hf-admin-light body.model-expense .main-sidebar .nav-sidebar a[href*="/admin/billing/expense/"],
+html.hf-admin-light body.model-gasmeterreading #jazzy-sidebar .nav-sidebar a[href*="/admin/billing/gasmeterreading/"],
+html.hf-admin-light body.model-gasmeterreading .main-sidebar .nav-sidebar a[href*="/admin/billing/gasmeterreading/"],
+html.hf-admin-light body.model-hotwatermeterreading #jazzy-sidebar .nav-sidebar a[href*="/admin/billing/hotwatermeterreading/"],
+html.hf-admin-light body.model-hotwatermeterreading .main-sidebar .nav-sidebar a[href*="/admin/billing/hotwatermeterreading/"],
+html.hf-admin-light body.model-heatingrecord #jazzy-sidebar .nav-sidebar a[href*="/admin/billing/heatingrecord/"],
+html.hf-admin-light body.model-heatingrecord .main-sidebar .nav-sidebar a[href*="/admin/billing/heatingrecord/"] {
+    color: #075f3c !important;
+    background: #e7f5ee !important;
+    border: 1px solid rgba(8, 121, 75, 0.24) !important;
+    border-radius: 10px !important;
+    box-shadow: inset 4px 0 0 #08794b, 0 6px 16px rgba(24, 39, 52, 0.06) !important;
+}
+
+html.hf-admin-light body.model-owner #jazzy-sidebar .nav-sidebar a[href*="/admin/main_app/owner/"] *,
+html.hf-admin-light body.model-owner .main-sidebar .nav-sidebar a[href*="/admin/main_app/owner/"] *,
+html.hf-admin-light body.model-apartment #jazzy-sidebar .nav-sidebar a[href*="/admin/main_app/apartment/"] *,
+html.hf-admin-light body.model-apartment .main-sidebar .nav-sidebar a[href*="/admin/main_app/apartment/"] *,
+html.hf-admin-light body.model-building #jazzy-sidebar .nav-sidebar a[href*="/admin/main_app/building/"] *,
+html.hf-admin-light body.model-building .main-sidebar .nav-sidebar a[href*="/admin/main_app/building/"] *,
+html.hf-admin-light body.model-transaction #jazzy-sidebar .nav-sidebar a[href*="/admin/payments/transaction/"] *,
+html.hf-admin-light body.model-transaction .main-sidebar .nav-sidebar a[href*="/admin/payments/transaction/"] *,
+html.hf-admin-light body.model-paymetransaction #jazzy-sidebar .nav-sidebar a[href*="/admin/payments/paymetransaction/"] *,
+html.hf-admin-light body.model-paymetransaction .main-sidebar .nav-sidebar a[href*="/admin/payments/paymetransaction/"] * {
+    color: #075f3c !important;
+    fill: #075f3c !important;
+    stroke: #075f3c !important;
+}
+
+/* Selected sidebar item in light theme: visible without black-on-black states. */
+html.hf-admin-light #jazzy-sidebar .nav-sidebar .nav-link.active,
+html.hf-admin-light .main-sidebar .nav-sidebar .nav-link.active,
+html.hf-admin-light .sidebar .nav-sidebar .nav-link.active,
+html.hf-admin-light .nav-pills .nav-link.active,
+html.hf-admin-light .nav-sidebar > .nav-item > .nav-link.active {
+    color: #075f3c !important;
+    background: #e7f5ee !important;
+    border: 1px solid rgba(8, 121, 75, 0.24) !important;
+    box-shadow: inset 4px 0 0 #08794b, 0 6px 16px rgba(24, 39, 52, 0.06) !important;
+}
+
+html.hf-admin-light #jazzy-sidebar .nav-sidebar .nav-link.active *,
+html.hf-admin-light .main-sidebar .nav-sidebar .nav-link.active *,
+html.hf-admin-light .sidebar .nav-sidebar .nav-link.active * {
+    color: #075f3c !important;
+    fill: #075f3c !important;
+    stroke: #075f3c !important;
+}
+
+html.hf-admin-light #jazzy-sidebar .nav-sidebar .nav-link.active i::before,
+html.hf-admin-light #jazzy-sidebar .nav-sidebar .nav-link.active .nav-icon::before,
+html.hf-admin-light .main-sidebar .nav-sidebar .nav-link.active i::before,
+html.hf-admin-light .main-sidebar .nav-sidebar .nav-link.active .nav-icon::before {
+    color: #075f3c !important;
+}

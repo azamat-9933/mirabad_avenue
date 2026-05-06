@@ -2,6 +2,63 @@
 <button class="hidden" data-drawer-open="details-drawer" type="button">Open details</button>
 <button class="hidden" data-drawer-open="apartment-details-drawer" type="button">Open apartment details</button>
 
+<div aria-labelledby="building-summary-title" aria-hidden="true" class="app-modal premium-center-modal fixed inset-0 z-[84] hidden items-center justify-center p-4 sm:p-6" id="building-summary-modal" role="dialog">
+<div class="premium-center-panel building-summary-panel">
+<div class="building-summary-shell">
+<div class="building-summary-hero">
+<div class="building-summary-copy">
+<span class="building-summary-kicker" data-i18n-key="House overview">House overview</span>
+<h2 class="building-summary-title" id="building-summary-title" data-building-summary-title>House</h2>
+<p class="building-summary-subtitle" data-building-summary-subtitle>Residential building summary from backend data.</p>
+</div>
+<button aria-label="Close house summary" class="building-summary-close" data-close-overlay type="button">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<div class="building-summary-body">
+<aside class="building-summary-identity">
+<span class="material-symbols-outlined" aria-hidden="true">apartment</span>
+<strong data-building-summary-title>House</strong>
+<small data-building-summary-subtitle>Residential building summary from backend data.</small>
+</aside>
+<section class="building-summary-fields" role="list">
+<div class="building-summary-field is-occupancy" role="listitem">
+<span class="building-summary-field-icon material-symbols-outlined" aria-hidden="true">domain</span>
+<small data-i18n-key="Apartments and residents">Apartments and residents</small>
+<strong data-building-summary-apartments>0</strong>
+</div>
+<div class="building-summary-field is-area" role="listitem">
+<span class="building-summary-field-icon material-symbols-outlined" aria-hidden="true">square_foot</span>
+<small data-i18n-key="Total area">Total area</small>
+<strong data-building-summary-area>0 m²</strong>
+</div>
+<div class="building-summary-field is-danger" role="listitem">
+<span class="building-summary-field-icon material-symbols-outlined" aria-hidden="true">gpp_bad</span>
+<small data-i18n-key="Debtors">Debtors</small>
+<strong data-building-summary-debtors>0</strong>
+</div>
+<div class="building-summary-field is-success" role="listitem">
+<span class="building-summary-field-icon material-symbols-outlined" aria-hidden="true">verified_user</span>
+<small data-i18n-key="Non-debtors">Non-debtors</small>
+<strong data-building-summary-paid>0</strong>
+</div>
+<div class="building-summary-field is-debt" role="listitem">
+<span class="building-summary-field-icon material-symbols-outlined" aria-hidden="true">account_balance_wallet</span>
+<small data-i18n-key="Total debt">Total debt</small>
+<strong data-building-summary-debt>0 UZS</strong>
+</div>
+</section>
+</div>
+<div class="building-summary-footer">
+<a class="building-summary-periods-link" data-building-summary-periods href="{% url 'admin:billing_billingperiod_changelist' %}">
+<span class="material-symbols-outlined" aria-hidden="true">calendar_month</span>
+<span data-i18n-key="Periods list">Periods list</span>
+</a>
+</div>
+</div>
+</div>
+</div>
+
 <div aria-labelledby="notifications-title" aria-hidden="true" class="app-modal premium-center-modal fixed inset-0 z-[84] hidden items-center justify-center p-4 sm:p-6" id="notifications-drawer" role="dialog">
 <div class="premium-center-panel premium-notifications-panel">
 <div class="h-full flex flex-col">
@@ -1248,10 +1305,6 @@
 <select name="building_id" required data-apartment-create-building></select>
 </label>
 <label class="resident-create-field">
-<span data-i18n-key="Section">Section</span>
-<input name="section_name" placeholder="A" type="text"/>
-</label>
-<label class="resident-create-field">
 <span data-i18n-key="Apartment number">Apartment number</span>
 <input name="number" required placeholder="402-A" type="text"/>
 </label>
@@ -1303,10 +1356,6 @@ This form writes directly to Django admin and database.
 <label class="resident-create-field">
 <span data-i18n-key="Building">Building</span>
 <select name="building_selector" data-resident-create-building></select>
-</label>
-<label class="resident-create-field">
-<span data-i18n-key="Section">Section</span>
-<select name="section_selector" data-resident-create-section></select>
 </label>
 <label class="resident-create-field">
 <span data-i18n-key="Apartment">Apartment</span>
