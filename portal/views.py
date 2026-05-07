@@ -52,6 +52,7 @@ from .backend_data import (
     _transaction_type,
     build_portal_data,
 )
+from .report_exports import ALLOWED_REPORT_TYPES, build_report_payload
 
 
 def safe_portal_data(request=None):
@@ -2247,6 +2248,7 @@ def api_system_alerts_configure(request):
 @api_view(["POST"])
 def api_export_report(request):
     payload = _json_payload(request)
+    report_type = str(payload.get("report_type") or "").strip().lower()
     context = str(payload.get("context") or payload.get("source_context") or "residential").strip().lower()
     if context not in {"residential", "transactions", "maintenance"}:
         source = str(payload.get("source") or "").lower()
@@ -2263,9 +2265,27 @@ def api_export_report(request):
 
     language = str(payload.get("language") or "en").strip().lower()
     source = str(payload.get("source") or "Current page").strip() or "Current page"
-    portal_data = safe_portal_data(request)
-    download = _render_export_payload(portal_data, context, export_format, source, language, payload)
-    row_count = len(_portal_export_rows(portal_data, context, payload))
+    if report_type in ALLOWED_REPORT_TYPES:
+        generated = build_report_payload(payload, language, export_format)
+        if export_format == "PDF":
+            download = _encode_download(
+                generated["filename"],
+                generated["mime"],
+                generated["content"],
+            )
+            row_count = generated.get("row_count", 0)
+        else:
+            download = _encode_download(
+                generated["filename"],
+                generated["mime"],
+                generated["content"],
+            )
+            row_count = generated.get("row_count", 0)
+        context = report_type
+    else:
+        portal_data = safe_portal_data(request)
+        download = _render_export_payload(portal_data, context, export_format, source, language, payload)
+        row_count = len(_portal_export_rows(portal_data, context, payload))
 
     AuditEvent.objects.create(
         event_type=AuditEvent.TYPE_EXPORT,

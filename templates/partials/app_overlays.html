@@ -101,7 +101,6 @@
 <p class="text-xs text-on-surface-variant mt-1">Skyline Residences, Block B. Detected 12 minutes ago.</p>
 <p class="notification-action-state hidden" data-notification-state></p>
 <div class="mt-3 flex gap-2">
-<button class="drawer-action bg-error text-white" data-notification-action="Technician assignment queued" type="button">Assign technician</button>
 <button class="drawer-action bg-surface-container text-primary" data-detail-open type="button">Details</button>
 <button class="drawer-action bg-surface-container text-primary" data-confirm-action="close-critical-alert" type="button">Close alert</button>
 </div>
@@ -209,10 +208,9 @@
 </div>
 </section>
 </div>
-<div class="p-6 border-t border-surface-container grid grid-cols-3 gap-3">
+<div class="p-6 border-t border-surface-container grid grid-cols-2 gap-3">
 <button class="drawer-action bg-error text-white" data-reminder-action type="button">Send reminder</button>
 <button class="drawer-action bg-surface-container text-primary" data-export-open data-export-context="transactions" data-export-source="Selected record payments" type="button">Export</button>
-<button class="drawer-action bg-primary text-white" data-assign-technician type="button">Assign technician</button>
 </div>
 </div>
 </aside>
@@ -286,7 +284,6 @@
 <div class="apartment-details-actions">
 <button class="drawer-action bg-error text-white" data-reminder-action type="button">Send reminder</button>
 <button class="drawer-action bg-surface-container text-primary" data-export-open data-export-context="transactions" data-export-source="Apartment resident payments" type="button">Export</button>
-<button class="drawer-action bg-primary text-white" data-assign-technician type="button">Assign technician</button>
 </div>
 </div>
 </aside>
@@ -447,12 +444,6 @@
 </div>
 </div>
 <div class="checklist-body">
-<div class="checklist-context-grid">
-<div><span data-i18n-key="Scope">Scope</span><strong data-checklist-scope data-i18n-key="Current workspace">Current workspace</strong></div>
-<div><span data-i18n-key="Owner">Owner</span><strong data-i18n-key="Operations Team">Operations Team</strong></div>
-                            <div><span data-i18n-key="Saved">Saved</span><strong data-checklist-saved data-i18n-key="Connected">Connected</strong></div>
-<div><span data-i18n-key="Timezone">Timezone</span><strong>Asia/Tashkent</strong></div>
-</div>
 <div class="checklist-toolbar">
 <button data-checklist-action="complete-visible" type="button"><span class="material-symbols-outlined">done_all</span><span data-i18n-key="Complete visible">Complete visible</span></button>
 <button data-checklist-action="reset" type="button"><span class="material-symbols-outlined">restart_alt</span><span data-i18n-key="Reset">Reset</span></button>
@@ -736,12 +727,54 @@
 </label>
 <label class="export-filter-field">
 <span data-i18n-key="Date from">Date from</span>
-<input data-export-date-from type="datetime-local"/>
+<input data-export-date-from type="hidden"/>
+<button class="export-date-trigger" data-export-date-trigger="from" type="button">
+<span class="material-symbols-outlined" aria-hidden="true">calendar_month</span>
+<strong data-export-date-label="from">Select date</strong>
+</button>
 </label>
 <label class="export-filter-field">
 <span data-i18n-key="Date to">Date to</span>
-<input data-export-date-to type="datetime-local"/>
+<input data-export-date-to type="hidden"/>
+<button class="export-date-trigger" data-export-date-trigger="to" type="button">
+<span class="material-symbols-outlined" aria-hidden="true">calendar_month</span>
+<strong data-export-date-label="to">Select date</strong>
+</button>
 </label>
+</div>
+<div class="export-date-popover hidden" data-export-date-popover>
+<div class="export-date-popover-head">
+<button data-export-date-nav="-1" type="button" aria-label="Previous month"><span class="material-symbols-outlined">chevron_left</span></button>
+<div class="export-date-month-controls">
+<select data-export-date-month-select aria-label="Select month"></select>
+<select data-export-date-year-select aria-label="Select year"></select>
+</div>
+<div class="export-date-head-actions">
+<button data-export-date-nav="1" type="button" aria-label="Next month"><span class="material-symbols-outlined">chevron_right</span></button>
+<button data-export-date-close type="button" aria-label="Close calendar"><span class="material-symbols-outlined">close</span></button>
+</div>
+</div>
+<div class="export-date-weekdays">
+<span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+</div>
+<div class="export-date-days" data-export-date-days></div>
+<div class="export-date-time-row">
+<label><span>Hour</span><select data-export-date-hour></select></label>
+<label><span>Minute</span><select data-export-date-minute></select></label>
+</div>
+<div class="export-date-popover-actions">
+<button data-export-date-today type="button">Today</button>
+<button data-export-date-apply type="button">Apply</button>
+</div>
+</div>
+<div>
+<p class="drawer-label">Report type</p>
+<div class="export-format-grid export-report-type-grid" data-export-report-type>
+<button class="is-active" data-report-type="all" type="button">ALL</button>
+<button data-report-type="hot_water" type="button">GVS</button>
+<button data-report-type="heating" type="button">HEATING</button>
+<button data-report-type="payments" type="button">PAYMENTS</button>
+</div>
 </div>
 <div>
 <p class="drawer-label" data-i18n-key="File type">File type</p>
@@ -845,7 +878,6 @@
 <option value="Open route">Open route</option>
 <option value="Review meters">Review meters</option>
 <option value="View scope">View scope</option>
-<option value="Assign technician">Assign technician</option>
 </select>
 </label>
 <label class="resident-create-field md:col-span-2">
@@ -870,7 +902,6 @@
 <div class="export-preview-hero">
 <span class="material-symbols-outlined">notifications_active</span>
 <div>
-<p class="profile-kicker" data-i18n-key="Backend system alerts">Backend system alerts</p>
 <h2 data-i18n-key="Configure system alerts" id="system-alerts-config-title">Configure system alerts</h2>
 <small data-i18n-key="Create and manage live alerts stored in Django admin and database.">Create and manage live alerts stored in Django admin and database.</small>
 </div>
@@ -895,31 +926,16 @@
 </select>
 </label>
 <label class="resident-create-field">
-<span data-i18n-key="Category">Category</span>
-<select name="category">
-<option data-i18n-key="Pressure" value="pressure">Pressure</option>
-<option data-i18n-key="Water" value="water">Water</option>
-<option data-i18n-key="Heating" value="heating">Heating</option>
-<option data-i18n-key="Payment" value="payment">Payment</option>
-<option data-i18n-key="Security" value="security">Security</option>
-<option data-i18n-key="Other" value="other">Other</option>
-</select>
-</label>
-<label class="resident-create-field">
-<span data-i18n-key="Complex">Complex</span>
+<span data-i18n-key="Sector">Sector</span>
 <select name="complex_id" data-system-alert-complex></select>
 </label>
 <label class="resident-create-field">
-<span data-i18n-key="Building">Building</span>
+<span data-i18n-key="House">House</span>
 <select name="building_id" data-system-alert-building></select>
 </label>
 <label class="resident-create-field">
 <span data-i18n-key="Assigned to">Assigned to</span>
 <input data-i18n-placeholder="Operations Team" name="assigned_to" placeholder="Operations Team" type="text" value="Operations Team"/>
-</label>
-<label class="resident-create-field">
-<span data-i18n-key="Action label">Action label</span>
-<input data-i18n-placeholder="Review alert" name="action_label" placeholder="Review alert" type="text" value="Review alert"/>
 </label>
 <label class="resident-create-field md:col-span-2">
 <span data-i18n-key="Message">Message</span>
@@ -973,45 +989,6 @@
 <div class="assign-status-actions">
 <button data-close-overlay type="button">Cancel</button>
 <button data-assign-status-apply type="button"><span class="material-symbols-outlined">check</span><span>Apply status</span></button>
-</div>
-</div>
-</div>
-
-<div aria-labelledby="assign-technician-title" aria-hidden="true" class="app-modal fixed inset-0 z-[86] hidden items-center justify-center p-6" id="assign-technician-modal" role="dialog">
-<div class="modal-panel assign-status-panel w-full max-w-md bg-white rounded-lg shadow-2xl border border-outline-variant/20 overflow-hidden">
-<div class="assign-status-hero">
-<span class="material-symbols-outlined">engineering</span>
-<div>
-<p class="profile-kicker">Backend assignment</p>
-<h2 id="assign-technician-title">Assign technician</h2>
-<small data-assign-technician-summary>Select technician and sync directly to database.</small>
-</div>
-<button aria-label="Close assign technician" class="profile-drawer-close" data-close-overlay type="button">
-<span class="material-symbols-outlined">close</span>
-</button>
-</div>
-<div class="assign-status-body">
-<div class="assign-status-context">
-<span>Target</span>
-<strong data-assign-technician-target>Current item</strong>
-</div>
-<label class="resident-create-field">
-<span>Technician</span>
-<select data-assign-technician-select>
-<option value="Field Team A">Field Team A</option>
-<option value="Field Team B">Field Team B</option>
-<option value="Maintenance Desk">Maintenance Desk</option>
-<option value="Billing Team">Billing Team</option>
-</select>
-</label>
-<label class="resident-create-field">
-<span>Note</span>
-<textarea data-assign-technician-note placeholder="Optional assignment note..."></textarea>
-</label>
-</div>
-<div class="assign-status-actions">
-<button data-close-overlay type="button">Cancel</button>
-<button data-assign-technician-apply type="button"><span class="material-symbols-outlined">check</span><span>Assign technician</span></button>
 </div>
 </div>
 </div>

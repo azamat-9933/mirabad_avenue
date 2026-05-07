@@ -691,6 +691,8 @@
         "Delete": { ru: "Удалить", uz: "O'chirish" },
         "Checklist item removed": { ru: "Пункт чеклиста удалён", uz: "Ro'yxat bandi o'chirildi" },
         "Checklist note removed": { ru: "Заметка чеклиста удалена", uz: "Ro'yxat izohi o'chirildi" },
+        "No backend checklist items": { ru: "Нет задач из DB", uz: "DB ro'yxat vazifalari yo'q" },
+        "Create checklist items in Django admin to show them here.": { ru: "Создайте пункты чеклиста в Django admin, чтобы они появились здесь.", uz: "Bu yerda ko'rinishi uchun Django admin'da checklist bandlarini yarating." },
         "Removed locally.": { ru: "Удалено локально.", uz: "Lokal o'chirildi." },
         "Data view": { ru: "Данные", uz: "Ma'lumot" },
         "Billing": { ru: "Биллинг", uz: "Billing" },
@@ -2074,11 +2076,11 @@
         const groupLabel = (key, label, hidden = false) => `<div class="notification-group-label ${hidden ? "hidden" : ""}" data-notification-group="${key}">${label}</div>`;
         const severityLabel = (severity) => severity === "critical" ? "Critical" : severity === "warning" ? "Warning" : "Info";
         const actionButtons = (item) => {
-            const primary = item.actionPrimary || (item.severity === "critical" ? "Assign technician" : "Details");
+            const primary = item.actionPrimary && item.actionPrimary !== "Assign technician" ? item.actionPrimary : "Details";
             const secondary = item.actionSecondary || (item.severity === "critical" ? "Close alert" : "");
             return `
                 <div class="mt-3 flex gap-2">
-                    <button class="drawer-action ${item.severity === "critical" ? "bg-error" : "bg-primary"} text-white" ${item.severity === "critical" ? `data-assign-technician data-notification-backend-id="${escapeHtml(item.backendId || "")}"` : `data-notification-action="${escapeHtml(item.actionState || `${primary} queued`)}"`} type="button">${escapeHtml(primary)}</button>
+                    <button class="drawer-action ${item.severity === "critical" ? "bg-error" : "bg-primary"} text-white" data-notification-action="${escapeHtml(item.actionState || `${primary} queued`)}" type="button">${escapeHtml(primary)}</button>
                     ${secondary ? `<button class="drawer-action bg-surface-container text-primary" ${item.severity === "critical" ? 'data-confirm-action="close-critical-alert"' : `data-notification-action="${escapeHtml(`${secondary} queued`)}"`} type="button">${escapeHtml(secondary)}</button>` : ""}
                 </div>
             `;
@@ -2352,7 +2354,7 @@
                     priority: "High",
                     date: "20.04.2026 | 10:30",
                     status: "Upcoming",
-                    action: "Assign technician",
+                    action: "View plan",
                     icon: "plumbing",
                     day: "20",
                     month: "APR",
@@ -3277,11 +3279,11 @@
         const groupLabel = (key, label, hidden = false) => `<div class="notification-group-label ${hidden ? "hidden" : ""}" data-notification-group="${key}">${label}</div>`;
         const severityLabel = (severity) => severity === "critical" ? "Critical" : severity === "warning" ? "Warning" : "Info";
         const actionButtons = (item) => {
-            const primary = item.actionPrimary || (item.severity === "critical" ? "Assign technician" : "Details");
+            const primary = item.actionPrimary && item.actionPrimary !== "Assign technician" ? item.actionPrimary : "Details";
             const secondary = item.actionSecondary || (item.severity === "critical" ? "Close alert" : "");
             return `
                 <div class="mt-3 flex gap-2">
-                    <button class="drawer-action ${item.severity === "critical" ? "bg-error" : "bg-primary"} text-white" ${item.severity === "critical" ? `data-assign-technician type="button"` : `data-notification-action="${escapeAttr(item.actionState || `${primary} queued`)}" type="button"`}>${escapeHtml(primary)}</button>
+                    <button class="drawer-action ${item.severity === "critical" ? "bg-error" : "bg-primary"} text-white" data-notification-action="${escapeAttr(item.actionState || `${primary} queued`)}" type="button">${escapeHtml(primary)}</button>
                     ${secondary ? `<button class="drawer-action bg-surface-container text-primary" ${item.severity === "critical" ? 'data-confirm-action="close-critical-alert"' : `data-notification-action="${escapeAttr(`${secondary} queued`)}"`} type="button">${escapeHtml(secondary)}</button>` : ""}
                 </div>
             `;
@@ -4347,7 +4349,7 @@
                                 <button class="p-2 text-primary hover:bg-primary-container/10 rounded-lg transition-colors" type="button" title="Manage Units">
                                     <span class="material-symbols-outlined">settings_suggest</span>
                                 </button>
-                                <button class="px-4 py-2 text-xs font-bold bg-primary text-white rounded-lg hover:brightness-110 active:scale-95 transition-all" data-detail-open type="button" data-i18n-key="Details">Details</button>
+                                <button class="residential-detail-button" data-detail-open type="button" data-i18n-key="Details">Details</button>
                             </div>
                         </td>
                     </tr>
@@ -5319,24 +5321,80 @@
                 const element = drawer.querySelector(selector);
                 if (element) element.textContent = value || "";
             };
+            const localizedEmpty = () => {
+                const lang = storage.getItem("hydroflow-lang") || "en";
+                return lang === "ru" ? "Нет данных" : lang === "uz" ? "Ma'lumot yo'q" : "No data";
+            };
+            const ownerId = String(data.ownerBackendId || "");
+            const apartmentId = String(data.apartmentBackendId || "");
+            const ownerSlug = ownerId ? `owner-${ownerId}` : "";
+            const rawContract = String(data.contract || "").trim();
+            const lang = storage.getItem("hydroflow-lang") || "en";
+            const yesLabel = lang === "ru" ? "Да" : lang === "uz" ? "Ha" : "Yes";
+            const noLabel = lang === "ru" ? "Нет" : lang === "uz" ? "Yo'q" : "No";
+            const contractLabel = lang === "ru" ? "Договор" : lang === "uz" ? "Shartnoma" : "Contract";
+            const lastVisitLabel = lang === "ru" ? "Последний визит" : lang === "uz" ? "So'nggi tashrif" : "Last visit";
+            const lastPaymentLabel = lang === "ru" ? "Последний платёж" : lang === "uz" ? "Oxirgi to'lov" : "Last payment";
+            const contractValue = rawContract.toLowerCase() === "true"
+                ? yesLabel
+                : rawContract.toLowerCase() === "false"
+                ? noLabel
+                : rawContract;
+            const realActivity = [
+                ...(Array.isArray(billingData.transactions) ? billingData.transactions : [])
+                    .filter((item) => String(item.apartmentBackendId || "") === apartmentId || String(item.ownerBackendId || "") === ownerId)
+                    .map((item) => {
+                        const signed = Number(item.signedAmount ?? item.amount ?? 0);
+                        const prefix = signed > 0 ? "+" : signed < 0 ? "-" : "";
+                        return {
+                            time: item.createdAt || item.date || "",
+                            text: `${item.method || item.type || "Transaction"}: ${prefix}${formatUzs(Math.abs(signed))} · ${item.status || "Success"}`,
+                        };
+                    }),
+                ...(Array.isArray(billingData.auditEvents) ? billingData.auditEvents : [])
+                    .filter((item) => item.ownerId === ownerSlug)
+                    .map((item) => ({
+                        time: item.time || "",
+                        text: [item.title, item.message].filter(Boolean).join(" · ") || item.label || "Audit event",
+                    })),
+                ...(Array.isArray(billingData.notifications) ? billingData.notifications : [])
+                    .filter((item) => item.ownerId === ownerSlug)
+                    .map((item) => ({
+                        time: item.eventAt || "",
+                        text: [item.title, item.message].filter(Boolean).join(" · ") || "Notification",
+                    })),
+            ].sort((a, b) => transactionDateValue(b.time) - transactionDateValue(a.time)).slice(0, 3);
             set("[data-apartment-title]", data.title);
             set("[data-apartment-subtitle]", data.subtitle);
             set("[data-apartment-owner]", data.owner);
-            set("[data-apartment-owner-meta]", `${data.contract} · last visit ${data.visit}`);
+            set("[data-apartment-owner-meta]", [
+                contractValue ? `${contractLabel}: ${contractValue}` : "",
+                data.visit ? `${lastVisitLabel}: ${data.visit}` : "",
+            ].filter(Boolean).join(" · ") || localizedEmpty());
             set("[data-apartment-balance]", data.balance);
-            set("[data-apartment-payment]", `Last payment ${data.payment}`);
+            set("[data-apartment-payment]", data.payment ? `${lastPaymentLabel} ${data.payment}` : localizedEmpty());
             set("[data-apartment-status]", data.status);
             set("[data-apartment-unit]", data.unit);
             set("[data-apartment-rooms]", data.rooms);
             set("[data-apartment-area]", data.area);
-            set("[data-apartment-meter]", data.meter);
-            set("[data-apartment-charge]", data.charge);
+            set("[data-apartment-meter]", data.meter || localizedEmpty());
+            set("[data-apartment-charge]", data.charge || localizedEmpty());
             set("[data-apartment-occupancy]", data.occupancy);
             set("[data-apartment-phone]", data.phone);
-            set("[data-apartment-email]", data.email);
-            set("[data-apartment-contract]", data.contract);
-            set("[data-apartment-visit]", data.visit);
-            set("[data-apartment-activity-1]", `${data.payment}: payment state is ${data.status.toLowerCase()}.`);
+            set("[data-apartment-email]", data.email || localizedEmpty());
+            set("[data-apartment-contract]", contractValue || localizedEmpty());
+            set("[data-apartment-visit]", data.visit || localizedEmpty());
+            const activityList = drawer.querySelector(".apartment-activity-list");
+            if (activityList) {
+                activityList.innerHTML = realActivity.length
+                    ? realActivity.map((item) => `
+                        <div>
+                            <time>${escapeHtml(item.time || localizedEmpty())}</time>
+                            <p>${escapeHtml(item.text)}</p>
+                        </div>
+                    `).join("")
+                    : `<div><time>${escapeHtml(localizedEmpty())}</time><p>${escapeHtml(localizedEmpty())}</p></div>`;
+            }
             drawer.querySelectorAll("[data-apartment-owner-photo], [data-apartment-owner-photo-secondary]").forEach((img) => {
                 if (data.photo) {
                     img.src = data.photo;
@@ -6242,11 +6300,9 @@
                 mode: "create",
                 title: formData.get("title"),
                 severity: formData.get("severity"),
-                category: formData.get("category"),
                 complex_id: formData.get("complex_id"),
                 building_id: formData.get("building_id"),
                 assigned_to: formData.get("assigned_to"),
-                action_label: formData.get("action_label"),
                 message: formData.get("message"),
             };
             submit.disabled = true;
@@ -6264,7 +6320,6 @@
                 form.reset();
                 syncComplexOptions();
                 form.querySelector("input[name='assigned_to']").value = t("Operations Team");
-                form.querySelector("input[name='action_label']").value = t("Review alert");
                 toast("System alert created", "The alert is now stored in Django admin and visible in the portal.", "success");
             } catch (error) {
                 const recovered = await refreshPortalDataSnapshot().then(() => findRecoveredSystemAlert(requestPayload, previousAlertIds)).catch(() => null);
@@ -6274,7 +6329,6 @@
                     form.reset();
                     syncComplexOptions();
                     form.querySelector("input[name='assigned_to']").value = t("Operations Team");
-                    form.querySelector("input[name='action_label']").value = t("Review alert");
                     toast("System alert created", "The alert was saved in Django admin and recovered after refresh.", "success");
                     return;
                 }
@@ -6541,6 +6595,15 @@
                     resident.telegramStatus,
                 ).includes(query);
             });
+            if (activeResidentId) {
+                const selected = noticeResidents.find((resident) => (
+                    String(resident.ownerBackendId || resident.backendId || resident.id).replace(/[^\d]/g, "") === String(activeResidentId).replace(/[^\d]/g, "")
+                ));
+                const selectedId = selected ? String(selected.ownerBackendId || selected.backendId || selected.id) : "";
+                if (selected && !rows.some((resident) => String(resident.ownerBackendId || resident.backendId || resident.id) === selectedId)) {
+                    rows.unshift(selected);
+                }
+            }
             return sortDebtors(rows);
         };
 
@@ -6787,13 +6850,6 @@
     setupMaintenanceDeploy();
     setupSystemAlertsConfig();
 
-    const assignTechnicianModal = document.getElementById("assign-technician-modal");
-    const assignTechnicianSelect = assignTechnicianModal?.querySelector("[data-assign-technician-select]");
-    const assignTechnicianNote = assignTechnicianModal?.querySelector("[data-assign-technician-note]");
-    const assignTechnicianTarget = assignTechnicianModal?.querySelector("[data-assign-technician-target]");
-    const assignTechnicianApply = assignTechnicianModal?.querySelector("[data-assign-technician-apply]");
-    let pendingTechnicianAssignment = {};
-
     const nearestActionPayload = (trigger) => {
         const detailsHost = trigger.closest("#details-drawer");
         if (detailsHost) {
@@ -6863,33 +6919,6 @@
             toast("Reminder failed", error.message || "Backend reminder sync failed.", "warning");
         }
     }, true);
-
-    document.addEventListener("click", (event) => {
-        const assignButton = event.target.closest("[data-assign-technician]");
-        if (!assignButton) return;
-        event.preventDefault();
-        pendingTechnicianAssignment = nearestActionPayload(assignButton);
-        if (assignTechnicianTarget) assignTechnicianTarget.textContent = pendingTechnicianAssignment.label || "Current item";
-        if (assignTechnicianSelect) assignTechnicianSelect.value = "Field Team A";
-        if (assignTechnicianNote) assignTechnicianNote.value = "";
-        openOverlayById("assign-technician-modal");
-    }, true);
-
-    assignTechnicianApply?.addEventListener("click", async () => {
-        try {
-            const response = await postPortalJson("/api/technicians/assign/", {
-                ...pendingTechnicianAssignment,
-                technician: assignTechnicianSelect?.value || "Field Team A",
-                note: assignTechnicianNote?.value || "",
-            });
-            rehydrateFromPortalData(response.portalData);
-            closeOverlayById("assign-technician-modal");
-            toast("Technician assigned", "Assignment saved in backend and synced to portal.", "success");
-            pendingTechnicianAssignment = {};
-        } catch (error) {
-            toast("Assignment failed", error.message || "Backend assignment failed.", "warning");
-        }
-    });
 
     const setupResidentKitTools = () => {
         const modal = document.getElementById("resident-kit-modal");
@@ -7097,22 +7126,15 @@
     setupResidentKitTools();
 
     const checklistStorageKey = "hydroflow-operations-checklist";
-    const checklistItems = [
-        { id: "filters", title: "Validate active filters", detail: "Confirm district, status and period filters match the current operation scope.", tag: "Data view", icon: "tune" },
-        { id: "residents", title: "Review residents and balances", detail: "Check debtor/paid split, resident cards and billing history before handoff.", tag: "Billing", icon: "group" },
-        { id: "alerts", title: "Resolve visible critical alerts", detail: "Open notification center and confirm critical items have an owner or technician.", tag: "Safety", icon: "notification_important" },
-        { id: "exports", title: "Prepare export package", detail: "Verify CSV/XLSX/PDF preview includes current visible data and backend timestamp.", tag: "Export", icon: "ios_share" },
-        { id: "audit", title: "Attach audit note", detail: "Record manual changes or review comments in the backend audit trail.", tag: "Audit", icon: "history" },
-    ];
-    if (Array.isArray(billingData.checklistItems) && billingData.checklistItems.length) {
-        checklistItems.splice(0, checklistItems.length, ...billingData.checklistItems.map((item) => ({
+    const checklistItems = Array.isArray(billingData.checklistItems)
+        ? billingData.checklistItems.map((item) => ({
             id: item.id,
             title: item.title,
             detail: item.detail,
             tag: item.tag || "Operations",
             icon: item.icon || "fact_check",
-        })));
-    }
+        }))
+        : [];
 
     const setupChecklist = () => {
         const drawer = document.getElementById("checklist-drawer");
@@ -7170,7 +7192,7 @@
             const state = readState();
             const notes = readNotes();
             const entries = allChecklistEntries(state, notes);
-            list.innerHTML = entries.map((item) => {
+            list.innerHTML = entries.length ? entries.map((item) => {
                 const done = Boolean(item.done);
                 const isCustom = Boolean(item.custom);
                 const id = escapeHtml(item.id);
@@ -7196,7 +7218,13 @@
                         </span>
                     </article>
                 `;
-            }).join("");
+            }).join("") : `
+                <div class="checklist-empty-state">
+                    <span class="material-symbols-outlined">task_alt</span>
+                    <strong>${escapeHtml(translateValue("No backend checklist items", storage.getItem("hydroflow-lang") || "en"))}</strong>
+                    <p>${escapeHtml(translateValue("Create checklist items in Django admin to show them here.", storage.getItem("hydroflow-lang") || "en"))}</p>
+                </div>
+            `;
             if (notesList) {
                 notesList.innerHTML = "";
                 notesList.classList.add("hidden");
@@ -7215,7 +7243,8 @@
             window.HydroFlowSyncLocale?.();
         };
         const openChecklist = (scope = "Current workspace") => {
-            drawer.querySelector("[data-checklist-scope]").textContent = scope;
+            const scopeNode = drawer.querySelector("[data-checklist-scope]");
+            if (scopeNode) scopeNode.textContent = scope;
             drawer.querySelector("[data-checklist-subtitle]").textContent = `${scope} readiness flow with saved progress.`;
             render();
             openOverlayById("checklist-drawer");
@@ -7327,7 +7356,9 @@
                 mode: "create",
                 text,
                 template_key: noteTemplate?.value || "",
-                scope: drawer.querySelector("[data-checklist-scope]")?.textContent?.trim() || "Operations",
+                scope: drawer.querySelector("[data-checklist-scope]")?.textContent?.trim()
+                    || drawer.querySelector("[data-checklist-subtitle]")?.textContent?.replace(/\s+readiness flow.*$/i, "").trim()
+                    || "Operations",
             }).then((payload) => {
                 if (noteInput) noteInput.value = "";
                 if (noteTemplate) noteTemplate.value = "";
@@ -8275,6 +8306,7 @@
 
     const exportModal = document.getElementById("export-preview-modal");
     let selectedExportFormat = "XLSX";
+    let selectedExportReportType = "all";
     let lastExportSource = document.title;
     let lastExportButton = null;
     let lastExportContext = "default";
@@ -8283,11 +8315,137 @@
     const exportResidentSelect = exportModal?.querySelector("[data-export-resident]");
     const exportDateFromInput = exportModal?.querySelector("[data-export-date-from]");
     const exportDateToInput = exportModal?.querySelector("[data-export-date-to]");
+    const exportDatePopover = exportModal?.querySelector("[data-export-date-popover]");
+    const exportDateDays = exportModal?.querySelector("[data-export-date-days]");
+    const exportDateMonthSelect = exportModal?.querySelector("[data-export-date-month-select]");
+    const exportDateYearSelect = exportModal?.querySelector("[data-export-date-year-select]");
+    const exportDateHour = exportModal?.querySelector("[data-export-date-hour]");
+    const exportDateMinute = exportModal?.querySelector("[data-export-date-minute]");
+    const exportDateTriggers = Array.from(exportModal?.querySelectorAll("[data-export-date-trigger]") || []);
+    const exportDateLabels = {
+        from: exportModal?.querySelector("[data-export-date-label='from']"),
+        to: exportModal?.querySelector("[data-export-date-label='to']"),
+    };
+    let activeExportDateTarget = "from";
+    let exportDateView = new Date();
+    let exportDateDraft = new Date();
+    const exportReportTypeButtons = Array.from(exportModal?.querySelectorAll("[data-export-report-type] button") || []);
     const getVisibleTableRows = (root = document) => Array.from(root.querySelectorAll("tbody tr")).filter((row) => !row.classList.contains("hidden"));
     const exportText = (key) => translateValue(key, storage.getItem("hydroflow-lang") || "en");
+    const exportReportTypeLabel = (reportType) => ({
+        all: "GVS + Heating + Payments",
+        hot_water: "GVS",
+        heating: "Heating",
+        payments: "Payments",
+    }[reportType] || "GVS + Heating + Payments");
     const exportDateTimeLocalValue = (date) => {
         const offsetMs = date.getTimezoneOffset() * 60000;
         return new Date(date.getTime() - offsetMs).toISOString().slice(0, 16);
+    };
+    const parseExportDateValue = (value) => {
+        const date = new Date(value || "");
+        return Number.isNaN(date.getTime()) ? new Date() : date;
+    };
+    const formatExportDateLabel = (value) => {
+        const date = parseExportDateValue(value);
+        return new Intl.DateTimeFormat(storage.getItem("hydroflow-lang") || "en", {
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+        }).format(date);
+    };
+    const syncExportDateLabels = () => {
+        if (exportDateLabels.from && exportDateFromInput?.value) exportDateLabels.from.textContent = formatExportDateLabel(exportDateFromInput.value);
+        if (exportDateLabels.to && exportDateToInput?.value) exportDateLabels.to.textContent = formatExportDateLabel(exportDateToInput.value);
+    };
+    const exportDateInputForTarget = (target) => target === "to" ? exportDateToInput : exportDateFromInput;
+    const renderExportDatePicker = () => {
+        if (!exportDatePopover || !exportDateDays || !exportDateMonthSelect || !exportDateYearSelect || !exportDateHour || !exportDateMinute) return;
+        const locale = storage.getItem("hydroflow-lang") || "en";
+        exportDateMonthSelect.innerHTML = Array.from({ length: 12 }, (_, month) => {
+            const label = new Intl.DateTimeFormat(locale, { month: "long" }).format(new Date(exportDateView.getFullYear(), month, 1));
+            return `<option value="${month}">${escapeHtml(label)}</option>`;
+        }).join("");
+        const currentYear = new Date().getFullYear();
+        const startYear = currentYear - 6;
+        exportDateYearSelect.innerHTML = Array.from({ length: 13 }, (_, index) => {
+            const year = startYear + index;
+            return `<option value="${year}">${year}</option>`;
+        }).join("");
+        exportDateMonthSelect.value = String(exportDateView.getMonth());
+        exportDateYearSelect.value = String(exportDateView.getFullYear());
+        exportDateHour.innerHTML = Array.from({ length: 24 }, (_, hour) => `<option value="${hour}">${String(hour).padStart(2, "0")}</option>`).join("");
+        exportDateMinute.innerHTML = Array.from({ length: 60 }, (_, minute) => `<option value="${minute}">${String(minute).padStart(2, "0")}</option>`).join("");
+        exportDateHour.value = String(exportDateDraft.getHours());
+        exportDateMinute.value = String(exportDateDraft.getMinutes());
+
+        const firstOfMonth = new Date(exportDateView.getFullYear(), exportDateView.getMonth(), 1);
+        const startOffset = (firstOfMonth.getDay() + 6) % 7;
+        const gridStart = new Date(firstOfMonth);
+        gridStart.setDate(firstOfMonth.getDate() - startOffset);
+        const todayValue = new Date().toDateString();
+        const selectedValue = exportDateDraft.toDateString();
+        exportDateDays.innerHTML = Array.from({ length: 42 }, (_, index) => {
+            const date = new Date(gridStart);
+            date.setDate(gridStart.getDate() + index);
+            const classes = ["export-date-day"];
+            if (date.getMonth() !== exportDateView.getMonth()) classes.push("is-muted");
+            if (date.toDateString() === todayValue) classes.push("is-today");
+            if (date.toDateString() === selectedValue) classes.push("is-selected");
+            return `<button class="${classes.join(" ")}" data-export-date-day="${date.toISOString()}" type="button">${date.getDate()}</button>`;
+        }).join("");
+    };
+    const openExportDatePicker = (target) => {
+        const input = exportDateInputForTarget(target);
+        activeExportDateTarget = target;
+        exportDateDraft = parseExportDateValue(input?.value);
+        exportDateView = new Date(exportDateDraft.getFullYear(), exportDateDraft.getMonth(), 1);
+        exportDateTriggers.forEach((button) => button.classList.toggle("is-active", button.dataset.exportDateTrigger === target));
+        renderExportDatePicker();
+        playExportDateOpenSound();
+        exportDatePopover?.classList.remove("hidden");
+    };
+    const closeExportDatePicker = () => {
+        exportDatePopover?.classList.add("hidden");
+        exportDateTriggers.forEach((button) => button.classList.remove("is-active"));
+    };
+    const playExportDateOpenSound = () => {
+        try {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            if (!AudioContext) return;
+            const context = new AudioContext();
+            const gain = context.createGain();
+            const first = context.createOscillator();
+            const second = context.createOscillator();
+            gain.gain.setValueAtTime(0.0001, context.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.035, context.currentTime + 0.012);
+            gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + 0.18);
+            first.frequency.setValueAtTime(740, context.currentTime);
+            first.frequency.exponentialRampToValueAtTime(920, context.currentTime + 0.12);
+            second.frequency.setValueAtTime(1180, context.currentTime + 0.035);
+            first.type = "sine";
+            second.type = "triangle";
+            first.connect(gain);
+            second.connect(gain);
+            gain.connect(context.destination);
+            first.start(context.currentTime);
+            second.start(context.currentTime + 0.035);
+            first.stop(context.currentTime + 0.16);
+            second.stop(context.currentTime + 0.18);
+            window.setTimeout(() => context.close?.(), 260);
+        } catch (error) {
+            // Sound is optional; blocked audio should not affect the date picker.
+        }
+    };
+    const applyExportDateDraft = () => {
+        const input = exportDateInputForTarget(activeExportDateTarget);
+        if (!input) return;
+        exportDateDraft.setHours(Number(exportDateHour?.value || 0), Number(exportDateMinute?.value || 0), 0, 0);
+        input.value = exportDateTimeLocalValue(exportDateDraft);
+        syncExportDateLabels();
+        closeExportDatePicker();
     };
     const setExportSelectOptions = (select, rows, emptyLabel) => {
         if (!select) return;
@@ -8344,6 +8502,23 @@
         if (exportResidentSelect) exportResidentSelect.value = "";
         if (exportDateFromInput) exportDateFromInput.value = exportDateTimeLocalValue(new Date(Date.now() - 90 * 24 * 60 * 60 * 1000));
         if (exportDateToInput) exportDateToInput.value = exportDateTimeLocalValue(new Date());
+        syncExportDateLabels();
+        closeExportDatePicker();
+        selectedExportReportType = "all";
+        exportReportTypeButtons.forEach((item) => item.classList.toggle("is-active", (item.dataset.reportType || "all") === selectedExportReportType));
+        syncExportFilters();
+    };
+    const applyExportContextFromButton = (sourceButton = null) => {
+        const host = sourceButton?.closest("#details-drawer, #apartment-details-drawer");
+        if (!host) return;
+        const buildingId = String(host.dataset.buildingBackendId || "");
+        const apartmentId = String(host.dataset.apartmentBackendId || "");
+        const ownerId = String(host.dataset.ownerBackendId || "");
+        if (exportBuildingSelect && buildingId) exportBuildingSelect.value = buildingId;
+        syncExportFilters();
+        if (exportApartmentSelect && apartmentId) exportApartmentSelect.value = apartmentId;
+        syncExportFilters();
+        if (exportResidentSelect && ownerId) exportResidentSelect.value = ownerId;
         syncExportFilters();
     };
     const getEffectiveExportContext = (baseContext) => {
@@ -9351,19 +9526,29 @@ ${sheets}
         lastExportSource = source;
         const isMaintenanceLog = lastExportContext === "maintenance" || source.toLowerCase().includes("maintenance log");
         const isUsageReport = lastExportContext === "usage-report" || source.toLowerCase().includes("usage report");
-        syncExportFilters();
+        resetExportFilters();
+        applyExportContextFromButton(sourceButton);
         document.querySelectorAll("[data-export-format] button").forEach((item) => item.classList.toggle("is-active", (item.dataset.format || "XLSX") === selectedExportFormat));
+        exportReportTypeButtons.forEach((item) => item.classList.toggle("is-active", (item.dataset.reportType || "all") === selectedExportReportType));
         exportModal?.querySelector("[data-export-subtitle]")?.replaceChildren(document.createTextNode(isMaintenanceLog
             ? "Backend maintenance export from Django admin data."
             : isUsageReport
-            ? "Export real backend rows with custom scope and exact date range."
-            : `Source: ${source}. Export uses real backend rows and selected filters.`));
+            ? `Export ${exportReportTypeLabel(selectedExportReportType)} with custom scope and exact date range.`
+            : `Source: ${source}. Export ${exportReportTypeLabel(selectedExportReportType)} from real backend rows.`));
         openOverlayById("export-preview-modal");
     };
     document.querySelectorAll("[data-export-format] button").forEach((button) => button.addEventListener("click", () => {
         const requestedFormat = button.dataset.format || "XLSX";
         selectedExportFormat = requestedFormat;
         document.querySelectorAll("[data-export-format] button").forEach((item) => item.classList.toggle("is-active", (item.dataset.format || "XLSX") === selectedExportFormat));
+    }));
+    exportReportTypeButtons.forEach((button) => button.addEventListener("click", () => {
+        selectedExportReportType = button.dataset.reportType || "all";
+        exportReportTypeButtons.forEach((item) => item.classList.toggle("is-active", (item.dataset.reportType || "all") === selectedExportReportType));
+        const subtitle = exportModal?.querySelector("[data-export-subtitle]");
+        if (subtitle) {
+            subtitle.textContent = `Source: ${lastExportSource || "Current page"}. Export ${exportReportTypeLabel(selectedExportReportType)} from real backend rows.`;
+        }
     }));
     document.addEventListener("click", (event) => {
         const exportButton = event.target.closest("[data-export-open], [data-table-action='export']");
@@ -9383,6 +9568,58 @@ ${sheets}
         syncExportFilters();
         if (exportResidentSelect) exportResidentSelect.value = resident.ownerId;
     });
+    exportDateTriggers.forEach((button) => button.addEventListener("click", () => openExportDatePicker(button.dataset.exportDateTrigger || "from")));
+    exportDatePopover?.querySelectorAll("[data-export-date-nav]").forEach((button) => button.addEventListener("click", () => {
+        exportDateView = new Date(exportDateView.getFullYear(), exportDateView.getMonth() + Number(button.dataset.exportDateNav || 0), 1);
+        renderExportDatePicker();
+    }));
+    exportDateMonthSelect?.addEventListener("change", () => {
+        exportDateView = new Date(exportDateView.getFullYear(), Number(exportDateMonthSelect.value || 0), 1);
+        renderExportDatePicker();
+    });
+    exportDateYearSelect?.addEventListener("change", () => {
+        exportDateView = new Date(Number(exportDateYearSelect.value || exportDateView.getFullYear()), exportDateView.getMonth(), 1);
+        renderExportDatePicker();
+    });
+    exportDateDays?.addEventListener("click", (event) => {
+        const button = event.target.closest("[data-export-date-day]");
+        if (!button) return;
+        const selected = new Date(button.dataset.exportDateDay || "");
+        if (Number.isNaN(selected.getTime())) return;
+        exportDateDraft = new Date(
+            selected.getFullYear(),
+            selected.getMonth(),
+            selected.getDate(),
+            Number(exportDateHour?.value || exportDateDraft.getHours()),
+            Number(exportDateMinute?.value || exportDateDraft.getMinutes()),
+            0,
+            0,
+        );
+        exportDateView = new Date(exportDateDraft.getFullYear(), exportDateDraft.getMonth(), 1);
+        renderExportDatePicker();
+    });
+    exportDateHour?.addEventListener("change", () => {
+        exportDateDraft.setHours(Number(exportDateHour.value || 0));
+    });
+    exportDateMinute?.addEventListener("change", () => {
+        exportDateDraft.setMinutes(Number(exportDateMinute.value || 0));
+    });
+    exportModal?.querySelector("[data-export-date-today]")?.addEventListener("click", () => {
+        exportDateDraft = new Date();
+        exportDateView = new Date(exportDateDraft.getFullYear(), exportDateDraft.getMonth(), 1);
+        renderExportDatePicker();
+    });
+    exportModal?.querySelector("[data-export-date-apply]")?.addEventListener("click", () => applyExportDateDraft());
+    exportModal?.querySelector("[data-export-date-close]")?.addEventListener("click", () => closeExportDatePicker());
+    document.addEventListener("keydown", (event) => {
+        if (event.key !== "Escape" || !exportDatePopover || exportDatePopover.classList.contains("hidden")) return;
+        closeExportDatePicker();
+    });
+    document.addEventListener("click", (event) => {
+        if (!exportModal || !exportDatePopover || exportDatePopover.classList.contains("hidden")) return;
+        if (event.target.closest("[data-export-date-popover], [data-export-date-trigger]")) return;
+        closeExportDatePicker();
+    }, true);
     document.querySelector("[data-export-reset]")?.addEventListener("click", () => resetExportFilters());
     document.addEventListener("hydroflow:backend-refreshed", () => syncExportFilters());
     document.addEventListener("hydroflow:language-changed", () => syncExportFilters());
@@ -9489,6 +9726,7 @@ ${sheets}
                 ...buildBackendExportSelection(effectiveContext),
                 context: effectiveContext,
                 format: selectedExportFormat,
+                report_type: selectedExportReportType,
                 source: lastExportSource || "Current page",
                 language: exportLang(),
             });
