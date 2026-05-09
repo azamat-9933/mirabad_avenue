@@ -3524,9 +3524,10 @@
         const residentButtons = Array.from(document.querySelectorAll("[data-resident-filter]"));
         const residentLayout = residentsGrid?.dataset.residentLayout || "card";
         const residentExpandButton = document.querySelector("[data-resident-expand]");
+        const residentFetchAll = residentsGrid?.dataset.residentFetchAll === "true";
         const residentPageSize = Number(residentsGrid?.dataset.residentPageSize || residentsGrid?.dataset.residentLimit || 8) || 8;
-        const residentCollapsedSize = Number(residentsGrid?.dataset.residentCollapsedSize || 10) || 10;
-        let residentExpanded = false;
+        const residentCollapsedSize = residentFetchAll ? residentPageSize : Number(residentsGrid?.dataset.residentCollapsedSize || 10) || 10;
+        let residentExpanded = residentFetchAll;
         let residentFilterSortState = { filter: "all", direction: "" };
         const residentFilterDefaults = {
             page: "1",
@@ -3640,9 +3641,46 @@
         };
         const updateResidentExpandButton = (total, shown) => {
             if (!residentExpandButton) return;
+            if (residentFetchAll) {
+                residentExpandButton.classList.add("hidden");
+                residentExpandButton.setAttribute("aria-hidden", "true");
+                return;
+            }
             const canExpand = !residentExpanded && Number(total || 0) > Number(shown || 0);
             residentExpandButton.classList.toggle("hidden", !canExpand);
             residentExpandButton.setAttribute("aria-hidden", canExpand ? "false" : "true");
+        };
+        const fetchResidentList = async (params, pageSize) => {
+            const firstPage = await fetchServerList("/api/lists/residents/", {
+                ...params,
+                page: residentFetchAll ? 1 : params.page,
+                page_size: pageSize,
+            });
+            if (!residentFetchAll) return firstPage;
+
+            const totalPages = Number(firstPage.pages || 1);
+            if (totalPages <= 1) return firstPage;
+
+            const restPages = await Promise.all(
+                Array.from({ length: totalPages - 1 }, (_item, index) => (
+                    fetchServerList("/api/lists/residents/", {
+                        ...params,
+                        page: index + 2,
+                        page_size: pageSize,
+                    })
+                ))
+            );
+            const results = [
+                ...(firstPage.results || []),
+                ...restPages.flatMap((page) => page.results || []),
+            ];
+            return {
+                ...firstPage,
+                page: 1,
+                page_size: results.length,
+                pages: 1,
+                results,
+            };
         };
         const loadResidents = async () => {
             if (!residentsGrid) return;
@@ -3654,13 +3692,12 @@
             const effectivePageSize = residentExpanded
                 ? residentPageSize
                 : Math.min(residentCollapsedSize, residentPageSize);
-            const payload = await fetchServerList("/api/lists/residents/", {
+            const payload = await fetchResidentList({
                 ...params,
                 page: state.page,
-                page_size: effectivePageSize,
                 status: scopedStatus,
                 ordering: state.ordering,
-            });
+            }, effectivePageSize);
             residentsGrid.innerHTML = payload.results.map((resident) => renderResidentCardMarkup(resident, residentLayout)).join("");
             residentButtons.forEach((button) => {
                 const active = (button.dataset.residentFilter || "all") === scopedStatus;
