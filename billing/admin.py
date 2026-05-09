@@ -1,7 +1,7 @@
 from django.contrib import admin, messages
+from django.core.exceptions import ValidationError
 from django.db.models import Sum, Count
 from django.urls import reverse
-from django.utils import timezone
 from django.utils.html import format_html, format_html_join
 
 from .models import (
@@ -159,29 +159,39 @@ class BillingPeriodAdmin(admin.ModelAdmin):
 
     @admin.action(description="✓ Tanlangan davrlarni YoPISh")
     def action_close_period(self, request, queryset):
-        open_qs = queryset.filter(status=BillingPeriod.STATUS_OPEN)
-        count   = open_qs.count()
-        open_qs.update(
-            status=BillingPeriod.STATUS_CLOSED,
-            closed_at=timezone.now(),
-        )
-        self.message_user(
-            request,
-            f"{count} ta davr yopildi. "
-            "Hisob-fakturalar views.py orqali yaratiladi.",
-            messages.SUCCESS,
-        )
+        closed_count = 0
+        errors_count = 0
+        for period in queryset:
+            try:
+                period.close_period()
+                closed_count += 1
+            except ValidationError as exc:
+                errors_count += 1
+                self.message_user(request, f"{period.name}: {exc}", messages.ERROR)
+        if closed_count:
+            self.message_user(
+                request,
+                f"{closed_count} ta davr yopildi. Hisob-fakturalar va hisoblar yaratildi.",
+                messages.SUCCESS,
+            )
+        if not closed_count and not errors_count:
+            self.message_user(request, "Yopish uchun davr tanlanmadi.", messages.WARNING)
 
     @admin.action(description="↺ Tanlangan davrlarni OChISh (pereraschyot uchun)")
     def action_reopen_period(self, request, queryset):
-        closed_qs = queryset.filter(status=BillingPeriod.STATUS_CLOSED)
-        count     = closed_qs.count()
-        closed_qs.update(status=BillingPeriod.STATUS_OPEN, closed_at=None)
-        self.message_user(
-            request,
-            f"{count} ta davr qayta ochildi.",
-            messages.WARNING,
-        )
+        reopened_count = 0
+        for period in queryset:
+            try:
+                period.reopen_period()
+                reopened_count += 1
+            except ValidationError as exc:
+                self.message_user(request, f"{period.name}: {exc}", messages.ERROR)
+        if reopened_count:
+            self.message_user(
+                request,
+                f"{reopened_count} ta davr qayta ochildi.",
+                messages.WARNING,
+            )
 
 
 # ══════════════════════════════════════════════════════

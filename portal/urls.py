@@ -11,6 +11,7 @@ urlpatterns = [
     path("system-health/", views.SystemHealthView.as_view(), name="system_health"),
     path("billing/", views.BillingView.as_view(), name="billing"),
     path("billing/periods/create", views.BillingPeriodCreateView.as_view(), name="billing_period_create"),
+    path("billing/periods/create/", views.BillingPeriodCreateView.as_view(), name="billing_period_create_slash"),
     path("analytics/", views.AnalyticsView.as_view(), name="analytics"),
     path("api", RedirectView.as_view(url="/api/", permanent=False), name="api_root_redirect"),
     path("api/", views.api_root, name="api_root"),

@@ -3,16 +3,20 @@ import base64
 import io
 import re
 import zipfile
+from collections import defaultdict
+from urllib.parse import urlencode
 from decimal import Decimal, InvalidOperation
 from datetime import datetime, time, timedelta
 
+from django.contrib import messages
 from django.contrib.auth import logout
 from django.core.paginator import EmptyPage, Paginator
-from django.core.exceptions import ImproperlyConfigured
-from django.db import DatabaseError, OperationalError, transaction
+from django.core.exceptions import ImproperlyConfigured, ValidationError
+from django.db import DatabaseError, OperationalError, connection, transaction
 from django.db.models import Case, Count, F, IntegerField, Max, Prefetch, Q, Sum, Value, When
 from django.http import JsonResponse
 from django.http.request import RawPostDataException
+from django.shortcuts import redirect
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.dateparse import parse_date, parse_datetime
@@ -23,7 +27,7 @@ from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema
 from rest_framework.decorators import api_view
 
-from billing.models import HotWaterMeterReading
+from billing.models import BillingPeriod, Expense, HeatingApartmentUsage, HeatingRecord, HotWaterMeterReading
 from main_app.models import DEFAULT_SECTOR_NAME
 from properties.models import Apartment, Building, Complex, Owner
 from payments.models import Transaction
@@ -110,6 +114,295 @@ class BillingPeriodCreateView(PortalPageView):
     template_name = "portal/billing_period_create.html"
     page_title = "Create Billing Period | HydroFlow"
     active_page = "billing_period"
+
+    def _redirect_with_filters(self, request):
+        query = {}
+        building_id = str(request.POST.get("building_id") or request.GET.get("building_id") or "").strip()
+        period_id = str(request.POST.get("period_id") or request.GET.get("period_id") or "").strip()
+        if building_id:
+            query["building_id"] = building_id
+        if period_id:
+            query["period_id"] = period_id
+        url = reverse("portal:billing_period_create")
+        if query:
+            url = f"{url}?{urlencode(query)}"
+        return redirect(url)
+
+    def _parse_int(self, value):
+        try:
+            return int(str(value or "").strip())
+        except (TypeError, ValueError):
+            return 0
+
+    def _missing_billing_core_tables(self):
+        existing = set(connection.introspection.table_names())
+        required = {
+            "billing_buildingservice",
+            "billing_serviceexpense",
+            "billing_heatingapartmentusage",
+            "billing_hotwaterreading",
+            "billing_charge",
+            "billing_invoice",
+            "billing_recalculationlog",
+            "billing_heatingcalculationsummary",
+            "billing_hotwatercalculationsummary",
+        }
+        return sorted(required - existing)
+
+    def _parse_excluded_dates(self, raw_value, period):
+        raw = str(raw_value or "").strip()
+        if not raw:
+            return []
+        tokens = [token.strip() for token in re.split(r"[,\s]+", raw) if token.strip()]
+        values = []
+        seen = set()
+        for token in tokens:
+            date_value = parse_date(token)
+            if not date_value:
+                raise ValidationError(f"Noto'g'ri sana formati: {token}. Format YYYY-MM-DD.")
+            if date_value < period.start_date or date_value > period.end_date:
+                raise ValidationError(
+                    f"Sana davr oralig'idan tashqarida: {token}. Davr: {period.start_date} - {period.end_date}."
+                )
+            key = date_value.isoformat()
+            if key in seen:
+                continue
+            seen.add(key)
+            values.append(key)
+        values.sort()
+        return values
+
+    def post(self, request, *args, **kwargs):
+        action = str(request.POST.get("action") or "").strip()
+        try:
+            if action == "add_expense":
+                self._handle_add_expense(request)
+            elif action == "update_status":
+                self._handle_update_status(request)
+            elif action == "update_heating_record":
+                self._handle_update_heating_record(request)
+            else:
+                messages.error(request, "Noma'lum amal.")
+        except ValidationError as exc:
+            messages.error(request, str(exc))
+        except (DatabaseError, OperationalError) as exc:
+            messages.error(
+                request,
+                f"Bazada billing jadvallari to'liq emas yoki xatolik bor: {exc}",
+            )
+        return self._redirect_with_filters(request)
+
+    def _handle_add_expense(self, request):
+        period_id = self._parse_int(request.POST.get("period_id"))
+        building_id = self._parse_int(request.POST.get("building_id"))
+        service_type = str(request.POST.get("service_type") or "").strip()
+        name = str(request.POST.get("name") or "").strip()
+        amount_raw = str(request.POST.get("amount") or "").strip()
+
+        if not period_id or not building_id:
+            raise ValidationError("Davr va uy tanlanishi shart.")
+        if service_type not in {"heating", "hot_water"}:
+            raise ValidationError("Xizmat turi noto'g'ri.")
+        if not name:
+            raise ValidationError("Xarajat nomini kiriting.")
+        try:
+            amount = Decimal(amount_raw)
+        except (InvalidOperation, TypeError):
+            raise ValidationError("Summa noto'g'ri.")
+        if amount <= 0:
+            raise ValidationError("Summa 0 dan katta bo'lishi kerak.")
+
+        period = BillingPeriod.objects.get(pk=period_id)
+        building = Building.objects.get(pk=building_id)
+        Expense.objects.create(
+            period=period,
+            building=building,
+            service_type=service_type,
+            name=name,
+            amount=amount,
+        )
+        period.buildings.add(building)
+        messages.success(request, "Xarajat qo'shildi.")
+
+    def _handle_update_status(self, request):
+        period_id = self._parse_int(request.POST.get("period_id"))
+        if not period_id:
+            raise ValidationError("Davr tanlanmadi.")
+        status = str(request.POST.get("status") or "").strip().lower()
+        period = BillingPeriod.objects.get(pk=period_id)
+        missing_tables = self._missing_billing_core_tables()
+
+        if status == period.status:
+            messages.info(request, "Davr holati o'zgarmadi.")
+            return
+        if status == BillingPeriod.STATUS_CLOSED:
+            if missing_tables:
+                raise ValidationError(
+                    "Hisoblarni yopish uchun billing migratsiyalarini qo'llang. "
+                    f"Yo'q jadvallar: {', '.join(missing_tables)}."
+                )
+            period.close_period()
+            messages.success(request, "Davr yopildi, hisoblar foydalanuvchilarga qo'yildi.")
+            return
+        if status == BillingPeriod.STATUS_REOPENED:
+            if missing_tables:
+                raise ValidationError(
+                    "Davr holatini qayta ochish uchun billing migratsiyalarini qo'llang. "
+                    f"Yo'q jadvallar: {', '.join(missing_tables)}."
+                )
+            period.reopen_period()
+            messages.warning(request, "Davr qayta ochildi.")
+            return
+        if status == BillingPeriod.STATUS_DRAFT:
+            period.status = BillingPeriod.STATUS_DRAFT
+            period.closed_at = None
+            period.save(update_fields=["status", "closed_at"])
+            messages.success(request, "Davr holati draft ga o'zgartirildi.")
+            return
+        raise ValidationError("Noto'g'ri status.")
+
+    def _handle_update_heating_record(self, request):
+        period_id = self._parse_int(request.POST.get("period_id"))
+        apartment_id = self._parse_int(request.POST.get("apartment_id"))
+        if not period_id or not apartment_id:
+            raise ValidationError("Davr yoki kvartira tanlanmadi.")
+
+        period = BillingPeriod.objects.get(pk=period_id)
+        apartment = Apartment.objects.select_related("building").get(pk=apartment_id)
+        excluded_dates = self._parse_excluded_dates(request.POST.get("excluded_dates", ""), period)
+
+        record, _ = HeatingRecord.objects.get_or_create(period=period, apartment=apartment)
+        record.excluded_dates = excluded_dates
+        record.save(update_fields=["excluded_dates"])
+
+        for usage in HeatingApartmentUsage.objects.filter(
+            service__period=period,
+            service__building=apartment.building,
+            apartment=apartment,
+        ):
+            usage.days_provided = record.heated_days
+            usage.save(update_fields=["days_provided", "heated_area", "updated_at"])
+
+        messages.success(request, f"Kv.{apartment.number} uchun isitish kunlari yangilandi.")
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        missing_core_tables = self._missing_billing_core_tables()
+        can_count_charges = "billing_charge" not in missing_core_tables
+        can_count_invoices = "billing_invoice" not in missing_core_tables
+
+        buildings = list(
+            Building.objects.select_related("complex").prefetch_related("apartments").order_by("number", "id")
+        )
+        periods = list(
+            BillingPeriod.objects.prefetch_related("buildings").order_by("-start_date", "-id")
+        )
+        expenses = list(
+            Expense.objects.select_related("building", "period")
+            .order_by("-id")
+        )
+
+        expense_totals = defaultdict(Decimal)
+        for expense in expenses:
+            expense_totals[(expense.period_id, expense.building_id, expense.service_type)] += expense.amount or Decimal("0")
+
+        periods_by_building = defaultdict(list)
+        for period in periods:
+            for building in period.buildings.all():
+                periods_by_building[building.id].append(period)
+
+        building_period_cards = []
+        for building in buildings:
+            period_rows = []
+            for period in periods_by_building.get(building.id, []):
+                period_rows.append(
+                    {
+                        "id": period.id,
+                        "name": period.title,
+                        "start_date": period.start_date,
+                        "end_date": period.end_date,
+                        "total_days": period.total_days,
+                        "status": period.status,
+                        "heating_expense": expense_totals[(period.id, building.id, "heating")],
+                        "hot_water_expense": expense_totals[(period.id, building.id, "hot_water")],
+                        "charges_count": (
+                            period.charges.filter(
+                                apartment__building=building,
+                                is_cancelled=False,
+                            ).count()
+                            if can_count_charges
+                            else 0
+                        ),
+                        "invoices_count": (
+                            period.invoices.filter(apartment__building=building).count()
+                            if can_count_invoices
+                            else 0
+                        ),
+                    }
+                )
+            building_period_cards.append(
+                {
+                    "building": building,
+                    "periods": period_rows,
+                }
+            )
+
+        selected_building_id = self._parse_int(self.request.GET.get("building_id"))
+        selected_period_id = self._parse_int(self.request.GET.get("period_id"))
+        selected_building = None
+        if selected_building_id:
+            selected_building = next((item for item in buildings if item.id == selected_building_id), None)
+        if not selected_building and building_period_cards:
+            selected_building = building_period_cards[0]["building"]
+
+        selected_period = None
+        if selected_building:
+            selected_periods = periods_by_building.get(selected_building.id, [])
+            if selected_period_id:
+                selected_period = next((item for item in selected_periods if item.id == selected_period_id), None)
+            if not selected_period and selected_periods:
+                selected_period = selected_periods[0]
+
+        apartment_rows = []
+        if selected_building and selected_period:
+            apartment_queryset = selected_building.apartments.select_related("owner").order_by("number", "id")
+            record_map = {
+                record.apartment_id: record
+                for record in HeatingRecord.objects.filter(
+                    period=selected_period,
+                    apartment__building=selected_building,
+                ).select_related("apartment")
+            }
+            for apartment in apartment_queryset:
+                record = record_map.get(apartment.id)
+                heated_days = record.heated_days if record else selected_period.total_days
+                not_heated = len(record.excluded_dates) if record else 0
+                apartment_rows.append(
+                    {
+                        "apartment": apartment,
+                        "owner": getattr(apartment, "owner", None),
+                        "heated_days": heated_days,
+                        "not_heated_days": not_heated,
+                        "excluded_dates": ", ".join(record.excluded_dates) if record else "",
+                        "record_admin_url": (
+                            reverse("admin:billing_heatingrecord_change", args=[record.id])
+                            if record else ""
+                        ),
+                    }
+                )
+
+        ctx.update(
+            {
+                "building_period_cards": building_period_cards,
+                "billing_periods": periods,
+                "selected_building": selected_building,
+                "selected_period": selected_period,
+                "apartment_rows": apartment_rows,
+                "status_choices": BillingPeriod.STATUS_CHOICES,
+                "missing_billing_core_tables": missing_core_tables,
+            }
+        )
+        return ctx
 
 
 class AnalyticsView(PortalPageView):

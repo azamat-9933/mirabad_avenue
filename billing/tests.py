@@ -10,10 +10,12 @@ from billing.models import (
     BillingPeriod,
     BuildingService,
     Charge,
+    Expense,
     HeatingApartmentUsage,
     HeatingRecord,
     HotWaterMeterReading,
     HotWaterReading,
+    Invoice,
     Payment,
     RecalculationLog,
     ServiceExpense,
@@ -193,6 +195,33 @@ class BillingCoreModelTests(TestCase):
         self.assertEqual(Charge.objects.filter(period=self.period, is_cancelled=False).count(), 2)
         self.assertEqual(self.owner_1.balance, Decimal("-3123.52"))
         self.assertEqual(self.owner_2.balance, Decimal("148223.50"))
+        self.assertEqual(Invoice.objects.filter(period=self.period).count(), 2)
+
+    def test_close_period_bootstraps_core_rows_from_legacy_records(self):
+        Expense.objects.create(
+            period=self.period,
+            building=self.building,
+            service_type="heating",
+            name="Legacy heating expense",
+            amount=Decimal("4900.00"),
+        )
+        HeatingRecord.objects.create(
+            period=self.period,
+            apartment=self.apartment_1,
+            excluded_dates=[],
+        )
+        HeatingRecord.objects.create(
+            period=self.period,
+            apartment=self.apartment_2,
+            excluded_dates=[],
+        )
+
+        self.period.close_period()
+
+        self.assertEqual(BuildingService.objects.filter(period=self.period, building=self.building).count(), 1)
+        self.assertEqual(HeatingApartmentUsage.objects.filter(service__period=self.period).count(), 2)
+        self.assertEqual(Charge.objects.filter(period=self.period, is_cancelled=False).count(), 2)
+        self.assertEqual(Invoice.objects.filter(period=self.period).count(), 2)
 
     def test_reopen_period_only_from_closed(self):
         with self.assertRaises(ValidationError):
@@ -224,6 +253,7 @@ class BillingCoreModelTests(TestCase):
         self.assertEqual(active.count(), 2)
         self.assertEqual(cancelled.count(), 2)
         self.assertTrue(RecalculationLog.objects.filter(period=self.period).exists())
+        self.assertTrue(Invoice.objects.filter(period=self.period, is_recalculated=True).exists())
 
         self.owner_1.refresh_from_db()
         self.owner_2.refresh_from_db()

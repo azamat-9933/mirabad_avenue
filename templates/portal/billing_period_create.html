@@ -2,22 +2,239 @@
 {% block title %}{{ page_title }}{% endblock %}
 {% block page_body %}
 <main class="ml-64 min-h-screen pt-16">
-<div class="px-8 py-8">
-<section class="max-w-4xl bg-surface-container-lowest rounded-2xl border border-outline-variant/10 shadow-sm p-8">
-<p class="text-[11px] font-black uppercase tracking-[0.18em] text-primary" data-i18n-key="Billing">Billing</p>
-<h1 class="mt-3 text-3xl font-black text-on-surface" data-i18n-key="Create Billing Period">Create Billing Period</h1>
-<p class="mt-3 text-sm text-on-surface-variant max-w-2xl" data-i18n-key="Create a new расчетный период for heating and hot water calculations.">Create a new расчетный период for heating and hot water calculations.</p>
-<div class="mt-8 flex flex-wrap gap-3">
-<a class="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-primary text-white text-sm font-bold hover:opacity-90 transition-all" href="/admin/billing/billingperiod/add/">
-<span class="material-symbols-outlined text-base">calendar_month</span>
-<span data-i18n-key="Open admin form">Open admin form</span>
-</a>
-<a class="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-surface-container text-on-surface text-sm font-bold hover:bg-surface-container-high transition-all" href="/billing/">
-<span class="material-symbols-outlined text-base">arrow_back</span>
-<span data-i18n-key="Back to Billing">Back to Billing</span>
-</a>
-</div>
-</section>
-</div>
+  <div class="px-8 py-8 space-y-6">
+    <section class="rounded-2xl border border-outline-variant/20 bg-surface-container-lowest p-6 shadow-sm">
+      <div class="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <p class="text-xs font-black uppercase tracking-[0.18em] text-primary">Billing</p>
+          <h1 class="mt-2 text-3xl font-black text-on-surface">House Billing Periods</h1>
+          <p class="mt-2 text-sm text-on-surface-variant">
+            Manage periods by house, add expenses, update status, and edit heating days per apartment.
+          </p>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <a href="/admin/billing/billingperiod/add/" class="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-bold text-white hover:opacity-90">
+            <span class="material-symbols-outlined text-base">calendar_month</span>
+            <span>Create period</span>
+          </a>
+          <a href="/billing/" class="inline-flex items-center gap-2 rounded-xl bg-surface-container px-4 py-2 text-sm font-bold text-on-surface hover:bg-surface-container-high">
+            <span class="material-symbols-outlined text-base">arrow_back</span>
+            <span>Back to Billing</span>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    {% if messages %}
+      <section class="space-y-2">
+        {% for message in messages %}
+          <div class="rounded-xl border px-4 py-3 text-sm font-semibold {% if message.tags == 'error' %}border-red-300 bg-red-50 text-red-700{% elif message.tags == 'warning' %}border-amber-300 bg-amber-50 text-amber-800{% elif message.tags == 'success' %}border-emerald-300 bg-emerald-50 text-emerald-800{% else %}border-slate-300 bg-slate-50 text-slate-700{% endif %}">
+            {{ message }}
+          </div>
+        {% endfor %}
+      </section>
+    {% endif %}
+
+    {% if missing_billing_core_tables %}
+      <section class="rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+        <p class="font-semibold">Billing core tables are missing in database.</p>
+        <p class="mt-1">Apply migrations before closing/reopening periods. Missing tables: {{ missing_billing_core_tables|join:", " }}</p>
+      </section>
+    {% endif %}
+
+    <section class="space-y-4">
+      {% for item in building_period_cards %}
+        <article class="rounded-2xl border border-outline-variant/20 bg-surface-container-lowest shadow-sm">
+          <header class="flex flex-wrap items-center justify-between gap-3 border-b border-outline-variant/20 px-5 py-4">
+            <div>
+              <h2 class="text-xl font-black text-on-surface">House {{ item.building.number }}</h2>
+              <p class="text-sm text-on-surface-variant">{{ item.building.complex.title }}</p>
+            </div>
+            <a href="?building_id={{ item.building.id }}" class="inline-flex items-center gap-2 rounded-lg border border-outline-variant/30 px-3 py-2 text-xs font-bold text-on-surface-variant hover:bg-surface-container">
+              <span class="material-symbols-outlined text-sm">visibility</span>
+              <span>Open details</span>
+            </a>
+          </header>
+          <div class="overflow-x-auto">
+            <table class="min-w-full text-sm">
+              <thead class="bg-surface-container text-on-surface-variant">
+                <tr>
+                  <th class="px-4 py-3 text-left font-bold">Period</th>
+                  <th class="px-4 py-3 text-left font-bold">Dates</th>
+                  <th class="px-4 py-3 text-left font-bold">Status</th>
+                  <th class="px-4 py-3 text-left font-bold">Heating Expense</th>
+                  <th class="px-4 py-3 text-left font-bold">Hot Water Expense</th>
+                  <th class="px-4 py-3 text-left font-bold">Charges</th>
+                  <th class="px-4 py-3 text-left font-bold">Invoices</th>
+                  <th class="px-4 py-3 text-left font-bold">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for row in item.periods %}
+                  <tr class="border-t border-outline-variant/15">
+                    <td class="px-4 py-3 font-semibold text-on-surface">{{ row.name }}</td>
+                    <td class="px-4 py-3 text-on-surface-variant">
+                      {{ row.start_date }} - {{ row.end_date }}<br/>
+                      <span class="text-xs">{{ row.total_days }} days</span>
+                    </td>
+                    <td class="px-4 py-3">
+                      <form method="post" class="flex items-center gap-2">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="update_status"/>
+                        <input type="hidden" name="period_id" value="{{ row.id }}"/>
+                        <input type="hidden" name="building_id" value="{{ item.building.id }}"/>
+                        <select name="status" class="rounded-lg border border-outline-variant/40 bg-white px-2 py-1 text-xs font-semibold text-on-surface">
+                          {% for value, label in status_choices %}
+                            <option value="{{ value }}" {% if row.status == value %}selected{% endif %}>{{ label }}</option>
+                          {% endfor %}
+                        </select>
+                        <button type="submit" class="rounded-lg bg-primary px-2 py-1 text-xs font-bold text-white hover:opacity-90">Save</button>
+                      </form>
+                    </td>
+                    <td class="px-4 py-3 font-semibold text-on-surface">{{ row.heating_expense }}</td>
+                    <td class="px-4 py-3 font-semibold text-on-surface">{{ row.hot_water_expense }}</td>
+                    <td class="px-4 py-3 text-on-surface">{{ row.charges_count }}</td>
+                    <td class="px-4 py-3 text-on-surface">{{ row.invoices_count }}</td>
+                    <td class="px-4 py-3">
+                      <div class="flex flex-wrap gap-2">
+                        <a href="?building_id={{ item.building.id }}&period_id={{ row.id }}" class="rounded-lg border border-outline-variant/40 px-2 py-1 text-xs font-bold text-on-surface-variant hover:bg-surface-container">Details</a>
+                        <a href="/admin/billing/billingperiod/{{ row.id }}/change/" class="rounded-lg border border-outline-variant/40 px-2 py-1 text-xs font-bold text-on-surface-variant hover:bg-surface-container">Admin period</a>
+                        <a href="/admin/billing/heatingrecord/?period__id__exact={{ row.id }}&apartment__building__id__exact={{ item.building.id }}" class="rounded-lg border border-outline-variant/40 px-2 py-1 text-xs font-bold text-on-surface-variant hover:bg-surface-container">Heating days</a>
+                      </div>
+                    </td>
+                  </tr>
+                {% empty %}
+                  <tr>
+                    <td colspan="8" class="px-4 py-4 text-sm text-on-surface-variant">No periods linked to this house yet.</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </article>
+      {% empty %}
+        <div class="rounded-2xl border border-outline-variant/20 bg-surface-container-lowest p-6 text-sm text-on-surface-variant">
+          Houses not found.
+        </div>
+      {% endfor %}
+    </section>
+
+    {% if selected_building and selected_period %}
+      <section class="rounded-2xl border border-outline-variant/20 bg-surface-container-lowest p-6 shadow-sm space-y-5">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 class="text-xl font-black text-on-surface">
+              Details: House {{ selected_building.number }} / {{ selected_period.title }}
+            </h2>
+            <p class="text-sm text-on-surface-variant">
+              {{ selected_period.start_date }} - {{ selected_period.end_date }} ({{ selected_period.total_days }} days)
+            </p>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <a href="/admin/billing/expense/?period__id__exact={{ selected_period.id }}&building__id__exact={{ selected_building.id }}" class="rounded-lg border border-outline-variant/40 px-3 py-2 text-xs font-bold text-on-surface-variant hover:bg-surface-container">
+              Expense list
+            </a>
+            <a href="/admin/billing/invoice/?period__id__exact={{ selected_period.id }}&apartment__building__id__exact={{ selected_building.id }}" class="rounded-lg border border-outline-variant/40 px-3 py-2 text-xs font-bold text-on-surface-variant hover:bg-surface-container">
+              Invoice list
+            </a>
+          </div>
+        </div>
+
+        <div class="grid gap-4 lg:grid-cols-3">
+          <form method="post" class="rounded-xl border border-outline-variant/20 bg-surface p-4 space-y-3 lg:col-span-2">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="add_expense"/>
+            <input type="hidden" name="period_id" value="{{ selected_period.id }}"/>
+            <input type="hidden" name="building_id" value="{{ selected_building.id }}"/>
+            <h3 class="text-sm font-black uppercase tracking-[0.12em] text-primary">Add Expense</h3>
+            <div class="grid gap-3 md:grid-cols-4">
+              <label class="text-xs font-bold text-on-surface-variant md:col-span-1">
+                Service
+                <select name="service_type" class="mt-1 w-full rounded-lg border border-outline-variant/40 px-2 py-2 text-sm font-semibold text-on-surface">
+                  <option value="heating">Heating</option>
+                  <option value="hot_water">Hot water</option>
+                </select>
+              </label>
+              <label class="text-xs font-bold text-on-surface-variant md:col-span-2">
+                Expense name
+                <input name="name" type="text" class="mt-1 w-full rounded-lg border border-outline-variant/40 px-2 py-2 text-sm text-on-surface" placeholder="Boiler service"/>
+              </label>
+              <label class="text-xs font-bold text-on-surface-variant md:col-span-1">
+                Amount
+                <input name="amount" type="number" min="0" step="0.01" class="mt-1 w-full rounded-lg border border-outline-variant/40 px-2 py-2 text-sm text-on-surface" placeholder="0.00"/>
+              </label>
+            </div>
+            <button type="submit" class="rounded-lg bg-primary px-4 py-2 text-xs font-bold text-white hover:opacity-90">Add expense</button>
+          </form>
+
+          <form method="post" class="rounded-xl border border-outline-variant/20 bg-surface p-4 space-y-3">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="update_status"/>
+            <input type="hidden" name="period_id" value="{{ selected_period.id }}"/>
+            <input type="hidden" name="building_id" value="{{ selected_building.id }}"/>
+            <h3 class="text-sm font-black uppercase tracking-[0.12em] text-primary">Period Status</h3>
+            <select name="status" class="w-full rounded-lg border border-outline-variant/40 px-2 py-2 text-sm font-semibold text-on-surface">
+              {% for value, label in status_choices %}
+                <option value="{{ value }}" {% if selected_period.status == value %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+            <p class="text-xs text-on-surface-variant">
+              Closing period will generate charges and invoices for residents.
+            </p>
+            <button type="submit" class="w-full rounded-lg bg-primary px-3 py-2 text-xs font-bold text-white hover:opacity-90">Apply status</button>
+          </form>
+        </div>
+
+        <div class="overflow-x-auto rounded-xl border border-outline-variant/20">
+          <table class="min-w-full text-sm">
+            <thead class="bg-surface-container text-on-surface-variant">
+              <tr>
+                <th class="px-4 py-3 text-left font-bold">Apartment</th>
+                <th class="px-4 py-3 text-left font-bold">Resident</th>
+                <th class="px-4 py-3 text-left font-bold">Area</th>
+                <th class="px-4 py-3 text-left font-bold">Heated days</th>
+                <th class="px-4 py-3 text-left font-bold">No heating days</th>
+                <th class="px-4 py-3 text-left font-bold">Not heated dates (YYYY-MM-DD, comma)</th>
+                <th class="px-4 py-3 text-left font-bold">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in apartment_rows %}
+                <tr class="border-t border-outline-variant/15">
+                  <td class="px-4 py-3 font-semibold text-on-surface">{{ row.apartment.number }}</td>
+                  <td class="px-4 py-3 text-on-surface-variant">{% if row.owner %}{{ row.owner.fio }}{% else %}-{% endif %}</td>
+                  <td class="px-4 py-3 text-on-surface">{{ row.apartment.area }}</td>
+                  <td class="px-4 py-3 font-semibold text-emerald-700">{{ row.heated_days }}</td>
+                  <td class="px-4 py-3 font-semibold text-red-700">{{ row.not_heated_days }}</td>
+                  <td class="px-4 py-3 min-w-[280px]">
+                    <form method="post" class="flex items-center gap-2">
+                      {% csrf_token %}
+                      <input type="hidden" name="action" value="update_heating_record"/>
+                      <input type="hidden" name="period_id" value="{{ selected_period.id }}"/>
+                      <input type="hidden" name="building_id" value="{{ selected_building.id }}"/>
+                      <input type="hidden" name="apartment_id" value="{{ row.apartment.id }}"/>
+                      <input name="excluded_dates" value="{{ row.excluded_dates }}" class="w-full rounded-lg border border-outline-variant/40 px-2 py-2 text-xs text-on-surface" placeholder="2026-01-04, 2026-01-05"/>
+                      <button type="submit" class="rounded-lg bg-primary px-3 py-2 text-xs font-bold text-white hover:opacity-90">Save</button>
+                    </form>
+                  </td>
+                  <td class="px-4 py-3">
+                    {% if row.record_admin_url %}
+                      <a href="{{ row.record_admin_url }}" class="rounded-lg border border-outline-variant/40 px-2 py-1 text-xs font-bold text-on-surface-variant hover:bg-surface-container">Admin</a>
+                    {% else %}
+                      <span class="text-xs text-on-surface-variant">New record</span>
+                    {% endif %}
+                  </td>
+                </tr>
+              {% empty %}
+                <tr>
+                  <td colspan="7" class="px-4 py-4 text-on-surface-variant">No apartments found for this house.</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    {% endif %}
+  </div>
 </main>
 {% endblock %}

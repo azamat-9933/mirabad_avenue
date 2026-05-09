@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections import defaultdict
 from datetime import timedelta
 from decimal import Decimal, ROUND_HALF_UP
 
@@ -170,6 +171,246 @@ class BillingPeriod(models.Model):
     def _active_charges(self):
         return self.charges.filter(is_cancelled=False)
 
+    def _building_ids_for_period(self):
+        ids = set(self.buildings.values_list("id", flat=True))
+        ids.update(self.expenses.values_list("building_id", flat=True))
+        ids.update(
+            HeatingRecord.objects.filter(period=self).values_list(
+                "apartment__building_id", flat=True
+            )
+        )
+        ids.update(
+            HotWaterMeterReading.objects.filter(period=self).values_list(
+                "apartment__building_id", flat=True
+            )
+        )
+        return {building_id for building_id in ids if building_id}
+
+    def bootstrap_services_from_legacy(self):
+        """
+        Build/refresh billing-core records from legacy billing rows.
+
+        This keeps close/recalculate working even when users only filled
+        legacy period data (Expense, HeatingRecord, HotWaterMeterReading).
+        """
+        if not self.pk:
+            return {"services_created": 0, "services_updated": 0}
+
+        period_days = self.days_count()
+        created_services = 0
+        updated_services = 0
+        building_ids = self._building_ids_for_period()
+        if not building_ids:
+            return {"services_created": 0, "services_updated": 0}
+
+        apartments = Apartment.objects.filter(building_id__in=building_ids).select_related("building")
+        apartments_by_building = defaultdict(list)
+        apartment_ids = []
+        for apartment in apartments:
+            apartments_by_building[apartment.building_id].append(apartment)
+            apartment_ids.append(apartment.id)
+
+        heating_records = {
+            record.apartment_id: record
+            for record in HeatingRecord.objects.filter(period=self, apartment_id__in=apartment_ids)
+        }
+        heating_override_apartment_ids = {
+            record.apartment_id
+            for record in heating_records.values()
+            if record.excluded_dates
+        }
+        hot_water_records = {}
+        for record in HotWaterMeterReading.objects.filter(period=self, apartment_id__in=apartment_ids):
+            if record.start_reading is None and record.end_reading is None:
+                continue
+            hot_water_records[record.apartment_id] = record
+
+        legacy_expenses = defaultdict(list)
+        for expense in self.expenses.select_related("building").all():
+            legacy_expenses[(expense.building_id, expense.service_type)].append(expense)
+        existing_services = set(
+            self.services.values_list("building_id", "service_type")
+        )
+
+        for building_id, apartment_rows in apartments_by_building.items():
+            has_heating_overrides = any(
+                apartment.id in heating_override_apartment_ids for apartment in apartment_rows
+            )
+            has_hot_water_records = any(apartment.id in hot_water_records for apartment in apartment_rows)
+            heating_needed = bool(
+                legacy_expenses.get((building_id, SERVICE_HEATING))
+                or has_heating_overrides
+                or (building_id, SERVICE_HEATING) in existing_services
+            )
+            hot_water_needed = bool(
+                legacy_expenses.get((building_id, SERVICE_HOT_WATER))
+                or has_hot_water_records
+                or (building_id, SERVICE_HOT_WATER) in existing_services
+            )
+
+            if heating_needed:
+                service, created = BuildingService.objects.get_or_create(
+                    period=self,
+                    building_id=building_id,
+                    service_type=SERVICE_HEATING,
+                )
+                if created:
+                    created_services += 1
+                else:
+                    updated_services += 1
+
+                expenses = legacy_expenses.get((building_id, SERVICE_HEATING), [])
+                if expenses:
+                    service.expense_items.all().delete()
+                    ServiceExpense.objects.bulk_create(
+                        [
+                            ServiceExpense(
+                                service=service,
+                                title=(expense.name or "Heating expense")[:255],
+                                amount=money(expense.amount),
+                            )
+                            for expense in expenses
+                        ]
+                    )
+
+                for apartment in apartment_rows:
+                    record = heating_records.get(apartment.id)
+                    days_value = record.heated_days if record else period_days
+                    usage, usage_created = HeatingApartmentUsage.objects.get_or_create(
+                        service=service,
+                        apartment=apartment,
+                        defaults={"days_provided": days_value},
+                    )
+                    should_sync_existing = bool(record and record.excluded_dates)
+                    if not usage_created and should_sync_existing and usage.days_provided != days_value:
+                        usage.days_provided = days_value
+                        usage.save(update_fields=["days_provided", "heated_area", "updated_at"])
+
+            if hot_water_needed:
+                service, created = BuildingService.objects.get_or_create(
+                    period=self,
+                    building_id=building_id,
+                    service_type=SERVICE_HOT_WATER,
+                )
+                if created:
+                    created_services += 1
+                else:
+                    updated_services += 1
+
+                expenses = legacy_expenses.get((building_id, SERVICE_HOT_WATER), [])
+                if expenses:
+                    service.expense_items.all().delete()
+                    ServiceExpense.objects.bulk_create(
+                        [
+                            ServiceExpense(
+                                service=service,
+                                title=(expense.name or "Hot water expense")[:255],
+                                amount=money(expense.amount),
+                            )
+                            for expense in expenses
+                        ]
+                    )
+
+                for apartment in apartment_rows:
+                    reading = hot_water_records.get(apartment.id)
+                    if not reading:
+                        continue
+                    start_value = _decimal(reading.start_reading)
+                    end_value = _decimal(reading.end_reading) if reading.end_reading is not None else start_value
+                    usage, usage_created = HotWaterReading.objects.get_or_create(
+                        service=service,
+                        apartment=apartment,
+                        defaults={"start_value": start_value, "end_value": end_value},
+                    )
+                    if not usage_created and (
+                        usage.start_value != start_value or usage.end_value != end_value
+                    ):
+                        usage.start_value = start_value
+                        usage.end_value = end_value
+                        usage.save(update_fields=["start_value", "end_value", "consumption", "updated_at"])
+
+        return {"services_created": created_services, "services_updated": updated_services}
+
+    def _sync_summaries_from_services(self):
+        HeatingCalculationSummary.objects.filter(period=self).delete()
+        HotWaterCalculationSummary.objects.filter(period=self).delete()
+        services = self.services.select_related("building")
+        for service in services:
+            if service.service_type == SERVICE_HEATING:
+                HeatingCalculationSummary.objects.create(
+                    period=self,
+                    building=service.building,
+                    section=None,
+                    total_expenses=money(service.total_expense),
+                    total_heated_area=service.total_volume,
+                    cost_per_sqm=service.tariff,
+                )
+                continue
+            HotWaterCalculationSummary.objects.create(
+                period=self,
+                building=service.building,
+                section=None,
+                total_expenses=money(service.total_expense),
+                total_consumption=service.total_volume,
+                tariff_per_m3=service.tariff,
+            )
+
+    def _sync_invoices_from_active_charges(self, mark_recalculated=False):
+        apartment_payload = {}
+        totals_by_apartment = defaultdict(Decimal)
+        heating_volume_by_apartment = defaultdict(Decimal)
+        heating_amount_by_apartment = defaultdict(Decimal)
+        hot_volume_by_apartment = defaultdict(Decimal)
+        hot_amount_by_apartment = defaultdict(Decimal)
+
+        active_charges = self._active_charges().select_related("apartment", "owner")
+        for charge in active_charges:
+            apartment_id = charge.apartment_id
+            apartment_payload[apartment_id] = {
+                "apartment": charge.apartment,
+                "owner_snapshot": charge.owner.fio,
+            }
+            totals_by_apartment[apartment_id] += _decimal(charge.amount)
+            if charge.charge_type == SERVICE_HEATING:
+                heating_volume_by_apartment[apartment_id] += _decimal(charge.volume)
+                heating_amount_by_apartment[apartment_id] += _decimal(charge.amount)
+            else:
+                hot_volume_by_apartment[apartment_id] += _decimal(charge.volume)
+                hot_amount_by_apartment[apartment_id] += _decimal(charge.amount)
+
+        keep_ids = set(apartment_payload.keys())
+        if not keep_ids:
+            self.invoices.all().delete()
+            return
+
+        now = timezone.now()
+        for apartment_id, payload in apartment_payload.items():
+            heating_volume = heating_volume_by_apartment[apartment_id]
+            heating_amount = heating_amount_by_apartment[apartment_id]
+            hot_volume = hot_volume_by_apartment[apartment_id]
+            hot_amount = hot_amount_by_apartment[apartment_id]
+            heating_tariff = rate(heating_amount / heating_volume) if heating_volume > 0 else None
+            hot_tariff = rate(hot_amount / hot_volume) if hot_volume > 0 else None
+            defaults = {
+                "owner_snapshot": payload["owner_snapshot"],
+                "heated_area": heating_volume if heating_volume > 0 else None,
+                "heating_cost_per_sqm": heating_tariff,
+                "heating_amount": money(heating_amount) if heating_amount > 0 else None,
+                "hot_water_consumption": hot_volume if hot_volume > 0 else None,
+                "hot_water_tariff": hot_tariff,
+                "hot_water_amount": money(hot_amount) if hot_amount > 0 else None,
+                "total_amount": money(totals_by_apartment[apartment_id]),
+                "is_recalculated": bool(mark_recalculated),
+                "recalculated_at": now if mark_recalculated else None,
+            }
+            Invoice.objects.update_or_create(
+                period=self,
+                apartment=payload["apartment"],
+                defaults=defaults,
+            )
+
+        self.invoices.exclude(apartment_id__in=keep_ids).delete()
+
     def _build_service_charges(self, service: "BuildingService"):
         service.calculate()
         if service.total_volume <= 0:
@@ -200,6 +441,8 @@ class BillingPeriod(models.Model):
             if locked._active_charges().exists():
                 raise ValidationError("Active charges already exist for this period.")
 
+            locked.sync_default_records()
+            locked.bootstrap_services_from_legacy()
             services = list(locked.services.select_related("building").all())
             if not services:
                 raise ValidationError("Billing period has no building services to close.")
@@ -226,6 +469,9 @@ class BillingPeriod(models.Model):
             for owner_id, total in owner_totals.items():
                 Owner.objects.filter(pk=owner_id).update(balance=models.F("balance") - total)
 
+            locked._sync_invoices_from_active_charges(mark_recalculated=False)
+            locked._sync_summaries_from_services()
+
             locked.status = self.STATUS_CLOSED
             locked.closed_at = timezone.now()
             locked.save(update_fields=["status", "closed_at"])
@@ -246,6 +492,8 @@ class BillingPeriod(models.Model):
             if locked.status not in {self.STATUS_CLOSED, self.STATUS_REOPENED}:
                 raise ValidationError("Only closed or reopened periods can be recalculated.")
 
+            locked.sync_default_records()
+            locked.bootstrap_services_from_legacy()
             active_charges = list(
                 locked.charges.select_related("owner").filter(is_cancelled=False)
             )
@@ -286,6 +534,9 @@ class BillingPeriod(models.Model):
                 delta = old_totals.get(owner_id, Decimal("0")) - new_totals.get(owner_id, Decimal("0"))
                 if delta:
                     Owner.objects.filter(pk=owner_id).update(balance=models.F("balance") + delta)
+
+            locked._sync_invoices_from_active_charges(mark_recalculated=True)
+            locked._sync_summaries_from_services()
 
             RecalculationLog.objects.create(
                 period=locked,
