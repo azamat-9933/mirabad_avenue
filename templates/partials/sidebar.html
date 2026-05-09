@@ -26,24 +26,23 @@
 <span class="material-symbols-outlined" data-icon="analytics" {% if active_page == 'analytics' %}style="font-variation-settings: 'FILL' 1;"{% endif %}>analytics</span>
 <span class="font-medium" data-i18n-key="Reports">Reports</span>
 </a>
+<a class="nav-item sidebar-link relative flex items-center gap-3 px-4 py-3 rounded-lg {% if active_page == 'billing_period' %}active is-active font-bold{% else %}dark:text-slate-400{% endif %}" data-nav-link href="{% url 'portal:billing_period_create' %}">
+<span class="material-symbols-outlined" data-icon="calendar_month" {% if active_page == 'billing_period' %}style="font-variation-settings: 'FILL' 1;"{% endif %}>calendar_month</span>
+<span class="font-medium" data-i18n-key="Billing Period">Billing Period</span>
+</a>
 </nav>
 <div class="mt-auto pt-3 border-t border-outline-variant/15">
 <div class="space-y-2">
 <div class="sidebar-premium-hub">
-<button class="sidebar-premium-item" data-modal-open="notifications-drawer" data-sidebar-notification-item type="button">
+<div class="sidebar-premium-dual" role="group" aria-label="Notifications">
+<button class="sidebar-premium-item sidebar-premium-zone" data-modal-open="notifications-drawer" data-notification-tab-open="all" data-sidebar-notification-item type="button">
 <span class="sidebar-premium-icon">
 <span class="material-symbols-outlined sidebar-premium-bell" data-icon="notifications">notifications</span>
 <span class="sidebar-premium-notification-dot sidebar-premium-dot" data-notification-dot></span>
 </span>
 <span class="sidebar-premium-copy" data-i18n-key="Notifications">Notifications</span>
 </button>
-<button class="sidebar-premium-item" data-modal-open="checklist-drawer" type="button">
-<span class="sidebar-premium-icon">
-<span class="material-symbols-outlined" data-icon="fact_check">fact_check</span>
-</span>
-<span class="sidebar-premium-copy" data-i18n-key="To do">To do</span>
-<span class="sidebar-premium-count" data-sidebar-todo-count>0 left</span>
-</button>
+</div>
 </div>
 <div class="mx-1 rounded-[24px] border border-white/75 bg-[linear-gradient(180deg,rgba(255,255,255,0.9),rgba(225,241,247,0.8))] px-3 py-2.5 shadow-[0_18px_34px_rgba(0,92,114,0.12)] backdrop-blur-xl ring-1 ring-[rgba(255,255,255,0.55)] dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(23,29,40,0.78),rgba(15,20,29,0.72))] dark:shadow-[0_18px_34px_rgba(0,0,0,0.34)] dark:ring-[rgba(255,255,255,0.06)]">
 <div class="px-1 pb-2">

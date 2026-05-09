@@ -11,6 +11,7 @@
         "System Health": { ru: "Состояние систем", uz: "Tizim holati" },
         "Billing & Debt": { ru: "Платежи и долги", uz: "To'lovlar va qarzlar" },
         "Payments": { ru: "Платежи и долги", uz: "To'lovlar va qarzlar" },
+        "Billing Period": { ru: "Расчётный период", uz: "Hisob davri" },
         "Analytics": { ru: "Аналитика", uz: "Tahlil" },
         "Reports": { ru: "Статистика", uz: "Statistika" },
         "Settings": { ru: "Настройки", uz: "Sozlamalar" },
@@ -69,6 +70,21 @@
         "412 records from Payme and Click are ready for review.": { ru: "412 записей из Payme и Click готовы к проверке.", uz: "Payme va Clickdan 412 yozuv tekshiruvga tayyor." },
         "Review batch": { ru: "Проверить пакет", uz: "Paketni tekshirish" },
         "Archive": { ru: "Архив", uz: "Arxiv" },
+        "Clear read": { ru: "Очистить прочитанные", uz: "O'qilganlarni tozalash" },
+        "Pinned": { ru: "Закреплено", uz: "Mahkamlangan" },
+        "Pin": { ru: "PIN", uz: "PIN" },
+        "Today": { ru: "Сегодня", uz: "Bugun" },
+        "Yesterday": { ru: "Вчера", uz: "Kecha" },
+        "Older": { ru: "Ранее", uz: "Oldingi" },
+        "Reminder for": { ru: "Напоминание для", uz: "Eslatma" },
+        "Outstanding balance reminder for apartment": { ru: "Напоминание о задолженности по квартире", uz: "Xonadon bo'yicha qarz eslatmasi" },
+        "Assigned to": { ru: "Назначено", uz: "Biriktirilgan" },
+        "Review owner": { ru: "Проверить абонента", uz: "Abonentni tekshirish" },
+        "Resident follow-up:": { ru: "Сопровождение резидента:", uz: "Abonent bo'yicha kuzatuv:" },
+        "Mark done": { ru: "Выполнить", uz: "Bajarildi" },
+        "Reopen": { ru: "Вернуть", uz: "Qaytarish" },
+        "Tasks left": { ru: "задач осталось", uz: "vazifa qoldi" },
+        "Shared To Do": { ru: "Общие задачи", uz: "Umumiy vazifalar" },
         "No hidden alerts": { ru: "Скрытых уведомлений нет", uz: "Yashirin ogohlantirishlar yo'q" },
         "Resolved notifications are moved to the activity log.": { ru: "Закрытые уведомления перемещаются в журнал действий.", uz: "Yopilgan bildirishnomalar faoliyat jurnaliga ko'chiriladi." },
         "Filters": { ru: "Фильтры", uz: "Filtrlar" },
@@ -1991,20 +2007,8 @@
         target.dataset.confirmed = "true";
         if (target.dataset.confirmAction === "close-critical-alert") {
             const item = target.closest(".notification-item");
-            const notificationBackendId = item?.dataset.notificationBackendId || "";
-            const alertBackendId = item?.dataset.alertBackendId || "";
             try {
-                const payload = await postPortalJson("/api/system-alerts/configure/", {
-                    mode: "resolve",
-                    alert_id: alertBackendId,
-                    notification_id: notificationBackendId,
-                });
-                if (payload.portalData) {
-                    rehydrateFromPortalData(payload.portalData);
-                } else {
-                    await refreshPortalDataSnapshot();
-                    if (payload.warning) console.warn(payload.warning);
-                }
+                await resolveNotificationItem(item);
                 const lang = storage.getItem("hydroflow-lang") || "en";
                 toast(translateValue("Alert closed", lang), "The critical alert was moved to the audit timeline.", "success");
             } catch (error) {
@@ -2031,6 +2035,83 @@
     });
 
     const pinnedNotificationKey = "hydroflow-pinned-notifications";
+    const visibleNotificationState = (value) => {
+        const normalized = String(value || "").trim();
+        return normalized === "Created from dashboard" ? "" : normalized;
+    };
+    const translateNotificationTitle = (value) => {
+        const normalized = String(value || "").trim();
+        if (!normalized) return "";
+        if (normalized.startsWith("Reminder for ")) {
+            return `${t("Reminder for")} ${normalized.slice("Reminder for ".length)}`.trim();
+        }
+        if (normalized.startsWith("Resident follow-up: ")) {
+            return `${t("Resident follow-up:")} ${normalized.slice("Resident follow-up: ".length)}`.trim();
+        }
+        return t(normalized);
+    };
+    const translateNotificationMessage = (value) => {
+        const normalized = String(value || "").trim();
+        if (!normalized) return "";
+        if (normalized.startsWith("Outstanding balance reminder for apartment ")) {
+            return `${t("Outstanding balance reminder for apartment")} ${normalized.slice("Outstanding balance reminder for apartment ".length)}`.trim();
+        }
+        if (normalized.startsWith("Assigned to ")) {
+            return `${t("Assigned to")} ${normalized.slice("Assigned to ".length)}`.trim();
+        }
+        return t(normalized);
+    };
+    const translateNotificationAction = (value) => {
+        const normalized = String(value || "").trim();
+        return normalized ? t(normalized) : "";
+    };
+    const animateResolvedNotification = (item, onDone) => {
+        if (!item) {
+            onDone?.();
+            return;
+        }
+        if (item.dataset.resolving === "true") return;
+        const notificationId = item.dataset.notificationId || "";
+        if (notificationId) {
+            const currentPinned = getPinnedNotificationIds().filter((id) => id !== notificationId);
+            savePinnedNotificationIds(currentPinned);
+        }
+        item.dataset.resolving = "true";
+        const height = item.offsetHeight || 0;
+        item.style.maxHeight = `${height}px`;
+        item.style.overflow = "hidden";
+        item.style.willChange = "transform, opacity, max-height, margin, padding";
+        window.requestAnimationFrame(() => {
+            item.classList.add("is-resolving");
+            item.style.maxHeight = "0px";
+        });
+        window.setTimeout(() => {
+            item.remove();
+            updateNotifications();
+            onDone?.();
+        }, 380);
+    };
+    const resolveNotificationItem = async (item) => {
+        if (!item || item.dataset.resolving === "true") return null;
+        const notificationBackendId = item.dataset.notificationBackendId || "";
+        const alertBackendId = item.dataset.alertBackendId || "";
+        const payload = await postPortalJson("/api/system-alerts/configure/", {
+            mode: "resolve",
+            alert_id: alertBackendId,
+            notification_id: notificationBackendId,
+        });
+        if (payload.portalData) {
+            rehydrateFromPortalData(payload.portalData);
+        } else {
+            await refreshPortalDataSnapshot();
+            if (payload.warning) console.warn(payload.warning);
+        }
+        animateResolvedNotification(item, () => {
+            serverListControllers.alerts?.refresh?.();
+            serverListControllers.audit?.refresh?.();
+        });
+        return payload;
+    };
     const getPinnedNotificationIds = () => {
         try {
             const ids = JSON.parse(storage.getItem(pinnedNotificationKey) || "[]");
@@ -2048,11 +2129,11 @@
         item.classList.toggle("is-pinned", Boolean(pinned));
         if (button) {
             button.setAttribute("aria-pressed", String(Boolean(pinned)));
-            button.setAttribute("aria-label", pinned ? "Unpin notification" : "Pin notification");
+            button.setAttribute("aria-label", pinned ? t("Pinned") : t("Pin"));
             const icon = button.querySelector(".material-symbols-outlined");
             const label = button.querySelector(".notification-pin-label");
             if (icon) icon.textContent = pinned ? "keep_off" : "keep";
-            if (label) label.textContent = pinned ? "Pinned" : "Pin";
+            if (label) label.textContent = pinned ? t("Pinned") : t("Pin");
         }
     };
     const placeNotificationAfterGroup = (list, item, groupName) => {
@@ -2072,16 +2153,22 @@
         const notifications = Array.isArray(billingData.notifications) ? billingData.notifications : [];
         if (!list || list.dataset.backendNotificationsRendered === "true") return;
         if (list.dataset.serverList === "alerts") return;
+        if (document.querySelector("[data-notification-filter='todo'].is-active")) return;
         if (!notifications.length && !billingData.source) return;
-        const groupLabel = (key, label, hidden = false) => `<div class="notification-group-label ${hidden ? "hidden" : ""}" data-notification-group="${key}">${label}</div>`;
-        const severityLabel = (severity) => severity === "critical" ? "Critical" : severity === "warning" ? "Warning" : "Info";
+        const groupLabel = (key, label, hidden = false) => `<div class="notification-group-label ${hidden ? "hidden" : ""}" data-notification-group="${key}">${escapeHtml(t(label))}</div>`;
+        const severityLabel = (severity) => severity === "critical" ? t("Critical") : severity === "warning" ? t("Warning") : t("Info");
         const actionButtons = (item) => {
             const primary = item.actionPrimary && item.actionPrimary !== "Assign technician" ? item.actionPrimary : "Details";
             const secondary = item.actionSecondary || (item.severity === "critical" ? "Close alert" : "");
+            const secondaryText = String(secondary || "").trim().toLowerCase();
+            const secondaryAttr = secondaryText === "resolve" || secondaryText === "close alert"
+                ? "data-notification-resolve"
+                : `data-notification-action="${escapeHtml(`${secondary} queued`)}"`;
+            const secondaryLabel = secondaryText === "close alert" ? "Resolve" : secondary;
             return `
                 <div class="mt-3 flex gap-2">
-                    <button class="drawer-action ${item.severity === "critical" ? "bg-error" : "bg-primary"} text-white" data-notification-action="${escapeHtml(item.actionState || `${primary} queued`)}" type="button">${escapeHtml(primary)}</button>
-                    ${secondary ? `<button class="drawer-action bg-surface-container text-primary" ${item.severity === "critical" ? 'data-confirm-action="close-critical-alert"' : `data-notification-action="${escapeHtml(`${secondary} queued`)}"`} type="button">${escapeHtml(secondary)}</button>` : ""}
+                    <button class="drawer-action ${item.severity === "critical" ? "bg-error" : "bg-primary"} text-white" data-notification-action="${escapeHtml(visibleNotificationState(item.actionState) || `${primary} queued`)}" type="button">${escapeHtml(translateNotificationAction(primary))}</button>
+                    ${secondary ? `<button class="drawer-action bg-surface-container text-primary" ${secondaryAttr} type="button">${escapeHtml(translateNotificationAction(secondaryLabel))}</button>` : ""}
                 </div>
             `;
         };
@@ -2091,6 +2178,7 @@
                 <div class="notification-item ${severity === "critical" ? "critical-pulse" : ""}"
                     data-notification-id="${escapeHtml(item.id)}"
                     data-notification-backend-id="${escapeHtml(item.backendId || "")}"
+                    data-alert-backend-id="${escapeHtml(item.alertBackendId || "")}"
                     data-notification-section="${escapeHtml(item.section || "today")}"
                     data-read="${item.read ? "true" : "false"}"
                     data-pinned="${item.pinned ? "true" : "false"}"
@@ -2099,12 +2187,12 @@
                         <p class="severity-badge severity-${escapeHtml(severity)}"><span class="status-dot dot-${severity === "critical" ? "critical" : severity === "warning" ? "warning" : "info"}"></span>${severityLabel(severity)}</p>
                         <div class="notification-card-meta">
                             <time class="text-[10px] text-on-surface-variant">${escapeHtml(item.eventAt || "")}</time>
-                            <button aria-label="Pin notification" aria-pressed="${item.pinned ? "true" : "false"}" class="notification-pin" data-notification-pin type="button"><span class="material-symbols-outlined">${item.pinned ? "keep_off" : "keep"}</span><span class="notification-pin-label">${item.pinned ? "Pinned" : "Pin"}</span></button>
+                            <button aria-label="${escapeHtml(item.pinned ? t("Pinned") : t("Pin"))}" aria-pressed="${item.pinned ? "true" : "false"}" class="notification-pin" data-notification-pin type="button"><span class="material-symbols-outlined">${item.pinned ? "keep_off" : "keep"}</span><span class="notification-pin-label">${escapeHtml(item.pinned ? t("Pinned") : t("Pin"))}</span></button>
                         </div>
                     </div>
-                    <p class="text-sm font-bold text-on-surface mt-2">${escapeHtml(item.title)}</p>
-                    <p class="text-xs text-on-surface-variant mt-1">${escapeHtml(item.message || "")}</p>
-                    <p class="notification-action-state ${item.actionState ? "" : "hidden"}" data-notification-state>${escapeHtml(item.actionState || "")}</p>
+                    <p class="text-sm font-bold text-on-surface mt-2">${escapeHtml(translateNotificationTitle(item.title))}</p>
+                    <p class="text-xs text-on-surface-variant mt-1">${escapeHtml(translateNotificationMessage(item.message || ""))}</p>
+                    <p class="notification-action-state ${visibleNotificationState(item.actionState) ? "" : "hidden"}" data-notification-state>${escapeHtml(translateNotificationAction(visibleNotificationState(item.actionState)))}</p>
                     ${actionButtons(item)}
                 </div>
             `;
@@ -2122,7 +2210,7 @@
             yesterday.map(renderItem).join(""),
             groupLabel("older", "Older", !older.length),
             older.map(renderItem).join(""),
-            `<div class="empty-state ${notifications.length ? "hidden" : ""}" data-notification-empty><span class="material-symbols-outlined">notifications_off</span><div><p>No hidden alerts</p><span>Resolved notifications are moved to the activity log.</span></div></div>`,
+            `<div class="empty-state ${notifications.length ? "hidden" : ""}" data-notification-empty><span class="material-symbols-outlined">notifications_off</span><div><p>${escapeHtml(t("No hidden alerts"))}</p><span>${escapeHtml(t("Resolved notifications are moved to the activity log."))}</span></div></div>`,
         ].join("");
         list.dataset.backendNotificationsRendered = "true";
     };
@@ -3278,15 +3366,20 @@
         return pager;
     };
     const renderNotificationMarkup = (items = []) => {
-        const groupLabel = (key, label, hidden = false) => `<div class="notification-group-label ${hidden ? "hidden" : ""}" data-notification-group="${key}">${label}</div>`;
-        const severityLabel = (severity) => severity === "critical" ? "Critical" : severity === "warning" ? "Warning" : "Info";
+        const groupLabel = (key, label, hidden = false) => `<div class="notification-group-label ${hidden ? "hidden" : ""}" data-notification-group="${key}">${escapeHtml(t(label))}</div>`;
+        const severityLabel = (severity) => severity === "critical" ? t("Critical") : severity === "warning" ? t("Warning") : t("Info");
         const actionButtons = (item) => {
             const primary = item.actionPrimary && item.actionPrimary !== "Assign technician" ? item.actionPrimary : "Details";
             const secondary = item.actionSecondary || (item.severity === "critical" ? "Close alert" : "");
+            const secondaryText = String(secondary || "").trim().toLowerCase();
+            const secondaryAttr = secondaryText === "resolve" || secondaryText === "close alert"
+                ? "data-notification-resolve"
+                : `data-notification-action="${escapeAttr(`${secondary} queued`)}"`;
+            const secondaryLabel = secondaryText === "close alert" ? "Resolve" : secondary;
             return `
                 <div class="mt-3 flex gap-2">
-                    <button class="drawer-action ${item.severity === "critical" ? "bg-error" : "bg-primary"} text-white" data-notification-action="${escapeAttr(item.actionState || `${primary} queued`)}" type="button">${escapeHtml(primary)}</button>
-                    ${secondary ? `<button class="drawer-action bg-surface-container text-primary" ${item.severity === "critical" ? 'data-confirm-action="close-critical-alert"' : `data-notification-action="${escapeAttr(`${secondary} queued`)}"`} type="button">${escapeHtml(secondary)}</button>` : ""}
+                    <button class="drawer-action ${item.severity === "critical" ? "bg-error" : "bg-primary"} text-white" data-notification-action="${escapeAttr(visibleNotificationState(item.actionState) || `${primary} queued`)}" type="button">${escapeHtml(translateNotificationAction(primary))}</button>
+                    ${secondary ? `<button class="drawer-action bg-surface-container text-primary" ${secondaryAttr} type="button">${escapeHtml(translateNotificationAction(secondaryLabel))}</button>` : ""}
                 </div>
             `;
         };
@@ -3296,6 +3389,7 @@
                 <div class="notification-item ${severity === "critical" ? "critical-pulse" : ""}"
                     data-notification-id="${escapeAttr(item.id)}"
                     data-notification-backend-id="${escapeAttr(item.backendId || "")}"
+                    data-alert-backend-id="${escapeAttr(item.alertBackendId || "")}"
                     data-notification-section="${escapeAttr(item.section || "today")}"
                     data-read="${item.read ? "true" : "false"}"
                     data-pinned="${item.pinned ? "true" : "false"}"
@@ -3304,12 +3398,12 @@
                         <p class="severity-badge severity-${escapeAttr(severity)}"><span class="status-dot dot-${severity === "critical" ? "critical" : severity === "warning" ? "warning" : "info"}"></span>${severityLabel(severity)}</p>
                         <div class="notification-card-meta">
                             <time class="text-[10px] text-on-surface-variant">${escapeHtml(item.eventAt || "")}</time>
-                            <button aria-label="Pin notification" aria-pressed="${item.pinned ? "true" : "false"}" class="notification-pin" data-notification-pin type="button"><span class="material-symbols-outlined">${item.pinned ? "keep_off" : "keep"}</span><span class="notification-pin-label">${item.pinned ? "Pinned" : "Pin"}</span></button>
+                            <button aria-label="${escapeAttr(item.pinned ? t("Pinned") : t("Pin"))}" aria-pressed="${item.pinned ? "true" : "false"}" class="notification-pin" data-notification-pin type="button"><span class="material-symbols-outlined">${item.pinned ? "keep_off" : "keep"}</span><span class="notification-pin-label">${escapeHtml(item.pinned ? t("Pinned") : t("Pin"))}</span></button>
                         </div>
                     </div>
-                    <p class="text-sm font-bold text-on-surface mt-2">${escapeHtml(item.title)}</p>
-                    <p class="text-xs text-on-surface-variant mt-1">${escapeHtml(item.message || "")}</p>
-                    <p class="notification-action-state ${item.actionState ? "" : "hidden"}" data-notification-state>${escapeHtml(item.actionState || "")}</p>
+                    <p class="text-sm font-bold text-on-surface mt-2">${escapeHtml(translateNotificationTitle(item.title))}</p>
+                    <p class="text-xs text-on-surface-variant mt-1">${escapeHtml(translateNotificationMessage(item.message || ""))}</p>
+                    <p class="notification-action-state ${visibleNotificationState(item.actionState) ? "" : "hidden"}" data-notification-state>${escapeHtml(translateNotificationAction(visibleNotificationState(item.actionState)))}</p>
                     ${actionButtons(item)}
                 </div>
             `;
@@ -3327,8 +3421,67 @@
             yesterday.map(renderItem).join(""),
             groupLabel("older", "Older", !older.length),
             older.map(renderItem).join(""),
-            `<div class="empty-state ${items.length ? "hidden" : ""}" data-notification-empty><span class="material-symbols-outlined">notifications_off</span><div><p>No hidden alerts</p><span>Resolved notifications are moved to the activity log.</span></div></div>`,
+            `<div class="empty-state ${items.length ? "hidden" : ""}" data-notification-empty><span class="material-symbols-outlined">notifications_off</span><div><p>${escapeHtml(t("No hidden alerts"))}</p><span>${escapeHtml(t("Resolved notifications are moved to the activity log."))}</span></div></div>`,
         ].join("");
+    };
+    const checklistEntriesForNotifications = () => checklistEntriesSnapshot().sort((left, right) => Number(left.done) - Number(right.done));
+    const renderChecklistNotificationMarkup = () => {
+        const { entries, percent } = checklistProgressSnapshot();
+        return `
+            <div class="notification-todo-inline" data-notification-todo-shell style="--checklist-progress:${percent}%;">
+                <div class="notification-todo-head">
+                    <div class="notification-todo-title-wrap">
+                        <span class="notification-todo-icon material-symbols-outlined">fact_check</span>
+                        <div>
+                            <p class="notification-todo-kicker" data-i18n-key="Operations checklist">Operations checklist</p>
+                            <h2 class="notification-todo-title" data-i18n-key="Readiness checklist">Readiness checklist</h2>
+                        </div>
+                    </div>
+                    <div class="notification-todo-progress-card">
+                        <div class="notification-todo-progress-copy">
+                            <span data-i18n-key="Completion">Completion</span>
+                            <strong data-notification-todo-progress-label>${percent}%</strong>
+                        </div>
+                        <div class="checklist-progress-bar" aria-label="Checklist completion" role="meter" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${percent}">
+                            <span></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="checklist-toolbar notification-todo-toolbar">
+                    <button data-notification-todo-action="complete-visible" type="button"><span class="material-symbols-outlined">done_all</span><span data-i18n-key="Complete visible">Complete visible</span></button>
+                    <button data-notification-todo-action="reset" type="button"><span class="material-symbols-outlined">restart_alt</span><span data-i18n-key="Reset">Reset</span></button>
+                    <button data-notification-todo-action="copy" type="button"><span class="material-symbols-outlined">content_copy</span><span data-i18n-key="Copy summary">Copy summary</span></button>
+                </div>
+                <button class="checklist-add-note-main notification-todo-add-note" data-notification-todo-action="toggle-note" type="button">
+                    <span class="material-symbols-outlined">add_notes</span>
+                    <span data-i18n-key="Add note">Add note</span>
+                </button>
+                <section class="checklist-note-composer hidden notification-todo-composer" data-notification-todo-composer>
+                    <div class="checklist-note-template-row">
+                        <label>
+                            <span data-i18n-key="Template">Template</span>
+                            <select data-notification-todo-template>
+                                <option value="" data-i18n-key="Custom note">Custom note</option>
+                                <option value="Reviewed filters and visible rows." data-template-text-key="Reviewed filters and visible rows." data-i18n-key="Filters reviewed">Filters reviewed</option>
+                                <option value="Critical alerts reviewed and technician ownership checked." data-template-text-key="Critical alerts reviewed and technician ownership checked." data-i18n-key="Critical alerts reviewed">Critical alerts reviewed</option>
+                                <option value="Export package checked for current visible data." data-template-text-key="Export package checked for current visible data." data-i18n-key="Export package checked">Export package checked</option>
+                                <option value="Resident balances and billing history checked." data-template-text-key="Resident balances and billing history checked." data-i18n-key="Resident balances checked">Resident balances checked</option>
+                            </select>
+                        </label>
+                    </div>
+                    <textarea data-notification-todo-note-input data-i18n-placeholder="Write a checklist note..." placeholder="Write a checklist note..."></textarea>
+                    <div class="checklist-note-actions">
+                        <button data-notification-todo-action="cancel-note" data-i18n-key="Cancel" type="button">Cancel</button>
+                        <button data-notification-todo-action="save-note" type="button"><span class="material-symbols-outlined">add</span><span data-i18n-key="Add note">Add note</span></button>
+                    </div>
+                </section>
+                <div class="checklist-list notification-todo-list" data-notification-todo-list>${renderChecklistEntriesMarkup(entries)}</div>
+                <div class="checklist-footer notification-todo-footer">
+                    <button data-notification-todo-action="open-audit" type="button"><span class="material-symbols-outlined">history</span><span data-i18n-key="Open audit log">Open audit log</span></button>
+                    <button data-notification-todo-action="mark-reviewed" type="button"><span class="material-symbols-outlined">task_alt</span><span data-i18n-key="Mark reviewed">Mark reviewed</span></button>
+                </div>
+            </div>
+        `;
     };
     const renderAuditMarkup = (items = []) => {
         const iconForType = (type) => ({
@@ -3705,43 +3858,166 @@
         const notificationList = document.querySelector("[data-notification-list]");
         if (notificationList) {
             const drawer = notificationList.closest("#notifications-drawer");
-            const pager = ensureDrawerPagination(notificationList.parentElement || drawer, "alerts");
+            drawer?.querySelector("[data-drawer-pagination='alerts']")?.remove();
             const filterButtons = Array.from(document.querySelectorAll("[data-notification-filter]"));
+            const countNode = document.querySelector("[data-notification-count]");
+            const toolbarActions = drawer?.querySelector(".notification-toolbar-actions");
             const loadAlerts = async () => {
                 const activeFilter = filterButtons.find((button) => button.classList.contains("is-active"))?.dataset.notificationFilter || "all";
-                const state = readListUrlState("alerts", { page: "1", ordering: "-pinned,-event_at" });
+                if (activeFilter === "todo") {
+                    await refreshPortalDataSnapshot();
+                    if (toolbarActions) toolbarActions.classList.add("hidden");
+                    notificationList.innerHTML = renderChecklistNotificationMarkup();
+                    const left = checklistEntriesForNotifications().filter((entry) => !entry.done).length;
+                    if (countNode) {
+                        const lang = storage.getItem("hydroflow-lang") || "en";
+                        countNode.textContent = lang === "ru" ? `${left} задач осталось` : lang === "uz" ? `${left} vazifa qoldi` : `${left} tasks left`;
+                    }
+                    window.HydroFlowSyncLocale?.();
+                    return;
+                }
+                if (toolbarActions) toolbarActions.classList.remove("hidden");
                 const { params } = currentGlobalListFilters();
                 const payload = await fetchServerList("/api/lists/alerts/", {
                     ...params,
-                    page: state.page,
-                    page_size: 12,
-                    ordering: state.ordering,
+                    page: 1,
+                    page_size: 200,
+                    ordering: "-pinned,-event_at",
                     severity: activeFilter === "all" ? "" : activeFilter,
                 });
                 notificationList.innerHTML = renderNotificationMarkup(payload.results || []);
-                if (pager) {
-                    pager.dataset.totalPages = String(payload.pages || 1);
-                    pager.querySelector("[data-page-label]").textContent = `Page ${payload.page} of ${payload.pages}`;
-                    pager.querySelector("[data-prev-page]").disabled = Number(payload.page || 1) <= 1;
-                    pager.querySelector("[data-next-page]").disabled = Number(payload.page || 1) >= Number(payload.pages || 1);
-                }
                 updateNotifications();
                 window.HydroFlowSyncLocale?.();
             };
             filterButtons.forEach((button) => button.addEventListener("click", () => {
                 filterButtons.forEach((item) => item.classList.toggle("is-active", item === button));
-                writeListUrlState("alerts", { page: 1 });
                 loadAlerts();
             }));
-            pager?.querySelector("[data-prev-page]")?.addEventListener("click", () => {
-                const state = readListUrlState("alerts", { page: "1" });
-                writeListUrlState("alerts", { page: Math.max(1, Number(state.page || 1) - 1) });
-                loadAlerts();
+            document.querySelectorAll("[data-notification-tab-open]").forEach((button) => {
+                button.addEventListener("click", () => {
+                    const tab = button.dataset.notificationTabOpen || "all";
+                    filterButtons.forEach((item) => item.classList.toggle("is-active", item.dataset.notificationFilter === tab));
+                });
             });
-            pager?.querySelector("[data-next-page]")?.addEventListener("click", () => {
-                const state = readListUrlState("alerts", { page: "1" });
-                writeListUrlState("alerts", { page: Math.min(Number(pager?.dataset.totalPages || 1), Number(state.page || 1) + 1) });
-                loadAlerts();
+            notificationList.addEventListener("click", (event) => {
+                const todoAction = event.target.closest("[data-notification-todo-action]");
+                if (todoAction) {
+                    const mode = todoAction.dataset.notificationTodoAction;
+                    if (mode === "complete-visible") {
+                        postPortalJson("/api/checklist/item/", {
+                            mode: "complete_visible",
+                            item_ids: (Array.isArray(billingData.checklistItems) ? billingData.checklistItems : []).map((item) => item.backendId).filter(Boolean),
+                        }).then((payload) => {
+                            rehydrateFromPortalData(payload.portalData);
+                            loadAlerts();
+                        }).catch((error) => toast("Checklist completion failed", error.message, "danger"));
+                    }
+                    if (mode === "reset") {
+                        postPortalJson("/api/checklist/item/", {
+                            mode: "reset_all",
+                        }).then((payload) => {
+                            rehydrateFromPortalData(payload.portalData);
+                            loadAlerts();
+                        }).catch((error) => toast("Checklist reset failed", error.message, "danger"));
+                    }
+                    if (mode === "copy") {
+                        navigator.clipboard?.writeText(buildChecklistSummaryText()).then(() => {
+                            toast("Checklist copied", "Summary copied to clipboard.", "success");
+                        }).catch(() => {
+                            toast("Checklist summary", buildChecklistSummaryText(), "info");
+                        });
+                    }
+                    if (mode === "toggle-note") {
+                        notificationList.querySelector("[data-notification-todo-composer]")?.classList.toggle("hidden");
+                        notificationList.querySelector("[data-notification-todo-note-input]")?.focus();
+                    }
+                    if (mode === "cancel-note") {
+                        notificationList.querySelector("[data-notification-todo-composer]")?.classList.add("hidden");
+                        const input = notificationList.querySelector("[data-notification-todo-note-input]");
+                        const template = notificationList.querySelector("[data-notification-todo-template]");
+                        if (input) input.value = "";
+                        if (template) template.value = "";
+                    }
+                    if (mode === "save-note") {
+                        const input = notificationList.querySelector("[data-notification-todo-note-input]");
+                        const template = notificationList.querySelector("[data-notification-todo-template]");
+                        const text = input?.value.trim() || "";
+                        if (!text) {
+                            toast("Checklist note required", "Choose a template or write a custom note.", "warning");
+                            input?.focus();
+                            return;
+                        }
+                        postPortalJson("/api/checklist/note/", {
+                            mode: "create",
+                            text,
+                            template_key: template?.value || "",
+                            scope: "Operations",
+                        }).then((payload) => {
+                            rehydrateFromPortalData(payload.portalData);
+                            loadAlerts();
+                            toast("Checklist note added", "Stored in backend checklist and audit trail.", "success");
+                        }).catch((error) => toast("Checklist note save failed", error.message, "danger"));
+                    }
+                    if (mode === "open-audit") {
+                        openOverlayById("audit-drawer");
+                    }
+                    if (mode === "mark-reviewed") {
+                        postPortalJson("/api/audit/note/", {
+                            title: "Checklist reviewed",
+                            message: "Checklist marked reviewed from notifications To Do.",
+                        }).then((payload) => {
+                            rehydrateFromPortalData(payload.portalData);
+                            loadAlerts();
+                            toast("Review recorded", "A backend audit note was added.", "success");
+                        }).catch((error) => toast("Review save failed", error.message, "danger"));
+                    }
+                    return;
+                }
+                const todoNoteDelete = event.target.closest("[data-checklist-note-delete]");
+                if (todoNoteDelete) {
+                    const backendId = todoNoteDelete.dataset.checklistNoteBackendId || String(todoNoteDelete.dataset.checklistNoteDelete || "").replace("note-", "");
+                    postPortalJson("/api/checklist/note/", {
+                        mode: "delete",
+                        note_id: backendId,
+                    }).then((payload) => {
+                        rehydrateFromPortalData(payload.portalData);
+                        loadAlerts();
+                        toast("Checklist note removed", "Removed from backend checklist.", "info");
+                    }).catch((error) => toast("Checklist note removal failed", error.message, "danger"));
+                    return;
+                }
+                const todoNoteToggle = event.target.closest("[data-checklist-note-toggle]");
+                if (todoNoteToggle) {
+                    const backendId = todoNoteToggle.dataset.checklistNoteBackendId || String(todoNoteToggle.dataset.checklistNoteToggle || "").replace("note-", "");
+                    postPortalJson("/api/checklist/note/", {
+                        mode: "toggle",
+                        note_id: backendId,
+                    }).then((payload) => {
+                        rehydrateFromPortalData(payload.portalData);
+                        loadAlerts();
+                        playSound("toggle");
+                    }).catch((error) => toast("Checklist note update failed", error.message, "danger"));
+                    return;
+                }
+                const todoToggle = event.target.closest("[data-notification-todo-toggle]");
+                const todoEntry = event.target.closest("[data-notification-todo-entry]");
+                const todoItem = event.target.closest("[data-checklist-item]");
+                if (!todoToggle && !todoItem) return;
+                const backendId = todoItem?.dataset.checklistItemBackendId || todoEntry?.dataset.notificationTodoBackendId || "";
+                if (!backendId) return;
+                postPortalJson("/api/checklist/item/", { mode: "toggle", item_id: backendId }).then((response) => {
+                    rehydrateFromPortalData(response.portalData);
+                    loadAlerts();
+                    playSound("toggle");
+                }).catch((error) => toast("Checklist update failed", error.message, "danger"));
+            });
+            notificationList.addEventListener("change", (event) => {
+                const template = event.target.closest("[data-notification-todo-template]");
+                if (!template) return;
+                const selected = template.selectedOptions?.[0];
+                const key = selected?.dataset.templateTextKey || template.value;
+                const input = notificationList.querySelector("[data-notification-todo-note-input]");
+                if (input && key) input.value = translateValue(key, storage.getItem("hydroflow-lang") || "en");
             });
             serverListControllers.alerts = {
                 name: "alerts",
@@ -6273,9 +6549,7 @@
                     </div>
                     <div class="system-alert-card-actions">
                         <span class="system-alert-chip is-status">${escapeHtml(statusLabel(alert.status || "active"))}</span>
-                        <button data-system-alert-action="acknowledge" data-system-alert-id="${escapeHtml(alert.backendId || "")}" type="button">${escapeHtml(t("Acknowledge"))}</button>
                         <button data-system-alert-action="resolve" data-system-alert-id="${escapeHtml(alert.backendId || "")}" type="button">${escapeHtml(t("Resolve"))}</button>
-                        <a href="${escapeHtml(alert.adminUrl || `/admin/portal/systemalert/${alert.backendId}/change/`)}">${escapeHtml(t("Admin"))}</a>
                     </div>
                 </article>
             `).join("") : `<div class="system-alert-empty">${escapeHtml(t("No live alerts in backend. Create one from this panel."))}</div>`;
@@ -7137,16 +7411,75 @@
 
     setupResidentKitTools();
 
-    const checklistStorageKey = "hydroflow-operations-checklist";
-    const checklistItems = Array.isArray(billingData.checklistItems)
+    const checklistItemsSnapshot = () => (Array.isArray(billingData.checklistItems)
         ? billingData.checklistItems.map((item) => ({
             id: item.id,
+            backendId: item.backendId,
             title: item.title,
             detail: item.detail,
             tag: item.tag || "Operations",
             icon: item.icon || "fact_check",
+            done: Boolean(item.done),
         }))
-        : [];
+        : []);
+    const checklistNotesSnapshot = () => (Array.isArray(billingData.checklistNotes) ? billingData.checklistNotes.slice(0, 24).map((note) => ({
+        id: note.id,
+        backendId: note.backendId,
+        title: note.text,
+        detail: note.time,
+        tag: "Note",
+        icon: "edit_note",
+        done: Boolean(note.done),
+        custom: true,
+    })) : []);
+    const checklistEntriesSnapshot = () => ([
+        ...checklistItemsSnapshot().map((item) => ({ ...item, custom: false })),
+        ...checklistNotesSnapshot(),
+    ]);
+    const checklistProgressSnapshot = () => {
+        const entries = checklistEntriesSnapshot();
+        const completed = entries.filter((item) => item.done).length;
+        const total = entries.length;
+        const percent = Math.round((completed / Math.max(total, 1)) * 100);
+        return { entries, completed, total, left: total - completed, percent };
+    };
+    const buildChecklistSummaryText = () => {
+        const notes = checklistNotesSnapshot();
+        const noteText = notes.length ? `\n\nNotes\n${notes.map((note) => `${note.done ? "[x]" : "[ ]"} ${note.detail}: ${note.title}`).join("\n")}` : "";
+        return `HydroFlow checklist\n${checklistItemsSnapshot().map((item) => `${item.done ? "[x]" : "[ ]"} ${item.title} - ${item.tag}`).join("\n")}${noteText}`;
+    };
+    const renderChecklistEntriesMarkup = (entries) => entries.length ? entries.map((item) => {
+        const done = Boolean(item.done);
+        const isCustom = Boolean(item.custom);
+        const id = escapeHtml(item.id);
+        const backendId = escapeHtml(String(item.backendId || ""));
+        const title = escapeHtml(item.title);
+        const detail = escapeHtml(item.detail || "");
+        const tag = escapeHtml(item.tag || "Note");
+        const itemAttr = isCustom ? `data-checklist-note-toggle="${id}" data-checklist-note-backend-id="${backendId}"` : `data-checklist-item="${id}" data-checklist-item-backend-id="${backendId}"`;
+        const deleteAttr = isCustom ? `data-checklist-note-delete="${id}" data-checklist-note-backend-id="${backendId}"` : "";
+        const titleKey = isCustom ? "" : ` data-i18n-key="${title}"`;
+        const detailKey = isCustom ? "" : ` data-i18n-key="${detail}"`;
+        return `
+            <article class="checklist-item ${isCustom ? "checklist-custom-item" : ""} ${done ? "is-done" : ""}" ${itemAttr} role="button" tabindex="0" aria-pressed="${done}">
+                <span class="checklist-check material-symbols-outlined">${done ? "check" : escapeHtml(item.icon)}</span>
+                <span>
+                    <h3${titleKey}>${title}</h3>
+                    <p${detailKey}>${detail}</p>
+                </span>
+                <span class="checklist-node-actions">
+                    <span class="checklist-pill" data-i18n-key="${tag}">${tag}</span>
+                    ${isCustom ? `<button class="checklist-delete-node" ${deleteAttr} type="button" aria-label="${translateValue("Delete", storage.getItem("hydroflow-lang") || "en")}"><span class="material-symbols-outlined">delete</span></button>` : ""}
+                </span>
+            </article>
+        `;
+    }).join("") : `
+        <div class="checklist-empty-state">
+            <span class="material-symbols-outlined">task_alt</span>
+            <strong>${escapeHtml(translateValue("No backend checklist items", storage.getItem("hydroflow-lang") || "en"))}</strong>
+            <p>${escapeHtml(translateValue("Create checklist items in Django admin to show them here.", storage.getItem("hydroflow-lang") || "en"))}</p>
+        </div>
+    `;
 
     const setupChecklist = () => {
         const drawer = document.getElementById("checklist-drawer");
@@ -7157,25 +7490,13 @@
         const composer = drawer.querySelector("[data-checklist-note-composer]");
         const noteTemplate = drawer.querySelector("[data-checklist-note-template]");
         const noteInput = drawer.querySelector("[data-checklist-note-input]");
-        const readState = () => {
-            try {
-                return JSON.parse(storage.getItem(checklistStorageKey) || "{}") || {};
-            } catch {
-                return {};
-            }
-        };
-        const writeState = (state) => storage.setItem(checklistStorageKey, JSON.stringify(state));
-        const deletedKey = "__deleted";
-        const getDeletedItems = (state = readState()) => Array.isArray(state[deletedKey]) ? state[deletedKey] : [];
-        const visibleChecklistItems = (state = readState()) => {
-            const deleted = new Set(getDeletedItems(state));
-            return checklistItems.filter((item) => !deleted.has(item.id));
-        };
+        const visibleChecklistItems = () => checklistItemsSnapshot();
         const readNotes = () => Array.isArray(billingData.checklistNotes) ? billingData.checklistNotes.slice(0, 24) : [];
-        const allChecklistEntries = (state = readState(), notes = readNotes()) => [
-            ...visibleChecklistItems(state).map((item) => ({ ...item, done: Boolean(state[item.id]), custom: false })),
+        const allChecklistEntries = (notes = readNotes()) => [
+            ...visibleChecklistItems().map((item) => ({ ...item, done: Boolean(item.done), custom: false })),
             ...notes.map((note) => ({
                 id: note.id,
+                backendId: note.backendId,
                 title: note.text,
                 detail: note.time,
                 tag: "Note",
@@ -7184,8 +7505,8 @@
                 custom: true,
             })),
         ];
-        const updateFab = (state = readState()) => {
-            const left = allChecklistEntries(state).filter((item) => !item.done).length;
+        const updateFab = () => {
+            const left = allChecklistEntries().filter((item) => !item.done).length;
             const lang = storage.getItem("hydroflow-lang") || "en";
             const suffix = lang === "ru" ? "не выполнено" : lang === "uz" ? "qoldi" : left === 1 ? "task left" : "tasks left";
             document.querySelectorAll("[data-checklist-fab] small").forEach((target) => {
@@ -7201,9 +7522,8 @@
             });
         };
         const render = () => {
-            const state = readState();
             const notes = readNotes();
-            const entries = allChecklistEntries(state, notes);
+            const entries = allChecklistEntries(notes);
             list.innerHTML = entries.length ? entries.map((item) => {
                 const done = Boolean(item.done);
                 const isCustom = Boolean(item.custom);
@@ -7211,7 +7531,7 @@
                 const title = escapeHtml(item.title);
                 const detail = escapeHtml(item.detail || "");
                 const tag = escapeHtml(item.tag || "Note");
-                const itemAttr = isCustom ? `data-checklist-note-toggle="${id}"` : `data-checklist-item="${id}"`;
+                const itemAttr = isCustom ? `data-checklist-note-toggle="${id}"` : `data-checklist-item="${id}" data-checklist-item-backend-id="${escapeHtml(String(item.backendId || ""))}"`;
                 const deleteAttr = isCustom ? `data-checklist-note-delete="${id}"` : `data-checklist-item-delete="${id}"`;
                 const titleKey = isCustom ? "" : ` data-i18n-key="${title}"`;
                 const detailKey = isCustom ? "" : ` data-i18n-key="${detail}"`;
@@ -7224,9 +7544,9 @@
                         </span>
                         <span class="checklist-node-actions">
                             <span class="checklist-pill" data-i18n-key="${tag}">${tag}</span>
-                            <button class="checklist-delete-node" ${deleteAttr} type="button" aria-label="${translateValue("Delete", storage.getItem("hydroflow-lang") || "en")}">
+                            ${isCustom ? `<button class="checklist-delete-node" ${deleteAttr} type="button" aria-label="${translateValue("Delete", storage.getItem("hydroflow-lang") || "en")}">
                                 <span class="material-symbols-outlined">delete</span>
-                            </button>
+                            </button>` : ""}
                         </span>
                     </article>
                 `;
@@ -7251,7 +7571,7 @@
                 saved.dataset.i18nKey = "Synced to backend";
             }
             drawer.querySelector(".checklist-progress-bar")?.setAttribute("aria-valuenow", String(percent));
-            updateFab(state);
+            updateFab();
             window.HydroFlowSyncLocale?.();
         };
         const openChecklist = (scope = "Current workspace") => {
@@ -7269,14 +7589,7 @@
                 event.preventDefault();
                 event.stopPropagation();
                 if (itemDelete) {
-                    const state = readState();
-                    const id = itemDelete.dataset.checklistItemDelete;
-                    const deleted = new Set(getDeletedItems(state));
-                    deleted.add(id);
-                    delete state[id];
-                    state[deletedKey] = [...deleted];
-                    writeState(state);
-                    toast(translateValue("Checklist item removed", storage.getItem("hydroflow-lang") || "en"), translateValue("Removed from current checklist view.", storage.getItem("hydroflow-lang") || "en"), "info");
+                    return;
                 }
                 if (noteDelete) {
                     const id = noteDelete.dataset.checklistNoteDelete;
@@ -7303,37 +7616,47 @@
                     rehydrateFromPortalData(payload.portalData);
                     playSound("toggle");
                 }).catch((error) => {
-                    toast("Checklist note update failed", error.message, "danger");
-                });
+                        toast("Checklist note update failed", error.message, "danger");
+                    });
                 return;
             }
             const item = event.target.closest("[data-checklist-item]");
             if (!item) return;
-            const state = readState();
-            state[item.dataset.checklistItem] = !state[item.dataset.checklistItem];
-            writeState(state);
-            render();
-            playSound("toggle");
+            postPortalJson("/api/checklist/item/", {
+                mode: "toggle",
+                item_id: item.dataset.checklistItemBackendId,
+            }).then((payload) => {
+                rehydrateFromPortalData(payload.portalData);
+                playSound("toggle");
+            }).catch((error) => {
+                toast("Checklist item update failed", error.message, "danger");
+            });
         });
         drawer.querySelector("[data-checklist-action='complete-visible']")?.addEventListener("click", () => {
-            const state = readState();
-            visibleChecklistItems(state).forEach((item) => {
-                state[item.id] = true;
+            postPortalJson("/api/checklist/item/", {
+                mode: "complete_visible",
+                item_ids: visibleChecklistItems().map((item) => item.backendId).filter(Boolean),
+            }).then((payload) => {
+                rehydrateFromPortalData(payload.portalData);
+                toast("Checklist completed", "All visible checklist items are marked complete.", "success");
+            }).catch((error) => {
+                toast("Checklist completion failed", error.message, "danger");
             });
-            writeState(state);
-            render();
-            toast("Checklist completed", "All visible checklist items are marked complete.", "success");
         });
         drawer.querySelector("[data-checklist-action='reset']")?.addEventListener("click", () => {
-            writeState({});
-            render();
-            toast("Checklist reset", "Checklist progress was cleared for this workspace.", "warning");
+            postPortalJson("/api/checklist/item/", {
+                mode: "reset_all",
+            }).then((payload) => {
+                rehydrateFromPortalData(payload.portalData);
+                toast("Checklist reset", "Checklist progress was cleared for all admins.", "warning");
+            }).catch((error) => {
+                toast("Checklist reset failed", error.message, "danger");
+            });
         });
         drawer.querySelector("[data-checklist-action='copy']")?.addEventListener("click", async () => {
-            const state = readState();
             const notes = readNotes();
             const noteText = notes.length ? `\n\nNotes\n${notes.map((note) => `${note.done ? "[x]" : "[ ]"} ${note.time}: ${note.text}`).join("\n")}` : "";
-            const text = `HydroFlow checklist\n${visibleChecklistItems(state).map((item) => `${state[item.id] ? "[x]" : "[ ]"} ${item.title} - ${item.tag}`).join("\n")}${noteText}`;
+            const text = `HydroFlow checklist\n${visibleChecklistItems().map((item) => `${item.done ? "[x]" : "[ ]"} ${item.title} - ${item.tag}`).join("\n")}${noteText}`;
             try {
                 await navigator.clipboard?.writeText(text);
                 toast("Checklist copied", "Summary copied to clipboard.", "success");
@@ -10066,6 +10389,26 @@ ${sheets}
         setNotificationPinnedState(item, pinned);
         updateNotifications();
         toast(pinned ? "Notification pinned" : "Notification unpinned", item.querySelector("p.text-sm")?.textContent || "", "info");
+    });
+    document.addEventListener("click", (event) => {
+        const button = event.target.closest("[data-notification-resolve]");
+        if (!button) return;
+        event.preventDefault();
+        event.stopPropagation();
+        const item = button.closest(".notification-item");
+        button.disabled = true;
+        button.classList.add("is-loading");
+        resolveNotificationItem(item)
+            .then(() => {
+                const lang = storage.getItem("hydroflow-lang") || "en";
+                toast(translateValue("Alert closed", lang), "The notification was moved to the audit timeline.", "success");
+            })
+            .catch((error) => {
+                button.disabled = false;
+                button.classList.remove("is-loading");
+                const lang = storage.getItem("hydroflow-lang") || "en";
+                toast(translateValue("Alert closed", lang), error.message || "The notification could not be resolved.", "warning");
+            });
     });
     document.addEventListener("click", (event) => {
         const button = event.target.closest("[data-notification-action]");

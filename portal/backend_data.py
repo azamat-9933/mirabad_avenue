@@ -215,17 +215,25 @@ def _transaction_method_label(transaction: Transaction) -> str:
 
 def _serialize_notifications() -> list[dict]:
     rows = []
-    queryset = PortalNotification.objects.select_related(
+    queryset = list(PortalNotification.objects.select_related(
         "complex",
         "building",
         "apartment",
         "owner",
-    ).exclude(status=PortalNotification.STATUS_ARCHIVED).order_by("-pinned", "-event_at")[:80]
+    ).exclude(status=PortalNotification.STATUS_ARCHIVED).order_by("-pinned", "-event_at")[:80])
+    notification_ids = [item.id for item in queryset]
+    alert_map = {}
+    if notification_ids:
+        for alert in SystemAlert.objects.filter(metadata__notification_id__in=notification_ids).exclude(status=SystemAlert.STATUS_RESOLVED).order_by("-detected_at", "-id"):
+            notification_id = int((alert.metadata or {}).get("notification_id") or 0)
+            if notification_id and notification_id not in alert_map:
+                alert_map[notification_id] = alert.id
     for item in queryset:
         related = item.complex or (item.building.complex if item.building_id else None)
         rows.append({
             "id": _slug("notification", item.id),
             "backendId": item.id,
+            "alertBackendId": alert_map.get(item.id, ""),
             "severity": item.severity,
             "title": item.title,
             "message": item.message,
@@ -235,7 +243,7 @@ def _serialize_notifications() -> list[dict]:
             "eventAt": _datetime(item.event_at),
             "actionPrimary": item.action_primary,
             "actionSecondary": item.action_secondary,
-            "actionState": item.action_state,
+            "actionState": "" if item.action_state == "Created from dashboard" else item.action_state,
             "complexId": _slug("complex", related.id) if related else "",
             "buildingId": _slug("building", item.building_id) if item.building_id else "",
             "ownerId": _slug("owner", item.owner_id) if item.owner_id else "",
@@ -342,6 +350,7 @@ def _serialize_checklist_items() -> list[dict]:
             "icon": item.icon or "fact_check",
             "scope": item.scope,
             "sortOrder": item.sort_order,
+            "done": item.done,
         }
         for item in ChecklistItem.objects.filter(is_active=True).order_by("sort_order", "title")
     ]

@@ -123,9 +123,9 @@ class MaintenanceTaskAdmin(admin.ModelAdmin):
 
 @admin.register(ChecklistItem)
 class ChecklistItemAdmin(admin.ModelAdmin):
-    list_display = ("title", "scope", "tag", "sort_order", "is_active")
-    list_filter = ("scope", "tag", "is_active")
-    list_editable = ("sort_order", "is_active")
+    list_display = ("title", "scope", "tag", "done", "sort_order", "is_active")
+    list_filter = ("scope", "tag", "done", "is_active")
+    list_editable = ("done", "sort_order", "is_active")
     search_fields = ("title", "detail", "tag")
 
 

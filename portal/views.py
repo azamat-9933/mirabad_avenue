@@ -29,6 +29,7 @@ from properties.models import Apartment, Building, Complex, Owner
 from payments.models import Transaction
 from portal.models import (
     AuditEvent,
+    ChecklistItem,
     ChecklistNote,
     MaintenanceTask,
     PortalNotification,
@@ -108,7 +109,7 @@ class BillingView(PortalPageView):
 class BillingPeriodCreateView(PortalPageView):
     template_name = "portal/billing_period_create.html"
     page_title = "Create Billing Period | HydroFlow"
-    active_page = "billing"
+    active_page = "billing_period"
 
 
 class AnalyticsView(PortalPageView):
@@ -428,11 +429,12 @@ def _notification_severity_rank():
     )
 
 
-def _serialize_alert_row(item):
+def _serialize_alert_row(item, alert_backend_id=""):
     related = item.complex or (item.building.complex if item.building_id else None)
     return {
         "id": f"notification-{item.id}",
         "backendId": item.id,
+        "alertBackendId": alert_backend_id or "",
         "severity": item.severity,
         "title": item.title,
         "message": item.message,
@@ -442,7 +444,7 @@ def _serialize_alert_row(item):
         "eventAt": _datetime(item.event_at),
         "actionPrimary": item.action_primary,
         "actionSecondary": item.action_secondary,
-        "actionState": item.action_state,
+        "actionState": "" if item.action_state == "Created from dashboard" else item.action_state,
         "complexId": f"complex-{related.id}" if related else "",
         "buildingId": f"building-{item.building_id}" if item.building_id else "",
         "ownerId": f"owner-{item.owner_id}" if item.owner_id else "",
@@ -884,7 +886,15 @@ def api_list_alerts(request):
     queryset = _apply_period_filter(queryset, "event_at", period_value, period_from, period_to)
     ordering = _normalize_ordering(ordering_raw, allowed_ordering, "-pinned")
     page_obj = _paginate_queryset(queryset.order_by(*ordering, "-id"), page, page_size)
-    results = [_serialize_alert_row(item) for item in page_obj.object_list]
+    page_items = list(page_obj.object_list)
+    alert_map = {}
+    notification_ids = [item.id for item in page_items]
+    if notification_ids:
+        for alert in SystemAlert.objects.filter(metadata__notification_id__in=notification_ids).exclude(status=SystemAlert.STATUS_RESOLVED).order_by("-detected_at", "-id"):
+            notification_id = int((alert.metadata or {}).get("notification_id") or 0)
+            if notification_id and notification_id not in alert_map:
+                alert_map[notification_id] = alert.id
+    results = [_serialize_alert_row(item, alert_map.get(item.id, "")) for item in page_items]
     return _paginated_response(results, page_obj.number, page_size, queryset.count(), ordering_raw)
 
 
@@ -1539,6 +1549,56 @@ def api_checklist_note(request):
         return JsonResponse({"ok": True, "noteId": note_id, "portalData": safe_portal_data(request)})
 
     return JsonResponse({"ok": False, "error": "Unknown checklist note mode."}, status=400)
+
+
+@extend_schema(request=OpenApiTypes.OBJECT, responses=OpenApiTypes.OBJECT)
+@api_view(["POST"])
+def api_checklist_item(request):
+    payload = _json_payload(request)
+    mode = str(payload.get("mode") or "toggle").strip().lower()
+
+    if mode == "toggle":
+        item = _optional_instance(ChecklistItem, payload.get("item_id"))
+        if not item:
+            return JsonResponse({"ok": False, "error": "Checklist item was not found."}, status=404)
+        item.done = not item.done
+        item.save(update_fields=["done"])
+        AuditEvent.objects.create(
+            event_type=AuditEvent.TYPE_NOTE,
+            title="Checklist item updated",
+            message=f"{item.title}: {'done' if item.done else 'open'}",
+            actor=_actor(request),
+            metadata={"source": "portal_checklist_item", "itemId": item.id, "done": item.done},
+        )
+        return JsonResponse({"ok": True, "itemId": item.id, "done": item.done, "portalData": safe_portal_data(request)})
+
+    if mode == "complete_visible":
+        raw_ids = payload.get("item_ids") or []
+        backend_ids = [int(str(item_id)) for item_id in raw_ids if str(item_id).isdigit()]
+        if backend_ids:
+            ChecklistItem.objects.filter(id__in=backend_ids).update(done=True)
+            AuditEvent.objects.create(
+                event_type=AuditEvent.TYPE_NOTE,
+                title="Checklist items completed",
+                message=f"{len(backend_ids)} checklist items marked complete.",
+                actor=_actor(request),
+                metadata={"source": "portal_checklist_item", "itemIds": backend_ids, "mode": mode},
+            )
+        return JsonResponse({"ok": True, "count": len(backend_ids), "portalData": safe_portal_data(request)})
+
+    if mode == "reset_all":
+        ChecklistItem.objects.update(done=False)
+        ChecklistNote.objects.update(done=False)
+        AuditEvent.objects.create(
+            event_type=AuditEvent.TYPE_NOTE,
+            title="Checklist reset",
+            message="Checklist items and notes were reset from the portal.",
+            actor=_actor(request),
+            metadata={"source": "portal_checklist_item", "mode": mode},
+        )
+        return JsonResponse({"ok": True, "portalData": safe_portal_data(request)})
+
+    return JsonResponse({"ok": False, "error": "Unknown checklist item mode."}, status=400)
 
 
 @extend_schema(request=OpenApiTypes.OBJECT, responses=OpenApiTypes.OBJECT)
@@ -2212,7 +2272,7 @@ def api_system_alerts_configure(request):
             event_at=timezone.now(),
             action_primary=action_label,
             action_secondary="Resolve",
-            action_state="Created from dashboard",
+            action_state="",
             complex=complex_obj,
             building=building,
             apartment=apartment,

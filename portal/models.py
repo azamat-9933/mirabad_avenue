@@ -229,6 +229,7 @@ class ChecklistItem(models.Model):
     icon = models.CharField(max_length=80, blank=True, default="fact_check")
     scope = models.CharField(max_length=24, choices=SCOPE_CHOICES, default=SCOPE_GLOBAL)
     sort_order = models.PositiveIntegerField(default=100)
+    done = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
