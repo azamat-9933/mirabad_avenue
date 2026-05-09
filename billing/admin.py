@@ -2,7 +2,7 @@ from django.contrib import admin, messages
 from django.db.models import Sum, Count
 from django.urls import reverse
 from django.utils import timezone
-from django.utils.html import format_html
+from django.utils.html import format_html, format_html_join
 
 from .models import (
     BillingPeriod,
@@ -101,6 +101,21 @@ class BillingPeriodAdmin(admin.ModelAdmin):
 
     # ── Kastom kolonkalar ───────────────────────────
 
+    def save_related(self, request, form, formsets, change):
+        super().save_related(request, form, formsets, change)
+        created = form.instance.sync_default_records()
+        total_created = created["heating_created"] + created["hot_water_created"]
+        if total_created:
+            self.message_user(
+                request,
+                (
+                    "Kvartiralar uchun davr yozuvlari yaratildi: "
+                    f"isitish {created['heating_created']} ta, "
+                    f"GVS {created['hot_water_created']} ta."
+                ),
+                messages.INFO,
+            )
+
     @admin.display(description="Holat")
     def status_badge(self, obj):
         badge_map = {
@@ -123,13 +138,15 @@ class BillingPeriodAdmin(admin.ModelAdmin):
 
     @admin.display(description="Uylar")
     def buildings_list(self, obj):
-        buildings = obj.buildings.all()
-        tags = " ".join(
-            f'<span style="background:#eef2ff;color:#4e73df;padding:1px 6px;'
-            f'border-radius:6px;font-size:11px;margin:1px;">{b.number}</span>'
-            for b in buildings
+        buildings = list(obj.buildings.all())
+        if not buildings:
+            return "—"
+        return format_html_join(
+            " ",
+            '<span style="background:#eef2ff;color:#4e73df;padding:1px 6px;'
+            'border-radius:6px;font-size:11px;margin:1px;">{}</span>',
+            ((building.number,) for building in buildings),
         )
-        return format_html(tags) if tags else "—"
 
     @admin.display(description="Umumiy xarajatlar (so'm)")
     def total_expenses_display(self, obj):
@@ -411,7 +428,7 @@ class HotWaterMeterReadingAdmin(admin.ModelAdmin):
     def consumption_display(self, obj):
         c = obj.consumption
         if c == 0:
-            return format_html('<span style="color:#95a5a6;">0 kub</span>')
+            return format_html('<span style="color:#95a5a6;">{}</span>', "0 kub")
         return format_html(
             '<span style="color:#2980b9;font-weight:600;">{} kub</span>', admin_number(c, 2)
         )
@@ -513,7 +530,7 @@ class InvoiceAdmin(admin.ModelAdmin):
     @admin.display(description="🔥 Isitish")
     def heating_amount_display(self, obj):
         if not obj.heating_amount:
-            return format_html('<span style="color:#bdc3c7;">—</span>')
+            return format_html('<span style="color:#bdc3c7;">{}</span>', "—")
         return format_html(
             '<span style="color:#e67e22;">{} so\'m</span>',
             admin_number(obj.heating_amount),
@@ -522,7 +539,7 @@ class InvoiceAdmin(admin.ModelAdmin):
     @admin.display(description="💧 GVS")
     def hot_water_amount_display(self, obj):
         if not obj.hot_water_amount:
-            return format_html('<span style="color:#bdc3c7;">—</span>')
+            return format_html('<span style="color:#bdc3c7;">{}</span>', "—")
         return format_html(
             '<span style="color:#2980b9;">{} so\'m</span>',
             admin_number(obj.hot_water_amount),

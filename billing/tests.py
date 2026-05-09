@@ -11,6 +11,8 @@ from billing.models import (
     BuildingService,
     Charge,
     HeatingApartmentUsage,
+    HeatingRecord,
+    HotWaterMeterReading,
     HotWaterReading,
     Payment,
     RecalculationLog,
@@ -75,6 +77,22 @@ class BillingCoreModelTests(TestCase):
     def test_days_count_is_inclusive(self):
         self.assertEqual(self.period.days_count(), 30)
         self.assertEqual(self.period.total_days, 30)
+
+    def test_sync_default_records_creates_period_rows_for_selected_buildings(self):
+        self.assertEqual(HeatingRecord.objects.filter(period=self.period).count(), 0)
+        self.assertEqual(HotWaterMeterReading.objects.filter(period=self.period).count(), 0)
+
+        created = self.period.sync_default_records()
+
+        self.assertEqual(created["heating_created"], 2)
+        self.assertEqual(created["hot_water_created"], 2)
+        self.assertEqual(HeatingRecord.objects.filter(period=self.period).count(), 2)
+        self.assertEqual(HotWaterMeterReading.objects.filter(period=self.period).count(), 2)
+
+        # Sync is idempotent and doesn't duplicate rows.
+        created_again = self.period.sync_default_records()
+        self.assertEqual(created_again["heating_created"], 0)
+        self.assertEqual(created_again["hot_water_created"], 0)
 
     def test_building_service_unique_constraint(self):
         BuildingService.objects.create(period=self.period, building=self.building, service_type="heating")

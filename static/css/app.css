@@ -7459,7 +7459,7 @@ html.dark,
 }
 
 :root {
-    --resident-directory-columns: 72px minmax(0, 2.05fr) minmax(0, 1.25fr) minmax(0, 1fr) minmax(0, 0.88fr) minmax(0, 3.35fr);
+    --resident-directory-columns: 64px minmax(0, 2.45fr) minmax(0, 1.08fr) minmax(0, 0.84fr) minmax(0, 0.76fr) minmax(0, 2.55fr);
 }
 
 .resident-column-sorts {
@@ -7472,7 +7472,7 @@ html.dark,
 .resident-sort-button,
 .resident-sort-actions {
     min-width: 0;
-    min-height: 46px;
+    min-height: 40px;
 }
 
 .resident-sort-button {
@@ -7480,9 +7480,9 @@ html.dark,
     display: inline-flex;
     align-items: center;
     justify-content: space-between;
-    gap: 8px;
+    gap: 6px;
     width: 100%;
-    padding: 10px 14px;
+    padding: 8px 12px;
     overflow: hidden;
     border: 1px solid rgba(15, 23, 42, 0.07);
     border-radius: 16px;
@@ -7512,7 +7512,7 @@ html.dark,
     display: block;
     overflow: hidden;
     color: inherit;
-    font-size: 9px;
+    font-size: 8px;
     font-weight: 850;
     letter-spacing: 0.12em;
     line-height: 1.12;
@@ -7570,12 +7570,12 @@ html.dark,
     justify-content: flex-end;
     flex-wrap: nowrap;
     gap: 8px;
-    min-height: 48px;
+    min-height: 40px;
     border-radius: 16px;
     min-width: fit-content;
     overflow: hidden;
     margin-left: auto;
-    padding: 6px 8px;
+    padding: 4px 6px;
     background:
         linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(255, 255, 255, 0.58)),
         linear-gradient(135deg, rgba(79, 142, 247, 0.06), rgba(255, 255, 255, 0));
@@ -7643,10 +7643,10 @@ html.dark .resident-balance-filter-shell,
     --resident-row-divider: rgba(100, 116, 139, 0.18);
     display: grid;
     grid-template-columns: var(--resident-directory-columns);
-    gap: 12px;
+    gap: 10px;
     align-items: center;
     min-width: 0;
-    padding: 14px 16px;
+    padding: 10px 12px;
     border-bottom: 1px solid rgba(112, 120, 125, 0.10);
     background: transparent;
     transition: background 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
@@ -7703,40 +7703,46 @@ html.dark .resident-balance-filter-shell,
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 48px;
-    height: 34px;
-    padding: 0 10px;
-    border-radius: 12px;
+    min-width: 40px;
+    height: 28px;
+    padding: 0 8px;
+    border-radius: 10px;
     background: color-mix(in srgb, var(--resident-row-accent) 26%, rgba(255, 255, 255, 0.7));
     color: rgb(var(--color-on-surface));
-    font-size: 14px;
+    font-size: 12px;
     font-weight: 900;
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
 
 .resident-list-person {
     display: grid;
-    gap: 4px;
+    gap: 2px;
     min-width: 0;
 }
 
 .resident-list-person h4 {
     margin: 0;
+    display: -webkit-box;
     overflow: hidden;
     color: rgb(var(--color-on-surface));
-    font-size: 15px;
-    font-weight: 900;
-    line-height: 1.1;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    font-size: 13px;
+    font-weight: 800;
+    line-height: 1.2;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    line-clamp: 2;
+    text-overflow: clip;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }
 
 .resident-list-person p,
 .resident-list-cell small {
-    margin: 3px 0 0;
+    margin: 1px 0 0;
     overflow: hidden;
     color: rgb(var(--color-on-surface-variant));
-    font-size: 12px;
+    font-size: 10px;
     font-weight: 600;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -7750,9 +7756,9 @@ html.dark .resident-balance-filter-shell,
 .resident-list-cell span,
 .resident-list-balance span {
     display: block;
-    margin-bottom: 3px;
+    margin-bottom: 2px;
     color: rgb(var(--color-on-surface-variant));
-    font-size: 9px;
+    font-size: 8px;
     font-weight: 850;
     letter-spacing: 0.12em;
     line-height: 1;
@@ -7766,8 +7772,8 @@ html.dark .resident-balance-filter-shell,
     gap: 6px;
     overflow: hidden;
     color: rgb(var(--color-on-surface));
-    font-size: 13px;
-    font-weight: 780;
+    font-size: 11px;
+    font-weight: 700;
     line-height: 1.15;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -7777,7 +7783,7 @@ html.dark .resident-balance-filter-shell,
     display: inline-flex !important;
     align-items: center !important;
     justify-content: flex-start !important;
-    min-height: 30px !important;
+    min-height: 24px !important;
     line-height: 1 !important;
     overflow: visible !important;
 }
@@ -7801,12 +7807,12 @@ html.dark .resident-balance-filter-shell,
     align-items: center !important;
     justify-content: center !important;
     align-self: center;
-    min-height: 30px;
-    padding: 0 14px;
+    min-height: 24px;
+    padding: 0 10px;
     border-radius: 999px;
     border: 1px solid rgba(112, 120, 125, 0.14);
     background: rgba(255, 255, 255, 0.72);
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 850;
     line-height: 1 !important;
     white-space: nowrap;
@@ -7847,7 +7853,7 @@ html.dark .resident-balance-filter-shell,
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
     align-items: center;
-    gap: 16px;
+    gap: 10px;
 }
 
 .resident-list-balance-main {
@@ -7860,15 +7866,15 @@ html.dark .resident-balance-filter-shell,
 }
 
 .resident-list-balance strong {
-    font-size: 16px;
-    font-weight: 900;
+    font-size: 13px;
+    font-weight: 800;
 }
 
 .resident-list-balance strong .material-symbols-outlined {
-    width: 20px;
-    height: 20px;
-    min-width: 20px;
-    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    min-width: 16px;
+    font-size: 14px;
     border-radius: 999px;
 }
 
@@ -7894,7 +7900,7 @@ html.dark .resident-balance-filter-shell,
     display: inline-flex;
     align-items: center;
     justify-content: flex-end;
-    gap: 6px;
+    gap: 4px;
 }
 
 .resident-list-action {
@@ -7902,21 +7908,21 @@ html.dark .resident-balance-filter-shell,
     align-items: center;
     justify-content: center;
     gap: 6px;
-    height: 30px;
-    min-width: 84px;
-    padding: 0 10px;
+    height: 24px;
+    min-width: 64px;
+    padding: 0 8px;
     border-radius: 999px;
     border: 1px solid rgba(79, 142, 247, 0.16);
     background: rgba(79, 142, 247, 0.08);
     color: #215dd8;
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 850;
     text-decoration: none;
     transition: transform 0.16s ease, opacity 0.16s ease, background 0.16s ease;
 }
 
 .resident-list-action .material-symbols-outlined {
-    font-size: 16px;
+    font-size: 13px;
 }
 
 .resident-list-action.is-edit {
@@ -17813,9 +17819,10 @@ html.dark .notification-group-label[data-notification-group="pinned"],
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-height: 34px;
+    min-height: 32px;
     border-radius: 10px;
-    font-size: 12px;
+    font-size: 11px;
+    line-height: 1;
     font-weight: 850;
     transition: transform 0.2s ease, color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
 }
@@ -17824,7 +17831,7 @@ html.dark .notification-group-label[data-notification-group="pinned"],
     border: 1px solid rgba(79, 142, 247, 0.20);
     background: rgba(79, 142, 247, 0.10);
     color: #356FCE;
-    padding: 0 14px;
+    padding: 0 12px;
 }
 
 .residential-detail-button {
@@ -17938,39 +17945,34 @@ html.dark .notification-group-label[data-notification-group="pinned"],
 
 .residential-performance-table th:first-child,
 .residential-performance-table td:first-child {
-    width: 3.8%;
+    width: 52px;
     padding-left: 0.55rem !important;
     padding-right: 0.35rem !important;
 }
 
 .residential-performance-table th:nth-child(2),
 .residential-performance-table td:nth-child(2) {
-    width: 20%;
+    width: auto;
 }
 
 .residential-performance-table th:nth-child(3),
 .residential-performance-table td:nth-child(3) {
-    width: 12%;
+    width: 150px;
 }
 
 .residential-performance-table th:nth-child(4),
 .residential-performance-table td:nth-child(4) {
-    width: 16%;
+    width: 185px;
 }
 
 .residential-performance-table th:nth-child(5),
 .residential-performance-table td:nth-child(5) {
-    width: 12%;
+    width: 170px;
 }
 
 .residential-performance-table th:nth-child(6),
 .residential-performance-table td:nth-child(6) {
-    width: 16%;
-}
-
-.residential-performance-table th:nth-child(7),
-.residential-performance-table td:nth-child(7) {
-    width: 20.2%;
+    width: 220px;
 }
 
 .residential-performance-table .table-filter-heading-inner {
@@ -18005,8 +18007,7 @@ html.dark .notification-group-label[data-notification-group="pinned"],
 
 .residential-performance-table td:nth-child(2) p,
 .residential-performance-table td:nth-child(2) small,
-.residential-performance-table td:nth-child(2) span,
-.residential-performance-table td:nth-child(6) p {
+.residential-performance-table td:nth-child(2) span {
     overflow-wrap: anywhere;
 }
 
@@ -18014,15 +18015,15 @@ html.dark .notification-group-label[data-notification-group="pinned"],
     max-width: 100%;
 }
 
-.residential-performance-table td:nth-child(7) > div {
+.residential-performance-table td:nth-child(6) > div {
     gap: 6px !important;
 }
 
-.residential-performance-table td:nth-child(7) button.p-2 {
+.residential-performance-table td:nth-child(6) button.p-2 {
     display: none !important;
 }
 
-.residential-performance-table td:nth-child(7) button,
+.residential-performance-table td:nth-child(6) button,
 .residential-performance-table .residential-open-button,
 .residential-performance-table .residential-detail-button {
     min-width: 0;
@@ -18030,6 +18031,10 @@ html.dark .notification-group-label[data-notification-group="pinned"],
     padding-left: 10px !important;
     padding-right: 10px !important;
     white-space: nowrap;
+}
+.residential-performance-table th:last-child,
+.residential-performance-table td:last-child {
+    overflow: visible;
 }
 
 /* System maintenance table uses live backend rows, so keep it compact and non-scrollable. */
@@ -18163,7 +18168,7 @@ html.dark .maintenance-action-button,
     display: inline-flex;
     align-items: center;
     justify-content: flex-end;
-    gap: 8px;
+    gap: 6px;
     width: 100%;
     min-width: 0;
     white-space: nowrap;
@@ -18174,7 +18179,7 @@ html.dark .maintenance-action-button,
     align-items: stretch;
     justify-content: center;
     gap: 0;
-    min-width: 94px;
+    min-width: 102px;
     overflow: hidden;
     border: 1px solid rgba(15, 23, 42, 0.07);
     border-radius: 14px;
@@ -18187,8 +18192,8 @@ html.dark .maintenance-action-button,
 
 .resident-debt-split span {
     display: grid;
-    min-width: 46px;
-    padding: 5px 7px;
+    min-width: 50px;
+    padding: 5px 6px;
     text-align: center;
 }
 
@@ -18206,9 +18211,9 @@ html.dark .maintenance-action-button,
 .resident-debt-split small {
     margin-top: 4px;
     color: #7A8191;
-    font-size: 8px;
+    font-size: 7px;
     font-weight: 950;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.04em;
     line-height: 1;
     text-transform: uppercase;
 }

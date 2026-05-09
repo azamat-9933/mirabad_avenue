@@ -7,7 +7,7 @@
 <h2 class="text-3xl font-extrabold text-on-surface tracking-tight">Residential Units</h2>
 </div>
 <!-- Bento Grid Summary Cards -->
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 motion-stagger">
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8 motion-stagger">
 <!-- Total Complexes -->
 <div class="residential-kpi-card bg-surface-container-lowest p-6 rounded-lg shadow-sm border border-transparent hover:border-primary-container/10 transition-all flex flex-col justify-between">
 <div class="flex justify-between items-start mb-4">
@@ -20,11 +20,10 @@
 <p class="text-display-sm text-3xl font-black text-on-surface tracking-tight">142</p>
 <div class="kpi-support-row">
 <span>All homes connected</span>
-<span class="kpi-mini-badge kpi-mini-badge-blue">+5 this month</span>
 </div>
 </div>
 </div>
-<!-- Total Buildings -->
+<!-- Total Apartments -->
 <div class="residential-kpi-card bg-surface-container-lowest p-6 rounded-lg shadow-sm border border-transparent hover:border-primary-container/10 transition-all flex flex-col justify-between">
 <div class="flex justify-between items-start mb-4">
 <p class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Active Buildings</p>
@@ -36,32 +35,10 @@
 <p class="text-display-sm text-3xl font-black text-on-surface tracking-tight">856</p>
 <div class="kpi-support-row">
 <span>124 active units</span>
-<span class="kpi-mini-badge kpi-mini-badge-green">Live sync</span>
 </div>
 </div>
 </div>
-<!-- Occupancy Rate -->
-<div class="residential-kpi-card bg-surface-container-lowest p-6 rounded-lg shadow-sm border border-transparent hover:border-primary-container/10 transition-all flex flex-col justify-between">
-<div class="flex justify-between items-start mb-4">
-<p class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Occupancy Rate</p>
-<div class="kpi-icon-chip kpi-icon-amber">
-<span class="material-symbols-outlined" data-icon="groups">groups</span>
-</div>
-</div>
-<div>
-<div class="kpi-value-line">
-<p class="text-display-sm text-3xl font-black text-on-surface tracking-tight">98.4%</p>
-<div aria-label="Occupancy rate 98.4 percent" aria-valuemax="100" aria-valuemin="0" aria-valuenow="98.4" class="kpi-progress-meter kpi-progress-meter-amber kpi-occupancy-meter" role="meter" style="--progress: 98.4%; --occupancy: 98.4%;" data-value="98.4%">
-<span></span>
-</div>
-</div>
-<div class="kpi-support-row">
-<span>Across 856 buildings</span>
-<span class="kpi-mini-badge kpi-mini-badge-amber">Stable</span>
-</div>
-</div>
-</div>
-<!-- Critical Debt -->
+<!-- Total Debtors -->
 <div class="residential-kpi-card bg-error-container p-6 rounded-lg shadow-sm border border-transparent hover:shadow-lg transition-all flex flex-col justify-between">
 <div class="flex justify-between items-start mb-4">
 <p class="text-xs font-bold uppercase tracking-widest text-on-error-container/70">Critical Debt Units</p>
@@ -73,7 +50,6 @@
 <p class="text-display-sm text-3xl font-black text-on-error-container tracking-tight">24</p>
 <div class="kpi-support-row">
 <span>3 require field visit</span>
-<span class="kpi-mini-badge kpi-mini-badge-red">High risk</span>
 </div>
 </div>
 </div>
@@ -96,9 +72,8 @@
 <thead>
 <tr class="bg-surface-container-low/50">
 <th class="px-6 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-wider">House</th>
-<th class="px-6 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-wider">Infrastructure</th>
+<th class="px-6 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-wider">Apartments</th>
 <th class="px-6 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-wider">Area</th>
-<th class="px-6 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-wider">Finances</th>
 <th class="px-6 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-wider">Debt Status</th>
 <th class="px-6 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-wider text-right no-table-filter">Actions</th>
 </tr>

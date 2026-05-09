@@ -1,4 +1,4 @@
-(() => {
+﻿(() => {
     const root = document.documentElement;
     const storage = window.localStorage;
     const languageOrder = ["en", "ru", "uz"];
@@ -2266,18 +2266,16 @@
         setStat("Paid Residents", moneyFormatter.format(stats.detailedPaidResidents), t("Residents with positive or zero balance"));
         setStat("Total Debtors", moneyFormatter.format(stats.detailedDebtors), t("Residents with overdue balance"));
         setStat("Outstanding Debt", formatCompactUzs(stats.detailedDebt), t("Current resident liabilities"));
-        setStat("Total Complexes", moneyFormatter.format(stats.totalBuildings), t("All homes connected"));
+        setStat("Total Complexes", moneyFormatter.format(stats.totalComplexes), t("All homes connected"));
         const totalComplexesCard = document.querySelector('[data-stat-card="total-complexes"]');
-        const supportSpans = totalComplexesCard
-            ? Array.from(totalComplexesCard.querySelectorAll(".kpi-support-row span"))
-            : [];
-        const monthDeltaNode = supportSpans.length > 1 ? supportSpans[supportSpans.length - 1] : null;
+        const monthDeltaNode = totalComplexesCard?.querySelector(".kpi-support-row span:last-child");
         if (monthDeltaNode) {
             monthDeltaNode.dataset.statSynced = "true";
             monthDeltaNode.textContent = `+${moneyFormatter.format(Number(stats.newComplexesThisMonth) || 0)} ${t("new this month")}`.toUpperCase();
         }
         // Residents KPI row: show real counts (apartments / residents / debtors) instead of demo-like derived labels.
         setStat("Active Buildings", moneyFormatter.format(stats.totalUnits), t("Total apartments in system"));
+        setStat("Occupancy Rate", moneyFormatter.format(stats.detailedResidents), t("Total linked resident profiles"));
         setStat("Critical Debt Units", moneyFormatter.format(stats.detailedDebtors), t("Residents with overdue balance"));
         setStat("Total Units", moneyFormatter.format(stats.totalUnits));
         setStat("Total Subscribers", moneyFormatter.format(stats.occupiedUnits));
@@ -3991,31 +3989,30 @@
                     ? { type: "text", value: String(row.dataset[name]).toLowerCase() }
                     : null;
                 if (row.classList.contains("residential-district-row") || row.classList.contains("residential-building-row")) {
-                    if (labelKey.includes("complex") || labelKey.includes("house") || labelKey.includes("dom") || labelKey.includes("uy") || labelKey.includes("kompleks")) {
+                    if (labelKey.includes("complex") || labelKey.includes("комплекс") || labelKey.includes("kompleks")) {
                         const value = datasetText("sortName");
                         if (value) return value;
                     }
-                    if (labelKey.includes("infra") || labelKey.includes("apart") || labelKey.includes("unit") || labelKey.includes("kv")) {
+                    if (labelKey.includes("infra") || labelKey.includes("инфра")) {
                         const value = datasetNumber("sortUnits") || datasetNumber("sortBuildings");
                         if (value) return value;
                     }
                     if (
                         labelKey.includes("system")
+                        || labelKey.includes("систем")
+                        || labelKey.includes("tizim")
                         || labelKey.includes("area")
+                        || labelKey.includes("площ")
                         || labelKey.includes("maydon")
                     ) {
                         const value = datasetNumber("sortArea") || datasetNumber("sortSystemRank") || datasetNumber("sortHealth");
                         if (value) return value;
                     }
-                    if (labelKey.includes("resident") || labelKey.includes("tenant") || labelKey.includes("abonent")) {
-                        const value = datasetNumber("sortResidents") || datasetNumber("sortHealth") || datasetNumber("sortFinance");
-                        if (value) return value;
-                    }
-                    if (labelKey.includes("finance") || labelKey.includes("moliya")) {
+                    if (labelKey.includes("finance") || labelKey.includes("фина") || labelKey.includes("moliya")) {
                         const value = datasetNumber("sortHealth") || datasetNumber("sortFinance");
                         if (value) return value;
                     }
-                    if (labelKey.includes("debt") || labelKey.includes("qarz")) {
+                    if (labelKey.includes("debt") || labelKey.includes("долг") || labelKey.includes("qarz")) {
                         const value = datasetNumber("sortDebt");
                         if (value) return value;
                     }
@@ -4066,15 +4063,6 @@
                         return;
                     }
                     const label = header.querySelector(".table-filter-heading-text")?.textContent.trim() || header.textContent.trim();
-                    if (!label) {
-                        header.classList.remove("table-filter-heading");
-                        header.removeAttribute("role");
-                        header.removeAttribute("tabindex");
-                        header.removeAttribute("aria-label");
-                        const icon = header.querySelector(".table-sort-heading-icon");
-                        if (icon) icon.remove();
-                        return;
-                    }
                     header.classList.add("table-filter-heading");
                     header.setAttribute("role", "button");
                     header.setAttribute("tabindex", "0");
@@ -4298,7 +4286,8 @@
             };
             const singleSector = getSingleSectorStats();
             performanceBody.innerHTML = [singleSector].map((complex) => {
-                const residentCount = Number(complex.debtorResidents || 0) + Number(complex.paidResidents || 0);
+                const waterIssue = complex.water !== "Optimal";
+                const heatingIssue = complex.heating !== "Optimal";
                 const riskTextClass = complex.risk === "Critical" ? "text-error" : "text-on-surface";
                 const splitTone = debtSplitTone(complex.debtorResidents, complex.paidResidents);
                 return `
@@ -4310,8 +4299,7 @@
                         data-sort-name="${escapeHtml(complex.name)}"
                         data-sort-buildings="${Number(complex.buildings) || 0}"
                         data-sort-units="${Number(complex.units) || 0}"
-                        data-sort-health="${residentCount}"
-                        data-sort-residents="${residentCount}"
+                        data-sort-health="${Number(complex.health) || 0}"
                         data-sort-area="${Number(complex.totalArea) || 0}"
                         data-sort-finance="${Number(complex.finances) || 0}"
                         data-sort-debt="${Number(complex.debt) || 0}"
@@ -4330,15 +4318,22 @@
                             </div>
                         </td>
                         <td class="px-6 py-5">
-                            <p class="text-sm font-bold text-on-surface">
-                                ${moneyFormatter.format(complex.units)}
-                                <span class="text-xs font-normal text-on-surface-variant" data-i18n-key="Apartments">Apartments</span>
-                            </p>
+                            <div class="space-y-1">
+                                <p class="text-sm font-bold text-on-surface">${complex.buildings} <span class="text-xs font-normal text-on-surface-variant" data-i18n-key="Buildings">Buildings</span></p>
+                                <p class="text-sm font-bold text-on-surface">${complex.units} <span class="text-xs font-normal text-on-surface-variant" data-i18n-key="Units">Units</span></p>
+                            </div>
                         </td>
                         <td class="px-6 py-5">
                             <div class="space-y-1">
                                 <p class="text-sm font-bold text-on-surface">${formatAreaM2(complex.totalArea)}</p>
                                 <p class="text-xs text-on-surface-variant" data-i18n-key="Area (m²)">Area (m²)</p>
+                            </div>
+                        </td>
+                        <td class="px-6 py-5">
+                            <div class="w-24">
+                                <div class="percent-meter percent-meter-${escapeHtml(complex.tone)} percent-meter-compact" style="--progress: ${complex.health}%;" data-value="${complex.health}%">
+                                    <span class="percent-meter-track"><span class="percent-meter-fill"></span></span>
+                                </div>
                             </div>
                         </td>
                         <td class="px-6 py-5">
@@ -4939,26 +4934,15 @@
             `;
         };
 
-        const normalizeBuildingLabel = (value, fallback = "") => {
-            const source = String(value ?? "").trim();
-            if (!source) return String(fallback || "").trim();
-            const numberLike = source.match(/\d[\dA-Za-z/-]*/);
-            if (numberLike?.[0]) return numberLike[0];
-            const withoutPrefix = source.replace(/^\s*(?:house|dom|uy)\s*/i, "").trim();
-            return withoutPrefix || source;
-        };
-
         const renderBuildingRow = (districtId, index) => {
             const district = districts[districtId];
             const realBuilding = district.buildingItems?.[index - 1];
-            const rawBuildingName = buildingName(district, index);
-            const buildingLabel = normalizeBuildingLabel(realBuilding?.number || rawBuildingName || index, rawBuildingName || index);
             const unitCount = unitsForBuilding(district, index);
             const healthIssue = realBuilding ? realBuilding.risk === "Critical" : district.issueEvery && index % district.issueEvery === 0;
+            const completion = realBuilding ? realBuilding.health : Math.max(78, Math.min(99, 93 + (index % 6) - (healthIssue ? 9 : 0)));
             const debt = realBuilding ? realBuilding.debt : Math.round(district.debt / district.count) + (healthIssue ? 4200000 : index * 175000);
             const debtorCount = realBuilding ? realBuilding.debtorResidents : Math.max(1, Math.round(unitCount * (healthIssue ? 0.24 : districtId === "harbor" ? 0.17 : 0.07)));
             const paidCount = realBuilding ? realBuilding.paidResidents : Math.max(0, unitCount - debtorCount);
-            const residentCount = debtorCount + paidCount;
             const splitRatio = paidCount === 0 ? Infinity : debtorCount / paidCount;
             const splitTone = splitRatio > 1 ? "is-danger" : splitRatio >= 0.75 ? "is-caution" : "is-healthy";
             const buildingRisk = realBuilding?.risk || (healthIssue ? "Review" : district.risk);
@@ -4973,11 +4957,10 @@
             row.dataset.buildingIndex = String(index);
             row.dataset.backendId = String(realBuilding?.backendId || "");
             row.dataset.backendType = "building";
-            row.dataset.sortName = buildingLabel;
+            row.dataset.sortName = buildingName(district, index);
             row.dataset.sortBuildings = "1";
             row.dataset.sortUnits = String(unitCount);
-            row.dataset.sortHealth = String(residentCount);
-            row.dataset.sortResidents = String(residentCount);
+            row.dataset.sortHealth = String(completion);
             row.dataset.sortArea = String(totalArea);
             row.dataset.sortFinance = String(debt);
             row.dataset.sortDebt = String(debt);
@@ -4986,37 +4969,41 @@
             row.setAttribute("aria-expanded", "false");
             row.tabIndex = 0;
             row.innerHTML = `
-                ${makeSelectCell(`Select ${buildingLabel}`)}
+                ${makeSelectCell(`Select ${buildingName(district, index)}`)}
                 <td class="px-6 py-4 residential-building-summary-cell"
                     data-building-summary-open
-                    data-building-name="${attr(buildingLabel)}"
+                    data-building-name="${attr(buildingName(district, index))}"
                     data-building-complex="${attr(realBuilding?.parentComplexName || district.complex)}"
                     data-building-apartments="${attr(unitCount)}"
                     data-building-area="${attr(totalArea)}"
-                    data-building-residents="${attr(residentCount)}"
+                    data-building-residents="${attr(debtorCount + paidCount)}"
                     data-building-debtors="${attr(debtorCount)}"
                     data-building-paid="${attr(paidCount)}"
                     data-building-debt="${attr(debt)}"
                     data-building-backend-id="${attr(realBuilding?.backendId || "")}">
                     <div class="residential-nested-name">
                         <span class="material-symbols-outlined residential-drill-chevron" aria-hidden="true">expand_more</span>
+                        <span class="residential-level-chip" data-i18n-key="House">House</span>
                         <div class="residential-building-trigger">
-                            <p>${escapeHtml(buildingLabel)}</p>
+                            <p>${escapeHtml(buildingName(district, index))}</p>
                             <small>${escapeHtml(realBuilding?.parentComplexName || district.complex)}</small>
                         </div>
                     </div>
                 </td>
                 <td class="px-6 py-4">
-                    <p class="text-sm font-bold text-on-surface">
-                        ${moneyFormatter.format(unitCount)}
-                        <span class="text-xs font-normal text-on-surface-variant" data-i18n-key="Apartments">Apartments</span>
-                    </p>
+                    <div class="space-y-1">
+                        <p class="text-sm font-bold text-on-surface">${unitCount} <span class="text-xs font-normal text-on-surface-variant" data-i18n-key="Apartments">Apartments</span></p>
+                        <p class="text-xs text-on-surface-variant">${realBuilding?.address ? escapeHtml(realBuilding.address) : `${8 + (index % 5)} <span data-i18n-key="floors">floors</span> · ${index % 2 ? "A" : "B"} <span data-i18n-key="entrance">entrance</span>`}</p>
+                    </div>
                 </td>
                 <td class="px-6 py-4">
                     <div class="space-y-1">
                         <p class="text-sm font-bold text-on-surface">${formatAreaM2(totalArea)}</p>
                         <p class="text-xs text-on-surface-variant" data-i18n-key="Area (m²)">Area (m²)</p>
                     </div>
+                </td>
+                <td class="px-6 py-4">
+                    <div class="percent-meter percent-meter-${healthIssue ? "red" : district.tone} percent-meter-compact" style="--progress: ${completion}%;" data-value="${completion}%"><span class="percent-meter-track"><span class="percent-meter-fill"></span></span></div>
                 </td>
                 <td class="px-6 py-4">
                     <p class="text-sm font-bold ${healthIssue ? "text-error" : "text-on-surface"}">${formatUzs(debt)}</p>
@@ -5048,6 +5035,7 @@
                 ${makeSelectCell(`Select apartment ${apartment.unit}`)}
                 <td class="px-6 py-4">${renderOwner(apartment.owner, `Apartment ${apartment.unit}`)}</td>
                 <td class="px-6 py-4"><p class="text-sm font-bold text-on-surface" data-i18n-key="${attr(apartment.rooms)}">${escapeHtml(apartment.rooms)}</p><p class="text-xs text-on-surface-variant">${escapeHtml(apartment.area)} · ${escapeHtml(apartment.meter)}</p></td>
+                <td class="px-6 py-4"><span class="residential-status-dot ${apartment.status === "Overdue" ? "is-danger" : ""}"></span><span class="text-xs font-bold text-on-surface" data-i18n-key="${attr(apartment.occupancy)}">${escapeHtml(apartment.occupancy)}</span></td>
                 <td class="px-6 py-4"><p class="text-sm font-bold text-on-surface">${escapeHtml(apartment.charge)}</p><p class="text-xs text-on-surface-variant" data-i18n-key="Monthly charge">Monthly charge</p></td>
                 <td class="px-6 py-4"><p class="text-sm font-bold ${apartment.balance < 0 ? "text-error" : "text-on-surface"}">${formatUzs(apartment.balance)}</p><span class="residential-risk-pill ${apartment.status === "Overdue" ? "is-critical" : "is-paid"}" data-i18n-key="${attr(apartment.status)}">${escapeHtml(apartment.status)}</span></td>
                 <td class="px-6 py-4 text-right">
@@ -5152,11 +5140,11 @@
         }
         const syncResidentialLabels = (lang = storage.getItem("hydroflow-lang") || "en") => {
             const labels = {
-                en: ["House", "Apts", "Area", "Debt"],
-                ru: ["Дом", "Кв.", "Площадь", "Долг"],
-                uz: ["Uy", "Kv.", "Maydon", "Qarz"],
+                en: ["House", "Infra", "Area", "Finance", "Debt"],
+                ru: ["Дом", "Инфра", "Площадь", "Финансы", "Долг"],
+                uz: ["Uy", "Infra", "Maydon", "Moliya", "Qarz"],
             };
-            const fullLabels = ["House Name", "Apartments", "Area", "Debt Status"];
+            const fullLabels = ["House Name", "Infrastructure", "Area", "Finances", "Debt Status"];
             table.querySelectorAll(".table-filter-heading-text").forEach((label, index) => {
                 label.textContent = labels[lang]?.[index] || labels.en[index] || label.textContent;
                 label.title = fullLabels[index] || label.textContent;
@@ -10422,3 +10410,4 @@ ${sheets}
         }
     });
 })();
+

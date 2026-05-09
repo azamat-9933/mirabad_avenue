@@ -111,6 +111,57 @@ class BillingPeriod(models.Model):
         total = self.days_count()
         return [self.start_date + timedelta(days=index) for index in range(total)]
 
+    def sync_default_records(self):
+        """
+        Ensure default per-apartment records exist for selected buildings.
+
+        Heating defaults to full period coverage (empty excluded_dates),
+        and hot-water rows are created as placeholders for meter inputs.
+        """
+        if not self.pk:
+            return {"heating_created": 0, "hot_water_created": 0}
+
+        apartment_ids = list(
+            Apartment.objects.filter(
+                building_id__in=self.buildings.values_list("id", flat=True)
+            ).values_list("id", flat=True)
+        )
+        if not apartment_ids:
+            return {"heating_created": 0, "hot_water_created": 0}
+
+        existing_heating_ids = set(
+            HeatingRecord.objects.filter(
+                period_id=self.pk,
+                apartment_id__in=apartment_ids,
+            ).values_list("apartment_id", flat=True)
+        )
+        heating_rows = [
+            HeatingRecord(period_id=self.pk, apartment_id=apartment_id)
+            for apartment_id in apartment_ids
+            if apartment_id not in existing_heating_ids
+        ]
+        if heating_rows:
+            HeatingRecord.objects.bulk_create(heating_rows, ignore_conflicts=True)
+
+        existing_hot_water_ids = set(
+            HotWaterMeterReading.objects.filter(
+                period_id=self.pk,
+                apartment_id__in=apartment_ids,
+            ).values_list("apartment_id", flat=True)
+        )
+        hot_water_rows = [
+            HotWaterMeterReading(period_id=self.pk, apartment_id=apartment_id)
+            for apartment_id in apartment_ids
+            if apartment_id not in existing_hot_water_ids
+        ]
+        if hot_water_rows:
+            HotWaterMeterReading.objects.bulk_create(hot_water_rows, ignore_conflicts=True)
+
+        return {
+            "heating_created": len(heating_rows),
+            "hot_water_created": len(hot_water_rows),
+        }
+
     def clean(self):
         super().clean()
         if self.end_date and self.start_date and self.end_date < self.start_date:

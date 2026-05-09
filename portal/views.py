@@ -625,7 +625,7 @@ def api_list_residents(request):
     period_value = _query_param(request, "period", "all").lower()
     period_from = _query_param(request, "period_from", "")
     period_to = _query_param(request, "period_to", "")
-    ordering_raw = _query_param(request, "ordering", "name")
+    ordering_raw = _query_param(request, "ordering", "id")
     allowed_ordering = {
         "id": "id",
         "name": "fio",
@@ -702,7 +702,7 @@ def api_list_residents(request):
         queryset = queryset.filter(apartment__building_id=building_id)
     if apartment_id:
         queryset = queryset.filter(apartment_id=apartment_id)
-    ordering = _normalize_ordering(ordering_raw, allowed_ordering, "name")
+    ordering = _normalize_ordering(ordering_raw, allowed_ordering, "id")
     page_obj = _paginate_queryset(queryset.order_by(*ordering, "id"), page, page_size)
     results = [_serialize_resident_row(owner) for owner in page_obj.object_list]
     return _paginated_response(results, page_obj.number, page_size, queryset.count(), ordering_raw)

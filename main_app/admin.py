@@ -13,6 +13,10 @@ def admin_number(value, places=0):
     return format(value or 0, f",.{places}f")
 
 
+def actor_username(request):
+    return request.user.get_username() or "Admin"
+
+
 # ══════════════════════════════════════════════════════
 #  INLINES
 # ══════════════════════════════════════════════════════
@@ -21,7 +25,7 @@ class ApartmentInline(admin.StackedInline):
     """Uy ichidagi kvartiralar — qisqacha ko'rinish"""
     model = Apartment
     extra = 0
-    fields = ("number", "area", "author")
+    fields = ("number", "area")
     show_change_link = True
     verbose_name = "Kvartira"
     verbose_name_plural = "Kvartiralar"
@@ -57,6 +61,16 @@ class ComplexAdmin(admin.ModelAdmin):
     def save_model(self, request, obj, form, change):
         obj.address = DEFAULT_SECTOR_NAME
         super().save_model(request, obj, form, change)
+
+    def save_formset(self, request, form, formset, change):
+        instances = formset.save(commit=False)
+        for instance in instances:
+            if isinstance(instance, Building) and not instance.author:
+                instance.author = actor_username(request)
+            instance.save()
+        formset.save_m2m()
+        for instance in formset.deleted_objects:
+            instance.delete()
 
     def response_add(self, request, obj, post_url_continue=None):
         if any(key in request.POST for key in ("_continue", "_addanother", IS_POPUP_VAR)):
@@ -98,7 +112,7 @@ class BuildingAdmin(admin.ModelAdmin):
     )
     search_fields = ("number", "address", "complex__title")
     readonly_fields = ("created_at", "total_area_display")
-    exclude = ("complex",)
+    exclude = ("complex", "author")
     inlines       = [ApartmentInline]
 
     def get_readonly_fields(self, request, obj=None):
@@ -118,7 +132,19 @@ class BuildingAdmin(admin.ModelAdmin):
         sector = Complex.objects.order_by("pk").first()
         if sector:
             obj.complex = sector
+        if not obj.author:
+            obj.author = actor_username(request)
         super().save_model(request, obj, form, change)
+
+    def save_formset(self, request, form, formset, change):
+        instances = formset.save(commit=False)
+        for instance in instances:
+            if isinstance(instance, Apartment) and not instance.author:
+                instance.author = actor_username(request)
+            instance.save()
+        formset.save_m2m()
+        for instance in formset.deleted_objects:
+            instance.delete()
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
@@ -165,14 +191,20 @@ class ApartmentAdmin(admin.ModelAdmin):
         "owner__phone",
     )
     readonly_fields = ("created_at",)
+    exclude = ("author",)
 
     def get_readonly_fields(self, request, obj=None):
         return ("created_at",) if obj else ()
 
     def get_fields(self, request, obj=None):
         if obj:
-            return ("number", "building", "area", "author", "created_at")
-        return ("number", "building", "area", "author")
+            return ("number", "building", "area", "created_at")
+        return ("number", "building", "area")
+
+    def save_model(self, request, obj, form, change):
+        if not obj.author:
+            obj.author = actor_username(request)
+        super().save_model(request, obj, form, change)
 
     def get_queryset(self, request):
         return (
