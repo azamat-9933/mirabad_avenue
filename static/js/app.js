@@ -131,9 +131,6 @@
         "No filters": { ru: "Фильтров нет", uz: "Filtrlar yo'q" },
         "All homes connected": { ru: "Все дома подключены", uz: "Barcha uylar ulangan" },
         "All": { ru: "Все", uz: "Hammasi" },
-        "All short": { ru: "Все", uz: "Jami" },
-        "Debtors short": { ru: "Долг", uz: "Qarz" },
-        "Paid short": { ru: "Оплата", uz: "To'lov" },
         "Close alert": { ru: "Закрыть alert", uz: "Alertni yopish" },
         "Confirm action": { ru: "Подтвердите действие", uz: "Amalni tasdiqlang" },
         "Confirm": { ru: "Подтвердить", uz: "Tasdiqlash" },
@@ -219,6 +216,7 @@
         "Generate Usage Report": { ru: "Сформировать отчёт потребления", uz: "Iste'mol hisobotini yaratish" },
         "Add New Resident Profile": { ru: "Добавить профиль жильца", uz: "Yangi yashovchi profilini qo'shish" },
         "Generate Billing Notice": { ru: "Сформировать уведомление", uz: "To'lov xabarnomasini yaratish" },
+        "Create Billing Notice": { ru: "Создать уведомление", uz: "Xabarnoma yaratish" },
         "Payment workspace": { ru: "Платёжное окно", uz: "To'lov oynasi" },
         "Find a resident, confirm the profile and write a real payment to the database.": { ru: "Найдите абонента, проверьте профиль и запишите реальный платёж в базу данных.", uz: "Abonentni toping, profilni tasdiqlang va haqiqiy to'lovni bazaga yozing." },
         "Live resident search from current backend data.": { ru: "Живой поиск по текущим backend-данным.", uz: "Joriy backend ma'lumotlari bo'yicha jonli qidiruv." },
@@ -336,9 +334,9 @@
         "active": { ru: "активно", uz: "faol" },
         "acknowledged": { ru: "подтверждено", uz: "tasdiqlangan" },
         "resolved": { ru: "решено", uz: "hal qilingan" },
-        "critical": { ru: "критично", uz: "kritik" },
-        "warning": { ru: "предупреждение", uz: "ogohlantirish" },
-        "info": { ru: "инфо", uz: "ma'lumot" },
+        "critical": { ru: "Критично", uz: "Jiddiy" },
+        "warning": { ru: "Предупреждение", uz: "Ogohlantirish" },
+        "info": { ru: "Инфо", uz: "Ma'lumot" },
         "Debtor Trends": { ru: "Динамика должников", uz: "Qarzdorlar dinamikasi" },
         "High Risk": { ru: "Высокий риск", uz: "Yuqori xavf" },
         "Critical Debtors (Top 3 Δ)": { ru: "Критичные должники (топ 3 Δ)", uz: "Jiddiy qarzdorlar (top 3 Δ)" },
@@ -415,7 +413,7 @@
         "Nominal Flow Detected": { ru: "Номинальный поток", uz: "Nominal oqim aniqlandi" },
         "Active Residents": { ru: "Активные жильцы", uz: "Faol yashovchilar" },
         "Filter:": { ru: "Фильтр:", uz: "Filtr:" },
-        "ALL": { ru: "ВСЕ", uz: "HAMMASI" },
+        "ALL": { ru: "Все", uz: "Hammasi" },
         "DEBTORS": { ru: "ДОЛЖНИКИ", uz: "QARZDORLAR" },
         "PAID": { ru: "ОПЛАЧЕНО", uz: "TO'LANGAN" },
         "Current Balance": { ru: "Текущий баланс", uz: "Joriy balans" },
@@ -662,8 +660,6 @@
         "Attach audit note for any manual correction.": { ru: "Добавить audit note для любой ручной корректировки.", uz: "Har bir qo'lda tuzatish uchun audit izohi qo'shish." },
         "Open checklist": { ru: "Открыть чеклист", uz: "Ro'yxatni ochish" },
         "Checklist": { ru: "Чеклист", uz: "Ro'yxat" },
-        "Operations checklist": { ru: "Операционный чеклист", uz: "Operatsion ro'yxat" },
-        "Readiness checklist": { ru: "Чеклист готовности", uz: "Tayyorlik ro'yxati" },
         "Local workflow with saved progress.": { ru: "Локальный процесс с сохранённым прогрессом.", uz: "Saqlangan jarayonli lokal ish oqimi." },
         "Completion": { ru: "Готовность", uz: "Bajarilish" },
         "Scope": { ru: "Область", uz: "Qamrov" },
@@ -2158,17 +2154,9 @@
         const groupLabel = (key, label, hidden = false) => `<div class="notification-group-label ${hidden ? "hidden" : ""}" data-notification-group="${key}">${escapeHtml(t(label))}</div>`;
         const severityLabel = (severity) => severity === "critical" ? t("Critical") : severity === "warning" ? t("Warning") : t("Info");
         const actionButtons = (item) => {
-            const primary = item.actionPrimary && item.actionPrimary !== "Assign technician" ? item.actionPrimary : "Details";
-            const secondary = item.actionSecondary || (item.severity === "critical" ? "Close alert" : "");
-            const secondaryText = String(secondary || "").trim().toLowerCase();
-            const secondaryAttr = secondaryText === "resolve" || secondaryText === "close alert"
-                ? "data-notification-resolve"
-                : `data-notification-action="${escapeHtml(`${secondary} queued`)}"`;
-            const secondaryLabel = secondaryText === "close alert" ? "Resolve" : secondary;
             return `
                 <div class="mt-3 flex gap-2">
-                    <button class="drawer-action ${item.severity === "critical" ? "bg-error" : "bg-primary"} text-white" data-notification-action="${escapeHtml(visibleNotificationState(item.actionState) || `${primary} queued`)}" type="button">${escapeHtml(translateNotificationAction(primary))}</button>
-                    ${secondary ? `<button class="drawer-action bg-surface-container text-primary" ${secondaryAttr} type="button">${escapeHtml(translateNotificationAction(secondaryLabel))}</button>` : ""}
+                    <button class="drawer-action bg-surface-container text-primary" data-notification-resolve type="button">${escapeHtml(translateNotificationAction("Resolve"))}</button>
                 </div>
             `;
         };
@@ -2219,6 +2207,21 @@
         const items = Array.from(document.querySelectorAll("[data-notification-list] .notification-item"));
         const list = document.querySelector("[data-notification-list]");
         const pinnedIds = getPinnedNotificationIds();
+        items.forEach((item) => {
+            const actionRow = item.querySelector(".mt-3.flex.gap-2");
+            if (!actionRow) return;
+            actionRow.querySelectorAll("button").forEach((button) => {
+                if (!button.matches("[data-notification-resolve]")) button.remove();
+            });
+            if (!actionRow.querySelector("[data-notification-resolve]")) {
+                const resolve = document.createElement("button");
+                resolve.className = "drawer-action bg-surface-container text-primary";
+                resolve.dataset.notificationResolve = "";
+                resolve.type = "button";
+                resolve.textContent = translateNotificationAction("Resolve");
+                actionRow.appendChild(resolve);
+            }
+        });
         items.forEach((item) => setNotificationPinnedState(item, pinnedIds.includes(item.dataset.notificationId)));
         items
             .filter((item) => item.dataset.pinned !== "true")
@@ -3369,17 +3372,9 @@
         const groupLabel = (key, label, hidden = false) => `<div class="notification-group-label ${hidden ? "hidden" : ""}" data-notification-group="${key}">${escapeHtml(t(label))}</div>`;
         const severityLabel = (severity) => severity === "critical" ? t("Critical") : severity === "warning" ? t("Warning") : t("Info");
         const actionButtons = (item) => {
-            const primary = item.actionPrimary && item.actionPrimary !== "Assign technician" ? item.actionPrimary : "Details";
-            const secondary = item.actionSecondary || (item.severity === "critical" ? "Close alert" : "");
-            const secondaryText = String(secondary || "").trim().toLowerCase();
-            const secondaryAttr = secondaryText === "resolve" || secondaryText === "close alert"
-                ? "data-notification-resolve"
-                : `data-notification-action="${escapeAttr(`${secondary} queued`)}"`;
-            const secondaryLabel = secondaryText === "close alert" ? "Resolve" : secondary;
             return `
                 <div class="mt-3 flex gap-2">
-                    <button class="drawer-action ${item.severity === "critical" ? "bg-error" : "bg-primary"} text-white" data-notification-action="${escapeAttr(visibleNotificationState(item.actionState) || `${primary} queued`)}" type="button">${escapeHtml(translateNotificationAction(primary))}</button>
-                    ${secondary ? `<button class="drawer-action bg-surface-container text-primary" ${secondaryAttr} type="button">${escapeHtml(translateNotificationAction(secondaryLabel))}</button>` : ""}
+                    <button class="drawer-action bg-surface-container text-primary" data-notification-resolve type="button">${escapeHtml(translateNotificationAction("Resolve"))}</button>
                 </div>
             `;
         };
@@ -3430,13 +3425,6 @@
         return `
             <div class="notification-todo-inline" data-notification-todo-shell style="--checklist-progress:${percent}%;">
                 <div class="notification-todo-head">
-                    <div class="notification-todo-title-wrap">
-                        <span class="notification-todo-icon material-symbols-outlined">fact_check</span>
-                        <div>
-                            <p class="notification-todo-kicker" data-i18n-key="Operations checklist">Operations checklist</p>
-                            <h2 class="notification-todo-title" data-i18n-key="Readiness checklist">Readiness checklist</h2>
-                        </div>
-                    </div>
                     <div class="notification-todo-progress-card">
                         <div class="notification-todo-progress-copy">
                             <span data-i18n-key="Completion">Completion</span>
@@ -3873,6 +3861,7 @@
                         const lang = storage.getItem("hydroflow-lang") || "en";
                         countNode.textContent = lang === "ru" ? `${left} задач осталось` : lang === "uz" ? `${left} vazifa qoldi` : `${left} tasks left`;
                     }
+                    syncSidebarTodoCount();
                     window.HydroFlowSyncLocale?.();
                     return;
                 }
@@ -3962,13 +3951,12 @@
                         openOverlayById("audit-drawer");
                     }
                     if (mode === "mark-reviewed") {
-                        postPortalJson("/api/audit/note/", {
-                            title: "Checklist reviewed",
-                            message: "Checklist marked reviewed from notifications To Do.",
+                        postPortalJson("/api/checklist/item/", {
+                            mode: "mark_reviewed",
                         }).then((payload) => {
                             rehydrateFromPortalData(payload.portalData);
                             loadAlerts();
-                            toast("Review recorded", "A backend audit note was added.", "success");
+                            toast("Checklist reviewed", "All backend checklist items were marked complete.", "success");
                         }).catch((error) => toast("Review save failed", error.message, "danger"));
                     }
                     return;
@@ -5853,6 +5841,7 @@
             renderBackendAuditEvents();
             window.HydroFlowRenderSupport?.();
             window.HydroFlowRenderChecklist?.();
+            syncSidebarTodoCount();
             safeSyncSiteStatistics();
             setupResidentialHierarchy();
             window.HydroFlowApplyFilters?.(readFilterState(), { resetPage: false });
@@ -7443,6 +7432,16 @@
         const percent = Math.round((completed / Math.max(total, 1)) * 100);
         return { entries, completed, total, left: total - completed, percent };
     };
+    const sidebarTodoLeftLabel = (left) => {
+        return String(left);
+    };
+    const syncSidebarTodoCount = () => {
+        const { left } = checklistProgressSnapshot();
+        document.querySelectorAll("[data-notification-todo-count]").forEach((target) => {
+            target.textContent = sidebarTodoLeftLabel(left);
+            target.classList.toggle("is-complete", left === 0);
+        });
+    };
     const buildChecklistSummaryText = () => {
         const notes = checklistNotesSnapshot();
         const noteText = notes.length ? `\n\nNotes\n${notes.map((note) => `${note.done ? "[x]" : "[ ]"} ${note.detail}: ${note.title}`).join("\n")}` : "";
@@ -7512,10 +7511,7 @@
             document.querySelectorAll("[data-checklist-fab] small").forEach((target) => {
                 target.innerHTML = `<b data-checklist-fab-count>${left}</b> ${suffix}`;
             });
-            const sidebarSuffix = lang === "ru" ? "ост." : lang === "uz" ? "qoldi" : "left";
-            document.querySelectorAll("[data-sidebar-todo-count]").forEach((target) => {
-                target.textContent = `${left} ${sidebarSuffix}`;
-            });
+            syncSidebarTodoCount();
             document.querySelectorAll("[data-checklist-fab]").forEach((button) => {
                 button.classList.toggle("is-complete", left === 0);
                 button.setAttribute("aria-label", `Open checklist, ${left} tasks left`);
@@ -7706,12 +7702,12 @@
         });
         drawer.querySelector("[data-checklist-action='open-audit']")?.addEventListener("click", () => openOverlayById("audit-drawer"));
         drawer.querySelector("[data-checklist-action='mark-reviewed']")?.addEventListener("click", () => {
-            postPortalJson("/api/audit/note/", {
-                title: "Checklist reviewed",
-                message: "Checklist marked reviewed from operations drawer.",
+            postPortalJson("/api/checklist/item/", {
+                mode: "mark_reviewed",
             }).then((payload) => {
                 rehydrateFromPortalData(payload.portalData);
-                toast("Review recorded", "A backend audit note was added.", "success");
+                render();
+                toast("Checklist reviewed", "All backend checklist items were marked complete.", "success");
             }).catch((error) => {
                 toast("Review save failed", error.message, "danger");
             });
@@ -7723,6 +7719,7 @@
         window.HydroFlowRenderChecklist = render;
         render();
     };
+    document.addEventListener("hydroflow:language-changed", () => syncSidebarTodoCount());
 
     document.addEventListener("click", (event) => {
         const openTrigger = event.target.closest("[data-drawer-open], [data-modal-open]");
@@ -10708,6 +10705,7 @@ ${sheets}
 
     renderBackendAuditEvents();
     setupChecklist();
+    syncSidebarTodoCount();
     setupAuditTools();
     setupClickLogsDrawer();
     setupSupportTools();

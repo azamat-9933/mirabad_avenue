@@ -1598,6 +1598,30 @@ def api_checklist_item(request):
         )
         return JsonResponse({"ok": True, "portalData": safe_portal_data(request)})
 
+    if mode == "mark_reviewed":
+        item_count = ChecklistItem.objects.filter(is_active=True, done=False).update(done=True)
+        note_count = ChecklistNote.objects.filter(done=False).update(done=True)
+        AuditEvent.objects.create(
+            event_type=AuditEvent.TYPE_NOTE,
+            title="Checklist reviewed",
+            message=f"Checklist reviewed: {item_count} tasks and {note_count} notes marked complete.",
+            actor=_actor(request),
+            metadata={
+                "source": "portal_checklist_item",
+                "mode": mode,
+                "itemCount": item_count,
+                "noteCount": note_count,
+            },
+        )
+        return JsonResponse(
+            {
+                "ok": True,
+                "itemCount": item_count,
+                "noteCount": note_count,
+                "portalData": safe_portal_data(request),
+            }
+        )
+
     return JsonResponse({"ok": False, "error": "Unknown checklist item mode."}, status=400)
 
 

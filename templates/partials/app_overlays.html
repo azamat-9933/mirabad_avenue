@@ -84,7 +84,7 @@
 <button data-i18n-key="Critical" data-notification-filter="critical" type="button">Critical</button>
 <button data-i18n-key="Warning" data-notification-filter="warning" type="button">Warning</button>
 <button data-i18n-key="Info" data-notification-filter="info" type="button">Info</button>
-<button data-notification-filter="todo" data-i18n-key="To do" type="button">To do</button>
+<button data-notification-filter="todo" type="button"><span data-i18n-key="To do">To do</span><span class="notification-tab-count" data-notification-todo-count>0</span></button>
 </div>
 </div>
 <div class="p-6 space-y-4 overflow-y-auto" data-notification-list>
@@ -102,7 +102,6 @@
 <p class="text-xs text-on-surface-variant mt-1">Skyline Residences, Block B. Detected 12 minutes ago.</p>
 <p class="notification-action-state hidden" data-notification-state></p>
 <div class="mt-3 flex gap-2">
-<button class="drawer-action bg-surface-container text-primary" data-detail-open type="button">Details</button>
 <button class="drawer-action bg-surface-container text-primary" data-notification-resolve type="button">Resolve</button>
 </div>
 </div>
@@ -118,8 +117,7 @@
 <p class="text-xs text-on-surface-variant mt-1">Vista Towers, today at 09:00.</p>
 <p class="notification-action-state hidden" data-notification-state></p>
 <div class="mt-3 flex gap-2">
-<button class="drawer-action bg-primary text-white" data-notification-action="Schedule opened" type="button">Open schedule</button>
-<button class="drawer-action bg-surface-container text-primary" data-notification-action="Notification muted" type="button">Mute</button>
+<button class="drawer-action bg-surface-container text-primary" data-notification-resolve type="button">Resolve</button>
 </div>
 </div>
 <div class="notification-group-label" data-notification-group="yesterday" data-i18n-key="Yesterday">Yesterday</div>
@@ -135,8 +133,7 @@
 <p class="text-xs text-on-surface-variant mt-1">412 records from Payme and Click are ready for review.</p>
 <p class="notification-action-state hidden" data-notification-state></p>
 <div class="mt-3 flex gap-2">
-<button class="drawer-action bg-primary text-white" data-notification-action="Review queued" type="button">Review batch</button>
-<button class="drawer-action bg-surface-container text-primary" data-notification-action="Notification archived" type="button">Archive</button>
+<button class="drawer-action bg-surface-container text-primary" data-notification-resolve type="button">Resolve</button>
 </div>
 </div>
 <div class="empty-state hidden" data-notification-empty>
@@ -419,7 +416,7 @@
 </div>
 </aside>
 
-<div aria-labelledby="checklist-title" aria-hidden="true" class="app-modal premium-center-modal fixed inset-0 z-[84] hidden items-center justify-center p-4 sm:p-6" id="checklist-drawer" role="dialog">
+<div aria-label="Operations checklist" aria-hidden="true" class="app-modal premium-center-modal fixed inset-0 z-[84] hidden items-center justify-center p-4 sm:p-6" id="checklist-drawer" role="dialog">
 <div class="premium-center-panel premium-checklist-panel checklist-drawer">
 <div class="h-full flex flex-col">
 <div class="checklist-hero">
@@ -430,7 +427,6 @@
 <span class="checklist-hero-icon material-symbols-outlined">fact_check</span>
 <div>
 <p class="profile-kicker" data-i18n-key="Operations checklist">Operations checklist</p>
-<h2 id="checklist-title" data-i18n-key="Readiness checklist">Readiness checklist</h2>
                     <span data-checklist-subtitle data-i18n-key="Backend workflow with saved progress.">Backend workflow with saved progress.</span>
 </div>
 </div>

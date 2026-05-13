@@ -385,6 +385,21 @@
         "To'lov ma'lumoti": { en: "Payment data", ru: "Данные платежа", uz: "To'lov ma'lumoti" },
         "Turar joy majmuasi ichidagi uylar": { en: "Buildings inside the complex", ru: "Дома внутри ЖК", uz: "Turar joy majmuasi ichidagi uylar" },
         "Uyning seksiyalari": { en: "Building sections", ru: "Секции дома", uz: "Uyning seksiyalari" },
+        "Gaz hisoblagich": { en: "Gas meter", ru: "Газовый счётчик", uz: "Gaz hisoblagich" },
+        "Gaz hisoblagichlar": { en: "Gas meters", ru: "Газовые счётчики", uz: "Gaz hisoblagichlar" },
+        "Bu davr qaysi uylarga taalluqli": { en: "Which buildings belong to this period", ru: "Какие дома относятся к этому периоду", uz: "Bu davr qaysi uylarga taalluqli" },
+        "Masalan: Dekabr 2025": { en: "For example: December 2025", ru: "Например: Декабрь 2025", uz: "Masalan: Dekabr 2025" },
+        "Total days": { en: "Total days", ru: "Всего дней", uz: "Jami kunlar" },
+        "Draft": { en: "Draft", ru: "Черновик", uz: "Qoralama" },
+        "Closed": { en: "Closed", ru: "Закрыт", uz: "Yopiq" },
+        "Reopened": { en: "Reopened", ru: "Переоткрыт", uz: "Qayta ochilgan" },
+        "Remove": { en: "Remove", ru: "Удалить", uz: "Olib tashlash" },
+        "(click to clear)": { en: "(click to clear)", ru: "(нажмите, чтобы очистить)", uz: "(tozalash uchun bosing)" },
+        "Please select an item in the list.": { en: "Please select an item in the list.", ru: "Выберите элемент из списка.", uz: "Ro'yxatdan element tanlang." },
+        "Choose Uylar by selecting them and then select the \"Choose\" arrow button.": { en: "Choose buildings by selecting them and then clicking the \"Choose\" arrow button.", ru: "Выберите дома и затем нажмите кнопку-стрелку «Выбрать».", uz: "Uylarni tanlab, so'ng \"Tanlash\" strelka tugmasini bosing." },
+        "Remove Uylar by selecting them and then select the \"Remove\" arrow button.": { en: "Remove buildings by selecting them and then clicking the \"Remove\" arrow button.", ru: "Выберите дома и затем нажмите кнопку-стрелку «Убрать».", uz: "Uylarni tanlab, so'ng \"Olib tashlash\" strelka tugmasini bosing." },
+        "Hold down “Control”, or “Command” on a Mac, to select more than one.": { en: "Hold down “Control”, or “Command” on a Mac, to select more than one.", ru: "Удерживайте «Control», или «Command» на Mac, чтобы выбрать несколько элементов.", uz: "Bir nechta element tanlash uchun «Control» yoki Mac’da «Command» tugmasini bosib turing." },
+        "Hold down 'Control', or 'Command' on a Mac, to select more than one.": { en: "Hold down 'Control', or 'Command' on a Mac, to select more than one.", ru: "Удерживайте 'Control', или 'Command' на Mac, чтобы выбрать несколько элементов.", uz: "Bir nechta element tanlash uchun 'Control' yoki Mac’da 'Command' tugmasini bosib turing." },
     };
 
     const aliases = new Map();
@@ -474,6 +489,48 @@
             if (lang === "en") return `Selected ${selectedSlashMatch[1]} of ${selectedSlashMatch[2]}`;
             if (lang === "uz") return `${selectedSlashMatch[1]} / ${selectedSlashMatch[2]} tanlandi`;
             return `Выбрано ${selectedSlashMatch[1]} из ${selectedSlashMatch[2]}`;
+        }
+        const availableMatch = text.match(/^Available\s+(.+)$/i);
+        if (availableMatch) {
+            const model = translateExact(availableMatch[1], lang) || translateValue(availableMatch[1], lang) || availableMatch[1];
+            if (lang === "ru") return `Доступные ${model}`;
+            if (lang === "uz") return `Mavjud ${model}`;
+            return `Available ${model}`;
+        }
+        const chosenMatch = text.match(/^Chosen\s+(.+)$/i);
+        if (chosenMatch) {
+            const model = translateExact(chosenMatch[1], lang) || translateValue(chosenMatch[1], lang) || chosenMatch[1];
+            if (lang === "ru") return `Выбранные ${model}`;
+            if (lang === "uz") return `Tanlangan ${model}`;
+            return `Chosen ${model}`;
+        }
+        const chooseSelectedMatch = text.match(/^Choose selected\s+(.+)$/i);
+        if (chooseSelectedMatch) {
+            const model = translateExact(chooseSelectedMatch[1], lang) || translateValue(chooseSelectedMatch[1], lang) || chooseSelectedMatch[1];
+            if (lang === "ru") return `Выбрать отмеченные ${model}`;
+            if (lang === "uz") return `Belgilangan ${model}ni tanlash`;
+            return `Choose selected ${model}`;
+        }
+        const removeSelectedMatch = text.match(/^Remove selected\s+(.+)$/i);
+        if (removeSelectedMatch) {
+            const model = translateExact(removeSelectedMatch[1], lang) || translateValue(removeSelectedMatch[1], lang) || removeSelectedMatch[1];
+            if (lang === "ru") return `Убрать выбранные ${model}`;
+            if (lang === "uz") return `Tanlangan ${model}ni olib tashlash`;
+            return `Remove selected ${model}`;
+        }
+        const chooseAllMatch = text.match(/^Choose all\s+(.+)$/i);
+        if (chooseAllMatch) {
+            const model = translateExact(chooseAllMatch[1], lang) || translateValue(chooseAllMatch[1], lang) || chooseAllMatch[1];
+            if (lang === "ru") return `Выбрать все ${model}`;
+            if (lang === "uz") return `Barcha ${model}ni tanlash`;
+            return `Choose all ${model}`;
+        }
+        const removeAllMatch = text.match(/^Remove all\s+(.+)$/i);
+        if (removeAllMatch) {
+            const model = translateExact(removeAllMatch[1], lang) || translateValue(removeAllMatch[1], lang) || removeAllMatch[1];
+            if (lang === "ru") return `Убрать все ${model}`;
+            if (lang === "uz") return `Barcha ${model}ni olib tashlash`;
+            return `Remove all ${model}`;
         }
         const countBuildings = text.match(/^(\d+)\s+(ta uy|домов|buildings)$/i);
         if (countBuildings) {
@@ -631,6 +688,49 @@
         formatBalance(input.value);
     };
 
+    const translateBillingPeriodSelectorWidget = (lang = selectedLanguage()) => {
+        const isBillingPeriodPage = /\/admin\/billing\/billingperiod\//i.test(window.location.pathname)
+            || document.body.classList.contains("model-billingperiod");
+        if (!isBillingPeriodPage) return;
+
+        const setText = (selector, value) => {
+            const element = document.querySelector(selector);
+            if (!element) return;
+            element.textContent = translateValue(value, lang);
+        };
+
+        const setPlaceholder = (selector, value) => {
+            const element = document.querySelector(selector);
+            if (!element) return;
+            element.setAttribute("placeholder", translateValue(value, lang));
+        };
+
+        setText(".selector-available-title", "Available Uylar");
+        setText(".selector-chosen-title", "Chosen Uylar");
+        setText(".selector-available p:not(.selector-filter)", "Choose Uylar by selecting them and then select the \"Choose\" arrow button.");
+        setText(".selector-chosen p:not(.selector-filter)", "Remove Uylar by selecting them and then select the \"Remove\" arrow button.");
+        setText(".selector .selector-chooser li:first-child a", "Choose selected Uylar");
+        setText(".selector .selector-chooser li:last-child a", "Remove selected Uylar");
+        setText(".selector .selector-chooseall", "Choose all Uylar");
+        setText(".selector .selector-clearall", "Remove all Uylar");
+        setText(".selector .helptext, .selector .help, .selector ~ .help", "Hold down 'Control', or 'Command' on a Mac, to select more than one.");
+        setText(".selector .selector-chosen .list-footer-display-text", "(click to clear)");
+        setPlaceholder(".selector-available .selector-filter input", "Filter");
+        setPlaceholder(".selector-chosen .selector-filter input", "Filter");
+
+        document.querySelectorAll(".selector .selector-filter label").forEach((label) => {
+            const textNode = Array.from(label.childNodes).find((node) => node.nodeType === Node.TEXT_NODE && normalize(node.nodeValue));
+            if (textNode) textNode.nodeValue = "";
+        });
+
+        const warnings = document.querySelectorAll(".selector .helptext, .selector .help, .selector .selector-validation-error");
+        warnings.forEach((node) => {
+            if (normalize(node.textContent) === "Please select an item in the list.") {
+                node.textContent = translateValue("Please select an item in the list.", lang);
+            }
+        });
+    };
+
     const translatePage = (lang = selectedLanguage()) => {
         document.documentElement.lang = lang;
         const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
@@ -638,6 +738,7 @@
         while (walker.nextNode()) textNodes.push(walker.currentNode);
         textNodes.forEach((node) => translateTextNode(node, lang));
         translateAttributes(document, lang);
+        translateBillingPeriodSelectorWidget(lang);
         document.querySelectorAll(".admin-lang-switcher__button").forEach((button) => {
             button.classList.toggle("is-active", button.dataset.adminLang === lang);
             button.setAttribute("aria-pressed", String(button.dataset.adminLang === lang));
