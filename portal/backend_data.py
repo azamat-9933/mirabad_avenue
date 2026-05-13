@@ -96,12 +96,13 @@ def _serialize_profile(user=None) -> dict:
     if selected_user:
         profile, _ = WorkspaceProfile.objects.get_or_create(user=selected_user)
 
-    name = _display_name(selected_user)
+    username = selected_user.get_username() if selected_user else ""
+    name = username or _display_name(selected_user)
     role = _role_for_user(selected_user, profile)
     last_active = selected_user.last_login if selected_user else timezone.now()
     return {
         "id": selected_user.id if selected_user else None,
-        "username": selected_user.get_username() if selected_user else "",
+        "username": username,
         "name": name,
         "initials": _initials(name),
         "email": selected_user.email if selected_user else "",
@@ -193,6 +194,12 @@ def _health_from_split(debtors: int, paid: int) -> float:
 
 
 def _transaction_type(transaction: Transaction) -> str:
+    description = str(transaction.description or "").lower()
+    if transaction.payment_type == Transaction.TYPE_MANUAL:
+        if "[portal:card-credit]" in description or "[portal:terminal-credit]" in description:
+            return "Utility Payment"
+        if "[portal:balance-debit]" in description:
+            return "Manual Adjustment"
     mapping = {
         Transaction.TYPE_PAYME: "Utility Payment",
         Transaction.TYPE_CLICK: "Utility Payment",
@@ -206,8 +213,8 @@ def _transaction_type(transaction: Transaction) -> str:
 def _transaction_method_label(transaction: Transaction) -> str:
     description = str(transaction.description or "").lower()
     if transaction.payment_type == Transaction.TYPE_MANUAL:
-        if "[portal:terminal-credit]" in description:
-            return "Terminal"
+        if "[portal:card-credit]" in description or "[portal:terminal-credit]" in description:
+            return "Card"
         if "[portal:balance-debit]" in description:
             return "Adjustment"
     return transaction.get_payment_type_display()

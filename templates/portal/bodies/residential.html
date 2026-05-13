@@ -9,47 +9,47 @@
 <!-- Bento Grid Summary Cards -->
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8 motion-stagger">
 <!-- Total Complexes -->
-<div class="residential-kpi-card bg-surface-container-lowest p-6 rounded-lg shadow-sm border border-transparent hover:border-primary-container/10 transition-all flex flex-col justify-between">
+<div class="residential-kpi-card bg-surface-container-lowest p-6 rounded-lg shadow-sm border border-transparent hover:border-primary-container/10 transition-all flex flex-col justify-between" data-stat-card="total-complexes">
 <div class="flex justify-between items-start mb-4">
-<p class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Total Complexes</p>
+<p class="text-xs font-bold uppercase tracking-widest text-on-surface-variant" data-i18n-key="Total Complexes">Total Complexes</p>
 <div class="kpi-icon-chip kpi-icon-blue">
 <span class="material-symbols-outlined" data-icon="location_city">location_city</span>
 </div>
 </div>
 <div>
-<p class="text-display-sm text-3xl font-black text-on-surface tracking-tight">142</p>
+<h2 class="text-display-sm text-3xl font-black text-on-surface tracking-tight">142</h2>
 <div class="kpi-support-row">
-<span>All homes connected</span>
+<span data-stat-support data-i18n-key="All homes connected">All homes connected</span>
 </div>
 </div>
 </div>
 <!-- Total Apartments -->
-<div class="residential-kpi-card bg-surface-container-lowest p-6 rounded-lg shadow-sm border border-transparent hover:border-primary-container/10 transition-all flex flex-col justify-between">
+<div class="residential-kpi-card bg-surface-container-lowest p-6 rounded-lg shadow-sm border border-transparent hover:border-primary-container/10 transition-all flex flex-col justify-between" data-stat-card="active-buildings">
 <div class="flex justify-between items-start mb-4">
-<p class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Active Buildings</p>
+<p class="text-xs font-bold uppercase tracking-widest text-on-surface-variant" data-i18n-key="Active Buildings">Active Buildings</p>
 <div class="kpi-icon-chip kpi-icon-green">
 <span class="material-symbols-outlined" data-icon="domain">domain</span>
 </div>
 </div>
 <div>
-<p class="text-display-sm text-3xl font-black text-on-surface tracking-tight">856</p>
+<h2 class="text-display-sm text-3xl font-black text-on-surface tracking-tight">856</h2>
 <div class="kpi-support-row">
-<span>124 active units</span>
+<span data-stat-support data-i18n-key="Total apartments in system">124 active units</span>
 </div>
 </div>
 </div>
 <!-- Total Debtors -->
-<div class="residential-kpi-card bg-error-container p-6 rounded-lg shadow-sm border border-transparent hover:shadow-lg transition-all flex flex-col justify-between">
+<div class="residential-kpi-card bg-error-container p-6 rounded-lg shadow-sm border border-transparent hover:shadow-lg transition-all flex flex-col justify-between" data-stat-card="critical-debt-units">
 <div class="flex justify-between items-start mb-4">
-<p class="text-xs font-bold uppercase tracking-widest text-on-error-container/70">Critical Debt Units</p>
+<p class="text-xs font-bold uppercase tracking-widest text-on-error-container/70" data-i18n-key="Critical Debt Units">Critical Debt Units</p>
 <div class="kpi-icon-chip kpi-icon-red">
 <span class="material-symbols-outlined" data-icon="warning">warning</span>
 </div>
 </div>
 <div>
-<p class="text-display-sm text-3xl font-black text-on-error-container tracking-tight">24</p>
+<h2 class="text-display-sm text-3xl font-black text-on-error-container tracking-tight">24</h2>
 <div class="kpi-support-row">
-<span>3 require field visit</span>
+<span data-stat-support data-i18n-key="Residents with overdue balance">3 require field visit</span>
 </div>
 </div>
 </div>
@@ -78,7 +78,7 @@
 <th class="px-6 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-wider text-right no-table-filter">Actions</th>
 </tr>
 </thead>
-<tbody class="divide-y divide-surface-container-low"></tbody>
+<tbody></tbody>
 </table>
 </div>
 </div>

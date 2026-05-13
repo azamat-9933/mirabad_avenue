@@ -724,6 +724,10 @@ def _notification_severity_rank():
 
 def _serialize_alert_row(item, alert_backend_id=""):
     related = item.complex or (item.building.complex if item.building_id else None)
+    action_state = "" if item.action_state == "Created from dashboard" else item.action_state
+    resolved_by = ""
+    if isinstance(action_state, str) and action_state.lower().startswith("resolved by "):
+        resolved_by = action_state[12:].strip()
     return {
         "id": f"notification-{item.id}",
         "backendId": item.id,
@@ -737,7 +741,8 @@ def _serialize_alert_row(item, alert_backend_id=""):
         "eventAt": _datetime(item.event_at),
         "actionPrimary": item.action_primary,
         "actionSecondary": item.action_secondary,
-        "actionState": "" if item.action_state == "Created from dashboard" else item.action_state,
+        "actionState": action_state,
+        "resolvedBy": resolved_by,
         "complexId": f"complex-{related.id}" if related else "",
         "buildingId": f"building-{item.building_id}" if item.building_id else "",
         "ownerId": f"owner-{item.owner_id}" if item.owner_id else "",
@@ -1018,11 +1023,12 @@ def api_list_transactions(request):
     allowed_ordering = {
         "id": "id",
         "created_at": "created_at",
-        "amount": "amount",
         "resident": "owner__fio",
         "method": "payment_type",
         "type": "payment_type",
-        "status": "status_rank",
+        "amount": "amount",
+        "balance": "balance_after",
+        "status": "balance_status_rank",
     }
     queryset = Transaction.objects.select_related(
         "owner",
@@ -1032,6 +1038,11 @@ def api_list_transactions(request):
     ).annotate(
         status_rank=Case(
             When(amount__gt=0, then=Value(2)),
+            default=Value(1),
+            output_field=IntegerField(),
+        ),
+        balance_status_rank=Case(
+            When(balance_after__lt=0, then=Value(2)),
             default=Value(1),
             output_field=IntegerField(),
         )
@@ -1068,9 +1079,9 @@ def api_list_transactions(request):
     )
     queryset = _apply_period_filter(queryset, "created_at", period_value, period_from, period_to)
     if status_value in {"success", "paid"}:
-        queryset = queryset.filter(amount__gt=0)
-    elif status_value in {"pending", "overdue", "debt"}:
-        queryset = queryset.filter(amount__lte=0)
+        queryset = queryset.filter(balance_after__gte=0)
+    elif status_value in {"pending", "overdue", "debt", "debtor"}:
+        queryset = queryset.filter(balance_after__lt=0)
     elif status_value:
         override_ids = PortalStatusOverride.objects.filter(
             context=PortalStatusOverride.CONTEXT_TRANSACTIONS,
@@ -1141,6 +1152,8 @@ def api_list_alerts(request):
     search = _query_param(request, "search", "")
     severity = _query_param(request, "severity", "").lower()
     status_value = _query_param(request, "status", "").lower()
+    if status_value == "resolved":
+        status_value = PortalNotification.STATUS_ARCHIVED
     pinned = _query_bool(request, "pinned", None)
     district_value = _query_param(request, "district", "")
     period_value = _query_param(request, "period", "all").lower()
@@ -1158,7 +1171,12 @@ def api_list_alerts(request):
         "building",
         "apartment",
         "owner",
-    ).exclude(status=PortalNotification.STATUS_ARCHIVED).annotate(
+    )
+    if status_value == PortalNotification.STATUS_ARCHIVED:
+        queryset = queryset.filter(status=PortalNotification.STATUS_ARCHIVED)
+    else:
+        queryset = queryset.exclude(status=PortalNotification.STATUS_ARCHIVED)
+    queryset = queryset.annotate(
         severity_rank=_notification_severity_rank()
     )
     if search:
@@ -1426,8 +1444,12 @@ def _current_user_or_none(request):
 
 
 def _portal_payment_description(operation: str, channel: str) -> str:
-    if operation == "credit" and channel == "terminal":
-        return "[portal:terminal-credit] Portal credit via terminal/card."
+    if operation == "credit" and channel in {"card", "terminal"}:
+        return "[portal:card-credit] Portal credit via card."
+    if operation == "credit" and channel == "payme":
+        return "[portal:payme-credit] Portal credit via Payme."
+    if operation == "credit" and channel == "click":
+        return "[portal:click-credit] Portal credit via Click."
     if operation == "credit":
         return "[portal:cash-credit] Portal credit via cash."
     return "[portal:balance-debit] Portal manual balance subtraction."
@@ -1983,9 +2005,11 @@ def api_support_ticket(request):
 
 
 @extend_schema(request=OpenApiTypes.OBJECT, responses=OpenApiTypes.OBJECT)
-@api_view(["POST"])
+@api_view(["POST", "GET"])
 def api_logout(request):
     logout(request)
+    if request.method == "GET":
+        return redirect(request.GET.get("next") or "/")
     return JsonResponse({"ok": True, "redirectUrl": "/"})
 
 
@@ -2195,8 +2219,8 @@ def api_create_payment(request):
         return JsonResponse({"ok": False, "error": "Amount must be greater than zero."}, status=400)
     if operation not in {"credit", "debit"}:
         return JsonResponse({"ok": False, "error": "Unknown payment operation."}, status=400)
-    if operation == "credit" and channel not in {"cash", "terminal"}:
-        return JsonResponse({"ok": False, "error": "Payment channel must be cash or terminal."}, status=400)
+    if operation == "credit" and channel not in {"cash", "card", "terminal", "payme", "click"}:
+        return JsonResponse({"ok": False, "error": "Payment channel must be cash, card, payme or click."}, status=400)
 
     try:
         owner = Owner.objects.select_related(
@@ -2214,8 +2238,15 @@ def api_create_payment(request):
     signed_amount = amount if operation == "credit" else -amount
     balance_after = balance_before + signed_amount
 
-    if operation == "credit" and channel == "cash":
-        payment_type = Transaction.TYPE_CASH
+    if operation == "credit":
+        if channel == "cash":
+            payment_type = Transaction.TYPE_CASH
+        elif channel == "payme":
+            payment_type = Transaction.TYPE_PAYME
+        elif channel == "click":
+            payment_type = Transaction.TYPE_CLICK
+        else:
+            payment_type = Transaction.TYPE_MANUAL
     else:
         payment_type = Transaction.TYPE_MANUAL
 
@@ -2460,6 +2491,7 @@ def api_system_alerts_configure(request):
         return JsonResponse(response_payload)
 
     if mode in {"acknowledge", "resolve"}:
+        actor_name = _actor(request)
         notification = _optional_instance(PortalNotification, payload.get("notification_id"))
         if not alert and notification:
             alert = (
@@ -2481,7 +2513,7 @@ def api_system_alerts_configure(request):
             notification = _optional_instance(PortalNotification, notification_id)
         if notification:
             notification.status = PortalNotification.STATUS_READ if mode == "acknowledge" else PortalNotification.STATUS_ARCHIVED
-            notification.action_state = "Acknowledged from dashboard" if mode == "acknowledge" else "Resolved from dashboard"
+            notification.action_state = "Acknowledged from dashboard" if mode == "acknowledge" else f"Resolved by {actor_name}"
             notification.save(update_fields=["status", "action_state"])
 
         if alert:
@@ -2489,7 +2521,7 @@ def api_system_alerts_configure(request):
                 event_type=AuditEvent.TYPE_ALERT,
                 title="System alert updated",
                 message=f"{alert.title} was {mode}d from the portal.",
-                actor=_actor(request),
+                actor=actor_name,
                 complex=alert.complex,
                 building=alert.building,
                 apartment=alert.apartment,
@@ -2507,7 +2539,7 @@ def api_system_alerts_configure(request):
             event_type=AuditEvent.TYPE_ALERT,
             title="Notification updated",
             message=f"{notification.title} was {mode}d from the portal.",
-            actor=_actor(request),
+            actor=actor_name,
             complex=notification.complex,
             building=notification.building,
             apartment=notification.apartment,

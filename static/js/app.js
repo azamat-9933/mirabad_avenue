@@ -52,9 +52,12 @@
         "Sign out unavailable": { ru: "Выход пока недоступен", uz: "Chiqish hozircha mavjud emas" },
         "Notifications": { ru: "Уведомления", uz: "Bildirishnomalar" },
         "To do": { ru: "Задачи", uz: "Vazifalar" },
+        "Resolved tasks": { ru: "Решённые задачи", uz: "Hal qilingan vazifalar" },
+        "Resolved by": { ru: "Решил", uz: "Hal qilgan" },
+        "Unknown admin": { ru: "Неизвестный админ", uz: "Noma'lum admin" },
+        "No resolved tasks yet": { ru: "Пока нет решённых задач", uz: "Hali hal qilingan vazifalar yo'q" },
         "Unread operational events and assigned actions.": { ru: "Непрочитанные события и назначенные действия.", uz: "O'qilmagan hodisalar va tayinlangan amallar." },
         "3 unread": { ru: "3 непрочитанных", uz: "3 ta o'qilmagan" },
-        "Mark all as read": { ru: "Отметить все как прочитанные", uz: "Hammasini o'qilgan qilish" },
         "Critical": { ru: "Критично", uz: "Jiddiy" },
         "Warning": { ru: "Предупреждение", uz: "Ogohlantirish" },
         "Info": { ru: "Информация", uz: "Ma'lumot" },
@@ -70,7 +73,6 @@
         "412 records from Payme and Click are ready for review.": { ru: "412 записей из Payme и Click готовы к проверке.", uz: "Payme va Clickdan 412 yozuv tekshiruvga tayyor." },
         "Review batch": { ru: "Проверить пакет", uz: "Paketni tekshirish" },
         "Archive": { ru: "Архив", uz: "Arxiv" },
-        "Clear read": { ru: "Очистить прочитанные", uz: "O'qilganlarni tozalash" },
         "Pinned": { ru: "Закреплено", uz: "Mahkamlangan" },
         "Pin": { ru: "PIN", uz: "PIN" },
         "Today": { ru: "Сегодня", uz: "Bugun" },
@@ -162,11 +164,13 @@
         "Total Debtors": { ru: "Всего должников", uz: "Jami qarzdorlar" },
         "Total linked resident profiles": { ru: "Всего привязанных профилей резидентов", uz: "Jami ulangan rezident profillari" },
         "Total apartments in system": { ru: "Всего квартир в системе", uz: "Tizimdagi jami kvartiralar" },
+        "Critical Debt Units": { ru: "Должники", uz: "Qarzdorlar" },
         "Residents with positive or zero balance": { ru: "Резиденты с положительным или нулевым балансом", uz: "Musbat yoki nol balansli rezidentlar" },
         "Residents with overdue balance": { ru: "Резиденты с просроченным балансом", uz: "Muddati o'tgan balansli rezidentlar" },
         "Current resident liabilities": { ru: "Текущие обязательства резидентов", uz: "Rezidentlarning joriy majburiyatlari" },
         "Resident Directory": { ru: "Каталог резидентов", uz: "Rezidentlar katalogi" },
         "Name": { ru: "Имя", uz: "Ism" },
+        "ID": { ru: "ID", uz: "ID" },
         "House overview": { ru: "Сводка по дому", uz: "Uy bo'yicha ko'rinish" },
         "House name": { ru: "Название дома", uz: "Uy nomi" },
         "Total area": { ru: "Общая площадь", uz: "Umumiy maydon" },
@@ -192,6 +196,9 @@
         "Telegram user": { ru: "Телеграм", uz: "Telegram" },
         "Section": { ru: "Секция", uz: "Seksiya" },
         "Current Balance": { ru: "Текущий баланс", uz: "Joriy balans" },
+        "FIO": { ru: "ФИО", uz: "F.I.Sh." },
+        "Payment method": { ru: "Чем оплата", uz: "To'lov turi" },
+        "No debt": { ru: "Не долг", uz: "Qarz yo'q" },
         "Total Complexes": { ru: "Всего домов", uz: "Jami uylar" },
         "Active Buildings": { ru: "Квартиры", uz: "Kvartiralar" },
         "Occupancy Rate": { ru: "Жильцы", uz: "Abonentlar" },
@@ -217,10 +224,8 @@
         "Add New Resident Profile": { ru: "Добавить профиль жильца", uz: "Yangi yashovchi profilini qo'shish" },
         "Generate Billing Notice": { ru: "Сформировать уведомление", uz: "To'lov xabarnomasini yaratish" },
         "Create Billing Notice": { ru: "Создать уведомление", uz: "Xabarnoma yaratish" },
-        "Payment workspace": { ru: "Платёжное окно", uz: "To'lov oynasi" },
-        "Find a resident, confirm the profile and write a real payment to the database.": { ru: "Найдите абонента, проверьте профиль и запишите реальный платёж в базу данных.", uz: "Abonentni toping, profilni tasdiqlang va haqiqiy to'lovni bazaga yozing." },
-        "Live resident search from current backend data.": { ru: "Живой поиск по текущим backend-данным.", uz: "Joriy backend ma'lumotlari bo'yicha jonli qidiruv." },
-        "Adjust the query to find a resident in the database.": { ru: "Измените запрос, чтобы найти абонента в базе.", uz: "Bazadan abonent topish uchun so'rovni o'zgartiring." },
+        "Find a resident, confirm the profile and create a payment.": { ru: "Найдите абонента, проверьте профиль и создайте платёж.", uz: "Abonentni toping, profilni tasdiqlang va to'lov yarating." },
+        "Adjust the query to find a resident.": { ru: "Измените запрос, чтобы найти абонента.", uz: "Abonentni topish uchun so'rovni o'zgartiring." },
         "Resident payment profile": { ru: "Платёжный профиль абонента", uz: "Abonentning to'lov profili" },
         "Amount": { ru: "Сумма", uz: "Summa" },
         "Operation": { ru: "Операция", uz: "Amal" },
@@ -230,8 +235,9 @@
         "Channel": { ru: "Канал", uz: "Kanal" },
         "Cash": { ru: "Наличные", uz: "Naqd" },
         "Terminal": { ru: "Терминал", uz: "Terminal" },
+        "Card": { ru: "Карта", uz: "Karta" },
         "Save payment": { ru: "Сохранить платёж", uz: "To'lovni saqlash" },
-        "A real transaction will be written to the database and all balances will refresh from backend data.": { ru: "В базу будет записана реальная транзакция, после чего все балансы обновятся из backend-данных.", uz: "Bazaga haqiqiy tranzaksiya yoziladi va barcha balanslar backend ma'lumotlaridan yangilanadi." },
+        "Payment will be saved and balances will refresh from backend data.": { ru: "Платёж будет сохранён, после чего балансы обновятся из backend-данных.", uz: "To'lov saqlanadi va keyin balanslar backend ma'lumotlaridan yangilanadi." },
         "Select a resident": { ru: "Выберите абонента", uz: "Abonentni tanlang" },
         "Choose a resident on the left to prepare a real payment operation.": { ru: "Выберите абонента слева, чтобы подготовить реальную платёжную операцию.", uz: "Haqiqiy to'lov amalini tayyorlash uchun chapdan abonentni tanlang." },
         "Search by name, phone, Telegram, house or apartment...": { ru: "Поиск по имени, телефону, Telegram, дому или квартире...", uz: "Ism, telefon, Telegram, uy yoki xonadon bo'yicha qidiring..." },
@@ -239,14 +245,17 @@
         "Saving payment...": { ru: "Сохранение платежа...", uz: "To'lov saqlanmoqda..." },
         "Resident ID could not be resolved.": { ru: "Не удалось определить ID абонента.", uz: "Abonent ID aniqlanmadi." },
         "Amount must be greater than zero.": { ru: "Сумма должна быть больше нуля.", uz: "Summa noldan katta bo'lishi kerak." },
-        "Payment saved to database.": { ru: "Платёж записан в базу данных.", uz: "To'lov bazaga yozildi." },
-        "Balance subtraction saved to database.": { ru: "Списание баланса записано в базу данных.", uz: "Balans ayirimi bazaga yozildi." },
-        "A real balance subtraction will be written to the database and resident totals will refresh from backend data.": { ru: "В базу будет записано реальное списание, после чего суммы обновятся из backend-данных.", uz: "Bazaga haqiqiy ayirma yoziladi va summalar backend ma'lumotlaridan yangilanadi." },
+        "Balance subtraction will be saved and totals will refresh from backend data.": { ru: "Списание будет сохранено, после чего суммы обновятся из backend-данных.", uz: "Ayirma saqlanadi va keyin summalar backend ma'lumotlaridan yangilanadi." },
+        "Payment saved in backend.": { ru: "Платёж сохранён в backend.", uz: "To'lov backend'da saqlandi." },
+        "Balance subtraction saved in backend.": { ru: "Списание баланса сохранено в backend.", uz: "Balans ayirmasi backend'da saqlandi." },
         "Payment saved": { ru: "Платёж сохранён", uz: "To'lov saqlandi" },
         "Balance updated": { ru: "Баланс обновлён", uz: "Balans yangilandi" },
-        "Cash payment was written to backend database.": { ru: "Платёж наличными записан в backend-базу.", uz: "Naqd to'lov backend bazaga yozildi." },
-        "Terminal payment was written to backend database.": { ru: "Платёж через терминал записан в backend-базу.", uz: "Terminal orqali to'lov backend bazaga yozildi." },
-        "Manual subtraction was written to backend database.": { ru: "Ручное списание записано в backend-базу.", uz: "Qo'lda ayirma backend bazaga yozildi." },
+        "Cash payment synced with backend.": { ru: "Платёж наличными синхронизирован с backend.", uz: "Naqd to'lov backend bilan sinxronlandi." },
+        "Terminal payment synced with backend.": { ru: "Платёж через терминал синхронизирован с backend.", uz: "Terminal to'lovi backend bilan sinxronlandi." },
+        "Card payment synced with backend.": { ru: "Платёж картой синхронизирован с backend.", uz: "Karta orqali to'lov backend bilan sinxronlandi." },
+        "Payme payment synced with backend.": { ru: "Платёж через Payme синхронизирован с backend.", uz: "Payme to'lovi backend bilan sinxronlandi." },
+        "Click payment synced with backend.": { ru: "Платёж через Click синхронизирован с backend.", uz: "Click to'lovi backend bilan sinxronlandi." },
+        "Manual subtraction synced with backend.": { ru: "Ручное списание синхронизировано с backend.", uz: "Qo'lda ayirma backend bilan sinxronlandi." },
         "Billing notice": { ru: "Платёжное уведомление", uz: "To'lov xabarnomasi" },
         "Preview of the resident debt notice generated from current backend data.": { ru: "Предпросмотр уведомления о долге, собранного из текущих backend-данных.", uz: "Joriy backend ma'lumotlaridan yig'ilgan qarzdorlik xabarnomasi ko'rinishi." },
         "Select a debtor, review the generated notice and copy or send it later.": { ru: "Выберите должника, проверьте сгенерированное письмо и затем скопируйте или отправьте его позже.", uz: "Qarzdorni tanlang, yaratilgan xabarnomani ko'rib chiqing va keyin nusxa oling yoki keyinroq yuboring." },
@@ -306,7 +315,6 @@
         "Message": { ru: "Сообщение", uz: "Xabar" },
         "Active alerts": { ru: "Активные уведомления", uz: "Faol ogohlantirishlar" },
         "Create alert": { ru: "Создать уведомление", uz: "Ogohlantirish yaratish" },
-        "Ready to create a live system alert.": { ru: "Готово к созданию live system alert.", uz: "Jonli tizim ogohlantirishini yaratishga tayyor." },
         "Whole complex": { ru: "Весь дом", uz: "Butun uy" },
         "System alert": { ru: "Системное уведомление", uz: "Tizim ogohlantirishi" },
         "Acknowledge": { ru: "Подтвердить", uz: "Tasdiqlash" },
@@ -407,6 +415,7 @@
         "Create resident": { ru: "Создать жильца", uz: "Yashovchi yaratish" },
         "Consumption & Collections Overview": { ru: "Потребление и сборы", uz: "Iste'mol va tushumlar sharhi" },
         "Active Debtors": { ru: "Активные должники", uz: "Faol qarzdorlar" },
+        "Payments this month": { ru: "Платежи за месяц", uz: "Bu oydagi to'lovlar" },
         "Total Outstanding": { ru: "Общая задолженность", uz: "Jami qarzdorlik" },
         "Collection Rate": { ru: "Уровень сборов", uz: "Yig'im darajasi" },
         "Total Complex Usage": { ru: "Общее потребление дома", uz: "Uy bo'yicha jami iste'mol" },
@@ -570,6 +579,12 @@
         "Network node detail preview.": { ru: "Предпросмотр деталей сетевого узла.", uz: "Tarmoq tuguni tafsilotlari ko'rinishi." },
         "Pressure anomaly is active. Assign a technician before SLA breach.": { ru: "Активна аномалия давления. Назначьте техника до нарушения SLA.", uz: "Bosim anomaliyasi faol. SLA buzilishidan oldin texnik tayinlang." },
         "No active alerts for this node.": { ru: "По этому узлу нет активных оповещений.", uz: "Bu tugun bo'yicha faol ogohlantirishlar yo'q." },
+        "No active alerts": { ru: "Нет активных уведомлений", uz: "Faol ogohlantirishlar yo'q" },
+        "All residential systems are synced with current local data.": { ru: "Все жилые системы синхронизированы с текущими локальными данными.", uz: "Barcha turar joy tizimlari joriy lokal ma'lumotlar bilan sinxronlangan." },
+        "No transactions for selected filters": { ru: "Нет данных по выбранным фильтрам", uz: "Tanlangan filtrlarda ma'lumot topilmadi" },
+        "Try another search term or reset filters. Backend data will refresh on retry.": { ru: "Попробуйте другой поисковый запрос или сбросьте фильтры. При повторе данные backend обновятся.", uz: "Boshqa qidiruv so'rovini kiriting yoki filtrlarni tiklang. Qayta urinishda backend ma'lumotlari yangilanadi." },
+        "Retry": { ru: "Повторить", uz: "Qayta urinish" },
+        "New": { ru: "Новое", uz: "Yangi" },
         "Water Pressure Stability": { ru: "Стабильность давления воды", uz: "Suv bosimi barqarorligi" },
         "Real-time telemetry from main supply line (last 24h)": { ru: "Телеметрия главной линии подачи в реальном времени (последние 24 часа)", uz: "Asosiy ta'minot liniyasi telemetriyasi real vaqtda (so'nggi 24 soat)" },
         "ACTUAL PSI": { ru: "ФАКТИЧЕСКИЙ PSI", uz: "AMALDAGI PSI" },
@@ -618,9 +633,6 @@
         "Home": { ru: "Главная", uz: "Bosh sahifa" },
         "Health": { ru: "Системы", uz: "Holat" },
         "Billing": { ru: "Платежи", uz: "To'lovlar" },
-        "14 residents": { ru: "14 жильцов", uz: "14 yashovchi" },
-        "+2 since last month": { ru: "+2 с прошлого месяца", uz: "O'tgan oydan +2" },
-        "17,640,000 UZS expected today": { ru: "17,640,000 UZS ожидается сегодня", uz: "Bugun 17,640,000 UZS kutilmoqda" },
         "Maintenance Fee": { ru: "Плата за обслуживание", uz: "Xizmat haqi" },
         "Late Penalty": { ru: "Пеня за просрочку", uz: "Kechikish jarimasi" },
         "Revenue vs Debt: Top 5": { ru: "Выручка vs долг: топ 5", uz: "Tushum va qarz: top 5" },
@@ -1044,9 +1056,10 @@
 
     const renderBackendProfile = () => {
         const profile = billingData.profile || {};
-        const fallbackName = profile.username || "Admin";
+        const usernameName = String(profile.username || "").trim();
+        const fallbackName = usernameName || String(profile.name || "").trim() || "Admin";
         const values = {
-            name: profile.name || fallbackName,
+            name: fallbackName,
             initials: profile.initials || fallbackName.slice(0, 2).toUpperCase(),
             role: profile.role || "Operator",
             email: profile.email || "No email in admin",
@@ -1207,6 +1220,23 @@
         return { labels: months, values: months.map((month) => map[month]) };
     };
     const getSiteStats = () => {
+        const normalizePaymentChannel = (transaction) => {
+            const paymentType = String(transaction?.paymentType || "").trim().toLowerCase();
+            const method = String(transaction?.method || "").trim().toLowerCase();
+            const description = String(transaction?.description || "").trim().toLowerCase();
+            if (paymentType === "payme" || method === "payme") return "Payme";
+            if (paymentType === "click" || method === "click") return "Click";
+            if (paymentType === "cash" || method === "cash") return "Cash";
+            if (
+                method === "card"
+                || method === "terminal"
+                || description.includes("[portal:card-credit]")
+                || description.includes("[portal:terminal-credit]")
+            ) {
+                return "Card";
+            }
+            return "";
+        };
         const complexes = getComplexStats();
         const totalComplexes = complexes.length;
         const now = new Date();
@@ -1233,9 +1263,19 @@
         const detailedDebt = billingData.residents.reduce((total, resident) => total + (resident.balance < 0 ? Math.abs(resident.balance) : 0), 0);
         const transactionVolume = billingData.transactions.reduce((total, transaction) => total + transaction.amount, 0);
         const methodTotals = billingData.transactions.reduce((totals, transaction) => {
-            totals[transaction.method] = (totals[transaction.method] || 0) + transaction.amount;
+            const channel = normalizePaymentChannel(transaction);
+            if (!channel) return totals;
+            if (Number(transaction?.signedAmount ?? transaction?.amount ?? 0) <= 0) return totals;
+            totals[channel] = (totals[channel] || 0) + Number(transaction.amount || 0);
             return totals;
-        }, {});
+        }, { Payme: 0, Click: 0, Cash: 0, Card: 0 });
+        const methodResidents = billingData.transactions.reduce((totals, transaction) => {
+            const channel = normalizePaymentChannel(transaction);
+            if (!channel) return totals;
+            if (Number(transaction?.signedAmount ?? transaction?.amount ?? 0) <= 0) return totals;
+            if (transaction.ownerBackendId) totals[channel].add(String(transaction.ownerBackendId));
+            return totals;
+        }, { Payme: new Set(), Click: new Set(), Cash: new Set(), Card: new Set() });
         const totalWaterM3 = billingData.complexes.reduce((total, complex) => total + complex.waterM3, 0);
         const totalHeatingM3 = billingData.complexes.reduce((total, complex) => total + complex.heatingM3, 0);
         const totalUsageM3 = totalWaterM3 + totalHeatingM3;
@@ -1276,6 +1316,9 @@
             detailedDebt,
             transactionVolume,
             methodTotals,
+            methodResidentCounts: Object.fromEntries(
+                Object.entries(methodResidents).map(([channel, residents]) => [channel, residents.size])
+            ),
             totalWaterM3,
             totalHeatingM3,
             totalUsageM3,
@@ -2210,16 +2253,20 @@
         items.forEach((item) => {
             const actionRow = item.querySelector(".mt-3.flex.gap-2");
             if (!actionRow) return;
+            const isResolved = String(item.dataset.status || "").toLowerCase() === "archived";
             actionRow.querySelectorAll("button").forEach((button) => {
                 if (!button.matches("[data-notification-resolve]")) button.remove();
             });
-            if (!actionRow.querySelector("[data-notification-resolve]")) {
+            if (!isResolved && !actionRow.querySelector("[data-notification-resolve]")) {
                 const resolve = document.createElement("button");
                 resolve.className = "drawer-action bg-surface-container text-primary";
                 resolve.dataset.notificationResolve = "";
                 resolve.type = "button";
                 resolve.textContent = translateNotificationAction("Resolve");
                 actionRow.appendChild(resolve);
+            }
+            if (isResolved) {
+                actionRow.querySelector("[data-notification-resolve]")?.remove();
             }
         });
         items.forEach((item) => setNotificationPinnedState(item, pinnedIds.includes(item.dataset.notificationId)));
@@ -2232,20 +2279,31 @@
             .filter(Boolean)
             .reverse()
             .forEach((item) => pinnedGroup?.insertAdjacentElement("afterend", item));
-        const unread = items.filter((item) => item.dataset.read !== "true").length;
+        const unread = (Array.isArray(billingData.notifications) ? billingData.notifications : [])
+            .filter((item) => !item.read)
+            .length;
         const lang = storage.getItem("hydroflow-lang") || "en";
+        const activeFilter = document.querySelector("[data-notification-filter].is-active")?.dataset.notificationFilter || "all";
+        const resolvedVisible = items.filter((item) => String(item.dataset.status || "").toLowerCase() === "archived").length;
         const unreadLabel = lang === "ru" ? `${unread} непрочитанных` : lang === "uz" ? `${unread} ta o'qilmagan` : `${unread} unread`;
-        document.querySelector("[data-notification-count]")?.replaceChildren(document.createTextNode(unreadLabel));
+        const resolvedLabel = lang === "ru" ? `${resolvedVisible} решено` : lang === "uz" ? `${resolvedVisible} hal qilingan` : `${resolvedVisible} resolved`;
+        document.querySelector("[data-notification-count]")?.replaceChildren(
+            document.createTextNode(activeFilter === "resolved" ? resolvedLabel : unreadLabel)
+        );
         document.querySelectorAll("[data-notification-dot]").forEach((dot) => {
             dot.classList.toggle("hidden", unread === 0);
         });
         document.querySelectorAll("[data-sidebar-notification-item]").forEach((item) => {
             item.classList.toggle("is-unread", unread > 0);
         });
-        const activeFilter = document.querySelector("[data-notification-filter].is-active")?.dataset.notificationFilter || "all";
         let visible = 0;
         items.forEach((item) => {
-            const show = activeFilter === "all" || item.dataset.severity === activeFilter;
+            const isResolved = String(item.dataset.status || "").toLowerCase() === "archived";
+            const show = activeFilter === "all"
+                ? !isResolved
+                : activeFilter === "resolved"
+                    ? isResolved
+                    : !isResolved && item.dataset.severity === activeFilter;
             item.classList.toggle("is-filtered", !show);
             if (show) visible += 1;
         });
@@ -2265,7 +2323,7 @@
         const stats = getSiteStats();
         const t = (key) => translateValue(key, storage.getItem("hydroflow-lang") || "en");
         const labelVariants = (text) => [text, translations[text]?.ru, translations[text]?.uz].filter(Boolean).map((item) => item.toLowerCase());
-        const statHostSelector = ".residential-kpi-card, .payment-channel, .debtor-trends-card, .bg-primary-container, [data-card], .bg-surface-container-lowest, .bg-surface-container-low";
+        const statHostSelector = ".residential-kpi-card, .payment-channel, .debtor-trends-card, .bg-primary-container, [data-card], [data-billing-kpi-card], .bg-surface-container-lowest, .bg-surface-container-low";
         const exactText = (text, selector = "p,h2,h3,h4,span,strong") => {
             const variants = labelVariants(text);
             return Array.from(document.querySelectorAll(selector))
@@ -2318,6 +2376,9 @@
         };
         const setStat = (label, value, support = "", progress = null) => {
             const statCardKeys = {
+                "Total Complexes": "total-complexes",
+                "Active Buildings": "active-buildings",
+                "Critical Debt Units": "critical-debt-units",
                 "Total Residents": "total-residents",
                 "Paid Residents": "paid-residents",
                 "Total Debtors": "total-debtors",
@@ -2352,6 +2413,18 @@
             .filter((transaction) => transaction.status === "Success")
             .reduce((total, transaction) => total + transaction.amount, 0);
         const detailedCollectionRate = (detailedPaid / Math.max(detailedPaid + stats.detailedDebt, 1)) * 100;
+        const now = new Date();
+        const paymentsThisMonth = billingData.transactions.filter((transaction) => {
+            const rawDate = transaction.createdAt || transaction.date || "";
+            let parsed = new Date(rawDate);
+            if (Number.isNaN(parsed.getTime())) {
+                const match = String(rawDate).trim().match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})/);
+                if (match) parsed = new Date(Number(match[3]), Number(match[2]) - 1, Number(match[1]));
+            }
+            return !Number.isNaN(parsed.getTime())
+                && parsed.getFullYear() === now.getFullYear()
+                && parsed.getMonth() === now.getMonth();
+        }).length;
 
         setStat("Total Residents", moneyFormatter.format(stats.detailedResidents), t("Total linked resident profiles"));
         setStat("Paid Residents", moneyFormatter.format(stats.detailedPaidResidents), t("Residents with positive or zero balance"));
@@ -2378,15 +2451,13 @@
         setStat("Active Alerts", `${stats.activeAlerts} Minor`, `${stats.criticalAlerts} critical tasks pending`);
         setStat("Water Pressure Status", stats.avgPressure < 50 ? "Review" : "Stable");
         setStat("Heating Core Temp", stats.warningComplexes.some((complex) => complex.heating !== "Optimal") ? "Maintenance" : "Optimal");
-        setStat("Active Debtors", `${stats.detailedDebtors} residents`, `${stats.pendingTransactions} pending transaction records`);
-        setStat("Total Outstanding", formatBillingUzs(stats.detailedDebt), `${formatBillingUzs(detailedPaid)} collected in log`);
-        setStat("Collection Rate", percentValue(detailedCollectionRate), "", detailedCollectionRate);
+        setStat("Active Debtors", moneyFormatter.format(stats.detailedDebtors));
+        setStat("Total Outstanding", formatBillingUzs(stats.detailedDebt));
+        setStat("Payments this month", moneyFormatter.format(paymentsThisMonth));
+        document.querySelectorAll("[data-payments-this-month]").forEach((node) => {
+            node.textContent = moneyFormatter.format(paymentsThisMonth);
+        });
         setStat("Total Complex Usage", `${compactNumber(stats.totalUsageM3)} m³`, `${moneyFormatter.format(stats.totalWaterM3)} water / ${moneyFormatter.format(stats.totalHeatingM3)} heating`);
-
-        const billingHeader = document.querySelector("main header p.text-on-surface-variant");
-        if (billingHeader?.textContent.includes("Managing")) {
-            billingHeader.textContent = `Managing ${stats.detailedResidents} linked residents across ${stats.totalUnits} units.`;
-        }
 
         const statusBanner = Array.from(document.querySelectorAll("span.text-sm.font-semibold")).find((element) => element.textContent.includes("All Systems"));
         if (statusBanner) statusBanner.textContent = stats.criticalAlerts ? "System Review Required" : "All Systems Operational";
@@ -2818,18 +2889,16 @@
             if (amount && name) amount.innerHTML = `${formatBillingUzs(stats.methodTotals[name] || 0).replace(" UZS", "")} <span class="text-xs font-medium">UZS</span>`;
         });
 
-        document.querySelectorAll(".payment-channel").forEach((channel) => {
-            const name = channel.querySelector("p.font-black")?.textContent.trim();
+        document.querySelectorAll(".payment-channel[data-payment-channel]").forEach((channel) => {
+            const name = channel.dataset.paymentChannel || "";
             if (!name) return;
             const amount = stats.methodTotals[name] || 0;
-            const transactions = billingData.transactions.filter((transaction) => transaction.method === name);
-            const success = transactions.filter((transaction) => transaction.status === "Success").length;
-            const rate = transactions.length ? (success / transactions.length) * 100 : 0;
-            const amountNode = Array.from(channel.querySelectorAll("p")).find((node) => node.textContent.includes("UZS") && node.className.includes("font-black"));
+            const residentCount = stats.methodResidentCounts?.[name] || 0;
+            const amountNode = channel.querySelector("[data-payment-channel-amount]");
             if (amountNode) amountNode.textContent = formatCompactUzs(amount);
-            const metricValues = channel.querySelectorAll(".text-lg.font-black, .text-xl.font-black");
-            if (metricValues[0]) metricValues[0].textContent = moneyFormatter.format(transactions.length);
-            if (metricValues[1]) metricValues[1].textContent = percentValue(rate);
+            channel.querySelectorAll("[data-payment-channel-count]").forEach((node) => {
+                node.textContent = moneyFormatter.format(residentCount);
+            });
         });
 
         const healthList = exactText("Complex Status Health Scores", "h3")?.nextElementSibling;
@@ -3016,7 +3085,7 @@
                 return items;
             });
             const countBadge = recentAlertsPanel.querySelector(".flex.items-center.justify-between span");
-            if (countBadge) countBadge.textContent = `${alertItems.length} New`;
+            if (countBadge) countBadge.textContent = `${alertItems.length} ${t("New")}`;
             const list = recentAlertsPanel.querySelector(".space-y-4");
             if (list) {
                 list.innerHTML = alertItems.length
@@ -3032,8 +3101,8 @@
                     }).join("")
                     : `
                         <div class="p-4 bg-secondary-container/10 border border-secondary/15 rounded-lg" data-liquid-alert-card>
-                            <p class="text-xs font-bold text-on-surface">No active alerts</p>
-                            <p class="text-[11px] text-on-surface-variant mt-1">All residential systems are synced with current local data.</p>
+                            <p class="text-xs font-bold text-on-surface">${escapeHtml(t("No active alerts"))}</p>
+                            <p class="text-[11px] text-on-surface-variant mt-1">${escapeHtml(t("All residential systems are synced with current local data."))}</p>
                         </div>
                     `;
             }
@@ -3291,8 +3360,18 @@
         const toggleOrdering = (index) => {
             const sortKey = config.sortMap[index];
             if (!sortKey) return;
-            const current = readListUrlState(config.name, { ordering: config.defaultOrdering }).ordering;
-            const next = current === sortKey ? `-${sortKey}` : current === `-${sortKey}` ? sortKey : (config.defaultSortDirection?.[sortKey] === "desc" ? `-${sortKey}` : sortKey);
+            const current = readListUrlState(config.name, { ordering: "" }).ordering;
+            const normalized = String(current || "");
+            const currentKey = normalized.startsWith("-") ? normalized.slice(1) : normalized;
+            const defaultDesc = config.defaultSortDirection?.[sortKey] === "desc";
+            const defaultValue = defaultDesc ? `-${sortKey}` : sortKey;
+            const reverseValue = defaultDesc ? sortKey : `-${sortKey}`;
+            let next = defaultValue;
+            if (currentKey === sortKey) {
+                if (normalized === defaultValue) next = reverseValue;
+                else if (normalized === reverseValue) next = "";
+                else next = defaultValue;
+            }
             writeListUrlState(config.name, { ordering: next, page: 1 });
             config.load();
         };
@@ -3344,7 +3423,7 @@
                     if (prev) prev.disabled = Number(meta.page || 1) <= 1;
                     if (next) next.disabled = Number(meta.page || 1) >= Number(meta.pages || 1);
                 }
-                syncSortIndicators(meta.ordering || config.defaultOrdering);
+                syncSortIndicators(readListUrlState(config.name, { ordering: "" }).ordering);
                 if (selectAll) selectAll.checked = false;
                 updateSelection();
                 window.HydroFlowSyncLocale?.();
@@ -3372,6 +3451,7 @@
         const groupLabel = (key, label, hidden = false) => `<div class="notification-group-label ${hidden ? "hidden" : ""}" data-notification-group="${key}">${escapeHtml(t(label))}</div>`;
         const severityLabel = (severity) => severity === "critical" ? t("Critical") : severity === "warning" ? t("Warning") : t("Info");
         const actionButtons = (item) => {
+            if (String(item.status || "").toLowerCase() === "archived") return "";
             return `
                 <div class="mt-3 flex gap-2">
                     <button class="drawer-action bg-surface-container text-primary" data-notification-resolve type="button">${escapeHtml(translateNotificationAction("Resolve"))}</button>
@@ -3380,6 +3460,19 @@
         };
         const renderItem = (item) => {
             const severity = ["critical", "warning", "info"].includes(item.severity) ? item.severity : "info";
+            const isResolved = String(item.status || "").toLowerCase() === "archived";
+            const resolvedBy = String(item.resolvedBy || "").trim();
+            const actionStateValue = visibleNotificationState(item.actionState);
+            const actionStateText = (() => {
+                if (!actionStateValue) return "";
+                if (isResolved && resolvedBy) {
+                    return `${t("Resolved by")}: ${resolvedBy}`;
+                }
+                return translateNotificationAction(actionStateValue);
+            })();
+            const pinButton = isResolved
+                ? ""
+                : `<button aria-label="${escapeAttr(item.pinned ? t("Pinned") : t("Pin"))}" aria-pressed="${item.pinned ? "true" : "false"}" class="notification-pin" data-notification-pin type="button"><span class="material-symbols-outlined">${item.pinned ? "keep_off" : "keep"}</span><span class="notification-pin-label">${escapeHtml(item.pinned ? t("Pinned") : t("Pin"))}</span></button>`;
             return `
                 <div class="notification-item ${severity === "critical" ? "critical-pulse" : ""}"
                     data-notification-id="${escapeAttr(item.id)}"
@@ -3388,17 +3481,18 @@
                     data-notification-section="${escapeAttr(item.section || "today")}"
                     data-read="${item.read ? "true" : "false"}"
                     data-pinned="${item.pinned ? "true" : "false"}"
+                    data-status="${escapeAttr(item.status || "unread")}"
                     data-severity="${escapeAttr(severity)}">
                     <div class="notification-card-head">
                         <p class="severity-badge severity-${escapeAttr(severity)}"><span class="status-dot dot-${severity === "critical" ? "critical" : severity === "warning" ? "warning" : "info"}"></span>${severityLabel(severity)}</p>
                         <div class="notification-card-meta">
                             <time class="text-[10px] text-on-surface-variant">${escapeHtml(item.eventAt || "")}</time>
-                            <button aria-label="${escapeAttr(item.pinned ? t("Pinned") : t("Pin"))}" aria-pressed="${item.pinned ? "true" : "false"}" class="notification-pin" data-notification-pin type="button"><span class="material-symbols-outlined">${item.pinned ? "keep_off" : "keep"}</span><span class="notification-pin-label">${escapeHtml(item.pinned ? t("Pinned") : t("Pin"))}</span></button>
+                            ${pinButton}
                         </div>
                     </div>
                     <p class="text-sm font-bold text-on-surface mt-2">${escapeHtml(translateNotificationTitle(item.title))}</p>
                     <p class="text-xs text-on-surface-variant mt-1">${escapeHtml(translateNotificationMessage(item.message || ""))}</p>
-                    <p class="notification-action-state ${visibleNotificationState(item.actionState) ? "" : "hidden"}" data-notification-state>${escapeHtml(translateNotificationAction(visibleNotificationState(item.actionState)))}</p>
+                    <p class="notification-action-state ${actionStateText ? "" : "hidden"}" data-notification-state>${escapeHtml(actionStateText)}</p>
                     ${actionButtons(item)}
                 </div>
             `;
@@ -3416,7 +3510,7 @@
             yesterday.map(renderItem).join(""),
             groupLabel("older", "Older", !older.length),
             older.map(renderItem).join(""),
-            `<div class="empty-state ${items.length ? "hidden" : ""}" data-notification-empty><span class="material-symbols-outlined">notifications_off</span><div><p>${escapeHtml(t("No hidden alerts"))}</p><span>${escapeHtml(t("Resolved notifications are moved to the activity log."))}</span></div></div>`,
+            `<div class="empty-state ${items.length ? "hidden" : ""}" data-notification-empty><span class="material-symbols-outlined">notifications_off</span><div><p>${escapeHtml(t("No hidden alerts"))}</p><span>${escapeHtml(t("No resolved tasks yet"))}</span></div></div>`,
         ].join("");
     };
     const checklistEntriesForNotifications = () => checklistEntriesSnapshot().sort((left, right) => Number(left.done) - Number(right.done));
@@ -3494,7 +3588,7 @@
     };
     const markServerDrivenHosts = () => {
         document.querySelector("[data-resident-grid]")?.setAttribute("data-server-list", "residents");
-        findSectionHeading("Recent Transaction Log")?.closest(".bg-surface-container-lowest")?.querySelector("table")?.setAttribute("data-server-list", "transactions");
+        findSectionHeading("Recent Transaction Log")?.closest("[data-billing-transactions-card], .bg-surface-container-lowest, section")?.querySelector("table")?.setAttribute("data-server-list", "transactions");
         document.querySelector("[data-maintenance-body]")?.closest("table")?.setAttribute("data-server-list", "maintenance");
         document.querySelector("[data-notification-list]")?.setAttribute("data-server-list", "alerts");
         document.querySelector("[data-audit-timeline]")?.setAttribute("data-server-list", "audit");
@@ -3520,7 +3614,7 @@
         const residentFilterDefaults = {
             page: "1",
             status: "all",
-            ordering: "name",
+            ordering: "",
         };
         const residentLegacyFilterKeys = ["telegram", "contract", "owner_id", "name", "phone", "telegram_user", "building", "apartment"];
         const residentSortDirections = {
@@ -3584,7 +3678,7 @@
             });
         };
         const syncResidentSortButtons = (ordering) => {
-            const normalized = String(ordering || "name");
+            const normalized = String(ordering || "");
             const descending = normalized.startsWith("-");
             const activeKey = descending ? normalized.slice(1) : normalized;
             residentSortButtons.forEach((button) => {
@@ -3616,13 +3710,16 @@
         const toggleResidentOrdering = (sortKey) => {
             if (!sortKey) return;
             const current = readListUrlState("residents", residentFilterDefaults).ordering;
-            const normalized = String(current || "name");
+            const normalized = String(current || "");
             const currentKey = normalized.startsWith("-") ? normalized.slice(1) : normalized;
-            const currentDesc = normalized.startsWith("-");
             const defaultDesc = residentSortDirections[sortKey] === "desc";
-            let next = defaultDesc ? `-${sortKey}` : sortKey;
+            const defaultValue = defaultDesc ? `-${sortKey}` : sortKey;
+            const reverseValue = defaultDesc ? sortKey : `-${sortKey}`;
+            let next = defaultValue;
             if (currentKey === sortKey) {
-                next = currentDesc ? sortKey : `-${sortKey}`;
+                if (normalized === defaultValue) next = reverseValue;
+                else if (normalized === reverseValue) next = "";
+                else next = defaultValue;
             }
             writeListUrlState("residents", { ordering: next, page: 1 });
             loadResidents();
@@ -3759,24 +3856,30 @@
             serverListControllers.residents = { name: "residents", load: loadResidents, refresh: () => loadResidents() };
         }
 
-        const transactionTable = findSectionHeading("Recent Transaction Log")?.closest(".bg-surface-container-lowest")?.querySelector("table");
+        const transactionTable = document.querySelector("table[data-server-list='transactions']")
+            || findSectionHeading("Recent Transaction Log")?.closest(".bg-surface-container-lowest")?.querySelector("table");
         if (transactionTable) {
             const transactionChrome = prepareServerTableChrome(transactionTable, {
                 name: "transactions",
-                sortMap: ["id", "resident", "type", "amount", "status", "created_at"],
+                sortMap: ["id", "resident", "created_at", "method", "amount", "balance", "status"],
                 defaultOrdering: "-created_at",
-                defaultSortDirection: { id: "desc", resident: "asc", type: "asc", created_at: "desc", amount: "desc", status: "desc" },
+                defaultSortDirection: { id: "desc", resident: "asc", created_at: "desc", method: "asc", amount: "desc", balance: "desc", status: "desc" },
                 load: () => loadTransactions(),
             });
             const renderTransactions = (items = []) => {
-                const colspan = transactionTable.querySelector("thead tr")?.cells.length || 6;
+                const colspan = transactionTable.querySelector("thead tr")?.cells.length || 7;
                 if (!items.length) {
-                    return `<tr data-smart-empty="true"><td class="px-6 py-8 text-sm text-on-surface-variant" colspan="${colspan}">No transactions found.</td></tr>`;
+                    return `<tr data-smart-empty="true"><td class="px-6 py-8 text-sm text-on-surface-variant" colspan="${colspan}">${escapeHtml(t("No transactions found"))}</td></tr>`;
                 }
                 return items.map((item) => {
-                    const pending = Number(item.signedAmount || 0) <= 0 || String(item.status || "").toLowerCase() === "pending";
+                    const signedAmount = Number(item.signedAmount ?? item.amount ?? 0);
+                    const balanceAfter = Number(item.balanceAfter || 0);
+                    const amountClass = signedAmount < 0 ? "text-error" : "text-primary";
+                    const amountPrefix = signedAmount > 0 ? "+" : signedAmount < 0 ? "-" : "";
+                    const balanceStatusKey = balanceAfter < 0 ? "Debt" : "No debt";
+                    const balanceClass = balanceAfter < 0 ? "text-error" : "text-on-surface";
                     return `
-                        <tr class="hover:bg-surface-container-low transition-colors"
+                        <tr class="hover:bg-surface-container-low transition-colors billing-transaction-row"
                             data-transaction-id="${escapeAttr(item.id)}"
                             data-resident-id="${escapeAttr(item.residentId)}"
                             data-complex-id="${escapeAttr(item.complexId)}"
@@ -3786,25 +3889,23 @@
                             data-apartment-backend-id="${escapeAttr(item.apartmentBackendId || "")}"
                             data-building-backend-id="${escapeAttr(item.buildingBackendId || "")}"
                             data-complex-backend-id="${escapeAttr(item.complexBackendId || "")}">
-                            <td class="px-4 py-4"><input aria-label="Select row" data-row-select type="checkbox"></td>
                             <td class="px-6 py-4">
-                                <p class="font-bold text-primary text-sm">${escapeHtml(String(item.id || "").toUpperCase())}</p>
-                                <p class="text-[10px] text-on-surface-variant">${escapeHtml(item.externalId || "Backend transaction")}</p>
+                                <p class="font-bold text-primary text-sm">${escapeHtml(String(item.backendId || item.id || ""))}</p>
                             </td>
                             <td class="px-6 py-4">
                                 <p class="font-bold text-primary text-sm">${escapeHtml(item.residentName || "Resident")}</p>
-                                <p class="text-[10px] text-on-surface-variant">${escapeHtml(item.apartment ? `Apartment ${item.apartment}` : item.residentId || "")}</p>
                             </td>
-                            <td class="px-6 py-4 text-xs font-medium text-on-surface-variant">${escapeHtml(item.method || item.type || "Payment")}</td>
-                            <td class="px-6 py-4 text-sm font-bold ${pending ? "text-error" : "text-on-surface"}">${formatBillingUzs(item.amount || 0)}</td>
-                            <td class="px-6 py-4">${renderTableStatus(item.status)}</td>
                             <td class="px-6 py-4 text-xs text-on-surface-variant">${escapeHtml(item.date)}</td>
+                            <td class="px-6 py-4 text-xs font-medium text-on-surface-variant">${escapeHtml(item.method || item.type || "Payment")}</td>
+                            <td class="px-6 py-4 text-sm font-bold ${amountClass}">${escapeHtml(`${amountPrefix}${formatBillingUzs(Math.abs(signedAmount))}`)}</td>
+                            <td class="px-6 py-4 text-sm font-bold ${balanceClass}">${formatBillingUzs(balanceAfter)}</td>
+                            <td class="px-6 py-4"><span class="table-assigned-status ${balanceStatusKey === "Debt" ? "is-critical" : "is-success"}">${escapeHtml(t(balanceStatusKey))}</span></td>
                         </tr>
                     `;
                 }).join("");
             };
             const loadTransactions = async () => {
-                const state = readListUrlState("transactions", { page: "1", search: "", ordering: "-created_at" });
+                const state = readListUrlState("transactions", { page: "1", search: "", ordering: "" });
                 const { state: globalState, params } = currentGlobalListFilters();
                 const status = globalState.status === "paid" ? "success" : globalState.status === "debtor" ? "pending" : "";
                 const payload = await fetchServerList("/api/lists/transactions/", {
@@ -3865,7 +3966,7 @@
                 `).join("");
             };
             const loadMaintenance = async () => {
-                const state = readListUrlState("maintenance", { page: "1", search: "", ordering: "-priority,-scheduled_at" });
+                const state = readListUrlState("maintenance", { page: "1", search: "", ordering: "" });
                 const { params } = currentGlobalListFilters();
                 const payload = await fetchServerList("/api/lists/maintenance/", {
                     ...params,
@@ -3886,7 +3987,14 @@
             drawer?.querySelector("[data-drawer-pagination='alerts']")?.remove();
             const filterButtons = Array.from(document.querySelectorAll("[data-notification-filter]"));
             const countNode = document.querySelector("[data-notification-count]");
+            const resolvedCountNodes = Array.from(document.querySelectorAll("[data-notification-resolved-count]"));
             const toolbarActions = drawer?.querySelector(".notification-toolbar-actions");
+            const setResolvedTabCount = (value) => {
+                const numeric = Number(value) || 0;
+                resolvedCountNodes.forEach((node) => {
+                    node.textContent = String(numeric);
+                });
+            };
             const loadAlerts = async () => {
                 const activeFilter = filterButtons.find((button) => button.classList.contains("is-active"))?.dataset.notificationFilter || "all";
                 if (activeFilter === "todo") {
@@ -3904,13 +4012,18 @@
                 }
                 if (toolbarActions) toolbarActions.classList.remove("hidden");
                 const { params } = currentGlobalListFilters();
+                const resolvedMode = activeFilter === "resolved";
                 const payload = await fetchServerList("/api/lists/alerts/", {
                     ...params,
                     page: 1,
                     page_size: 200,
                     ordering: "-pinned,-event_at",
-                    severity: activeFilter === "all" ? "" : activeFilter,
+                    status: resolvedMode ? "resolved" : "",
+                    severity: resolvedMode || activeFilter === "all" ? "" : activeFilter,
                 });
+                if (resolvedMode) {
+                    setResolvedTabCount(payload.total || 0);
+                }
                 notificationList.innerHTML = renderNotificationMarkup(payload.results || []);
                 updateNotifications();
                 window.HydroFlowSyncLocale?.();
@@ -4137,6 +4250,9 @@
             console.warn("HydroFlow statistics sync failed", error);
         }
     };
+    document.addEventListener("hydroflow:language-changed", () => {
+        window.requestAnimationFrame(() => safeSyncSiteStatistics());
+    });
 
     const setupBillingDataSync = () => {
         const syncedAttr = "billingDataSynced";
@@ -4437,7 +4553,7 @@
         };
 
         const recentHeading = findHeading("Recent Transaction Log");
-        const recentTable = recentHeading?.closest(".bg-surface-container-lowest")?.querySelector("table");
+        const recentTable = recentHeading?.closest("[data-billing-transactions-card], .bg-surface-container-lowest, section")?.querySelector("table");
         const recentTableBody = recentTable?.querySelector("tbody");
         if (recentTableBody && recentTable?.dataset.serverList !== "transactions") {
             const headers = Array.from(recentTable.querySelectorAll("thead th"))
@@ -4679,14 +4795,6 @@
         document.querySelectorAll("[data-notification-filter]").forEach((item) => item.classList.toggle("is-active", item === button));
         updateNotifications();
     }));
-
-    document.querySelector("[data-mark-read]")?.addEventListener("click", () => {
-        document.querySelectorAll("[data-notification-list] .notification-item").forEach((item) => {
-            item.dataset.read = "true";
-            item.classList.remove("critical-pulse");
-        });
-        updateNotifications();
-    });
 
     const setupResidentFilters = () => {
         const group = document.querySelector("[data-resident-filter-group]");
@@ -6495,7 +6603,7 @@
         const form = modal?.querySelector("[data-system-alert-form]");
         if (!modal || !form || modal.dataset.alertsReady === "true") return;
         modal.dataset.alertsReady = "true";
-        const complexSelect = form.querySelector("[data-system-alert-complex]");
+        const complexInput = form.querySelector("input[name='complex_id']");
         const buildingSelect = form.querySelector("[data-system-alert-building]");
         const submit = form.querySelector("[data-system-alert-submit]");
         const status = form.querySelector("[data-system-alert-status]");
@@ -6532,24 +6640,20 @@
         ));
         const syncBuildingOptions = () => {
             if (!buildingSelect) return;
-            const selectedComplexId = complexSelect?.value || "";
-            const buildings = allBuildings().filter((building) => String(building.parentComplex?.backendId || "") === selectedComplexId);
+            const buildings = allBuildings().filter((building) => building.backendId);
+            const previous = buildingSelect.value;
             buildingSelect.innerHTML = [
                 `<option value="">${escapeHtml(t("Whole complex"))}</option>`,
-                ...buildings.map((building) => `<option value="${escapeHtml(building.backendId || "")}">${escapeHtml(building.name || building.number || "Building")}</option>`),
+                ...buildings.map((building) => {
+                    const complexLabel = building.parentComplex?.name ? ` (${building.parentComplex.name})` : "";
+                    return `<option value="${escapeHtml(building.backendId || "")}">${escapeHtml((building.name || building.number || "Building") + complexLabel)}</option>`;
+                }),
             ].join("");
-        };
-        const syncComplexOptions = () => {
-            if (!complexSelect) return;
-            const previous = complexSelect.value;
-            const complexes = billingData.complexes.filter((complex) => complex.backendId);
-            complexSelect.innerHTML = complexes.map((complex) => (
-                `<option value="${escapeHtml(complex.backendId)}">${escapeHtml(complex.name)}</option>`
-            )).join("");
-            complexSelect.value = previous && complexes.some((complex) => String(complex.backendId) === String(previous))
+            buildingSelect.value = previous && buildings.some((building) => String(building.backendId) === String(previous))
                 ? previous
-                : String(complexes[0]?.backendId || "");
-            syncBuildingOptions();
+                : "";
+            const selected = buildings.find((building) => String(building.backendId) === String(buildingSelect.value));
+            if (complexInput) complexInput.value = selected?.parentComplex?.backendId || "";
         };
         const chipClass = (severity) => severity === "critical" ? "is-critical" : severity === "warning" ? "is-warning" : "is-info";
         const renderAlerts = () => {
@@ -6582,21 +6686,20 @@
             syncModalStaticText();
         };
         const prepare = () => {
-            syncComplexOptions();
+            syncBuildingOptions();
             renderAlerts();
-            setStatus("Create a live alert and it will immediately sync across dashboard, notifications and system health.");
         };
 
-        complexSelect?.addEventListener("change", syncBuildingOptions);
+        buildingSelect?.addEventListener("change", syncBuildingOptions);
         document.querySelectorAll("[data-modal-open='system-alerts-config-modal']").forEach((button) => {
             button.addEventListener("click", prepare);
         });
         document.addEventListener("hydroflow:backend-refreshed", () => {
-            syncComplexOptions();
+            syncBuildingOptions();
             renderAlerts();
         });
         document.addEventListener("hydroflow:language-changed", () => {
-            syncComplexOptions();
+            syncBuildingOptions();
             renderAlerts();
             syncModalStaticText();
         });
@@ -6612,8 +6715,8 @@
                 mode: "create",
                 title: formData.get("title"),
                 severity: formData.get("severity"),
-                complex_id: formData.get("complex_id"),
-                building_id: formData.get("building_id"),
+                complex_id: formData.get("complex_id") || "",
+                building_id: formData.get("building_id") || "",
                 assigned_to: formData.get("assigned_to"),
                 message: formData.get("message"),
             };
@@ -6630,7 +6733,7 @@
                 renderAlerts();
                 setStatus("System alert created and synced.", "success");
                 form.reset();
-                syncComplexOptions();
+                syncBuildingOptions();
                 form.querySelector("input[name='assigned_to']").value = t("Operations Team");
                 toast("System alert created", "The alert is now stored in Django admin and visible in the portal.", "success");
             } catch (error) {
@@ -6639,7 +6742,7 @@
                     renderAlerts();
                     setStatus("System alert created and synced.", "success");
                     form.reset();
-                    syncComplexOptions();
+                    syncBuildingOptions();
                     form.querySelector("input[name='assigned_to']").value = t("Operations Team");
                     toast("System alert created", "The alert was saved in Django admin and recovered after refresh.", "success");
                     return;
@@ -7779,6 +7882,28 @@
 
     const recentCommandKey = "hydroflow-recent-commands";
     const recentSearchKey = "hydroflow-recent-searches";
+    const userStorageScope = (() => {
+        const profile = billingData.profile || {};
+        const id = String(profile.id || "").trim();
+        const username = String(profile.username || "").trim().toLowerCase();
+        return id || username || "anonymous";
+    })();
+    const scopedStorageKey = (baseKey) => `${baseKey}:${userStorageScope}`;
+    const scopedRecentCommandKey = scopedStorageKey(recentCommandKey);
+    const scopedRecentSearchKey = scopedStorageKey(recentSearchKey);
+    const shouldResetRecentStorage = () => {
+        const backendConnected = billingData.source === "backend";
+        const residentsEmpty = !Array.isArray(billingData.residents) || billingData.residents.length === 0;
+        const complexesEmpty = !Array.isArray(billingData.complexes) || billingData.complexes.length === 0;
+        const transactionsEmpty = !Array.isArray(billingData.transactions) || billingData.transactions.length === 0;
+        return !backendConnected || (residentsEmpty && complexesEmpty && transactionsEmpty);
+    };
+    if (shouldResetRecentStorage()) {
+        storage.removeItem(scopedRecentSearchKey);
+        storage.removeItem(scopedRecentCommandKey);
+        storage.removeItem(recentSearchKey);
+        storage.removeItem(recentCommandKey);
+    }
     const commandPalette = document.getElementById("command-palette");
     const commandInput = document.querySelector("[data-command-input]");
     const commandResults = document.querySelector("[data-command-results]");
@@ -7802,14 +7927,30 @@
     const getCommandItems = () => Array.from(document.querySelectorAll("[data-command-results] .command-item"));
     const getRecentCommands = () => {
         try {
-            return JSON.parse(storage.getItem(recentCommandKey) || "[]");
+            const scoped = storage.getItem(scopedRecentCommandKey);
+            if (scoped) return JSON.parse(scoped);
+            const legacy = storage.getItem(recentCommandKey);
+            if (legacy) {
+                storage.setItem(scopedRecentCommandKey, legacy);
+                storage.removeItem(recentCommandKey);
+                return JSON.parse(legacy);
+            }
+            return [];
         } catch {
             return [];
         }
     };
     const getRecentSearches = () => {
         try {
-            return JSON.parse(storage.getItem(recentSearchKey) || "[]");
+            const scoped = storage.getItem(scopedRecentSearchKey);
+            if (scoped) return JSON.parse(scoped);
+            const legacy = storage.getItem(recentSearchKey);
+            if (legacy) {
+                storage.setItem(scopedRecentSearchKey, legacy);
+                storage.removeItem(recentSearchKey);
+                return JSON.parse(legacy);
+            }
+            return [];
         } catch {
             return [];
         }
@@ -7824,7 +7965,7 @@
         if (!value) return;
         const recent = getRecentSearches().filter((item) => item !== value);
         recent.unshift(value);
-        storage.setItem(recentSearchKey, JSON.stringify(recent.slice(0, 6)));
+        storage.setItem(scopedRecentSearchKey, JSON.stringify(recent.slice(0, 6)));
     };
     const saveRecentCommand = (button) => {
         const title = button.querySelector("span")?.textContent?.trim();
@@ -7840,7 +7981,7 @@
         };
         const recent = getRecentCommands().filter((item) => item.id !== command.id);
         recent.unshift(command);
-        storage.setItem(recentCommandKey, JSON.stringify(recent.slice(0, 4)));
+        storage.setItem(scopedRecentCommandKey, JSON.stringify(recent.slice(0, 4)));
         renderRecentCommands();
     };
     const renderRecentCommands = () => {
@@ -7848,12 +7989,7 @@
         const target = document.querySelector("[data-command-recent]");
         if (!wrap || !target) return;
         const recent = getRecentSearches();
-        const fallback = recent.length ? [] : [
-            billingData.residents[0]?.name,
-            billingData.residents[0]?.apartmentNumber ? `Apartment ${billingData.residents[0].apartmentNumber}` : "",
-            billingData.complexes[0]?.buildingItems?.[0]?.name,
-        ].filter(Boolean);
-        const items = recent.length ? recent : fallback;
+        const items = recent;
         wrap.classList.toggle("hidden", items.length === 0);
         target.innerHTML = items.slice(0, 6).map((item) => `
             <button class="command-recent-chip" data-command-recent-query="${escapeAttr(item)}" type="button">
@@ -8274,7 +8410,7 @@
     const syncAddPaymentSubmitState = () => {
         if (!addPaymentNodes?.submit) return;
         const amountValue = Number(addPaymentNodes.amount?.value || 0);
-        const channelReady = addPaymentState.operation === "debit" || ["cash", "terminal"].includes(addPaymentState.channel);
+        const channelReady = addPaymentState.operation === "debit" || ["cash", "card", "payme", "click", "terminal"].includes(addPaymentState.channel);
         addPaymentNodes.submit.disabled = addPaymentState.submitting || !addPaymentState.selectedResident || !(amountValue > 0) || !channelReady;
     };
     const syncAddPaymentMode = () => {
@@ -8290,8 +8426,8 @@
         }
         if (addPaymentNodes.submitNote) {
             addPaymentNodes.submitNote.textContent = addPaymentState.operation === "credit"
-                ? t("A real transaction will be written to the database and all balances will refresh from backend data.")
-                : t("A real balance subtraction will be written to the database and resident totals will refresh from backend data.");
+                ? t("Payment will be saved and balances will refresh from backend data.")
+                : t("Balance subtraction will be saved and totals will refresh from backend data.");
         }
         syncAddPaymentSubmitState();
     };
@@ -8443,15 +8579,21 @@
             renderAddPaymentResults();
             if (addPaymentNodes.amount) addPaymentNodes.amount.value = "";
             setAddPaymentStatus(
-                addPaymentState.operation === "credit" ? t("Payment saved to database.") : t("Balance subtraction saved to database."),
+                addPaymentState.operation === "credit" ? t("Payment saved in backend.") : t("Balance subtraction saved in backend."),
                 "success"
             );
             playSound("payment-success");
             toast(
                 addPaymentState.operation === "credit" ? t("Payment saved") : t("Balance updated"),
                 addPaymentState.operation === "credit"
-                    ? t(addPaymentState.channel === "cash" ? "Cash payment was written to backend database." : "Terminal payment was written to backend database.")
-                    : t("Manual subtraction was written to backend database."),
+                    ? t({
+                        cash: "Cash payment synced with backend.",
+                        card: "Card payment synced with backend.",
+                        terminal: "Card payment synced with backend.",
+                        payme: "Payme payment synced with backend.",
+                        click: "Click payment synced with backend.",
+                    }[addPaymentState.channel] || "Card payment synced with backend.")
+                    : t("Manual subtraction synced with backend."),
                 "success"
             );
         } catch (error) {
@@ -10344,9 +10486,9 @@ ${sheets}
                 state = document.createElement("div");
                 state.className = "table-empty-state hidden";
                 state.dataset.tableEmptyState = "true";
-                state.innerHTML = '<span class="material-symbols-outlined">search_off</span><strong>No transactions for selected filters</strong><small>Try another search term or reset filters. Backend data will refresh on retry.</small><button type="button" data-table-empty-reset>Retry</button>';
                 host.appendChild(state);
             }
+            state.innerHTML = `<span class="material-symbols-outlined">search_off</span><strong>${escapeHtml(t("No transactions for selected filters"))}</strong><small>${escapeHtml(t("Try another search term or reset filters. Backend data will refresh on retry."))}</small><button type="button" data-table-empty-reset>${escapeHtml(t("Retry"))}</button>`;
             state.classList.toggle("hidden", visible > 0 || rows.length === 0);
         });
     };
@@ -10383,11 +10525,8 @@ ${sheets}
                 card.classList.toggle("search-match-card", Boolean(query) && card.textContent.toLowerCase().includes(query));
             });
         }
-        const searches = JSON.parse(storage.getItem("hydroflow-recent-searches") || "[]").filter((item) => item !== input.value.trim());
-        if (input.value.trim()) {
-            searches.unshift(input.value.trim());
-            storage.setItem("hydroflow-recent-searches", JSON.stringify(searches.slice(0, 5)));
-        }
+        const value = input.value.trim();
+        if (value) saveRecentSearch(value);
     }, true);
     document.addEventListener("click", (event) => {
         const reset = event.target.closest("[data-table-empty-reset]");
@@ -10401,6 +10540,7 @@ ${sheets}
         }
     });
     window.setTimeout(updateTableEmptyStates, 0);
+    document.addEventListener("hydroflow:language-changed", () => window.setTimeout(updateTableEmptyStates, 0));
 
     document.addEventListener("keydown", (event) => {
         if (event.key !== "/" || event.ctrlKey || event.metaKey || event.altKey) return;
@@ -10456,14 +10596,6 @@ ${sheets}
         if (item) item.dataset.read = "true";
         updateNotifications();
     });
-    document.querySelector("[data-clear-read]")?.addEventListener("click", () => {
-        document.querySelectorAll("[data-notification-list] .notification-item[data-read='true']").forEach((item) => {
-            if (item.dataset.pinned !== "true") item.remove();
-        });
-        updateNotifications();
-        toast("Read notifications cleared", "Pinned items stay visible.", "info");
-    });
-
     const renderBackendAuditEvents = () => {
         const timeline = document.querySelector("[data-audit-timeline]");
         const events = Array.isArray(billingData.auditEvents) ? billingData.auditEvents : [];
@@ -10509,106 +10641,6 @@ ${sheets}
         setText("[data-support-headline]", summary.headline || "Operational issues sync through Django admin helpdesk.");
         setText("[data-support-summary-caption]", summary.caption || "Use this drawer to copy the current support summary, create a backend helpdesk ticket, or open the checklist.");
         drawer.dataset.latestSupportTicket = tickets[0]?.title || "";
-    };
-
-    const clickLogsStorageKey = "hydroflow-click-logs";
-    const maxClickLogs = 400;
-
-    const readClickLogs = () => {
-        try {
-            const parsed = JSON.parse(storage.getItem(clickLogsStorageKey) || "[]");
-            return Array.isArray(parsed) ? parsed : [];
-        } catch {
-            return [];
-        }
-    };
-
-    const writeClickLogs = (logs) => {
-        storage.setItem(clickLogsStorageKey, JSON.stringify(Array.isArray(logs) ? logs.slice(0, maxClickLogs) : []));
-    };
-
-    const getClickTargetLabel = (element) => {
-        if (!element) return "Unknown";
-        const explicit = element.dataset.actionKey
-            || element.dataset.i18nKey
-            || element.getAttribute("aria-label")
-            || element.title
-            || element.textContent;
-        return (explicit || "Unknown").replace(/\s+/g, " ").trim().slice(0, 160);
-    };
-
-    const getClickTargetScope = (element) => {
-        if (!element) return "page";
-        if (element.closest(".account-menu")) return "account-menu";
-        if (element.closest(".app-modal")) return "modal";
-        if (element.closest(".app-drawer")) return "drawer";
-        if (element.closest("aside")) return "sidebar";
-        if (element.closest("header")) return "topbar";
-        if (element.closest("main")) return "main";
-        return "page";
-    };
-
-    const pushClickLog = (element) => {
-        const logs = readClickLogs();
-        const now = new Date();
-        logs.unshift({
-            id: `${now.getTime()}-${Math.random().toString(36).slice(2, 8)}`,
-            at: now.toISOString(),
-            path: `${window.location.pathname}${window.location.search || ""}`,
-            scope: getClickTargetScope(element),
-            label: getClickTargetLabel(element),
-        });
-        writeClickLogs(logs);
-    };
-
-    const renderClickLogs = () => {
-        const drawer = document.getElementById("click-logs-drawer");
-        if (!drawer) return;
-        const list = drawer.querySelector("[data-click-logs-list]");
-        const empty = drawer.querySelector("[data-click-logs-empty]");
-        const total = drawer.querySelector("[data-click-logs-total]");
-        const visible = drawer.querySelector("[data-click-logs-visible]");
-        const search = drawer.querySelector("[data-click-logs-search]");
-        if (!list || !empty) return;
-
-        const query = (search?.value || "").trim().toLowerCase();
-        const allLogs = readClickLogs();
-        const filtered = query
-            ? allLogs.filter((item) => `${item.label} ${item.path} ${item.scope}`.toLowerCase().includes(query))
-            : allLogs;
-
-        list.innerHTML = filtered.map((item) => {
-            const dt = new Date(item.at);
-            const dateText = Number.isNaN(dt.getTime()) ? item.at : dt.toLocaleString();
-            return `
-                <div class="audit-event" data-type="action">
-                    <span class="audit-event-icon material-symbols-outlined">touch_app</span>
-                    <div>
-                        <time>${escapeHtml(dateText)}</time>
-                        <p>${escapeHtml(item.label || "Action")}</p>
-                        <span>${escapeHtml(item.path || "/")} · ${escapeHtml(item.scope || "page")}</span>
-                    </div>
-                </div>
-            `;
-        }).join("");
-
-        if (total) total.textContent = String(allLogs.length);
-        if (visible) visible.textContent = String(filtered.length);
-        empty.classList.toggle("hidden", filtered.length > 0);
-    };
-
-    const setupClickLogsDrawer = () => {
-        const drawer = document.getElementById("click-logs-drawer");
-        if (!drawer || drawer.dataset.clickLogsReady === "true") return;
-        drawer.dataset.clickLogsReady = "true";
-        const search = drawer.querySelector("[data-click-logs-search]");
-        search?.addEventListener("input", renderClickLogs);
-        drawer.querySelector("[data-click-logs-action='clear']")?.addEventListener("click", () => {
-            writeClickLogs([]);
-            renderClickLogs();
-            toast("Logs cleared", "Action history was cleared in this browser.", "info");
-        });
-        renderClickLogs();
     };
 
     const setupAuditTools = () => {
@@ -10744,26 +10776,10 @@ ${sheets}
     setupChecklist();
     syncSidebarTodoCount();
     setupAuditTools();
-    setupClickLogsDrawer();
     setupSupportTools();
     setupBillingNoticeQuickAction();
     setupBillingPeriodQuickAction();
     window.HydroFlowRenderSupport = renderSupportDrawer;
-
-    document.addEventListener("click", (event) => {
-        const button = event.target.closest("button, a, [role='button']");
-        if (!button) return;
-        if (
-            button.closest("#click-logs-drawer")
-            || button.matches("[data-close-overlay], [data-click-logs-action='clear']")
-        ) {
-            return;
-        }
-        pushClickLog(button);
-        if (document.getElementById("click-logs-drawer")?.classList.contains("is-open")) {
-            renderClickLogs();
-        }
-    }, true);
 
     document.addEventListener("click", (event) => {
         const button = event.target.closest("button");
@@ -10775,6 +10791,7 @@ ${sheets}
             return;
         }
         const actionKey = button.dataset.actionKey || button.dataset.i18nKey || button.textContent.trim();
+        const normalizedActionKey = String(button.dataset.actionKey || "").trim().toLowerCase();
         const label = actionKey.toLowerCase();
         const lang = storage.getItem("hydroflow-lang") || "en";
         if (label === "export") toast(translateValue("Export started", lang), "A static report preview is being prepared.");
@@ -10788,15 +10805,16 @@ ${sheets}
             const adminUrl = billingData.profile?.adminUrl || "/admin/portal/workspaceprofile/";
             window.location.assign(adminUrl);
         }
-        if (label.includes("sign out")) {
+        if (normalizedActionKey === "sign out" || label.includes("sign out")) {
             event.preventDefault();
             postPortalJson("/api/logout/", {})
                 .then((payload) => {
                     window.location.assign(payload.redirectUrl || "/");
                 })
-                .catch((error) => {
-                    toast("Authentication request failed", error.message || "Logout request failed.", "warning");
+                .catch(() => {
+                    window.location.assign("/api/logout/?next=/");
                 });
+            return;
         }
     });
 })();

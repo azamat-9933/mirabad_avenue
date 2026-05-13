@@ -17,6 +17,17 @@ def actor_username(request):
     return request.user.get_username() or "Admin"
 
 
+def get_or_create_default_complex(request):
+    sector = Complex.objects.order_by("pk").first()
+    if sector:
+        return sector
+    return Complex.objects.create(
+        title=DEFAULT_SECTOR_NAME,
+        address=DEFAULT_SECTOR_NAME,
+        author=actor_username(request),
+    )
+
+
 # ══════════════════════════════════════════════════════
 #  INLINES
 # ══════════════════════════════════════════════════════
@@ -120,18 +131,14 @@ class BuildingAdmin(admin.ModelAdmin):
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == "complex":
-            sector = Complex.objects.order_by("pk").first()
-            queryset = Complex.objects.none()
-            if sector:
-                queryset = Complex.objects.filter(pk=sector.pk)
-                kwargs.setdefault("initial", sector.pk)
+            sector = get_or_create_default_complex(request)
+            queryset = Complex.objects.filter(pk=sector.pk)
+            kwargs.setdefault("initial", sector.pk)
             kwargs["queryset"] = queryset
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
     def save_model(self, request, obj, form, change):
-        sector = Complex.objects.order_by("pk").first()
-        if sector:
-            obj.complex = sector
+        obj.complex = get_or_create_default_complex(request)
         if not obj.author:
             obj.author = actor_username(request)
         super().save_model(request, obj, form, change)

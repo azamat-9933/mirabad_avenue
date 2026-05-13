@@ -17,7 +17,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
 <link href="{% static 'img/favicon.svg' %}" rel="icon" type="image/svg+xml"/>
-<link href="{% static 'css/app.css' %}?v=checklist-mark-reviewed-20260513-1" rel="stylesheet"/>
+<link href="{% static 'css/app.css' %}?v=properties-row-tight-20260514-2" rel="stylesheet"/>
 <script id="tailwind-config">
         tailwind.config = {
             darkMode: "class",
@@ -335,9 +335,14 @@
             z-index: 5;
             cursor: pointer;
         }
-        .table-stable th:first-child,
-        .table-stable td:first-child {
+        .table-stable:not(.billing-transactions-table) th:first-child,
+        .table-stable:not(.billing-transactions-table) td:first-child {
             width: 2.75rem;
+        }
+        .billing-transactions-table th:first-child,
+        .billing-transactions-table td:first-child {
+            width: 6.5rem;
+            min-width: 6.5rem;
         }
         .table-pagination {
             display: flex;
@@ -564,6 +569,7 @@
 
     const enhanceTable = (table) => {
         if (table.dataset.enhanced === "true") return;
+        if (table.dataset.skipBaseTableEnhance === "true") return;
         const headRow = table.querySelector("thead tr");
         const body = table.querySelector("tbody");
         if (!headRow || !body) return;
@@ -581,6 +587,7 @@
         });
 
         const rows = Array.from(body.rows);
+        const originalRows = rows.slice();
         const host = table.closest(".overflow-x-auto") || table;
         host.classList.add("table-workspace");
         const tools = document.createElement("div");
@@ -749,7 +756,7 @@
                 header.removeAttribute("aria-label");
                 return;
             }
-            const label = header.textContent.trim();
+            const label = header.querySelector(".table-filter-heading-text")?.textContent.trim() || header.textContent.trim();
             header.classList.add("table-filter-heading");
             header.setAttribute("role", "button");
             header.setAttribute("tabindex", "0");
@@ -763,7 +770,11 @@
             `;
             const applySort = () => {
                 setTableLoading();
-                const direction = header.dataset.sortDirection === "asc" ? "desc" : "asc";
+                const direction = header.dataset.sortDirection === "asc"
+                    ? "desc"
+                    : header.dataset.sortDirection === "desc"
+                        ? ""
+                        : "asc";
                 Array.from(headRow.cells).forEach((cell) => {
                     if (cell !== header) {
                         delete cell.dataset.sortDirection;
@@ -771,11 +782,18 @@
                         if (icon) icon.textContent = "unfold_more";
                     }
                 });
-                header.dataset.sortDirection = direction;
                 const icon = header.querySelector(".table-sort-heading-icon");
-                if (icon) icon.textContent = direction === "asc" ? "arrow_upward" : "arrow_downward";
-                rows.sort((a, b) => compareSemanticRows(a, b, index, direction, label));
-                rows.forEach((row) => body.appendChild(row));
+                if (!direction) {
+                    delete header.dataset.sortDirection;
+                    if (icon) icon.textContent = "unfold_more";
+                    originalRows.forEach((row) => body.appendChild(row));
+                    rows.splice(0, rows.length, ...originalRows);
+                } else {
+                    header.dataset.sortDirection = direction;
+                    if (icon) icon.textContent = direction === "asc" ? "arrow_upward" : "arrow_downward";
+                    rows.sort((a, b) => compareSemanticRows(a, b, index, direction, label));
+                    rows.forEach((row) => body.appendChild(row));
+                }
                 filteredRows = rows.filter((row) => row.textContent.toLowerCase().includes(search.value.trim().toLowerCase()));
                 updateVisibleRows();
             };
@@ -880,11 +898,6 @@
         }
     });
     accountMenu?.querySelectorAll("button").forEach((button) => button.addEventListener("click", closeAccountMenu));
-    document.querySelector("[data-mark-read]")?.addEventListener("click", () => {
-        document.querySelectorAll("[data-notification-list] .notification-item").forEach((item) => item.classList.add("opacity-60"));
-        document.querySelectorAll("[data-notification-dot]").forEach((dot) => dot.classList.add("hidden"));
-    });
-
     document.querySelectorAll("button").forEach((button) => {
         const label = button.textContent.trim().toLowerCase();
         if ((label.includes("details") || label.includes("view report") || label.includes("billing history")) && !button.matches("[data-apartment-details]")) {
@@ -901,7 +914,7 @@
 <script>
     window.HydroFlowBackendData = JSON.parse("{{ backend_billing_data_json|default:'{}'|escapejs }}");
 </script>
-<script src="{% static 'js/app.js' %}?v=checklist-mark-reviewed-20260513-1"></script>
+<script src="{% static 'js/app.js' %}?v=payment-channels-card-fix-20260514-9"></script>
 </body>
 </html>
 

@@ -74,16 +74,13 @@
 <div class="px-6 py-3 border-b border-surface-container space-y-3">
 <div class="flex items-center justify-between">
 <span class="text-xs font-bold text-on-surface-variant" data-notification-count>3 unread</span>
-<div class="notification-toolbar-actions">
-<button class="text-xs font-bold text-primary hover:underline" data-mark-read type="button">Mark all as read</button>
-<button class="text-xs font-bold text-primary hover:underline" data-clear-read data-i18n-key="Clear read" type="button">Clear read</button>
-</div>
 </div>
 <div class="notification-tabs" data-notification-tabs>
 <button class="is-active" data-i18n-key="ALL" data-notification-filter="all" type="button">ALL</button>
 <button data-i18n-key="Critical" data-notification-filter="critical" type="button">Critical</button>
 <button data-i18n-key="Warning" data-notification-filter="warning" type="button">Warning</button>
 <button data-i18n-key="Info" data-notification-filter="info" type="button">Info</button>
+<button data-notification-filter="resolved" type="button"><span data-i18n-key="Resolved tasks">Resolved tasks</span><span class="notification-tab-count" data-notification-resolved-count>0</span></button>
 <button data-notification-filter="todo" type="button"><span data-i18n-key="To do">To do</span><span class="notification-tab-count" data-notification-todo-count>0</span></button>
 </div>
 </div>
@@ -337,43 +334,6 @@
 </div>
 </aside>
 
-<aside aria-labelledby="click-logs-title" aria-hidden="true" class="app-drawer audit-drawer fixed top-0 right-0 z-[70] h-screen w-full max-w-xl bg-white shadow-2xl border-l border-outline-variant/20 translate-x-full" id="click-logs-drawer" role="dialog">
-<div class="h-full flex flex-col">
-<div class="px-6 py-5 border-b border-surface-container flex items-center justify-between">
-<div>
-<h2 class="text-lg font-black text-on-surface" id="click-logs-title">Logs</h2>
-<p class="text-xs text-on-surface-variant mt-1">When, where and what actions were clicked in this workspace.</p>
-</div>
-<button aria-label="Close logs" class="p-2 rounded-lg hover:bg-surface-container transition-colors" data-close-overlay type="button">
-<span class="material-symbols-outlined">close</span>
-</button>
-</div>
-<div class="audit-drawer-body p-6 overflow-y-auto">
-<div class="audit-summary-grid">
-<div><span>Total actions</span><strong data-click-logs-total>0</strong></div>
-<div><span>Visible</span><strong data-click-logs-visible>0</strong></div>
-<div><span>Storage</span><strong>Local</strong></div>
-<div><span>Scope</span><strong>Current browser</strong></div>
-</div>
-<div class="audit-toolbox">
-<label class="audit-search-shell">
-<span class="material-symbols-outlined" aria-hidden="true">search</span>
-<input aria-label="Search logs" data-click-logs-search placeholder="Search actions, labels or routes..." type="search"/>
-</label>
-<div class="audit-action-row">
-<button data-click-logs-action="clear" type="button"><span class="material-symbols-outlined">delete_sweep</span><span>Clear logs</span></button>
-</div>
-</div>
-<div class="audit-timeline" data-click-logs-list></div>
-<div class="audit-empty-state hidden" data-click-logs-empty>
-<span class="material-symbols-outlined">history_toggle_off</span>
-<strong>No actions yet</strong>
-<small>Start interacting with the interface to build the log.</small>
-</div>
-</div>
-</div>
-</aside>
-
 <aside aria-labelledby="support-title" aria-hidden="true" class="app-drawer support-drawer fixed top-0 right-0 z-[70] h-screen w-full max-w-md bg-white shadow-2xl border-l border-outline-variant/20 translate-x-full" id="support-drawer" role="dialog">
 <div class="h-full flex flex-col">
 <div class="support-drawer-hero">
@@ -528,24 +488,6 @@
 </div>
 </div>
 <div class="profile-drawer-body">
-<section class="profile-summary-card">
-<div>
-<span class="profile-summary-label" data-i18n-key="Status">Status</span>
-<strong><span class="status-dot dot-operational"></span><span data-profile-field="status">Active</span></strong>
-</div>
-<div>
-<span class="profile-summary-label" data-i18n-key="Workspace">Workspace</span>
-<strong data-profile-field="workspace">HydroFlow</strong>
-</div>
-<div>
-<span class="profile-summary-label" data-i18n-key="Time zone">Time zone</span>
-<strong data-profile-field="timezone">Asia/Tashkent</strong>
-</div>
-<div>
-<span class="profile-summary-label" data-i18n-key="Last active">Last active</span>
-<strong data-profile-field="lastActive">Backend session</strong>
-</div>
-</section>
 <section class="profile-info-section">
 <div class="profile-section-heading">
 <span class="material-symbols-outlined">badge</span>
@@ -558,17 +500,6 @@
 <div><span data-i18n-key="Access level">Access level</span><strong data-profile-field="accessLevel">Full operations access</strong></div>
 </div>
 </section>
-<section class="profile-info-section">
-<div class="profile-section-heading">
-<span class="material-symbols-outlined">shield</span>
-<h3 data-i18n-key="Security">Security</h3>
-</div>
-<div class="profile-security-grid">
-<div><span data-i18n-key="Two-factor authentication">Two-factor authentication</span><strong data-profile-field="twoFactor">Enabled</strong></div>
-<div><span data-i18n-key="Session status">Session status</span><strong data-profile-field="sessionStatus">Active</strong></div>
-</div>
-</section>
-<p class="profile-note" data-profile-field="note">Profile data is loaded from Django admin and the active backend session.</p>
 </div>
 <div class="profile-drawer-actions">
 <button class="profile-action-primary" data-action-key="Edit profile" type="button">
@@ -694,7 +625,6 @@
 <div class="export-preview-hero">
 <span class="material-symbols-outlined">ios_share</span>
 <div>
-<p class="profile-kicker">Backend export</p>
 <h2 id="export-preview-title">Export report</h2>
 <small data-export-subtitle>Live export generated from Django data.</small>
 </div>
@@ -922,14 +852,7 @@
 <option data-i18n-key="Info" value="info">Info</option>
 </select>
 </label>
-<label class="resident-create-field">
-<span data-i18n-key="Sector">Sector</span>
-<select name="complex_id" data-system-alert-complex></select>
-</label>
-<label class="resident-create-field">
-<span data-i18n-key="House">House</span>
-<select name="building_id" data-system-alert-building></select>
-</label>
+<input name="complex_id" type="hidden" value=""/>
 <label class="resident-create-field">
 <span data-i18n-key="Assigned to">Assigned to</span>
 <input data-i18n-placeholder="Operations Team" name="assigned_to" placeholder="Operations Team" type="text" value="Operations Team"/>
@@ -938,10 +861,6 @@
 <span data-i18n-key="Message">Message</span>
 <textarea data-i18n-placeholder="Explain the issue, scope and next action." name="message" placeholder="Explain the issue, scope and next action."></textarea>
 </label>
-</div>
-<div class="resident-create-status hidden" data-system-alert-status>
-<span class="material-symbols-outlined">info</span>
-<p data-i18n-key="Ready to create a live system alert.">Ready to create a live system alert.</p>
 </div>
 <div class="system-alerts-config-actions">
 <button data-close-overlay data-i18n-key="Cancel" type="button">Cancel</button>
@@ -1095,9 +1014,8 @@
 <div class="add-payment-hero">
 <span class="material-symbols-outlined" aria-hidden="true">add_card</span>
 <div>
-<p class="profile-kicker" data-i18n-key="Payment workspace">Payment workspace</p>
 <h2 id="add-payment-title" data-i18n-key="Add payment">Add payment</h2>
-<small data-i18n-key="Find a resident, confirm the profile and write a real payment to the database.">Find a resident, confirm the profile and write a real payment to the database.</small>
+<small data-i18n-key="Find a resident, confirm the profile and create a payment.">Find a resident, confirm the profile and create a payment.</small>
 </div>
 <button aria-label="Close add payment" class="profile-drawer-close" data-close-overlay type="button">
 <span class="material-symbols-outlined">close</span>
@@ -1112,15 +1030,11 @@
 <span class="material-symbols-outlined" aria-hidden="true">close</span>
 </button>
 </label>
-<div class="add-payment-search-caption">
-<span class="material-symbols-outlined" aria-hidden="true">database</span>
-<p data-i18n-key="Live resident search from current backend data.">Live resident search from current backend data.</p>
-</div>
 <div class="add-payment-search-results" data-add-payment-results></div>
 <div class="add-payment-search-empty hidden" data-add-payment-empty>
 <span class="material-symbols-outlined">person_search</span>
 <strong data-i18n-key="No residents found">No residents found</strong>
-<small data-i18n-key="Adjust the query to find a resident in the database.">Adjust the query to find a resident in the database.</small>
+<small data-i18n-key="Adjust the query to find a resident.">Adjust the query to find a resident.</small>
 </div>
 </section>
 <section class="add-payment-sheet">
@@ -1191,12 +1105,14 @@
 <span data-i18n-key="Channel">Channel</span>
 <div class="add-payment-toggle-row">
 <button class="is-active" data-add-payment-channel="cash" type="button"><span class="material-symbols-outlined" aria-hidden="true">payments</span><span data-i18n-key="Cash">Cash</span></button>
-<button data-add-payment-channel="terminal" type="button"><span class="material-symbols-outlined" aria-hidden="true">credit_card</span><span data-i18n-key="Terminal">Terminal</span></button>
+<button data-add-payment-channel="card" type="button"><span class="material-symbols-outlined" aria-hidden="true">credit_card</span><span data-i18n-key="Card">Card</span></button>
+<button data-add-payment-channel="payme" type="button"><span class="material-symbols-outlined" aria-hidden="true">account_balance_wallet</span><span>Payme</span></button>
+<button data-add-payment-channel="click" type="button"><span class="material-symbols-outlined" aria-hidden="true">touch_app</span><span>Click</span></button>
 </div>
 </div>
 </div>
 <div class="add-payment-submit-row">
-<p class="add-payment-submit-note" data-add-payment-submit-note data-i18n-key="A real transaction will be written to the database and all balances will refresh from backend data.">A real transaction will be written to the database and all balances will refresh from backend data.</p>
+<p class="add-payment-submit-note" data-add-payment-submit-note data-i18n-key="Payment will be saved and balances will refresh from backend data.">Payment will be saved and balances will refresh from backend data.</p>
 <button class="add-payment-submit" data-add-payment-submit type="submit">
 <span class="material-symbols-outlined" aria-hidden="true">check_circle</span>
 <span data-i18n-key="Save payment">Save payment</span>

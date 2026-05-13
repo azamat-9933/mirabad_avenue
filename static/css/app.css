@@ -2713,6 +2713,38 @@ html.dark tr.hover\:bg-surface-container-low:hover {
     background: rgba(79, 142, 247, 0.04) !important;
 }
 
+.billing-transactions-table th:first-child,
+.billing-transactions-table td:first-child {
+    width: 6.5rem !important;
+    min-width: 6.5rem;
+}
+
+.billing-transactions-table tbody tr {
+    --resident-row-divider: rgba(100, 116, 139, 0.18);
+    position: relative;
+    border-bottom: 1px solid rgba(112, 120, 125, 0.10);
+}
+
+.billing-transactions-table tbody td {
+    position: relative;
+}
+
+.billing-transactions-table tbody td:not(:last-child)::after {
+    content: "";
+    position: absolute;
+    top: 4px;
+    right: -6px;
+    width: 1px;
+    height: calc(100% - 8px);
+    background: var(--resident-row-divider);
+    pointer-events: none;
+}
+
+html.dark .billing-transactions-table tbody tr {
+    --resident-row-divider: rgba(148, 163, 184, 0.18);
+    border-bottom-color: rgba(255, 255, 255, 0.06);
+}
+
 html.dark .table-tools,
 html.dark .table-pagination,
 html.dark [data-table-enhanced] .table-tools,
@@ -7471,7 +7503,7 @@ html.dark,
 }
 
 :root {
-    --resident-directory-columns: 64px minmax(0, 2.45fr) minmax(0, 1.08fr) minmax(0, 0.84fr) minmax(0, 0.76fr) minmax(0, 2.55fr);
+    --resident-directory-columns: 80px minmax(0, 2.45fr) minmax(0, 1.08fr) minmax(0, 0.84fr) minmax(0, 0.76fr) minmax(0, 2.55fr);
 }
 
 .resident-column-sorts {
@@ -13441,6 +13473,25 @@ html.dark .sidebar-brand-block:focus-visible,
     margin-top: 8px;
     width: 100%;
     justify-content: center;
+    border-color: rgba(82, 133, 255, 0.42);
+    background: linear-gradient(135deg, rgba(96, 154, 255, 0.24), rgba(140, 118, 255, 0.2));
+    color: #1f4f86;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 10px 20px rgba(84, 132, 255, 0.16);
+}
+
+.notification-todo-add-note:hover {
+    border-color: rgba(82, 133, 255, 0.6);
+    background: linear-gradient(135deg, rgba(96, 154, 255, 0.34), rgba(140, 118, 255, 0.28));
+    color: #1d63b8;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.92), 0 14px 28px rgba(84, 132, 255, 0.24);
+}
+
+html.dark .notification-todo-add-note,
+[data-theme="dark"] .notification-todo-add-note {
+    border-color: rgba(108, 151, 255, 0.5);
+    background: linear-gradient(135deg, rgba(60, 108, 205, 0.38), rgba(99, 84, 211, 0.34));
+    color: #d8e7ff;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 14px 30px rgba(0, 0, 0, 0.24);
 }
 
 .notification-todo-composer {
@@ -13816,6 +13867,11 @@ html.dark .building-summary-periods-link,
     min-width: 0;
     text-align: center;
     white-space: nowrap;
+}
+
+.resident-sort-button[data-resident-sort="id"] span:first-child {
+    letter-spacing: 0.06em;
+    font-size: 10px;
 }
 
 .sidebar-premium-dot {
@@ -15848,6 +15904,11 @@ html.dark .command-item-icon,
     margin-top: 6px;
 }
 
+[data-add-payment-channel-group] .add-payment-toggle-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .add-payment-toggle-row button {
     width: 100%;
     flex: 0 0 auto;
@@ -15907,12 +15968,14 @@ html.dark .command-item-icon,
 }
 
 .add-payment-submit {
-    min-height: 46px;
-    min-width: 180px;
-    border-radius: 14px;
-    padding: 0 16px;
-    border: 1px solid rgba(11, 94, 120, 0.20);
-    background: linear-gradient(135deg, rgba(11, 94, 120, 0.95), rgba(79, 142, 247, 0.9));
+    min-height: 48px;
+    min-width: 188px;
+    border-radius: 16px;
+    padding: 0 18px;
+    border: 1px solid rgba(89, 161, 226, 0.34);
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.04)),
+        linear-gradient(135deg, rgba(98, 176, 231, 0.96), rgba(99, 140, 245, 0.94));
     color: #fff;
     font-size: 13.5px;
     font-weight: 900;
@@ -15921,8 +15984,11 @@ html.dark .command-item-icon,
     align-items: center;
     justify-content: center;
     gap: 8px;
-    box-shadow: 0 16px 30px rgba(11, 94, 120, 0.22);
+    box-shadow:
+        0 16px 30px rgba(77, 142, 247, 0.22),
+        inset 0 1px 0 rgba(255, 255, 255, 0.34);
     transition: transform 0.16s ease, box-shadow 0.16s ease, opacity 0.16s ease;
+    cursor: pointer;
 }
 
 .add-payment-submit span:last-child {
@@ -15932,12 +15998,18 @@ html.dark .command-item-icon,
 
 .add-payment-submit:hover {
     transform: translateY(-1px);
-    box-shadow: 0 18px 34px rgba(11, 94, 120, 0.28);
+    box-shadow:
+        0 20px 36px rgba(77, 142, 247, 0.28),
+        inset 0 1px 0 rgba(255, 255, 255, 0.40);
 }
 
 .add-payment-submit:disabled {
-    opacity: 0.6;
-    cursor: wait;
+    opacity: 0.58;
+    cursor: not-allowed;
+    transform: none !important;
+    box-shadow:
+        0 10px 20px rgba(148, 163, 184, 0.12),
+        inset 0 1px 0 rgba(255, 255, 255, 0.28);
 }
 
 html.dark .add-payment-panel,
@@ -16085,12 +16157,14 @@ html.dark .add-payment-resident-photo-shell,
 
 .table-empty-state button {
     min-height: 34px;
-    border-radius: 999px;
+    border-radius: 12px;
     padding: 0 14px;
-    background: rgba(24, 42, 76, 0.56);
-    color: #356FCE;
+    border: 1px solid rgba(79, 142, 247, 0.26);
+    background: linear-gradient(180deg, rgba(235, 244, 255, 0.94), rgba(220, 236, 255, 0.86));
+    color: #2A60CF;
     font-size: 12px;
     font-weight: 850;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
 .export-preview-panel {
@@ -16516,7 +16590,7 @@ html.dark .add-payment-resident-photo-shell,
 .notification-tabs {
     position: relative;
     display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: repeat(6, minmax(0, 1fr));
     gap: 6px;
     padding: 6px;
     border-radius: 16px;
@@ -16953,6 +17027,14 @@ html.dark .export-summary-grid div,
     border-color: rgba(255, 255, 255, 0.08);
     background: rgba(255, 255, 255, 0.045);
     color: #A0A5B5;
+}
+
+html.dark .table-empty-state button,
+[data-theme="dark"] .table-empty-state button {
+    border-color: rgba(124, 176, 255, 0.42);
+    background: linear-gradient(180deg, rgba(67, 117, 201, 0.34), rgba(44, 87, 165, 0.26));
+    color: #D6E8FF;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 8px 18px rgba(25, 49, 92, 0.25);
 }
 
 html.dark .command-empty p,
@@ -17925,6 +18007,31 @@ html.dark .notification-group-label[data-notification-group="pinned"],
     cursor: pointer;
 }
 
+.residential-performance-table tbody tr {
+    --resident-row-divider: rgba(100, 116, 139, 0.18);
+    border-bottom: 1px solid rgba(112, 120, 125, 0.10);
+}
+
+.residential-performance-table tbody td {
+    position: relative;
+    overflow: visible;
+}
+
+.residential-performance-table tbody td:not(:last-child)::after {
+    content: "";
+    position: absolute;
+    top: 4px;
+    right: -6px;
+    width: 1px;
+    height: calc(100% - 8px);
+    background: var(--resident-row-divider);
+    pointer-events: none;
+}
+
+.residential-performance-table tbody tr:last-child {
+    border-bottom: 0;
+}
+
 .residential-district-row {
     position: relative;
 }
@@ -18245,11 +18352,12 @@ html.dark .notification-group-label[data-notification-group="pinned"],
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-height: 32px;
+    min-height: 30px;
     border-radius: 10px;
-    font-size: 11px;
+    font-size: 10px;
     line-height: 1;
     font-weight: 850;
+    white-space: nowrap;
     transition: transform 0.2s ease, color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -18257,7 +18365,7 @@ html.dark .notification-group-label[data-notification-group="pinned"],
     border: 1px solid rgba(79, 142, 247, 0.20);
     background: rgba(79, 142, 247, 0.10);
     color: #356FCE;
-    padding: 0 12px;
+    padding: 0 10px;
 }
 
 .residential-detail-button {
@@ -18364,8 +18472,8 @@ html.dark .notification-group-label[data-notification-group="pinned"],
 .residential-performance-table th,
 .residential-performance-table td {
     overflow: hidden;
-    padding-left: 0.75rem !important;
-    padding-right: 0.75rem !important;
+    padding-left: 0.625rem !important;
+    padding-right: 0.625rem !important;
     vertical-align: middle;
 }
 
@@ -18383,22 +18491,22 @@ html.dark .notification-group-label[data-notification-group="pinned"],
 
 .residential-performance-table th:nth-child(3),
 .residential-performance-table td:nth-child(3) {
-    width: 150px;
+    width: 128px;
 }
 
 .residential-performance-table th:nth-child(4),
 .residential-performance-table td:nth-child(4) {
-    width: 185px;
+    width: 152px;
 }
 
 .residential-performance-table th:nth-child(5),
 .residential-performance-table td:nth-child(5) {
-    width: 170px;
+    width: 146px;
 }
 
 .residential-performance-table th:nth-child(6),
 .residential-performance-table td:nth-child(6) {
-    width: 220px;
+    width: 214px;
 }
 
 .residential-performance-table .table-filter-heading-inner {
@@ -18594,7 +18702,7 @@ html.dark .maintenance-action-button,
     display: inline-flex;
     align-items: center;
     justify-content: flex-end;
-    gap: 6px;
+    gap: 4px;
     width: 100%;
     min-width: 0;
     white-space: nowrap;
@@ -18605,7 +18713,7 @@ html.dark .maintenance-action-button,
     align-items: stretch;
     justify-content: center;
     gap: 0;
-    min-width: 102px;
+    min-width: 92px;
     overflow: hidden;
     border: 1px solid rgba(15, 23, 42, 0.07);
     border-radius: 14px;
@@ -18614,6 +18722,22 @@ html.dark .maintenance-action-button,
     box-shadow:
         inset 0 1px 0 rgba(255, 255, 255, 0.86),
         0 8px 20px rgba(15, 23, 42, 0.055);
+}
+
+.residential-building-row > td,
+.residential-apartment-row > td {
+    padding-top: 0.7rem !important;
+    padding-bottom: 0.7rem !important;
+}
+
+.residential-building-row .residential-building-trigger p,
+.residential-apartment-row .residential-owner-cell strong {
+    line-height: 1.08;
+}
+
+.residential-building-row .residential-building-trigger small,
+.residential-apartment-row .residential-owner-cell span {
+    margin-top: 2px;
 }
 
 .resident-debt-split span {
@@ -18685,7 +18809,7 @@ html.dark .maintenance-action-button,
 .residential-performance-table .residential-owner-cell,
 .residential-performance-table td:nth-child(2) > .flex {
     min-width: 0;
-    gap: 10px;
+    gap: 8px;
 }
 
 .residential-performance-table .residential-nested-name > div,
@@ -18698,25 +18822,42 @@ html.dark .maintenance-action-button,
 .residential-performance-table .residential-owner-initials,
 .residential-performance-table td:nth-child(2) img,
 .residential-performance-table td:nth-child(2) .w-10.h-10 {
-    width: 34px !important;
-    height: 34px !important;
-    border-radius: 10px !important;
+    width: 32px !important;
+    height: 32px !important;
+    border-radius: 9px !important;
 }
 
 .residential-performance-table .residential-owner-initials {
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
-    flex: 0 0 34px !important;
-    min-width: 34px !important;
-    max-width: 34px !important;
+    flex: 0 0 32px !important;
+    min-width: 32px !important;
+    max-width: 32px !important;
     padding: 0 !important;
-    font-size: 13px !important;
+    font-size: 12px !important;
     line-height: 1 !important;
     letter-spacing: 0.045em !important;
     white-space: nowrap !important;
     word-break: normal !important;
     overflow-wrap: normal !important;
+}
+
+.residential-performance-table .resident-phone-line {
+    flex-wrap: nowrap;
+    white-space: nowrap;
+    gap: 4px;
+    padding: 4px 4px 4px 7px;
+}
+
+.residential-performance-table .resident-phone-line b {
+    flex: 0 0 auto;
+    white-space: nowrap;
+}
+
+.residential-performance-table .resident-copy-phone {
+    width: 22px;
+    height: 22px;
 }
 
 .residential-performance-table .residential-level-chip {
@@ -18951,6 +19092,12 @@ html.dark .residential-district-row.is-expanded,
     background:
         linear-gradient(90deg, rgba(79, 142, 247, 0.13), transparent 58%),
         rgba(255, 255, 255, 0.025);
+}
+
+html.dark .residential-performance-table tbody tr,
+[data-theme="dark"] .residential-performance-table tbody tr {
+    --resident-row-divider: rgba(148, 163, 184, 0.18);
+    border-bottom-color: rgba(255, 255, 255, 0.06);
 }
 
 html.dark .residential-drill-chevron,
