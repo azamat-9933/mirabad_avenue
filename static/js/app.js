@@ -353,9 +353,52 @@
         "View All Houses": { ru: "Все дома", uz: "Barcha uylar" },
         "debt residents": { ru: "должников", uz: "qarzdor rezidentlar" },
         "Analytics Overview": { ru: "Обзор аналитики", uz: "Tahlil sharhi" },
+        "Analytics dashboard": { ru: "Биллинг по домам", uz: "Uylar bo'yicha billing" },
+        "Live billing snapshot from backend residents, payments and current balances.": { ru: "Живой срез по абонентам, оплатам и текущим балансам из backend.", uz: "Backenddagi abonentlar, to'lovlar va joriy balanslar bo'yicha jonli kesim." },
         "Real-time system performance and fiscal health": { ru: "Производительность системы и финансовое состояние в реальном времени", uz: "Tizim samaradorligi va moliyaviy holat real vaqtda" },
         "Last 3 Months": { ru: "Последние 3 месяца", uz: "So'nggi 3 oy" },
         "Filter Views": { ru: "Фильтр видов", uz: "Ko'rinishlarni filtrlash" },
+        "Month": { ru: "Месяц", uz: "Oy" },
+        "Apts": { ru: "Кв.", uz: "Xon." },
+        "Paid this month": { ru: "Оплачено за месяц", uz: "Oy bo'yicha to'langan" },
+        "Real successful payments in selected month.": { ru: "Реальные успешные платежи за выбранный месяц.", uz: "Tanlangan oy bo'yicha haqiqiy muvaffaqiyatli to'lovlar." },
+        "Payment operations": { ru: "Платёжные операции", uz: "To'lov operatsiyalari" },
+        "Successful payment operations in selected month.": { ru: "Успешные платёжные операции за выбранный месяц.", uz: "Tanlangan oy bo'yicha muvaffaqiyatli to'lov operatsiyalari." },
+        "Total debt": { ru: "Общий долг", uz: "Jami qarz" },
+        "Current negative balances across selected residents.": { ru: "Текущие отрицательные балансы по выбранным абонентам.", uz: "Tanlangan abonentlar bo'yicha joriy manfiy balanslar." },
+        "Overpayment": { ru: "Переплата", uz: "Ortiqcha to'lov" },
+        "Positive balances across selected residents.": { ru: "Положительные балансы по выбранным абонентам.", uz: "Tanlangan abonentlar bo'yicha musbat balanslar." },
+        "Average payment": { ru: "Средний платёж", uz: "O'rtacha to'lov" },
+        "Average successful payment in current scope.": { ru: "Средний успешный платёж в текущем срезе.", uz: "Joriy kesimdagi o'rtacha muvaffaqiyatli to'lov." },
+        "Average balance": { ru: "Средний баланс", uz: "O'rtacha balans" },
+        "Current mean resident balance.": { ru: "Текущий средний баланс абонента.", uz: "Abonentning joriy o'rtacha balansi." },
+        "Resident profiles with active contract flag.": { ru: "Профили абонентов с активным договором.", uz: "Faol shartnoma belgisi bor abonent profillari." },
+        "Payment dynamics": { ru: "Динамика платежей", uz: "To'lovlar dinamikasi" },
+        "Six-month trend from backend payment records.": { ru: "Тренд за шесть месяцев по backend-платежам.", uz: "Backend to'lov yozuvlari bo'yicha olti oylik trend." },
+        "Monthly collected": { ru: "Собрано за месяц", uz: "Oy bo'yicha tushum" },
+        "Operations": { ru: "Операции", uz: "Operatsiyalar" },
+        "Payment channels": { ru: "Каналы оплаты", uz: "To'lov kanallari" },
+        "Distribution by real backend payment methods.": { ru: "Распределение по реальным способам оплаты из backend.", uz: "Backenddagi haqiqiy to'lov usullari bo'yicha taqsimot." },
+        "Debt aging": { ru: "Возраст долга", uz: "Qarz yoshi" },
+        "How long current debtors have gone without a successful payment.": { ru: "Сколько времени текущие должники без успешного платежа.", uz: "Joriy qarzdorlar muvaffaqiyatli to'lovsiz qancha vaqt qolganini ko'rsatadi." },
+        "Balance structure": { ru: "Структура баланса", uz: "Balans tuzilmasi" },
+        "Current resident balance split by debt, zero and overpayment.": { ru: "Текущий баланс абонентов: долг, ноль и переплата.", uz: "Abonentlarning joriy balansi: qarz, nol va ortiqcha to'lov." },
+        "Zero balance": { ru: "Нулевой баланс", uz: "Nol balans" },
+        "House debt pressure": { ru: "Долговая нагрузка по домам", uz: "Uylar bo'yicha qarz bosimi" },
+        "Top houses by current outstanding balance from real residents.": { ru: "Топ домов по текущему долгу реальных абонентов.", uz: "Haqiqiy abonentlarning joriy qarzi bo'yicha top uylar." },
+        "Monthly balance movement": { ru: "Движение баланса по месяцам", uz: "Oylik balans harakati" },
+        "Collected payments compared with current outstanding debt.": { ru: "Поступления и списания по реальным операциям.", uz: "Haqiqiy operatsiyalar bo'yicha tushum va yechimlar." },
+        "Collected": { ru: "Собрано", uz: "Yig'ildi" },
+        "0-30 days": { ru: "0-30 дней", uz: "0-30 kun" },
+        "31-60 days": { ru: "31-60 дней", uz: "31-60 kun" },
+        "61-90 days": { ru: "61-90 дней", uz: "61-90 kun" },
+        "90+ days": { ru: "90+ дней", uz: "90+ kun" },
+        "Subtracted": { ru: "Списано", uz: "Yechildi" },
+        "Selected month": { ru: "Выбранный месяц", uz: "Tanlangan oy" },
+        "House finance table": { ru: "Таблица по домам", uz: "Uylar bo'yicha jadval" },
+        "Real backend breakdown by house, payments and debt.": { ru: "Реальная backend-детализация по дому, оплатам и долгу.", uz: "Uy, to'lovlar va qarz bo'yicha haqiqiy backend tafsiloti." },
+        "No building rows in current scope.": { ru: "В текущем срезе нет строк по домам.", uz: "Joriy kesimda uylar bo'yicha satrlar yo'q." },
+        "No building rows match the selected house and month.": { ru: "Для выбранного дома и месяца строки не найдены.", uz: "Tanlangan uy va oy bo'yicha satrlar topilmadi." },
         "Total Units": { ru: "Всего объектов", uz: "Jami obyektlar" },
         "Total Subscribers": { ru: "Всего абонентов", uz: "Jami abonentlar" },
         "Total YTD Payments": { ru: "Платежи с начала года", uz: "Yil boshidan to'lovlar" },
@@ -1341,6 +1384,799 @@
         };
     };
 
+    const analyticsDashboardState = window.HydroFlowAnalyticsDashboardState || { building: "all", month: "" };
+    window.HydroFlowAnalyticsDashboardState = analyticsDashboardState;
+    const analyticsChartRegistry = window.HydroFlowAnalyticsCharts || {};
+    window.HydroFlowAnalyticsCharts = analyticsChartRegistry;
+    const buildAnalyticsDemoData = () => {
+        const now = new Date();
+        const demoBuildings = [
+            { id: "demo-house-a", backendId: "demo-house-a", name: "House Skyline A", units: 84, totalArea: 6840 },
+            { id: "demo-house-b", backendId: "demo-house-b", name: "House Emerald II", units: 72, totalArea: 5920 },
+            { id: "demo-house-c", backendId: "demo-house-c", name: "House Harbor Block A", units: 64, totalArea: 5180 },
+            { id: "demo-house-d", backendId: "demo-house-d", name: "House Riverside B", units: 58, totalArea: 4740 },
+        ];
+        const demoResidents = [
+            ["demo-res-1", "demo-house-a", 1840000, true],
+            ["demo-res-2", "demo-house-a", -1240000, true],
+            ["demo-res-3", "demo-house-a", 0, false],
+            ["demo-res-4", "demo-house-b", 920000, true],
+            ["demo-res-5", "demo-house-b", -3100000, false],
+            ["demo-res-6", "demo-house-b", 450000, true],
+            ["demo-res-7", "demo-house-c", -760000, true],
+            ["demo-res-8", "demo-house-c", 1280000, true],
+            ["demo-res-9", "demo-house-d", -2150000, false],
+            ["demo-res-10", "demo-house-d", 640000, true],
+            ["demo-res-11", "demo-house-d", 0, true],
+            ["demo-res-12", "demo-house-c", 530000, false],
+        ].map(([id, buildingId, balance, hasContract], index) => ({
+            id,
+            backendId: id,
+            ownerBackendId: id,
+            fullName: `Demo Resident ${index + 1}`,
+            buildingId,
+            buildingBackendId: buildingId,
+            balance,
+            hasContract,
+            status: Number(balance) < 0 ? "debtor" : "paid",
+        }));
+        const demoTransactions = [];
+        const channels = ["cash", "card", "click", "payme"];
+        const baseAmounts = [620000, 840000, 980000, 1260000, 1480000, 1720000];
+        for (let monthOffset = 5; monthOffset >= 0; monthOffset -= 1) {
+            const monthDate = new Date(now.getFullYear(), now.getMonth() - monthOffset, 12);
+            const monthFactor = 6 - monthOffset;
+            demoResidents.slice(0, 10).forEach((resident, index) => {
+                if ((index + monthFactor) % 4 === 0) return;
+                const building = demoBuildings.find((item) => item.id === resident.buildingId) || demoBuildings[0];
+                const amount = baseAmounts[(index + monthFactor) % baseAmounts.length] + (monthFactor * 85000);
+                const channel = channels[(index + monthFactor) % channels.length];
+                const createdAt = new Date(monthDate.getFullYear(), monthDate.getMonth(), Math.min(26, 5 + index), 10 + (index % 8), 20, 0);
+                demoTransactions.push({
+                    id: `demo-trx-${monthOffset}-${index}`,
+                    residentId: resident.id,
+                    ownerBackendId: resident.ownerBackendId,
+                    buildingId: building.id,
+                    buildingBackendId: building.backendId,
+                    amount,
+                    signedAmount: amount,
+                    status: "Success",
+                    method: channel,
+                    paymentType: channel,
+                    createdAt: createdAt.toISOString(),
+                    date: `${String(createdAt.getDate()).padStart(2, "0")}.${String(createdAt.getMonth() + 1).padStart(2, "0")}.${createdAt.getFullYear()}`,
+                });
+            });
+        }
+        demoTransactions.push(
+            {
+                id: "demo-debt-writeoff-1",
+                residentId: "demo-res-5",
+                ownerBackendId: "demo-res-5",
+                buildingId: "demo-house-b",
+                buildingBackendId: "demo-house-b",
+                amount: 540000,
+                signedAmount: -540000,
+                status: "Success",
+                method: "card",
+                paymentType: "card",
+                createdAt: new Date(now.getFullYear(), now.getMonth(), 18, 12, 10, 0).toISOString(),
+            },
+            {
+                id: "demo-debt-writeoff-2",
+                residentId: "demo-res-9",
+                ownerBackendId: "demo-res-9",
+                buildingId: "demo-house-d",
+                buildingBackendId: "demo-house-d",
+                amount: 320000,
+                signedAmount: -320000,
+                status: "Success",
+                method: "cash",
+                paymentType: "cash",
+                createdAt: new Date(now.getFullYear(), now.getMonth(), 21, 14, 40, 0).toISOString(),
+            }
+        );
+        return {
+            complexes: [{
+                id: "demo-complex",
+                backendId: "demo-complex",
+                name: "Mirabad Avenue Demo",
+                sector: "Mirabad Avenue",
+                buildingItems: demoBuildings,
+            }],
+            residents: demoResidents,
+            transactions: demoTransactions,
+        };
+    };
+
+    const syncAnalyticsDashboard = () => {
+        const dashboard = document.querySelector("[data-analytics-dashboard]");
+        if (!dashboard) return false;
+        const lang = storage.getItem("hydroflow-lang") || "en";
+        const t = (key) => translateValue(key, lang);
+        const localeMap = { ru: "ru-RU", en: "en-US" };
+        const uzMonthNames = [
+            "yanvar",
+            "fevral",
+            "mart",
+            "aprel",
+            "may",
+            "iyun",
+            "iyul",
+            "avgust",
+            "sentabr",
+            "oktabr",
+            "noyabr",
+            "dekabr",
+        ];
+        const chartTextColor = root.dataset.theme === "dark" ? "#A5B6C9" : "#6F7E93";
+        const chartGridColor = root.dataset.theme === "dark" ? "rgba(148, 166, 188, 0.12)" : "rgba(160, 176, 198, 0.18)";
+        const tooltipBg = root.dataset.theme === "dark" ? "#101722" : "#172030";
+        const tooltipText = "#F8FBFF";
+        const parsePortalDate = (value) => {
+            if (!value) return null;
+            const direct = new Date(value);
+            if (!Number.isNaN(direct.getTime())) return direct;
+            const match = String(value).trim().match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})/);
+            if (!match) return null;
+            const parsed = new Date(Number(match[3]), Number(match[2]) - 1, Number(match[1]));
+            return Number.isNaN(parsed.getTime()) ? null : parsed;
+        };
+        const monthKeyFromDate = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+        const monthLabel = (monthKey) => {
+            const [year, month] = String(monthKey).split("-").map(Number);
+            if (lang === "uz") {
+                return `${uzMonthNames[Math.max(0, Math.min(11, (month || 1) - 1))]} ${year}-y.`;
+            }
+            return new Intl.DateTimeFormat(localeMap[lang] || "en-US", { month: "long", year: "numeric" })
+                .format(new Date(year, (month || 1) - 1, 1));
+        };
+        const rollingMonths = (monthKey, count = 6) => {
+            const [year, month] = String(monthKey).split("-").map(Number);
+            const base = new Date(year, (month || 1) - 1, 1);
+            return Array.from({ length: count }, (_, index) => {
+                const current = new Date(base.getFullYear(), base.getMonth() - (count - index - 1), 1);
+                return monthKeyFromDate(current);
+            });
+        };
+        const normalizePaymentChannel = (transaction) => {
+            const paymentType = String(transaction?.paymentType || "").trim().toLowerCase();
+            const method = String(transaction?.method || "").trim().toLowerCase();
+            const description = String(transaction?.description || "").trim().toLowerCase();
+            if (paymentType === "payme" || method === "payme" || description.includes("[portal:payme-credit]")) return "Payme";
+            if (paymentType === "click" || method === "click" || description.includes("[portal:click-credit]")) return "Click";
+            if (paymentType === "cash" || method === "cash" || description.includes("[portal:cash-credit]")) return "Cash";
+            if (
+                method === "card"
+                || method === "terminal"
+                || description.includes("[portal:card-credit]")
+                || description.includes("[portal:terminal-credit]")
+            ) return "Card";
+            return "";
+        };
+        const sumBy = (items, mapper) => items.reduce((total, item) => total + Number(mapper(item) || 0), 0);
+        const formatSignedUzs = (value) => {
+            const numeric = Number(value || 0);
+            if (!numeric) return `0 UZS`;
+            const abs = formatBillingUzs(Math.abs(numeric));
+            return `${numeric > 0 ? "+" : "-"}${abs}`;
+        };
+        const setText = (selector, value) => {
+            const node = document.querySelector(selector);
+            if (node) node.textContent = value;
+        };
+        const setMeter = (key, value) => {
+            document.querySelectorAll(`[data-analytics-meter="${key}"]`).forEach((node) => {
+                node.style.width = `${Math.max(0, Math.min(100, Number(value) || 0))}%`;
+            });
+        };
+        const destroyChart = (key) => {
+            const chart = analyticsChartRegistry[key];
+            if (chart) {
+                chart.destroy();
+                delete analyticsChartRegistry[key];
+            }
+        };
+
+        const backendComplexes = Array.isArray(billingData.complexes) ? billingData.complexes : [];
+        const backendResidents = Array.isArray(billingData.residents) ? billingData.residents : [];
+        const backendTransactions = Array.isArray(billingData.transactions) ? billingData.transactions : [];
+        const shouldUseDemoAnalytics = backendComplexes.length === 0
+            || backendResidents.length < 4
+            || backendTransactions.length < 8;
+        const analyticsData = shouldUseDemoAnalytics
+            ? buildAnalyticsDemoData()
+            : { complexes: backendComplexes, residents: backendResidents, transactions: backendTransactions };
+        const complexes = analyticsData.complexes;
+        const buildings = complexes.flatMap((complex) => (complex.buildingItems || []).map((building) => ({
+            ...building,
+            complexName: complex.name,
+            complexId: complex.id,
+            complexBackendId: complex.backendId,
+            sector: complex.sector,
+            complexWaterM3: Number(complex.waterM3 || 0),
+            complexHeatingM3: Number(complex.heatingM3 || 0),
+        })));
+        const residents = analyticsData.residents;
+        const residentsById = new Map(residents.map((resident) => [String(resident.id || ""), resident]));
+        const residentsByOwner = new Map(residents.map((resident) => [String(resident.ownerBackendId || resident.backendId || ""), resident]));
+        const transactions = analyticsData.transactions
+            .map((transaction) => {
+                const dateObj = parsePortalDate(transaction.createdAt || transaction.date);
+                return {
+                    ...transaction,
+                    _dateObj: dateObj,
+                    _monthKey: dateObj ? monthKeyFromDate(dateObj) : "",
+                };
+            })
+            .filter((transaction) => transaction._dateObj);
+
+        const monthKeys = Array.from(new Set(transactions.map((transaction) => transaction._monthKey)))
+            .filter(Boolean)
+            .sort();
+        const fallbackMonth = monthKeys[monthKeys.length - 1] || monthKeyFromDate(new Date());
+        if (!monthKeys.includes(analyticsDashboardState.month)) analyticsDashboardState.month = fallbackMonth;
+        const buildingExists = analyticsDashboardState.building === "all"
+            || buildings.some((building) => String(building.id) === String(analyticsDashboardState.building));
+        if (!buildingExists) analyticsDashboardState.building = "all";
+
+        const buildingSelect = document.querySelector("[data-analytics-building-select]");
+        const monthSelect = document.querySelector("[data-analytics-month-select]");
+        if (buildingSelect) {
+            buildingSelect.innerHTML = [
+                `<option value="all">${escapeHtml(t("All houses"))}</option>`,
+                ...buildings.map((building) => `<option value="${escapeHtml(String(building.id))}">${escapeHtml(building.name || building.complexName || t("House"))}</option>`),
+            ].join("");
+            buildingSelect.value = analyticsDashboardState.building;
+            if (buildingSelect.dataset.analyticsReady !== "true") {
+                buildingSelect.dataset.analyticsReady = "true";
+                buildingSelect.addEventListener("change", (event) => {
+                    analyticsDashboardState.building = event.target.value || "all";
+                    syncAnalyticsDashboard();
+                });
+            }
+        }
+        if (monthSelect) {
+            monthSelect.innerHTML = monthKeys.length
+                ? monthKeys.slice().reverse().map((monthKey) => `<option value="${escapeHtml(monthKey)}">${escapeHtml(monthLabel(monthKey))}</option>`).join("")
+                : `<option value="${escapeHtml(fallbackMonth)}">${escapeHtml(monthLabel(fallbackMonth))}</option>`;
+            monthSelect.value = analyticsDashboardState.month;
+            if (monthSelect.dataset.analyticsReady !== "true") {
+                monthSelect.dataset.analyticsReady = "true";
+                monthSelect.addEventListener("change", (event) => {
+                    analyticsDashboardState.month = event.target.value || fallbackMonth;
+                    syncAnalyticsDashboard();
+                });
+            }
+        }
+
+        const selectedBuilding = analyticsDashboardState.building === "all"
+            ? null
+            : buildings.find((building) => String(building.id) === String(analyticsDashboardState.building)) || null;
+        const selectedBuildings = selectedBuilding ? [selectedBuilding] : buildings;
+        const selectedBuildingIds = new Set(selectedBuildings.map((building) => String(building.id)));
+        const selectedBuildingBackendIds = new Set(selectedBuildings.map((building) => String(building.backendId || "")));
+        const selectedResidents = residents.filter((resident) => {
+            if (!selectedBuilding) return true;
+            return selectedBuildingIds.has(String(resident.buildingId || ""))
+                || selectedBuildingBackendIds.has(String(resident.buildingBackendId || ""));
+        });
+        const selectedTransactionsAll = transactions.filter((transaction) => {
+            if (!selectedBuilding) return true;
+            if (selectedBuildingIds.has(String(transaction.buildingId || ""))) return true;
+            if (selectedBuildingBackendIds.has(String(transaction.buildingBackendId || ""))) return true;
+            const resident = residentsById.get(String(transaction.residentId || "")) || residentsByOwner.get(String(transaction.ownerBackendId || ""));
+            return resident
+                ? selectedBuildingIds.has(String(resident.buildingId || "")) || selectedBuildingBackendIds.has(String(resident.buildingBackendId || ""))
+                : false;
+        });
+        const selectedMonthTransactions = selectedTransactionsAll.filter((transaction) => transaction._monthKey === analyticsDashboardState.month);
+        const successfulMonthTransactions = selectedMonthTransactions.filter((transaction) => {
+            const signedAmount = Number(transaction.signedAmount ?? transaction.amount ?? 0);
+            return String(transaction.status || "").toLowerCase() === "success" && signedAmount > 0;
+        });
+
+        const debtTotal = sumBy(selectedResidents, (resident) => {
+            const balance = Number(resident.balance || 0);
+            return balance < 0 ? Math.abs(balance) : 0;
+        });
+        const overpaymentTotal = sumBy(selectedResidents, (resident) => {
+            const balance = Number(resident.balance || 0);
+            return balance > 0 ? balance : 0;
+        });
+        const monthPaid = sumBy(successfulMonthTransactions, (transaction) => transaction.amount);
+        const monthPaymentCount = successfulMonthTransactions.length;
+        const debtorsCount = selectedResidents.filter((resident) => Number(resident.balance || 0) < 0).length;
+        const withContract = selectedResidents.filter((resident) => Boolean(resident.hasContract)).length;
+        const averagePayment = monthPaymentCount ? monthPaid / monthPaymentCount : 0;
+        const averageBalance = selectedResidents.length ? sumBy(selectedResidents, (resident) => resident.balance) / selectedResidents.length : 0;
+        const channelPalette = {
+            Payme: "#3A77F1",
+            Click: "#17B26A",
+            Cash: "#F59E0B",
+            Card: "#6C63FF",
+        };
+        const channelDisplayOrder = ["Cash", "Card", "Click", "Payme"];
+        const channelTotals = { Payme: 0, Click: 0, Cash: 0, Card: 0 };
+        const channelResidents = { Payme: new Set(), Click: new Set(), Cash: new Set(), Card: new Set() };
+        successfulMonthTransactions.forEach((transaction) => {
+            const channel = normalizePaymentChannel(transaction);
+            if (!channel) return;
+            channelTotals[channel] += Number(transaction.amount || 0);
+            const resident = residentsById.get(String(transaction.residentId || "")) || residentsByOwner.get(String(transaction.ownerBackendId || ""));
+            const residentKey = String(resident?.backendId || resident?.ownerBackendId || transaction.ownerBackendId || transaction.residentId || "");
+            if (residentKey) channelResidents[channel].add(residentKey);
+        });
+        const balanceSplit = {
+            debt: selectedResidents.filter((resident) => Number(resident.balance || 0) < 0).length,
+            overpaid: selectedResidents.filter((resident) => Number(resident.balance || 0) > 0).length,
+            zero: selectedResidents.filter((resident) => Number(resident.balance || 0) === 0).length,
+        };
+        const [selectedYear, selectedMonth] = String(analyticsDashboardState.month).split("-").map(Number);
+        const selectedMonthEnd = new Date(Number(selectedYear || new Date().getFullYear()), Number(selectedMonth || 1), 0);
+        const lastSuccessfulPaymentByResident = new Map();
+        selectedTransactionsAll.forEach((transaction) => {
+            const signedAmount = Number(transaction.signedAmount ?? transaction.amount ?? 0);
+            if (String(transaction.status || "").toLowerCase() !== "success" || signedAmount <= 0) return;
+            const resident = residentsById.get(String(transaction.residentId || "")) || residentsByOwner.get(String(transaction.ownerBackendId || ""));
+            const keys = [
+                resident?.id,
+                resident?.backendId,
+                resident?.ownerBackendId,
+                transaction.residentId,
+                transaction.ownerBackendId,
+            ].map((value) => String(value || "")).filter(Boolean);
+            keys.forEach((key) => {
+                const previous = lastSuccessfulPaymentByResident.get(key);
+                if (!previous || transaction._dateObj > previous) lastSuccessfulPaymentByResident.set(key, transaction._dateObj);
+            });
+        });
+        const debtAgingBuckets = [
+            { key: "0-30", label: t("0-30 days"), count: 0 },
+            { key: "31-60", label: t("31-60 days"), count: 0 },
+            { key: "61-90", label: t("61-90 days"), count: 0 },
+            { key: "90+", label: t("90+ days"), count: 0 },
+        ];
+        selectedResidents.filter((resident) => Number(resident.balance || 0) < 0).forEach((resident) => {
+            const keys = [resident.id, resident.backendId, resident.ownerBackendId].map((value) => String(value || "")).filter(Boolean);
+            const lastPayment = keys.map((key) => lastSuccessfulPaymentByResident.get(key)).filter(Boolean).sort((a, b) => b - a)[0];
+            const daysWithoutPayment = lastPayment
+                ? Math.max(0, Math.floor((selectedMonthEnd - lastPayment) / 86400000))
+                : 91;
+            const bucket = daysWithoutPayment <= 30
+                ? debtAgingBuckets[0]
+                : daysWithoutPayment <= 60
+                    ? debtAgingBuckets[1]
+                    : daysWithoutPayment <= 90
+                        ? debtAgingBuckets[2]
+                        : debtAgingBuckets[3];
+            bucket.count += 1;
+        });
+        const housePressureRows = selectedBuildings.map((building) => {
+            const buildingResidents = residents.filter((resident) => String(resident.buildingId || "") === String(building.id) || String(resident.buildingBackendId || "") === String(building.backendId || ""));
+            const buildingTransactions = successfulMonthTransactions.filter((transaction) => {
+                if (String(transaction.buildingId || "") === String(building.id)) return true;
+                if (String(transaction.buildingBackendId || "") === String(building.backendId || "")) return true;
+                const resident = residentsById.get(String(transaction.residentId || "")) || residentsByOwner.get(String(transaction.ownerBackendId || ""));
+                return resident
+                    ? String(resident.buildingId || "") === String(building.id) || String(resident.buildingBackendId || "") === String(building.backendId || "")
+                    : false;
+            });
+            return {
+                name: building.name || building.complexName || t("House"),
+                debt: sumBy(buildingResidents, (resident) => {
+                    const balance = Number(resident.balance || 0);
+                    return balance < 0 ? Math.abs(balance) : 0;
+                }),
+                paid: sumBy(buildingTransactions, (transaction) => transaction.amount),
+            };
+        }).sort((left, right) => (right.debt + right.paid) - (left.debt + left.paid)).slice(0, 7);
+
+        setText('[data-analytics-value="paid-this-month"]', formatBillingUzs(monthPaid));
+        setText('[data-analytics-value="payments-count"]', moneyFormatter.format(monthPaymentCount));
+        setText('[data-analytics-value="total-debt"]', formatBillingUzs(debtTotal));
+        setText('[data-analytics-value="overpayment"]', formatBillingUzs(overpaymentTotal));
+        setText('[data-analytics-value="debtors-count"]', moneyFormatter.format(debtorsCount));
+        setText('[data-analytics-value="average-payment"]', formatBillingUzs(averagePayment));
+        setText('[data-analytics-value="with-contract"]', moneyFormatter.format(withContract));
+        setText('[data-analytics-value="average-balance"]', formatSignedUzs(averageBalance));
+        setText('[data-analytics-value="aged-debtors"]', `${moneyFormatter.format(debtorsCount)} ${t("Debtors").toLowerCase()}`);
+        setText('[data-analytics-value="balance-debt-count"]', moneyFormatter.format(balanceSplit.debt));
+        setText('[data-analytics-value="balance-overpaid-count"]', moneyFormatter.format(balanceSplit.overpaid));
+        setText('[data-analytics-value="balance-zero-count"]', moneyFormatter.format(balanceSplit.zero));
+
+        const rollingMonthKeys = rollingMonths(analyticsDashboardState.month, 6);
+        const monthlyPaid = rollingMonthKeys.map((monthKey) => sumBy(
+            selectedTransactionsAll.filter((transaction) => transaction._monthKey === monthKey && String(transaction.status || "").toLowerCase() === "success" && Number(transaction.signedAmount ?? transaction.amount ?? 0) > 0),
+            (transaction) => transaction.amount
+        ));
+        const monthlyOps = rollingMonthKeys.map((monthKey) => selectedTransactionsAll.filter((transaction) => transaction._monthKey === monthKey && String(transaction.status || "").toLowerCase() === "success" && Number(transaction.signedAmount ?? transaction.amount ?? 0) > 0).length);
+        const monthlySubtracted = rollingMonthKeys.map((monthKey) => sumBy(
+            selectedTransactionsAll.filter((transaction) => transaction._monthKey === monthKey && String(transaction.status || "").toLowerCase() === "success" && Number(transaction.signedAmount ?? transaction.amount ?? 0) < 0),
+            (transaction) => Math.abs(Number(transaction.signedAmount ?? transaction.amount ?? 0))
+        ));
+
+        if (window.Chart) {
+            destroyChart("analytics-payments");
+            const paymentsCanvas = document.getElementById("analytics-payments-chart");
+            if (paymentsCanvas) {
+                analyticsChartRegistry["analytics-payments"] = new window.Chart(paymentsCanvas, {
+                    type: "bar",
+                    data: {
+                        labels: rollingMonthKeys.map((monthKey) => monthLabel(monthKey)),
+                        datasets: [
+                            {
+                                label: t("Monthly collected"),
+                                data: monthlyPaid,
+                                backgroundColor: root.dataset.theme === "dark" ? "rgba(96, 165, 250, 0.72)" : "rgba(58, 119, 241, 0.82)",
+                                borderRadius: 14,
+                                maxBarThickness: 42,
+                                yAxisID: "y",
+                            },
+                            {
+                                label: t("Operations"),
+                                type: "line",
+                                data: monthlyOps,
+                                borderColor: root.dataset.theme === "dark" ? "rgba(182, 206, 255, 0.92)" : "rgba(121, 147, 184, 0.95)",
+                                backgroundColor: root.dataset.theme === "dark" ? "rgba(182, 206, 255, 0.25)" : "rgba(121, 147, 184, 0.18)",
+                                borderWidth: 2,
+                                pointRadius: 2,
+                                pointHoverRadius: 2,
+                                pointHitRadius: 12,
+                                tension: 0.34,
+                                yAxisID: "y1",
+                            },
+                        ],
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        animation: false,
+                        animations: false,
+                        resizeDelay: 0,
+                        interaction: {
+                            mode: "nearest",
+                            intersect: false,
+                        },
+                        transitions: {
+                            active: {
+                                animation: {
+                                    duration: 0,
+                                },
+                            },
+                            resize: {
+                                animation: {
+                                    duration: 0,
+                                },
+                            },
+                        },
+                        plugins: {
+                            legend: {
+                                display: false,
+                            },
+                            tooltip: {
+                                animation: false,
+                                backgroundColor: tooltipBg,
+                                titleColor: tooltipText,
+                                bodyColor: tooltipText,
+                                borderColor: root.dataset.theme === "dark" ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.12)",
+                                borderWidth: 1,
+                                callbacks: {
+                                    label: (context) => context.dataset.yAxisID === "y1"
+                                        ? `${context.dataset.label}: ${moneyFormatter.format(context.raw)}`
+                                        : `${context.dataset.label}: ${formatBillingUzs(context.raw)}`,
+                                },
+                            },
+                        },
+                        scales: {
+                            x: {
+                                ticks: { color: chartTextColor, font: { weight: "800" } },
+                                grid: { display: false },
+                            },
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    color: chartTextColor,
+                                    callback: (value) => formatCompactUzs(value),
+                                },
+                                grid: { color: chartGridColor },
+                            },
+                            y1: {
+                                beginAtZero: true,
+                                position: "right",
+                                ticks: { color: chartTextColor },
+                                grid: { display: false },
+                            },
+                        },
+                    },
+                });
+            }
+
+            destroyChart("analytics-channels");
+            const channelsCanvas = document.getElementById("analytics-channel-chart");
+            if (channelsCanvas) {
+                analyticsChartRegistry["analytics-channels"] = new window.Chart(channelsCanvas, {
+                    type: "doughnut",
+                    data: {
+                        labels: channelDisplayOrder.map((channel) => t(channel)),
+                        datasets: [{
+                            data: channelDisplayOrder.map((channel) => channelTotals[channel] || 0),
+                            backgroundColor: channelDisplayOrder.map((channel) => channelPalette[channel]),
+                            borderWidth: 0,
+                            hoverOffset: 4,
+                        }],
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        animation: false,
+                        animations: false,
+                        resizeDelay: 0,
+                        transitions: {
+                            active: {
+                                animation: {
+                                    duration: 0,
+                                },
+                            },
+                            resize: {
+                                animation: {
+                                    duration: 0,
+                                },
+                            },
+                        },
+                        cutout: "72%",
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                animation: false,
+                                backgroundColor: tooltipBg,
+                                titleColor: tooltipText,
+                                bodyColor: tooltipText,
+                                callbacks: {
+                                    label: (context) => `${context.label}: ${formatBillingUzs(context.raw)}`,
+                                },
+                            },
+                        },
+                    },
+                });
+            }
+
+            destroyChart("analytics-debt-aging");
+            const debtAgingCanvas = document.getElementById("analytics-debt-aging-chart");
+            if (debtAgingCanvas) {
+                analyticsChartRegistry["analytics-debt-aging"] = new window.Chart(debtAgingCanvas, {
+                    type: "bar",
+                    data: {
+                        labels: debtAgingBuckets.map((bucket) => bucket.label),
+                        datasets: [{
+                            label: t("Debtors"),
+                            data: debtAgingBuckets.map((bucket) => bucket.count),
+                            backgroundColor: ["rgba(34, 197, 94, 0.78)", "rgba(245, 158, 11, 0.78)", "rgba(249, 115, 22, 0.78)", "rgba(239, 68, 68, 0.78)"],
+                            borderRadius: 12,
+                            maxBarThickness: 42,
+                        }],
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        animation: false,
+                        animations: false,
+                        resizeDelay: 0,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                animation: false,
+                                backgroundColor: tooltipBg,
+                                titleColor: tooltipText,
+                                bodyColor: tooltipText,
+                            },
+                        },
+                        scales: {
+                            x: {
+                                ticks: { color: chartTextColor, font: { weight: "850" } },
+                                grid: { display: false },
+                            },
+                            y: {
+                                beginAtZero: true,
+                                ticks: { color: chartTextColor, precision: 0 },
+                                grid: { color: chartGridColor },
+                            },
+                        },
+                    },
+                });
+            }
+
+            destroyChart("analytics-balance-structure");
+            const balanceStructureCanvas = document.getElementById("analytics-balance-structure-chart");
+            if (balanceStructureCanvas) {
+                analyticsChartRegistry["analytics-balance-structure"] = new window.Chart(balanceStructureCanvas, {
+                    type: "doughnut",
+                    data: {
+                        labels: [t("Debt"), t("Zero balance"), t("Overpayment")],
+                        datasets: [{
+                            data: [balanceSplit.debt, balanceSplit.zero, balanceSplit.overpaid],
+                            backgroundColor: ["#EF4444", "#94A3B8", "#17B26A"],
+                            borderWidth: 0,
+                            hoverOffset: 3,
+                        }],
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        animation: false,
+                        animations: false,
+                        resizeDelay: 0,
+                        cutout: "68%",
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                animation: false,
+                                backgroundColor: tooltipBg,
+                                titleColor: tooltipText,
+                                bodyColor: tooltipText,
+                            },
+                        },
+                    },
+                });
+            }
+
+            destroyChart("analytics-house-pressure");
+            const housePressureCanvas = document.getElementById("analytics-house-pressure-chart");
+            if (housePressureCanvas) {
+                analyticsChartRegistry["analytics-house-pressure"] = new window.Chart(housePressureCanvas, {
+                    type: "bar",
+                    data: {
+                        labels: housePressureRows.map((row) => row.name),
+                        datasets: [
+                            {
+                                label: t("Debt"),
+                                data: housePressureRows.map((row) => row.debt),
+                                backgroundColor: "rgba(239, 68, 68, 0.72)",
+                                borderRadius: 10,
+                                maxBarThickness: 24,
+                            },
+                            {
+                                label: t("Collected"),
+                                data: housePressureRows.map((row) => row.paid),
+                                backgroundColor: "rgba(23, 178, 106, 0.72)",
+                                borderRadius: 10,
+                                maxBarThickness: 24,
+                            },
+                        ],
+                    },
+                    options: {
+                        indexAxis: "y",
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        animation: false,
+                        animations: false,
+                        resizeDelay: 0,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                animation: false,
+                                backgroundColor: tooltipBg,
+                                titleColor: tooltipText,
+                                bodyColor: tooltipText,
+                                callbacks: {
+                                    label: (context) => `${context.dataset.label}: ${formatBillingUzs(context.raw)}`,
+                                },
+                            },
+                        },
+                        scales: {
+                            x: {
+                                beginAtZero: true,
+                                stacked: false,
+                                ticks: {
+                                    color: chartTextColor,
+                                    callback: (value) => formatCompactUzs(value),
+                                },
+                                grid: { color: chartGridColor },
+                            },
+                            y: {
+                                ticks: { color: chartTextColor, font: { weight: "850" } },
+                                grid: { display: false },
+                            },
+                        },
+                    },
+                });
+            }
+
+            destroyChart("analytics-balance-movement");
+            const balanceMovementCanvas = document.getElementById("analytics-balance-movement-chart");
+            if (balanceMovementCanvas) {
+                analyticsChartRegistry["analytics-balance-movement"] = new window.Chart(balanceMovementCanvas, {
+                    type: "line",
+                    data: {
+                        labels: rollingMonthKeys.map((monthKey) => monthLabel(monthKey)),
+                        datasets: [
+                            {
+                                label: t("Collected"),
+                                data: monthlyPaid,
+                                borderColor: "#17B26A",
+                                backgroundColor: "rgba(23, 178, 106, 0.14)",
+                                fill: true,
+                                borderWidth: 2,
+                                pointRadius: 2,
+                                pointHoverRadius: 2,
+                                pointHitRadius: 12,
+                                tension: 0.38,
+                            },
+                            {
+                                label: t("Subtracted"),
+                                data: monthlySubtracted,
+                                borderColor: "#EF4444",
+                                backgroundColor: "rgba(239, 68, 68, 0.10)",
+                                fill: true,
+                                borderWidth: 2,
+                                pointRadius: 2,
+                                pointHoverRadius: 2,
+                                pointHitRadius: 12,
+                                tension: 0.38,
+                            },
+                        ],
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        animation: false,
+                        animations: false,
+                        resizeDelay: 0,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                animation: false,
+                                backgroundColor: tooltipBg,
+                                titleColor: tooltipText,
+                                bodyColor: tooltipText,
+                                callbacks: {
+                                    label: (context) => `${context.dataset.label}: ${formatBillingUzs(context.raw)}`,
+                                },
+                            },
+                        },
+                        scales: {
+                            x: {
+                                ticks: { color: chartTextColor, font: { weight: "800" } },
+                                grid: { display: false },
+                            },
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    color: chartTextColor,
+                                    callback: (value) => formatCompactUzs(value),
+                                },
+                                grid: { color: chartGridColor },
+                            },
+                        },
+                    },
+                });
+            }
+        }
+
+        const channelList = document.querySelector("[data-analytics-channel-list]");
+        if (channelList) {
+            channelList.innerHTML = channelDisplayOrder.map((channel) => {
+                const amount = channelTotals[channel] || 0;
+                const residentsCount = channelResidents[channel]?.size || 0;
+                return `
+                <div class="analytics-v2-channel-card">
+                    <span class="analytics-v2-channel-badge" style="background:${channelPalette[channel]}"></span>
+                    <div class="analytics-v2-channel-copy">
+                        <strong>${escapeHtml(t(channel))}</strong>
+                        <span>${escapeHtml(`${moneyFormatter.format(residentsCount)} ${t("Residents").toLowerCase()}`)}</span>
+                    </div>
+                    <div class="analytics-v2-channel-value">
+                        <strong>${escapeHtml(formatBillingUzs(amount))}</strong>
+                        <span>${escapeHtml(t("Selected month"))}</span>
+                    </div>
+                </div>
+            `;
+            }).join("");
+        }
+
+        return true;
+    };
+
     const syncDashboardStatCards = (stats = getSiteStats()) => {
         const paidPercent = stats.detailedResidents ? (stats.detailedPaidResidents / stats.detailedResidents) * 100 : 0;
         const debtorPercent = stats.detailedResidents ? (stats.detailedDebtors / stats.detailedResidents) * 100 : 0;
@@ -2320,6 +3156,7 @@
     };
 
     const syncSiteStatistics = () => {
+        if (syncAnalyticsDashboard()) return;
         const stats = getSiteStats();
         const t = (key) => translateValue(key, storage.getItem("hydroflow-lang") || "en");
         const labelVariants = (text) => [text, translations[text]?.ru, translations[text]?.uz].filter(Boolean).map((item) => item.toLowerCase());
@@ -6030,48 +6867,16 @@
         }
     };
 
-    const openOverlayById = (id) => {
-        const overlay = document.getElementById(id);
-        const backdrop = document.querySelector("[data-overlay-backdrop]");
-        if (!overlay) return;
-        playSound("modal-open");
-        document.querySelectorAll(".app-drawer.is-open").forEach((drawer) => {
-            drawer.classList.remove("is-open");
-            drawer.classList.add("translate-x-full");
-            drawer.style.transform = "";
-            drawer.style.display = "";
-            drawer.style.visibility = "";
-            drawer.style.pointerEvents = "";
-            drawer.setAttribute("aria-hidden", "true");
-        });
-        document.querySelectorAll(".app-modal.is-open").forEach((modal) => {
-            modal.classList.add("hidden");
-            modal.classList.remove("is-open", "flex");
-            modal.setAttribute("aria-hidden", "true");
-        });
-        backdrop?.classList.remove("hidden");
-        window.requestAnimationFrame(() => backdrop?.classList.add("is-visible"));
-        overlay.classList.remove("hidden");
-        overlay.classList.add("is-open");
-        if (overlay.classList.contains("app-drawer")) {
-            overlay.classList.remove("translate-x-full");
-            overlay.style.display = "block";
-            overlay.style.visibility = "visible";
-            overlay.style.pointerEvents = "auto";
-            overlay.style.transform = "translateX(0)";
-        } else {
-            overlay.classList.add("flex");
-        }
-        overlay.setAttribute("aria-hidden", "false");
-        loadOverlayServerList(id);
-    };
+    const OVERLAY_CLOSE_DURATION = 360;
 
-    const closeOverlayById = (id) => {
-        const overlay = document.getElementById(id);
-        const backdrop = document.querySelector("[data-overlay-backdrop]");
+    const finalizeOverlayClose = (overlay) => {
         if (!overlay) return;
+        if (overlay.__closeTimer) {
+            window.clearTimeout(overlay.__closeTimer);
+            overlay.__closeTimer = null;
+        }
         overlay.classList.add("hidden");
-        overlay.classList.remove("is-open", "flex");
+        overlay.classList.remove("is-open", "is-closing", "flex");
         if (overlay.classList.contains("app-drawer")) {
             overlay.classList.add("translate-x-full");
             overlay.style.transform = "";
@@ -6080,10 +6885,78 @@
             overlay.style.pointerEvents = "";
         }
         overlay.setAttribute("aria-hidden", "true");
-        if (!document.querySelector(".app-drawer.is-open, .app-modal.is-open")) {
-            backdrop?.classList.remove("is-visible");
-            window.setTimeout(() => backdrop?.classList.add("hidden"), 140);
+        delete overlay.dataset.closing;
+    };
+
+    const cancelOverlayClosingState = (overlay) => {
+        if (!overlay) return;
+        if (overlay.__closeTimer) {
+            window.clearTimeout(overlay.__closeTimer);
+            overlay.__closeTimer = null;
         }
+        overlay.classList.remove("is-closing");
+        delete overlay.dataset.closing;
+    };
+
+    const syncOverlayBackdropVisibility = () => {
+        const backdrop = document.querySelector("[data-overlay-backdrop]");
+        const hasVisibleOverlay = document.querySelector(".app-drawer.is-open, .app-modal.is-open");
+        if (hasVisibleOverlay) {
+            backdrop?.classList.remove("hidden");
+            window.requestAnimationFrame(() => backdrop?.classList.add("is-visible"));
+            return;
+        }
+        backdrop?.classList.remove("is-visible");
+        window.setTimeout(() => {
+            const stillVisible = document.querySelector(".app-drawer.is-open, .app-modal.is-open");
+            if (!stillVisible) backdrop?.classList.add("hidden");
+        }, 90);
+    };
+
+    const openOverlayById = (id) => {
+        const overlay = document.getElementById(id);
+        if (!overlay) return;
+        playSound("modal-open");
+        document.querySelectorAll(".app-drawer.is-open").forEach((drawer) => {
+            finalizeOverlayClose(drawer);
+        });
+        document.querySelectorAll(".app-modal.is-open").forEach((modal) => {
+            finalizeOverlayClose(modal);
+        });
+        cancelOverlayClosingState(overlay);
+        overlay.classList.remove("hidden");
+        if (overlay.classList.contains("app-drawer")) {
+            overlay.classList.remove("translate-x-full");
+            overlay.style.display = "block";
+            overlay.style.visibility = "visible";
+            overlay.style.pointerEvents = "auto";
+        } else {
+            overlay.classList.add("flex");
+        }
+        overlay.setAttribute("aria-hidden", "false");
+        window.requestAnimationFrame(() => {
+            overlay.classList.add("is-open");
+            if (overlay.classList.contains("app-drawer")) {
+                overlay.style.transform = "translateX(0)";
+            }
+            syncOverlayBackdropVisibility();
+        });
+        loadOverlayServerList(id);
+    };
+
+    const closeOverlayById = (id) => {
+        const overlay = document.getElementById(id);
+        if (!overlay) return;
+        if (overlay.dataset.closing === "true") return;
+        overlay.dataset.closing = "true";
+        overlay.classList.remove("is-open");
+        overlay.classList.add("is-closing");
+        overlay.setAttribute("aria-hidden", "true");
+        overlay.__closeTimer = window.setTimeout(() => {
+            finalizeOverlayClose(overlay);
+            syncOverlayBackdropVisibility();
+        }, OVERLAY_CLOSE_DURATION);
+        syncOverlayBackdropVisibility();
     };
 
     const closeAllOverlays = () => {

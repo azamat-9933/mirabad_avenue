@@ -1,227 +1,183 @@
-<!-- Main Wrapper -->
-<main class="pl-64 min-h-screen flex flex-col pt-16">
-<!-- Page Content -->
-<div class="p-8 space-y-8 flex-1">
-<div class="flex justify-between items-end">
-<div>
-<h2 class="text-3xl font-extrabold text-on-surface tracking-tight">Analytics Overview</h2>
-<p class="text-on-surface-variant mt-1">Real-time system performance and fiscal health</p>
-</div>
-<div class="analytics-header-actions">
-<button class="analytics-header-button analytics-period-button" type="button">
-<span class="material-symbols-outlined text-sm" data-icon="calendar_today">calendar_today</span>
-                        Last 3 Months
-                    </button>
-<button class="analytics-header-button analytics-filter-button" type="button">
-<span class="material-symbols-outlined text-sm" data-icon="filter_list">filter_list</span>
-                        Filter Views
-                    </button>
-</div>
-</div>
-<!-- KPI Grid -->
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 motion-stagger">
-<!-- Card 1 -->
-<div class="bg-surface-container-lowest p-6 rounded-lg shadow-sm border-b-4 border-primary">
-<div class="flex items-center justify-between mb-4">
-<h3 class="text-on-surface-variant text-sm font-medium uppercase tracking-widest">Total Units</h3>
-<div class="kpi-icon-chip kpi-icon-blue">
-<span class="material-symbols-outlined" data-icon="home">home</span>
-</div>
-</div>
-<p class="text-3xl font-black text-on-surface mt-1">5</p>
-</div>
-<!-- Card 2 -->
-<div class="bg-surface-container-lowest p-6 rounded-lg shadow-sm border-b-4 border-secondary">
-<div class="flex items-center justify-between mb-4">
-<h3 class="text-on-surface-variant text-sm font-medium uppercase tracking-widest">Total Subscribers</h3>
-<div class="kpi-icon-chip kpi-icon-green">
-<span class="material-symbols-outlined" data-icon="group">group</span>
-</div>
-</div>
-<p class="text-3xl font-black text-on-surface mt-1">472</p>
-</div>
-<!-- Card 3 -->
-<div class="bg-surface-container-lowest p-6 rounded-lg shadow-sm border-b-4 border-tertiary">
-<div class="flex items-center justify-between mb-4">
-<h3 class="text-on-surface-variant text-sm font-medium uppercase tracking-widest">Total YTD Payments</h3>
-<div class="kpi-icon-chip kpi-icon-amber">
-<span class="material-symbols-outlined" data-icon="payments">payments</span>
-</div>
-</div>
-<p class="text-2xl font-black text-on-surface mt-1">888,442,635 <span class="text-sm font-normal text-on-surface-variant">UZS</span></p>
-</div>
-<!-- Card 4 -->
-<div class="bg-surface-container-lowest p-6 rounded-lg shadow-sm border-b-4 border-error">
-<div class="flex items-center justify-between mb-4">
-<h3 class="text-on-surface-variant text-sm font-medium uppercase tracking-widest">Total Debt Burden</h3>
-<div class="kpi-icon-chip kpi-icon-red">
-<span class="material-symbols-outlined" data-icon="warning">warning</span>
-</div>
-</div>
-<p class="text-2xl font-black text-on-surface mt-1">845,002,060 <span class="text-sm font-normal text-on-surface-variant">UZS</span></p>
-</div>
-</div>
-<!-- Dashboard Analytics Layout -->
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-<!-- Main Chart Area -->
-<div class="lg:col-span-2 space-y-6">
-<div class="bg-surface-container-lowest p-8 rounded-xl shadow-sm h-full flex flex-col">
-<div class="flex justify-between items-center mb-10">
-<div>
-<h3 class="text-xl font-bold text-primary tracking-tight">Balance (Monthly Distribution)</h3>
-<p class="text-sm text-on-surface-variant">System-wide financial overview across core categories</p>
-</div>
-<div class="flex gap-4">
-<div class="flex items-center gap-1.5">
-<span class="w-3 h-3 rounded-full bg-[#0061FF]"></span>
-<span class="text-[10px] font-bold uppercase tracking-tighter text-on-surface-variant">Debit</span>
-</div>
-<div class="flex items-center gap-1.5">
-<span class="w-3 h-3 rounded-full bg-[#D1E4FF]"></span>
-<span class="text-[10px] font-bold uppercase tracking-tighter text-on-surface-variant">Credit</span>
-</div>
-<div class="flex items-center gap-1.5">
-<span class="w-3 h-3 rounded-full bg-[#FF6B00]"></span>
-<span class="text-[10px] font-bold uppercase tracking-tighter text-on-surface-variant">Accruals</span>
-</div>
-<div class="flex items-center gap-1.5">
-<span class="w-3 h-3 rounded-full bg-[#00C853]"></span>
-<span class="text-[10px] font-bold uppercase tracking-tighter text-on-surface-variant">Receipts</span>
-</div>
-</div>
-</div>
-<div class="chart-canvas-wrap">
-<canvas aria-label="Monthly balance distribution chart" id="analytics-balance-chart" role="img"></canvas>
-</div>
-<!-- High Fidelity Bar Chart -->
-<div class="hidden flex-1 flex-col relative min-h-[400px]">
-<!-- Grid Lines and Y-Axis -->
-<div class="absolute inset-0 flex flex-col justify-between text-[10px] text-slate-400 pb-10 pr-4">
-<div class="flex items-center gap-4"><span>1,000,000,000 UZS</span><div class="chart-grid-line relative"></div></div>
-<div class="flex items-center gap-4"><span>800,000,000 UZS</span><div class="chart-grid-line relative"></div></div>
-<div class="flex items-center gap-4"><span>600,000,000 UZS</span><div class="chart-grid-line relative"></div></div>
-<div class="flex items-center gap-4"><span>400,000,000 UZS</span><div class="chart-grid-line relative"></div></div>
-<div class="flex items-center gap-4"><span>200,000,000 UZS</span><div class="chart-grid-line relative"></div></div>
-<div class="flex items-center gap-4"><span>0 UZS</span><div class="chart-grid-line relative"></div></div>
-</div>
-<!-- Bars Container -->
-<div class="flex-1 flex items-end justify-around pl-28 pr-4 pb-10 z-10 relative">
-<!-- January Group -->
-<div class="flex flex-col items-center flex-1">
-<div class="flex items-end gap-1.5 h-64">
-<div class="w-8 bg-[#0061FF] rounded-t-sm transition-all hover:brightness-110 cursor-pointer" style="height: 90%;"></div>
-<div class="w-8 bg-[#D1E4FF] rounded-t-sm transition-all hover:brightness-110 cursor-pointer" style="height: 10%;"></div>
-<div class="w-8 bg-[#FF6B00] rounded-t-sm transition-all hover:brightness-110 cursor-pointer" style="height: 35%;"></div>
-<div class="w-8 bg-[#00C853] rounded-t-sm transition-all hover:brightness-110 cursor-pointer" style="height: 42%;"></div>
-</div>
-<span class="absolute bottom-2 text-sm font-bold text-on-surface">Jan</span>
-</div>
-<!-- February Group -->
-<div class="flex flex-col items-center flex-1">
-<div class="flex items-end gap-1.5 h-64">
-<div class="w-8 bg-[#0061FF] rounded-t-sm transition-all hover:brightness-110 cursor-pointer" style="height: 98%;"></div>
-<div class="w-8 bg-[#D1E4FF] rounded-t-sm transition-all hover:brightness-110 cursor-pointer" style="height: 12%;"></div>
-<div class="w-8 bg-[#FF6B00] rounded-t-sm transition-all hover:brightness-110 cursor-pointer" style="height: 38%;"></div>
-<div class="w-8 bg-[#00C853] rounded-t-sm transition-all hover:brightness-110 cursor-pointer" style="height: 28%;"></div>
-</div>
-<span class="absolute bottom-2 text-sm font-bold text-on-surface">Feb</span>
-</div>
-<!-- March Group -->
-<div class="flex flex-col items-center flex-1">
-<div class="flex items-end gap-1.5 h-64">
-<div class="w-8 bg-[#0061FF] rounded-t-sm transition-all hover:brightness-110 cursor-pointer" style="height: 85%;"></div>
-<div class="w-8 bg-[#D1E4FF] rounded-t-sm transition-all hover:brightness-110 cursor-pointer" style="height: 18%;"></div>
-<div class="w-8 bg-[#FF6B00] rounded-t-sm transition-all hover:brightness-110 cursor-pointer" style="height: 0%;"></div>
-<div class="w-8 bg-[#00C853] rounded-t-sm transition-all hover:brightness-110 cursor-pointer" style="height: 22%;"></div>
-</div>
-<span class="absolute bottom-2 text-sm font-bold text-on-surface">Mar</span>
-</div>
-</div>
-</div>
-</div>
-</div>
-<!-- Payment Systems Sidebar -->
-<div class="space-y-6">
-<div class="bg-surface-container-low p-6 rounded-xl border border-surface-container-high">
-<h3 class="text-lg font-bold text-on-surface mb-6 flex items-center gap-2">
-<span class="material-symbols-outlined text-primary" data-icon="account_balance_wallet">account_balance_wallet</span>
-                            Payment Systems
-                        </h3>
-<div class="space-y-4">
-<!-- Click -->
-<div class="bg-surface-container-lowest p-4 rounded-lg flex items-center justify-between border-l-4 border-blue-500 shadow-sm transition-transform hover:scale-[1.02]">
-<div>
-<p class="text-xs font-bold text-on-surface-variant uppercase tracking-tighter">Click</p>
-<p class="text-lg font-bold text-primary">189,377,581 <span class="text-xs font-medium">UZS</span></p>
-</div>
-<span class="material-symbols-outlined text-blue-500" data-icon="touch_app">touch_app</span>
-</div>
-<!-- Munis -->
-<div class="bg-surface-container-lowest p-4 rounded-lg flex items-center justify-between border-l-4 border-amber-500 shadow-sm transition-transform hover:scale-[1.02]">
-<div>
-<p class="text-xs font-bold text-on-surface-variant uppercase tracking-tighter">Munis</p>
-<p class="text-lg font-bold text-primary">41,133,991 <span class="text-xs font-medium">UZS</span></p>
-</div>
-<span class="material-symbols-outlined text-amber-500" data-icon="receipt">receipt</span>
-</div>
-<!-- Transfer -->
-<div class="bg-surface-container-lowest p-4 rounded-lg flex items-center justify-between border-l-4 border-slate-400 shadow-sm transition-transform hover:scale-[1.02]">
-<div>
-<p class="text-xs font-bold text-on-surface-variant uppercase tracking-tighter">Transfer</p>
-<p class="text-lg font-bold text-primary">56,313,766 <span class="text-xs font-medium">UZS</span></p>
-</div>
-<span class="material-symbols-outlined text-slate-400" data-icon="currency_exchange">currency_exchange</span>
-</div>
-<!-- Payme -->
-<div class="bg-surface-container-lowest p-4 rounded-lg flex items-center justify-between border-l-4 border-teal-500 shadow-sm transition-transform hover:scale-[1.02]">
-<div>
-<p class="text-xs font-bold text-on-surface-variant uppercase tracking-tighter">Payme</p>
-<p class="text-lg font-bold text-primary">374,228,911 <span class="text-xs font-medium">UZS</span></p>
-</div>
-<span class="material-symbols-outlined text-teal-500" data-icon="credit_card">credit_card</span>
-</div>
-<!-- Terminal -->
-<div class="bg-surface-container-lowest p-4 rounded-lg flex items-center justify-between border-l-4 border-indigo-600 shadow-sm transition-transform hover:scale-[1.02]">
-<div>
-<p class="text-xs font-bold text-on-surface-variant uppercase tracking-tighter">Terminal</p>
-<p class="text-lg font-bold text-primary">227,388,386 <span class="text-xs font-medium">UZS</span></p>
-</div>
-<span class="material-symbols-outlined text-indigo-600" data-icon="point_of_sale">point_of_sale</span>
-</div>
-</div>
-<div class="mt-8 pt-6 border-t border-surface-container-high text-center">
-<p class="text-xs font-medium text-on-surface-variant">Total Transaction Volume</p>
-<p class="text-xl font-black text-on-surface mt-1">888,442,635.25 UZS</p>
-</div>
-</div>
-<!-- Static Report Readiness Card -->
-<div class="ops-readiness-card">
-<div class="ops-readiness-header">
-<span class="material-symbols-outlined" data-icon="fact_check">fact_check</span>
-<div>
-<h4>Report Readiness</h4>
-<p>Pre-export checklist for finance handoff.</p>
-</div>
-</div>
-<div class="ops-readiness-list">
-<div><span class="material-symbols-outlined">check_circle</span><p>Confirm Payme and Click totals before CSV export.</p></div>
-<div><span class="material-symbols-outlined">check_circle</span><p>Review debt rows marked critical or pending.</p></div>
-<div><span class="material-symbols-outlined">check_circle</span><p>Attach audit note for any manual correction.</p></div>
-</div>
-<div class="ops-readiness-actions">
-<button data-action-key="open checklist" type="button">Open checklist</button>
-<button data-action-key="export" data-export-open data-export-source="Operations Readiness Checklist" type="button">Export template</button>
-</div>
-</div>
-</div>
-</div>
-</div>
-<footer class="mt-auto py-6 px-8 border-t border-surface-container-high flex justify-between items-center text-on-surface-variant text-xs">
-<p>© 2024 HydroFlow Enterprise v2.4.0 • Infrastructure Utility Protocol</p>
-<div class="flex gap-6">
-<a class="hover:text-primary" href="#">System Logs</a>
-<a class="hover:text-primary" href="#">API Documentation</a>
-<a class="hover:text-primary" href="#">Support</a>
-</div>
-</footer>
+<main class="pl-64 min-h-screen flex flex-col pt-16 analytics-v2-shell" data-analytics-dashboard-page>
+    <div class="analytics-v2-page p-8 flex-1">
+        <section class="analytics-v2-hero">
+            <div class="analytics-v2-hero__copy">
+                <p class="analytics-v2-eyebrow" data-i18n-key="Reports">Reports</p>
+                <h1 data-i18n-key="Analytics dashboard">Analytics dashboard</h1>
+                <p data-i18n-key="Live billing snapshot from backend residents, payments and current balances.">Live billing snapshot from backend residents, payments and current balances.</p>
+            </div>
+            <div class="analytics-v2-toolbar">
+                <label class="analytics-v2-select-wrap">
+                    <span data-i18n-key="House">House</span>
+                    <select data-analytics-building-select></select>
+                </label>
+                <label class="analytics-v2-select-wrap">
+                    <span data-i18n-key="Month">Month</span>
+                    <select data-analytics-month-select></select>
+                </label>
+            </div>
+        </section>
+
+        <section class="analytics-v2-kpi-grid" data-analytics-dashboard>
+            <article class="analytics-v2-kpi analytics-v2-kpi--blue">
+                <div class="analytics-v2-kpi__label-row">
+                    <span data-i18n-key="Paid this month">Paid this month</span>
+                    <span class="material-symbols-outlined analytics-v2-kpi__icon">payments</span>
+                </div>
+                <strong data-analytics-value="paid-this-month">0 UZS</strong>
+                <small data-analytics-support="paid-this-month" data-i18n-key="Real successful payments in selected month.">Real successful payments in selected month.</small>
+            </article>
+            <article class="analytics-v2-kpi analytics-v2-kpi--emerald">
+                <div class="analytics-v2-kpi__label-row">
+                    <span data-i18n-key="Payment operations">Payment operations</span>
+                    <span class="material-symbols-outlined analytics-v2-kpi__icon">receipt_long</span>
+                </div>
+                <strong data-analytics-value="payments-count">0</strong>
+                <small data-analytics-support="payments-count" data-i18n-key="Successful payment operations in selected month.">Successful payment operations in selected month.</small>
+            </article>
+            <article class="analytics-v2-kpi analytics-v2-kpi--red">
+                <div class="analytics-v2-kpi__label-row">
+                    <span data-i18n-key="Total debt">Total debt</span>
+                    <span class="material-symbols-outlined analytics-v2-kpi__icon">warning</span>
+                </div>
+                <strong data-analytics-value="total-debt">0 UZS</strong>
+                <small data-analytics-support="total-debt" data-i18n-key="Current negative balances across selected residents.">Current negative balances across selected residents.</small>
+            </article>
+            <article class="analytics-v2-kpi analytics-v2-kpi--green">
+                <div class="analytics-v2-kpi__label-row">
+                    <span data-i18n-key="Overpayment">Overpayment</span>
+                    <span class="material-symbols-outlined analytics-v2-kpi__icon">savings</span>
+                </div>
+                <strong data-analytics-value="overpayment">0 UZS</strong>
+                <small data-analytics-support="overpayment" data-i18n-key="Positive balances across selected residents.">Positive balances across selected residents.</small>
+            </article>
+            <article class="analytics-v2-mini">
+                <span data-i18n-key="Debtors">Debtors</span>
+                <strong data-analytics-value="debtors-count">0</strong>
+                <small data-i18n-key="Residents with negative balance right now.">Residents with negative balance right now.</small>
+            </article>
+            <article class="analytics-v2-mini">
+                <span data-i18n-key="Average payment">Average payment</span>
+                <strong data-analytics-value="average-payment">0 UZS</strong>
+                <small data-i18n-key="Average successful payment in current scope.">Average successful payment in current scope.</small>
+            </article>
+            <article class="analytics-v2-mini">
+                <span data-i18n-key="With contract">With contract</span>
+                <strong data-analytics-value="with-contract">0</strong>
+                <small data-i18n-key="Resident profiles with active contract flag.">Resident profiles with active contract flag.</small>
+            </article>
+            <article class="analytics-v2-mini">
+                <span data-i18n-key="Average balance">Average balance</span>
+                <strong data-analytics-value="average-balance">0 UZS</strong>
+                <small data-i18n-key="Current mean resident balance.">Current mean resident balance.</small>
+            </article>
+        </section>
+
+        <section class="analytics-v2-grid analytics-v2-grid--top">
+            <article class="analytics-v2-panel analytics-v2-panel--chart">
+                <header class="analytics-v2-panel__head">
+                    <div>
+                        <h2 data-i18n-key="Payment dynamics">Payment dynamics</h2>
+                        <p data-i18n-key="Six-month trend from backend payment records.">Six-month trend from backend payment records.</p>
+                    </div>
+                    <div class="analytics-v2-legend">
+                        <span><i class="analytics-v2-dot analytics-v2-dot--blue"></i><b data-i18n-key="Monthly collected">Monthly collected</b></span>
+                        <span><i class="analytics-v2-dot analytics-v2-dot--soft"></i><b data-i18n-key="Operations">Operations</b></span>
+                    </div>
+                </header>
+                <div class="chart-canvas-wrap analytics-v2-chart-wrap analytics-v2-chart-wrap--tall">
+                    <canvas id="analytics-payments-chart" aria-label="Payments dynamics chart" role="img"></canvas>
+                </div>
+            </article>
+
+            <article class="analytics-v2-panel analytics-v2-panel--side">
+                <header class="analytics-v2-panel__head analytics-v2-panel__head--stack">
+                    <div>
+                        <h2 data-i18n-key="Payment channels">Payment channels</h2>
+                        <p data-i18n-key="Distribution by real backend payment methods.">Distribution by real backend payment methods.</p>
+                    </div>
+                </header>
+                <div class="analytics-v2-channel-layout">
+                    <div class="chart-canvas-wrap analytics-v2-chart-wrap analytics-v2-chart-wrap--donut">
+                        <canvas id="analytics-channel-chart" aria-label="Payment channels chart" role="img"></canvas>
+                    </div>
+                    <div class="analytics-v2-channel-list" data-analytics-channel-list></div>
+                </div>
+            </article>
+        </section>
+
+        <section class="analytics-v2-grid analytics-v2-grid--deep">
+            <article class="analytics-v2-panel analytics-v2-panel--chart">
+                <header class="analytics-v2-panel__head">
+                    <div>
+                        <h2 data-i18n-key="Debt aging">Debt aging</h2>
+                        <p data-i18n-key="How long current debtors have gone without a successful payment.">How long current debtors have gone without a successful payment.</p>
+                    </div>
+                    <span class="analytics-v2-panel-pill" data-analytics-value="aged-debtors">0</span>
+                </header>
+                <div class="chart-canvas-wrap analytics-v2-chart-wrap analytics-v2-chart-wrap--compact">
+                    <canvas id="analytics-debt-aging-chart" aria-label="Debt aging chart" role="img"></canvas>
+                </div>
+            </article>
+
+            <article class="analytics-v2-panel analytics-v2-panel--chart">
+                <header class="analytics-v2-panel__head">
+                    <div>
+                        <h2 data-i18n-key="Balance structure">Balance structure</h2>
+                        <p data-i18n-key="Current resident balance split by debt, zero and overpayment.">Current resident balance split by debt, zero and overpayment.</p>
+                    </div>
+                </header>
+                <div class="analytics-v2-split-layout">
+                    <div class="chart-canvas-wrap analytics-v2-chart-wrap analytics-v2-chart-wrap--mini-donut">
+                        <canvas id="analytics-balance-structure-chart" aria-label="Balance structure chart" role="img"></canvas>
+                    </div>
+                    <div class="analytics-v2-split-list">
+                        <div class="analytics-v2-split-card analytics-v2-split-card--red">
+                            <span data-i18n-key="Debt">Debt</span>
+                            <strong data-analytics-value="balance-debt-count">0</strong>
+                        </div>
+                        <div class="analytics-v2-split-card analytics-v2-split-card--green">
+                            <span data-i18n-key="Overpayment">Overpayment</span>
+                            <strong data-analytics-value="balance-overpaid-count">0</strong>
+                        </div>
+                        <div class="analytics-v2-split-card">
+                            <span data-i18n-key="Zero balance">Zero balance</span>
+                            <strong data-analytics-value="balance-zero-count">0</strong>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </section>
+
+        <section class="analytics-v2-grid analytics-v2-grid--wide">
+            <article class="analytics-v2-panel analytics-v2-panel--chart">
+                <header class="analytics-v2-panel__head">
+                    <div>
+                        <h2 data-i18n-key="House debt pressure">House debt pressure</h2>
+                        <p data-i18n-key="Top houses by current outstanding balance from real residents.">Top houses by current outstanding balance from real residents.</p>
+                    </div>
+                    <div class="analytics-v2-legend">
+                        <span><i class="analytics-v2-dot analytics-v2-dot--red"></i><b data-i18n-key="Debt">Debt</b></span>
+                        <span><i class="analytics-v2-dot analytics-v2-dot--green"></i><b data-i18n-key="Collected">Collected</b></span>
+                    </div>
+                </header>
+                <div class="chart-canvas-wrap analytics-v2-chart-wrap analytics-v2-chart-wrap--pressure">
+                    <canvas id="analytics-house-pressure-chart" aria-label="House debt pressure chart" role="img"></canvas>
+                </div>
+            </article>
+
+            <article class="analytics-v2-panel analytics-v2-panel--chart">
+                <header class="analytics-v2-panel__head">
+                    <div>
+                        <h2 data-i18n-key="Monthly balance movement">Monthly balance movement</h2>
+                        <p data-i18n-key="Collected payments compared with current outstanding debt.">Collected payments compared with current outstanding debt.</p>
+                    </div>
+                </header>
+                <div class="chart-canvas-wrap analytics-v2-chart-wrap analytics-v2-chart-wrap--compact">
+                    <canvas id="analytics-balance-movement-chart" aria-label="Monthly balance movement chart" role="img"></canvas>
+                </div>
+            </article>
+        </section>
+
+    </div>
 </main>
