@@ -1816,6 +1816,56 @@ html.hf-admin-light #recent-actions-module .timeline > .fas::before {
     color: #ffffff !important;
 }
 
+/* Recent actions: remove Jazzmin/AdminLTE green square behind add icons. */
+#recent-actions-module .timeline > i,
+#recent-actions-module .timeline > .fa,
+#recent-actions-module .timeline > .fas,
+html.hf-admin-light #recent-actions-module .timeline > i,
+html.hf-admin-light #recent-actions-module .timeline > .fa,
+html.hf-admin-light #recent-actions-module .timeline > .fas,
+html.hf-admin-dark #recent-actions-module .timeline > i,
+html.hf-admin-dark #recent-actions-module .timeline > .fa,
+html.hf-admin-dark #recent-actions-module .timeline > .fas {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 18px !important;
+    height: 18px !important;
+    min-width: 18px !important;
+    border-radius: 6px !important;
+    background: rgba(239, 246, 255, 0.96) !important;
+    border: 1px solid rgba(80, 162, 255, 0.42) !important;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.10) !important;
+    color: #0284c7 !important;
+    font-size: 10px !important;
+    line-height: 1 !important;
+}
+
+html.hf-admin-dark #recent-actions-module .timeline > i,
+html.hf-admin-dark #recent-actions-module .timeline > .fa,
+html.hf-admin-dark #recent-actions-module .timeline > .fas,
+body.dark-mode #recent-actions-module .timeline > i,
+body.dark-mode #recent-actions-module .timeline > .fa,
+body.dark-mode #recent-actions-module .timeline > .fas {
+    background: rgba(15, 23, 42, 0.92) !important;
+    border-color: rgba(125, 211, 252, 0.35) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.24) !important;
+    color: #7dd3fc !important;
+}
+
+#recent-actions-module .timeline > i::before,
+#recent-actions-module .timeline > .fa::before,
+#recent-actions-module .timeline > .fas::before,
+html.hf-admin-light #recent-actions-module .timeline > i::before,
+html.hf-admin-light #recent-actions-module .timeline > .fa::before,
+html.hf-admin-light #recent-actions-module .timeline > .fas::before,
+html.hf-admin-dark #recent-actions-module .timeline > i::before,
+html.hf-admin-dark #recent-actions-module .timeline > .fa::before,
+html.hf-admin-dark #recent-actions-module .timeline > .fas::before {
+    background: transparent !important;
+    color: currentColor !important;
+}
+
 html.hf-admin-light #recent-actions-module .timeline-item {
     color: #1f2933 !important;
     background: #ffffff !important;
@@ -1844,6 +1894,60 @@ html.hf-admin-light #recent-actions-module .timeline-body li {
 html.hf-admin-light #recent-actions-module .time,
 html.hf-admin-light #recent-actions-module .time i {
     color: #64748b !important;
+}
+
+/* Recent actions: keep action icons clean, without the broken green square behind plus. */
+#recent-actions-module .timeline > i,
+#recent-actions-module .timeline > .fa,
+#recent-actions-module .timeline > .fas,
+html.hf-admin-light #recent-actions-module .timeline > i,
+html.hf-admin-light #recent-actions-module .timeline > .fa,
+html.hf-admin-light #recent-actions-module .timeline > .fas,
+html.hf-admin-dark #recent-actions-module .timeline > i,
+html.hf-admin-dark #recent-actions-module .timeline > .fa,
+html.hf-admin-dark #recent-actions-module .timeline > .fas {
+    width: 18px !important;
+    height: 18px !important;
+    min-width: 18px !important;
+    min-height: 18px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 999px !important;
+    background: rgba(248, 250, 252, 0.94) !important;
+    border: 1px solid rgba(34, 211, 238, 0.42) !important;
+    color: #0891b2 !important;
+    box-shadow: 0 4px 10px rgba(8, 145, 178, 0.14) !important;
+    line-height: 1 !important;
+}
+
+html.hf-admin-dark #recent-actions-module .timeline > i,
+html.hf-admin-dark #recent-actions-module .timeline > .fa,
+html.hf-admin-dark #recent-actions-module .timeline > .fas,
+html.dark #recent-actions-module .timeline > i,
+html.dark #recent-actions-module .timeline > .fa,
+html.dark #recent-actions-module .timeline > .fas,
+[data-theme="dark"] #recent-actions-module .timeline > i,
+[data-theme="dark"] #recent-actions-module .timeline > .fa,
+[data-theme="dark"] #recent-actions-module .timeline > .fas {
+    background: rgba(15, 23, 42, 0.92) !important;
+    border-color: rgba(34, 211, 238, 0.46) !important;
+    color: #67e8f9 !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.22) !important;
+}
+
+#recent-actions-module .timeline > i::before,
+#recent-actions-module .timeline > .fa::before,
+#recent-actions-module .timeline > .fas::before,
+html.hf-admin-light #recent-actions-module .timeline > i::before,
+html.hf-admin-light #recent-actions-module .timeline > .fa::before,
+html.hf-admin-light #recent-actions-module .timeline > .fas::before,
+html.hf-admin-dark #recent-actions-module .timeline > i::before,
+html.hf-admin-dark #recent-actions-module .timeline > .fa::before,
+html.hf-admin-dark #recent-actions-module .timeline > .fas::before {
+    color: inherit !important;
+    font-size: 10px !important;
+    line-height: 1 !important;
 }
 
 /* Current sidebar item fallback based on Django admin body classes. */
@@ -1914,4 +2018,91 @@ html.hf-admin-light #jazzy-sidebar .nav-sidebar .nav-link.active .nav-icon::befo
 html.hf-admin-light .main-sidebar .nav-sidebar .nav-link.active i::before,
 html.hf-admin-light .main-sidebar .nav-sidebar .nav-link.active .nav-icon::before {
     color: #075f3c !important;
+}
+
+/* Final Recent actions fix: Jazzmin renders icons as .timeline > div > i.bg-success. */
+#recent-actions-module .timeline > div > i,
+#recent-actions-module .timeline i.fa-plus-circle,
+#recent-actions-module .timeline i.bg-success,
+#recent-actions-module .timeline i[class*="bg-success"],
+html.hf-admin-light #recent-actions-module .timeline > div > i,
+html.hf-admin-light #recent-actions-module .timeline i.fa-plus-circle,
+html.hf-admin-light #recent-actions-module .timeline i.bg-success,
+html.hf-admin-light #recent-actions-module .timeline i[class*="bg-success"],
+html.hf-admin-dark #recent-actions-module .timeline > div > i,
+html.hf-admin-dark #recent-actions-module .timeline i.fa-plus-circle,
+html.hf-admin-dark #recent-actions-module .timeline i.bg-success,
+html.hf-admin-dark #recent-actions-module .timeline i[class*="bg-success"] {
+    display: inline-block !important;
+    width: 14px !important;
+    height: 14px !important;
+    min-width: 14px !important;
+    min-height: 14px !important;
+    margin-left: -8px !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    background-color: transparent !important;
+    border: 0 !important;
+    color: #8a96a3 !important;
+    box-shadow: none !important;
+    font-size: 14px !important;
+    line-height: 1 !important;
+}
+
+html.hf-admin-light #recent-actions-module .timeline > div > i,
+html.hf-admin-light #recent-actions-module .timeline i.fa-plus-circle,
+html.hf-admin-light #recent-actions-module .timeline i.bg-success,
+html.hf-admin-light #recent-actions-module .timeline i[class*="bg-success"] {
+    color: #8a96a3 !important;
+}
+
+html.hf-admin-dark #recent-actions-module .timeline > div > i,
+html.hf-admin-dark #recent-actions-module .timeline i.fa-plus-circle,
+html.hf-admin-dark #recent-actions-module .timeline i.bg-success,
+html.hf-admin-dark #recent-actions-module .timeline i[class*="bg-success"],
+html[data-bs-theme="dark"] #recent-actions-module .timeline > div > i,
+html[data-bs-theme="dark"] #recent-actions-module .timeline i.fa-plus-circle,
+html[data-bs-theme="dark"] #recent-actions-module .timeline i.bg-success,
+html[data-bs-theme="dark"] #recent-actions-module .timeline i[class*="bg-success"],
+body.dark-mode #recent-actions-module .timeline > div > i,
+body.dark-mode #recent-actions-module .timeline i.fa-plus-circle,
+body.dark-mode #recent-actions-module .timeline i.bg-success,
+body.dark-mode #recent-actions-module .timeline i[class*="bg-success"] {
+    background: transparent !important;
+    background-color: transparent !important;
+    border: 0 !important;
+    color: #67e8f9 !important;
+    box-shadow: none !important;
+}
+
+#recent-actions-module .timeline > div > i::before,
+#recent-actions-module .timeline i.fa-plus-circle::before,
+#recent-actions-module .timeline i.bg-success::before,
+#recent-actions-module .timeline i[class*="bg-success"]::before {
+    color: currentColor !important;
+    background: transparent !important;
+    font-size: 14px !important;
+    line-height: 1 !important;
+}
+
+/* Light theme must win even when Jazzmin keeps data-bs-theme="dark" on html. */
+html.hf-admin-light #recent-actions-module .timeline > div > i.fa-plus-circle,
+html.hf-admin-light #recent-actions-module .timeline > div > i.bg-success,
+html.hf-admin-light #recent-actions-module .timeline > div > i[class*="bg-success"],
+html.hf-admin-light #recent-actions-module .timeline i.fas.fa-plus-circle.bg-success,
+html.hf-admin-light #recent-actions-module .timeline i.fa-plus-circle.text-xs {
+    color: #8b949e !important;
+    background: transparent !important;
+    background-color: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+}
+
+html.hf-admin-light #recent-actions-module .timeline > div > i.fa-plus-circle::before,
+html.hf-admin-light #recent-actions-module .timeline > div > i.bg-success::before,
+html.hf-admin-light #recent-actions-module .timeline > div > i[class*="bg-success"]::before,
+html.hf-admin-light #recent-actions-module .timeline i.fas.fa-plus-circle.bg-success::before,
+html.hf-admin-light #recent-actions-module .timeline i.fa-plus-circle.text-xs::before {
+    color: #8b949e !important;
+    background: transparent !important;
 }

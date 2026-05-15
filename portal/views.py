@@ -9,6 +9,7 @@ from decimal import Decimal, InvalidOperation
 from datetime import datetime, time, timedelta
 
 from django.contrib import messages
+from django.contrib.auth import get_user_model
 from django.contrib.auth import logout
 from django.core.paginator import EmptyPage, Paginator
 from django.core.exceptions import ImproperlyConfigured, ValidationError
@@ -2402,7 +2403,19 @@ def api_deploy_maintenance(request):
     valid_statuses = {value for value, _label in MaintenanceTask.STATUS_CHOICES}
     if status not in valid_statuses:
         status = MaintenanceTask.STATUS_SCHEDULED
-    assigned_to = str(payload.get("assigned_to") or "Operations Team").strip() or "Operations Team"
+    assigned_to = str(payload.get("assigned_to") or "").strip()
+    User = get_user_model()
+    admin_usernames = list(
+        User.objects.filter(is_active=True)
+        .filter(Q(is_staff=True) | Q(is_superuser=True))
+        .exclude(username="")
+        .values_list("username", flat=True)
+        .order_by("username", "id")
+    )
+    if admin_usernames and assigned_to not in admin_usernames:
+        assigned_to = admin_usernames[0]
+    elif not assigned_to:
+        assigned_to = _actor(request)
     action_label = str(payload.get("action_label") or "Open checklist").strip() or "Open checklist"
     notes = str(payload.get("notes") or "").strip()
     if not notes:

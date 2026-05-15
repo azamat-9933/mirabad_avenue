@@ -4,7 +4,7 @@ from datetime import timedelta
 from decimal import Decimal
 
 from django.contrib.auth import get_user_model
-from django.db.models import Prefetch, Sum
+from django.db.models import Prefetch, Q, Sum
 from django.urls import reverse
 from django.utils import timezone
 
@@ -122,6 +122,22 @@ def _serialize_profile(user=None) -> dict:
         "isStaff": bool(selected_user and selected_user.is_staff),
         "isSuperuser": bool(selected_user and selected_user.is_superuser),
     }
+
+
+def _serialize_admin_users() -> list[dict]:
+    User = get_user_model()
+    users = User.objects.filter(is_active=True).filter(Q(is_staff=True) | Q(is_superuser=True)).order_by("username", "id")
+    return [
+        {
+            "id": user.id,
+            "username": user.get_username(),
+            "name": _display_name(user),
+            "isStaff": user.is_staff,
+            "isSuperuser": user.is_superuser,
+        }
+        for user in users
+        if user.get_username()
+    ]
 
 
 def _date_section(value) -> str:
@@ -759,6 +775,7 @@ def build_portal_data(user=None) -> dict:
         "source": "mirabad_avenue_backend",
         "generatedAt": timezone.localtime().isoformat(),
         "profile": _serialize_profile(user),
+        "adminUsers": _serialize_admin_users(),
         "complexes": complex_rows,
         "residents": resident_rows,
         "transactions": transaction_rows,

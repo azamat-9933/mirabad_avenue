@@ -147,6 +147,7 @@
         "Last payment": { ru: "Последний платёж", uz: "Oxirgi to'lov" },
         "health": { ru: "здоровье", uz: "holat" },
         "Operations Team": { ru: "Операционная команда", uz: "Operatsion jamoa" },
+        "No admins found": { ru: "Админы не найдены", uz: "Adminlar topilmadi" },
         "Unassigned": { ru: "Не назначен", uz: "Belgilanmagan" },
         "Activity timeline": { ru: "Лента активности", uz: "Faoliyat tarixi" },
         "Close critical alert": { ru: "Закрыть критичный alert", uz: "Jiddiy alertni yopish" },
@@ -320,7 +321,8 @@
         "Acknowledge": { ru: "Подтвердить", uz: "Tasdiqlash" },
         "Resolve": { ru: "Решить", uz: "Hal qilish" },
         "Admin": { ru: "Админ", uz: "Admin" },
-        "No live alerts in backend. Create one from this panel.": { ru: "В backend нет активных уведомлений. Создайте новое в этой панели.", uz: "Backendda faol ogohlantirishlar yo'q. Shu paneldan yangisini yarating." },
+        "No live alerts in backend. Create one from this panel.": { ru: "Нет активных уведомлений. Создайте новое в этой панели.", uz: "Faol ogohlantirishlar yo'q. Shu paneldan yangisini yarating." },
+        "No active alerts. Create one from this panel.": { ru: "Нет активных уведомлений. Создайте новое в этой панели.", uz: "Faol ogohlantirishlar yo'q. Shu paneldan yangisini yarating." },
         "Create a live alert and it will immediately sync across dashboard, notifications and system health.": { ru: "Создайте live alert, и он сразу синхронизируется в dashboard, notifications и system health.", uz: "Jonli ogohlantirish yarating va u darhol dashboard, notifications va system health bilan sinxronlanadi." },
         "Creating system alert in Django admin and database...": { ru: "Создаётся system alert в Django admin и базе данных...", uz: "Django admin va ma'lumotlar bazasida tizim ogohlantirishi yaratilmoqda..." },
         "System alert created and synced.": { ru: "System alert создан и синхронизирован.", uz: "Tizim ogohlantirishi yaratildi va sinxronlandi." },
@@ -7478,6 +7480,7 @@
         modal.dataset.alertsReady = "true";
         const complexInput = form.querySelector("input[name='complex_id']");
         const buildingSelect = form.querySelector("[data-system-alert-building]");
+        const assigneeSelect = form.querySelector("[data-system-alert-assignee]");
         const submit = form.querySelector("[data-system-alert-submit]");
         const status = form.querySelector("[data-system-alert-status]");
         const list = modal.querySelector("[data-system-alert-list]");
@@ -7528,6 +7531,27 @@
             const selected = buildings.find((building) => String(building.backendId) === String(buildingSelect.value));
             if (complexInput) complexInput.value = selected?.parentComplex?.backendId || "";
         };
+        const adminUsers = () => (Array.isArray(billingData.adminUsers) ? billingData.adminUsers : [])
+            .map((user) => ({
+                username: String(user.username || "").trim(),
+                name: String(user.name || user.username || "").trim(),
+            }))
+            .filter((user) => user.username);
+        const syncAssigneeOptions = () => {
+            if (!assigneeSelect) return;
+            const admins = adminUsers();
+            const previous = assigneeSelect.value;
+            assigneeSelect.innerHTML = admins.length
+                ? admins.map((user) => {
+                    const label = user.name && user.name !== user.username ? `${user.username} · ${user.name}` : user.username;
+                    return `<option value="${escapeHtml(user.username)}">${escapeHtml(label)}</option>`;
+                }).join("")
+                : `<option value="">${escapeHtml(t("No admins found"))}</option>`;
+            assigneeSelect.disabled = !admins.length;
+            assigneeSelect.value = previous && admins.some((user) => user.username === previous)
+                ? previous
+                : (admins[0]?.username || "");
+        };
         const chipClass = (severity) => severity === "critical" ? "is-critical" : severity === "warning" ? "is-warning" : "is-info";
         const renderAlerts = () => {
             if (!list) return;
@@ -7555,11 +7579,12 @@
                         <button data-system-alert-action="resolve" data-system-alert-id="${escapeHtml(alert.backendId || "")}" type="button">${escapeHtml(t("Resolve"))}</button>
                     </div>
                 </article>
-            `).join("") : `<div class="system-alert-empty">${escapeHtml(t("No live alerts in backend. Create one from this panel."))}</div>`;
+            `).join("") : `<div class="system-alert-empty">${escapeHtml(t("No active alerts. Create one from this panel."))}</div>`;
             syncModalStaticText();
         };
         const prepare = () => {
             syncBuildingOptions();
+            syncAssigneeOptions();
             renderAlerts();
         };
 
@@ -7569,10 +7594,12 @@
         });
         document.addEventListener("hydroflow:backend-refreshed", () => {
             syncBuildingOptions();
+            syncAssigneeOptions();
             renderAlerts();
         });
         document.addEventListener("hydroflow:language-changed", () => {
             syncBuildingOptions();
+            syncAssigneeOptions();
             renderAlerts();
             syncModalStaticText();
         });
@@ -7607,7 +7634,7 @@
                 setStatus("System alert created and synced.", "success");
                 form.reset();
                 syncBuildingOptions();
-                form.querySelector("input[name='assigned_to']").value = t("Operations Team");
+                syncAssigneeOptions();
                 toast("System alert created", "The alert is now stored in Django admin and visible in the portal.", "success");
             } catch (error) {
                 const recovered = await refreshPortalDataSnapshot().then(() => findRecoveredSystemAlert(requestPayload, previousAlertIds)).catch(() => null);
@@ -7616,7 +7643,7 @@
                     setStatus("System alert created and synced.", "success");
                     form.reset();
                     syncBuildingOptions();
-                    form.querySelector("input[name='assigned_to']").value = t("Operations Team");
+                    syncAssigneeOptions();
                     toast("System alert created", "The alert was saved in Django admin and recovered after refresh.", "success");
                     return;
                 }

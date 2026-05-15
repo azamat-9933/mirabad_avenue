@@ -17796,6 +17796,32 @@ html.dark .analytics-v2-table tbody td,
     box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.16);
 }
 
+.notification-tabs button[data-notification-filter="resolved"]:hover,
+.notification-tabs button[data-notification-filter="resolved"].is-active {
+    color: #51627a;
+}
+
+.notification-tabs button[data-notification-filter="resolved"]::before {
+    background: #94a3b8;
+    box-shadow: 0 0 0 4px rgba(148, 163, 184, 0.16);
+}
+
+.notification-tabs button::before,
+.notification-tabs button[data-notification-filter="warning"]::before,
+.notification-tabs button[data-notification-filter="resolved"]::before {
+    display: inline-block;
+    flex: 0 0 8px;
+    width: 8px;
+    min-width: 8px;
+    max-width: 8px;
+    height: 8px;
+    min-height: 8px;
+    max-height: 8px;
+    aspect-ratio: 1 / 1;
+    border-radius: 999px;
+    border: 0;
+}
+
 .notification-tab-count {
     display: inline-flex;
     align-items: center;
@@ -17876,6 +17902,19 @@ html.dark .notification-tabs button[data-notification-filter="info"].is-active,
 [data-theme="dark"] .notification-tabs button[data-notification-filter="info"]:hover,
 [data-theme="dark"] .notification-tabs button[data-notification-filter="info"].is-active {
     color: #8cc7ff;
+}
+
+html.dark .notification-tabs button[data-notification-filter="resolved"]:hover,
+html.dark .notification-tabs button[data-notification-filter="resolved"].is-active,
+[data-theme="dark"] .notification-tabs button[data-notification-filter="resolved"]:hover,
+[data-theme="dark"] .notification-tabs button[data-notification-filter="resolved"].is-active {
+    color: #cbd5e1;
+}
+
+html.dark .notification-tabs button[data-notification-filter="resolved"]::before,
+[data-theme="dark"] .notification-tabs button[data-notification-filter="resolved"]::before {
+    background: #94a3b8;
+    box-shadow: 0 0 0 4px rgba(148, 163, 184, 0.18);
 }
 
 html.dark .notification-tabs button[data-notification-filter="todo"],
