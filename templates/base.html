@@ -17,7 +17,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
 <link href="{% static 'img/favicon.svg' %}" rel="icon" type="image/svg+xml"/>
-<link href="{% static 'css/app.css' %}?v=notification-tab-dots-20260515-1" rel="stylesheet"/>
+<link href="{% static 'css/app.css' %}?v=building-summary-admin-20260517-1" rel="stylesheet"/>
 <script id="tailwind-config">
         tailwind.config = {
             darkMode: "class",
@@ -599,17 +599,17 @@
             </label>
             <button class="table-tool-button" data-table-action="export" type="button">
                 <span class="material-symbols-outlined" aria-hidden="true">upload</span>
-                <span>Export</span>
+                <span data-i18n-key="Export">Export</span>
             </button>
             <button class="table-tool-button" data-table-action="reminders" type="button">
                 <span class="material-symbols-outlined" aria-hidden="true">notifications</span>
-                <span>Send reminders</span>
+                <span data-i18n-key="Send reminders">Send reminders</span>
             </button>
             <button class="table-tool-button" data-table-action="status" type="button">
                 <span class="material-symbols-outlined" aria-hidden="true">sell</span>
-                <span>Assign status</span>
+                <span data-i18n-key="Assign status">Assign status</span>
             </button>
-            <span class="table-selected-counter" data-selected-count data-count="0">0 selected</span>
+            <span class="table-selected-counter" data-selected-count data-count="0" data-i18n-key="0 selected">0 selected</span>
         `;
         host.parentNode.insertBefore(tools, host);
 
@@ -618,8 +618,8 @@
         pagination.innerHTML = `
             <span class="text-xs font-bold text-on-surface-variant" data-page-label>Page 1</span>
             <div class="flex gap-2">
-                <button class="table-tool-button" data-prev-page type="button">Previous</button>
-                <button class="table-tool-button" data-next-page type="button">Next</button>
+                <button class="table-tool-button" data-prev-page data-i18n-key="Previous" type="button">Previous</button>
+                <button class="table-tool-button" data-next-page data-i18n-key="Next" type="button">Next</button>
             </div>
         `;
         host.parentNode.insertBefore(pagination, host.nextSibling);
@@ -757,6 +757,7 @@
                 return;
             }
             const label = header.querySelector(".table-filter-heading-text")?.textContent.trim() || header.textContent.trim();
+            const labelKey = header.dataset.i18nKey || label;
             header.classList.add("table-filter-heading");
             header.setAttribute("role", "button");
             header.setAttribute("tabindex", "0");
@@ -764,7 +765,7 @@
             header.innerHTML = `
                 <span class="table-filter-heading-inner">
                     <span class="material-symbols-outlined table-filter-heading-icon" aria-hidden="true">filter_list</span>
-                    <span class="table-filter-heading-text">${label}</span>
+                    <span class="table-filter-heading-text" data-i18n-key="${labelKey}">${labelKey}</span>
                     <span class="material-symbols-outlined table-sort-heading-icon" aria-hidden="true">unfold_more</span>
                 </span>
             `;

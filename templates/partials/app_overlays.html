@@ -7,9 +7,7 @@
 <div class="building-summary-shell">
 <div class="building-summary-hero">
 <div class="building-summary-copy">
-<span class="building-summary-kicker" data-i18n-key="House overview">House overview</span>
-<h2 class="building-summary-title" id="building-summary-title" data-building-summary-title>House</h2>
-<p class="building-summary-subtitle" data-building-summary-subtitle>Residential building summary from backend data.</p>
+<h2 class="building-summary-title" id="building-summary-title" data-i18n-key="House overview">House overview</h2>
 </div>
 <button aria-label="Close house summary" class="building-summary-close" data-close-overlay type="button">
 <span class="material-symbols-outlined">close</span>
@@ -18,8 +16,8 @@
 <div class="building-summary-body">
 <aside class="building-summary-identity">
 <span class="material-symbols-outlined" aria-hidden="true">apartment</span>
-<strong data-building-summary-title>House</strong>
-<small data-building-summary-subtitle>Residential building summary from backend data.</small>
+<strong data-building-summary-card-title>House</strong>
+<small data-building-summary-card-subtitle>Residential building summary from backend data.</small>
 </aside>
 <section class="building-summary-fields" role="list">
 <div class="building-summary-field is-occupancy" role="listitem">
@@ -227,28 +225,28 @@
 <div class="apartment-balance-card">
 <span>Current balance</span>
 <strong data-apartment-balance>0 UZS</strong>
-<small data-apartment-payment>Last payment 13.04.2026</small>
+<small data-apartment-payment data-i18n-key="Last payment">Last payment 13.04.2026</small>
 </div>
 </div>
 <div class="apartment-details-body">
 <section class="apartment-detail-section">
 <div class="section-title-row">
 <span class="material-symbols-outlined">home_work</span>
-<h3>Apartment data</h3>
+<h3 data-i18n-key="Apartment data">Apartment data</h3>
 </div>
 <div class="apartment-detail-grid">
-<div><span>Unit</span><strong data-apartment-unit>402-A</strong></div>
-<div><span>Rooms</span><strong data-apartment-rooms>3 rooms</strong></div>
-<div><span>Area</span><strong data-apartment-area>84 m²</strong></div>
-<div><span>Meter</span><strong data-apartment-meter>HF-402A</strong></div>
-<div><span>Monthly charge</span><strong data-apartment-charge>1,240,000 UZS</strong></div>
-<div><span>Occupancy</span><strong data-apartment-occupancy>Resident</strong></div>
+<div><span data-i18n-key="Unit">Unit</span><strong data-apartment-unit>402-A</strong></div>
+<div><span data-i18n-key="Rooms">Rooms</span><strong data-apartment-rooms>3 rooms</strong></div>
+<div><span data-i18n-key="Area">Area</span><strong data-apartment-area>84 m²</strong></div>
+<div><span data-i18n-key="Meter">Meter</span><strong data-apartment-meter>HF-402A</strong></div>
+<div><span data-i18n-key="Monthly charge">Monthly charge</span><strong data-apartment-charge>1,240,000 UZS</strong></div>
+<div><span data-i18n-key="Occupancy">Occupancy</span><strong data-apartment-occupancy>Resident</strong></div>
 </div>
 </section>
 <section class="apartment-detail-section">
 <div class="section-title-row">
 <span class="material-symbols-outlined">person</span>
-<h3>Owner profile</h3>
+<h3 data-i18n-key="Owner profile">Owner profile</h3>
 </div>
 <div class="owner-profile-card">
 <img alt="" data-apartment-owner-photo-secondary src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=160&q=80"/>
@@ -258,16 +256,16 @@
 </div>
 </div>
 <div class="apartment-detail-grid">
-<div><span>Phone</span><strong data-apartment-phone>+998 90 555 0123</strong></div>
-<div><span>Email</span><strong data-apartment-email>resident@hydroflow.local</strong></div>
-<div><span>Contract</span><strong data-apartment-contract>HF-9284</strong></div>
-<div><span>Last visit</span><strong data-apartment-visit>09.04.2026</strong></div>
+<div><span data-i18n-key="Phone">Phone</span><strong data-apartment-phone>+998 90 555 0123</strong></div>
+<div><span data-i18n-key="Email">Email</span><strong data-apartment-email>resident@hydroflow.local</strong></div>
+<div><span data-i18n-key="Contract">Contract</span><strong data-apartment-contract>HF-9284</strong></div>
+<div><span data-i18n-key="Last visit">Last visit</span><strong data-apartment-visit>09.04.2026</strong></div>
 </div>
 </section>
 <section class="apartment-detail-section">
 <div class="section-title-row">
 <span class="material-symbols-outlined">timeline</span>
-<h3>Recent activity</h3>
+<h3 data-i18n-key="Recent activity">Recent activity</h3>
 </div>
 <div class="apartment-activity-list">
 <div><time>13 Apr 2026</time><p data-apartment-activity-1>Payment received through Click.</p></div>
@@ -1298,7 +1296,7 @@ This form writes directly to Django admin and database.
 <div>
 <p class="text-[11px] font-black uppercase tracking-[0.18em] text-primary" data-i18n-key="Billing notice">Billing notice</p>
 <h2 class="text-[28px] font-black text-on-surface leading-none mt-2" id="billing-notice-title" data-i18n-key="Generate Billing Notice">Generate Billing Notice</h2>
-<p class="text-sm text-on-surface-variant mt-3" data-i18n-key="Select a debtor, review the generated notice and copy or send it later.">Select a debtor, review the generated notice and copy or send it later.</p>
+<p class="text-sm text-on-surface-variant mt-3" data-i18n-key="Select a resident, review the generated notice and copy or send it later.">Select a resident, review the generated notice and copy or send it later.</p>
 </div>
 <div class="flex items-center gap-3">
 <div class="inline-flex items-center gap-2 rounded-xl bg-surface-container p-1" data-billing-notice-language>
@@ -1316,14 +1314,14 @@ This form writes directly to Django admin and database.
 <div class="flex-1 max-w-xl">
 <label class="relative block">
 <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]">search</span>
-<input class="w-full h-12 rounded-2xl border border-outline-variant/20 bg-surface-container-lowest pl-12 pr-12 text-sm text-on-surface placeholder:text-on-surface-variant/70 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30" data-billing-notice-search placeholder="Search debtors..." type="search"/>
+<input class="w-full h-12 rounded-2xl border border-outline-variant/20 bg-surface-container-lowest pl-12 pr-12 text-sm text-on-surface placeholder:text-on-surface-variant/70 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30" data-billing-notice-search placeholder="Search residents..." type="search"/>
 <button aria-label="Clear debtor search" class="absolute right-3 top-1/2 -translate-y-1/2 hidden h-8 w-8 rounded-full bg-surface-container text-on-surface-variant transition-colors hover:text-on-surface" data-billing-notice-search-clear type="button">
 <span class="material-symbols-outlined text-[18px]">close</span>
 </button>
 </label>
 </div>
 <div class="inline-flex flex-wrap items-center gap-2 rounded-2xl border border-outline-variant/15 bg-surface-container-lowest px-3 py-2" data-billing-notice-filter-group>
-<span class="text-[11px] font-black uppercase tracking-[0.18em] text-on-surface-variant" data-i18n-key="Debt order">Debt order</span>
+<span class="text-[11px] font-black uppercase tracking-[0.18em] text-on-surface-variant" data-i18n-key="Balance order">Balance order</span>
 <button class="px-4 py-2 rounded-xl text-xs font-black tracking-[0.12em] uppercase bg-primary/10 text-primary inline-flex items-center gap-2" data-billing-notice-sort type="button">
 <span class="material-symbols-outlined text-[16px]">swap_vert</span>
 <span data-billing-notice-sort-label>Largest first</span>
@@ -1335,15 +1333,15 @@ This form writes directly to Django admin and database.
 <section class="rounded-[20px] border border-outline-variant/15 bg-surface-container-lowest overflow-hidden">
 <div class="px-5 py-4 border-b border-outline-variant/10 flex items-center justify-between gap-3">
 <div>
-<p class="text-[11px] font-black uppercase tracking-[0.18em] text-on-surface-variant" data-i18n-key="Debtors">Debtors</p>
+<p class="text-[11px] font-black uppercase tracking-[0.18em] text-on-surface-variant" data-i18n-key="Residents">Residents</p>
 <p class="text-sm text-on-surface-variant mt-1" data-i18n-key="Choose a resident to preview the billing notice.">Choose a resident to preview the billing notice.</p>
 </div>
 </div>
 <div class="max-h-[520px] overflow-y-auto divide-y divide-outline-variant/10" data-billing-notice-list></div>
 <div class="hidden px-5 py-10 text-center" data-billing-notice-empty>
 <span class="material-symbols-outlined text-[30px] text-on-surface-variant">person_search</span>
-<p class="mt-3 text-sm font-bold text-on-surface" data-i18n-key="No debtors found">No debtors found</p>
-<p class="mt-1 text-xs text-on-surface-variant" data-i18n-key="Adjust search or filters to find a resident with overdue balance.">Adjust search or filters to find a resident with overdue balance.</p>
+<p class="mt-3 text-sm font-bold text-on-surface" data-i18n-key="No residents found">No residents found</p>
+<p class="mt-1 text-xs text-on-surface-variant" data-i18n-key="Adjust search or filters to find a resident.">Adjust search or filters to find a resident.</p>
 </div>
 </section>
 <section class="rounded-[20px] border border-outline-variant/15 bg-white p-8 shadow-sm" data-billing-notice-sheet>

@@ -259,23 +259,23 @@
         "Manual subtraction synced with backend.": { ru: "Ручное списание синхронизировано с backend.", uz: "Qo'lda ayirma backend bilan sinxronlandi." },
         "Billing notice": { ru: "Платёжное уведомление", uz: "To'lov xabarnomasi" },
         "Preview of the resident debt notice generated from current backend data.": { ru: "Предпросмотр уведомления о долге, собранного из текущих backend-данных.", uz: "Joriy backend ma'lumotlaridan yig'ilgan qarzdorlik xabarnomasi ko'rinishi." },
-        "Select a debtor, review the generated notice and copy or send it later.": { ru: "Выберите должника, проверьте сгенерированное письмо и затем скопируйте или отправьте его позже.", uz: "Qarzdorni tanlang, yaratilgan xabarnomani ko'rib chiqing va keyin nusxa oling yoki keyinroq yuboring." },
+        "Select a resident, review the generated notice and copy or send it later.": { ru: "Выберите абонента, проверьте сгенерированное уведомление и затем скопируйте или отправьте его.", uz: "Abonentni tanlang, yaratilgan xabarnomani ko'rib chiqing va keyin nusxa oling yoki yuboring." },
         "Create Billing Period": { ru: "Создать расчётный период", uz: "Hisob davrini yaratish" },
         "Create a new расчетный период for heating and hot water calculations.": { ru: "Создать новый расчётный период для отопления и горячей воды.", uz: "Isitish va issiq suv hisoblari uchun yangi hisob davrini yarating." },
         "Open admin form": { ru: "Открыть admin форму", uz: "Admin formasini ochish" },
         "Back to Billing": { ru: "Назад к биллингу", uz: "Billing sahifasiga qaytish" },
-        "Search debtors...": { ru: "Поиск должников...", uz: "Qarzdorlarni qidirish..." },
+        "Search residents...": { ru: "Поиск абонентов...", uz: "Abonentlarni qidirish..." },
         "Debtors": { ru: "Должники", uz: "Qarzdorlar" },
         "Choose a resident to preview the billing notice.": { ru: "Выберите резидента, чтобы увидеть платёжное уведомление.", uz: "To'lov xabarnomasini ko'rish uchun rezidentni tanlang." },
-        "Debt order": { ru: "Порядок долга", uz: "Qarz tartibi" },
+        "Balance order": { ru: "Порядок баланса", uz: "Balans tartibi" },
         "Largest debt": { ru: "Макс. долг", uz: "Eng katta qarz" },
         "Smallest debt": { ru: "Мин. долг", uz: "Eng kichik qarz" },
         "Largest first": { ru: "Сначала большой", uz: "Katta qarz avval" },
         "Smallest first": { ru: "Сначала малый", uz: "Kichik qarz avval" },
         "shown": { ru: "показано", uz: "ko'rsatildi" },
-        "Loading debtors...": { ru: "Загрузка должников...", uz: "Qarzdorlar yuklanmoqda..." },
-        "No debtors found": { ru: "Должники не найдены", uz: "Qarzdorlar topilmadi" },
-        "Adjust search or filters to find a resident with overdue balance.": { ru: "Измените поиск или фильтр, чтобы найти резидента с просроченным балансом.", uz: "Muddati o'tgan balansli rezidentni topish uchun qidiruv yoki filtrni o'zgartiring." },
+        "Loading residents...": { ru: "Загрузка абонентов...", uz: "Abonentlar yuklanmoqda..." },
+        "No residents found": { ru: "Абоненты не найдены", uz: "Abonentlar topilmadi" },
+        "Adjust search or filters to find a resident.": { ru: "Измените поиск или фильтр, чтобы найти абонента.", uz: "Abonentni topish uchun qidiruv yoki filtrni o'zgartiring." },
         "Copy notice": { ru: "Скопировать уведомление", uz: "Xabarnomani nusxalash" },
         "Notify in Telegram": { ru: "Уведомить в Telegram", uz: "Telegramda xabardor qilish" },
         "Billing notice copied": { ru: "Уведомление скопировано", uz: "Xabarnoma nusxalandi" },
@@ -804,15 +804,19 @@
         "Actions": { ru: "Действия", uz: "Amal" },
         "House": { ru: "Дом", uz: "Uy" },
         "Apartment": { ru: "Квартира", uz: "Xonadon" },
+        "Apartment data": { ru: "Данные квартиры", uz: "Xonadon ma'lumotlari" },
         "Apartments": { ru: "Квартиры", uz: "Xonadonlar" },
         "Buildings": { ru: "Зданий", uz: "Binolar" },
         "Units": { ru: "Квартир", uz: "Xonadonlar" },
+        "Unit": { ru: "Номер", uz: "Xonadon" },
+        "Rooms": { ru: "Комнаты", uz: "Xonalar" },
         "floors": { ru: "этажей", uz: "qavat" },
         "entrance": { ru: "подъезд", uz: "kirish" },
         "rooms": { ru: "комн.", uz: "xona" },
         "2 rooms": { ru: "2 комн.", uz: "2 xona" },
         "3 rooms": { ru: "3 комн.", uz: "3 xona" },
         "4 rooms": { ru: "4 комн.", uz: "4 xona" },
+        "Meter": { ru: "Счётчик", uz: "Hisoblagich" },
         "Monthly charge": { ru: "Ежемесячно", uz: "Oylik to'lov" },
         "Paid": { ru: "Оплатил", uz: "To'langan" },
         "Overdue": { ru: "Просрочено", uz: "Kechikkan" },
@@ -822,6 +826,12 @@
         "Optimal": { ru: "Оптимально", uz: "Optimal" },
         "Owner away": { ru: "Владелец не дома", uz: "Egasi uyda emas" },
         "Resident": { ru: "Жилец", uz: "Yashovchi" },
+        "Occupancy": { ru: "Проживание", uz: "Yashash holati" },
+        "Owner profile": { ru: "Профиль владельца", uz: "Egasi profili" },
+        "Recent activity": { ru: "Последняя активность", uz: "So'nggi faollik" },
+        "Last visit": { ru: "Последний визит", uz: "So'nggi tashrif" },
+        "Transaction": { ru: "Транзакция", uz: "Tranzaksiya" },
+        "Resident balance updated": { ru: "Баланс абонента обновлён", uz: "Abonent balansi yangilandi" },
         "Phone copied": { ru: "Номер скопирован", uz: "Telefon nusxalandi" },
         "No matching buildings or residents": { ru: "Дома или жильцы не найдены", uz: "Uylar yoki yashovchilar topilmadi" },
         "System Logs": { ru: "Системные логи", uz: "Tizim loglari" },
@@ -6147,10 +6157,10 @@
             const subtitle = complex || "Residential building summary from backend data.";
             const periodsLink = modal.querySelector("[data-building-summary-periods]");
 
-            modal.querySelectorAll("[data-building-summary-title]").forEach((node) => {
+            modal.querySelectorAll("[data-building-summary-card-title]").forEach((node) => {
                 node.textContent = title;
             });
-            modal.querySelectorAll("[data-building-summary-subtitle]").forEach((node) => {
+            modal.querySelectorAll("[data-building-summary-card-subtitle]").forEach((node) => {
                 node.textContent = subtitle;
             });
             modal.querySelector("[data-building-summary-apartments]").textContent = moneyFormatter.format(apartments);
@@ -6235,20 +6245,20 @@
             row.tabIndex = 0;
             row.innerHTML = `
                 ${makeSelectCell(`Select ${buildingLabel}`)}
-                <td class="px-6 py-4 residential-building-summary-cell"
-                    data-building-summary-open
-                    data-building-name="${attr(buildingLabel)}"
-                    data-building-complex="${attr(realBuilding?.parentComplexName || district.complex)}"
-                    data-building-apartments="${attr(unitCount)}"
-                    data-building-area="${attr(totalArea)}"
-                    data-building-residents="${attr(residentCount)}"
-                    data-building-debtors="${attr(debtorCount)}"
-                    data-building-paid="${attr(paidCount)}"
-                    data-building-debt="${attr(debt)}"
-                    data-building-backend-id="${attr(realBuilding?.backendId || "")}">
+                <td class="px-6 py-4 residential-building-summary-cell">
                     <div class="residential-nested-name">
                         <span class="material-symbols-outlined residential-drill-chevron" aria-hidden="true">expand_more</span>
-                        <div class="residential-building-trigger">
+                        <div class="residential-building-trigger"
+                            data-building-summary-open
+                            data-building-name="${attr(buildingLabel)}"
+                            data-building-complex="${attr(realBuilding?.parentComplexName || district.complex)}"
+                            data-building-apartments="${attr(unitCount)}"
+                            data-building-area="${attr(totalArea)}"
+                            data-building-residents="${attr(residentCount)}"
+                            data-building-debtors="${attr(debtorCount)}"
+                            data-building-paid="${attr(paidCount)}"
+                            data-building-debt="${attr(debt)}"
+                            data-building-backend-id="${attr(realBuilding?.backendId || "")}">
                             <p>${escapeHtml(buildingLabel)}</p>
                             <small>${escapeHtml(realBuilding?.parentComplexName || district.complex)}</small>
                         </div>
@@ -6592,14 +6602,29 @@
             const lang = storage.getItem("hydroflow-lang") || "en";
             const yesLabel = lang === "ru" ? "Да" : lang === "uz" ? "Ha" : "Yes";
             const noLabel = lang === "ru" ? "Нет" : lang === "uz" ? "Yo'q" : "No";
-            const contractLabel = lang === "ru" ? "Договор" : lang === "uz" ? "Shartnoma" : "Contract";
-            const lastVisitLabel = lang === "ru" ? "Последний визит" : lang === "uz" ? "So'nggi tashrif" : "Last visit";
-            const lastPaymentLabel = lang === "ru" ? "Последний платёж" : lang === "uz" ? "Oxirgi to'lov" : "Last payment";
+            const contractLabel = t("Contract");
+            const lastVisitLabel = t("Last visit");
+            const lastPaymentLabel = t("Last payment");
+            const apartmentLabel = t("Apartment");
+            const houseLabel = t("House");
             const contractValue = rawContract.toLowerCase() === "true"
                 ? yesLabel
                 : rawContract.toLowerCase() === "false"
                 ? noLabel
                 : rawContract;
+            const localizeApartmentTitle = (value) => {
+                const text = String(value || "").trim();
+                if (!text) return "";
+                return text.replace(/^Apartment\b/i, apartmentLabel);
+            };
+            const localizeHouseText = (value) => String(value || "").replace(/\bHouse\b/gi, houseLabel);
+            const localizeActivityText = (value) => {
+                let text = String(value || "");
+                if (!text) return text;
+                text = text.replace(/^Resident balance updated\b/i, t("Resident balance updated"));
+                text = text.replace(/^Transaction\b/i, t("Transaction"));
+                return text;
+            };
             const realActivity = [
                 ...(Array.isArray(billingData.transactions) ? billingData.transactions : [])
                     .filter((item) => String(item.apartmentBackendId || "") === apartmentId || String(item.ownerBackendId || "") === ownerId)
@@ -6608,24 +6633,24 @@
                         const prefix = signed > 0 ? "+" : signed < 0 ? "-" : "";
                         return {
                             time: item.createdAt || item.date || "",
-                            text: `${item.method || item.type || "Transaction"}: ${prefix}${formatUzs(Math.abs(signed))} · ${item.status || "Success"}`,
+                            text: `${t(item.method || item.type || "Transaction")}: ${prefix}${formatUzs(Math.abs(signed))} · ${t(item.status || "Success")}`,
                         };
                     }),
                 ...(Array.isArray(billingData.auditEvents) ? billingData.auditEvents : [])
                     .filter((item) => item.ownerId === ownerSlug)
                     .map((item) => ({
                         time: item.time || "",
-                        text: [item.title, item.message].filter(Boolean).join(" · ") || item.label || "Audit event",
+                        text: localizeActivityText([item.title, item.message].filter(Boolean).join(" · ") || item.label || "Audit event"),
                     })),
                 ...(Array.isArray(billingData.notifications) ? billingData.notifications : [])
                     .filter((item) => item.ownerId === ownerSlug)
                     .map((item) => ({
                         time: item.eventAt || "",
-                        text: [item.title, item.message].filter(Boolean).join(" · ") || "Notification",
+                        text: localizeActivityText([item.title, item.message].filter(Boolean).join(" · ") || "Notification"),
                     })),
             ].sort((a, b) => transactionDateValue(b.time) - transactionDateValue(a.time)).slice(0, 3);
-            set("[data-apartment-title]", data.title);
-            set("[data-apartment-subtitle]", data.subtitle);
+            set("[data-apartment-title]", localizeApartmentTitle(data.title));
+            set("[data-apartment-subtitle]", localizeHouseText(data.subtitle));
             set("[data-apartment-owner]", data.owner);
             set("[data-apartment-owner-meta]", [
                 contractValue ? `${contractLabel}: ${contractValue}` : "",
@@ -7707,14 +7732,14 @@
                     <div class="flex-1 max-w-xl">
                         <label class="relative block">
                             <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]">search</span>
-                            <input class="w-full h-12 rounded-2xl border border-outline-variant/20 bg-surface-container-lowest pl-12 pr-12 text-sm text-on-surface placeholder:text-on-surface-variant/70 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30" data-billing-notice-search placeholder="Search debtors..." type="search"/>
+                            <input class="w-full h-12 rounded-2xl border border-outline-variant/20 bg-surface-container-lowest pl-12 pr-12 text-sm text-on-surface placeholder:text-on-surface-variant/70 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30" data-billing-notice-search placeholder="Search residents..." type="search"/>
                             <button aria-label="Clear debtor search" class="absolute right-3 top-1/2 -translate-y-1/2 hidden h-8 w-8 rounded-full bg-surface-container text-on-surface-variant transition-colors hover:text-on-surface" data-billing-notice-search-clear type="button">
                                 <span class="material-symbols-outlined text-[18px]">close</span>
                             </button>
                         </label>
                     </div>
                     <div class="inline-flex flex-wrap items-center gap-2 rounded-2xl border border-outline-variant/15 bg-surface-container-lowest px-3 py-2" data-billing-notice-filter-group>
-                        <span class="text-[11px] font-black uppercase tracking-[0.18em] text-on-surface-variant" data-i18n-key="Debt order">Debt order</span>
+                        <span class="text-[11px] font-black uppercase tracking-[0.18em] text-on-surface-variant" data-i18n-key="Balance order">Balance order</span>
                         <button class="px-4 py-2 rounded-xl text-xs font-black tracking-[0.12em] uppercase bg-primary/10 text-primary inline-flex items-center gap-2" data-billing-notice-sort type="button">
                             <span class="material-symbols-outlined text-[16px]">swap_vert</span>
                             <span data-billing-notice-sort-label>Largest first</span>
@@ -7855,13 +7880,24 @@
             assignNoticeResidents([]);
         };
 
-        const getDebtors = () => noticeResidents.filter((resident) => debtValue(resident) > 0);
+        const noticeResidentId = (resident) => String(resident?.ownerBackendId || resident?.backendId || resident?.id || "").replace(/[^\d]/g, "");
+
+        const getNoticeResidents = () => noticeResidents.filter((resident) => {
+            if (!resident) return false;
+            return Boolean(
+                noticeResidentId(resident)
+                || resident.name
+                || resident.apartment
+                || resident.phone
+                || resident.telegramUser
+            );
+        });
 
         const renderLoading = () => {
             if (!listNode) return;
             listNode.innerHTML = `
                 <div class="px-5 py-8 text-sm font-bold text-on-surface-variant">
-                    ${escapeHtml(t("Loading debtors..."))}
+                    ${escapeHtml(t("Loading residents..."))}
                 </div>
             `;
             emptyNode?.classList.add("hidden");
@@ -7886,19 +7922,25 @@
             }
         };
 
-        const sortDebtors = (rows) => {
+        const sortNoticeResidents = (rows) => {
             const sorted = rows.slice();
             if (activeSort === "asc") {
-                sorted.sort((a, b) => debtValue(a) - debtValue(b));
+                sorted.sort((a, b) => {
+                    const byDebt = debtValue(a) - debtValue(b);
+                    return byDebt || String(a.name || "").localeCompare(String(b.name || ""));
+                });
                 return sorted;
             }
-            sorted.sort((a, b) => debtValue(b) - debtValue(a));
+            sorted.sort((a, b) => {
+                const byDebt = debtValue(b) - debtValue(a);
+                return byDebt || String(a.name || "").localeCompare(String(b.name || ""));
+            });
             return sorted;
         };
 
-        const filteredDebtors = () => {
+        const filteredNoticeResidents = () => {
             const query = searchNoticeText(searchInput?.value || "");
-            const rows = getDebtors().filter((resident) => {
+            const rows = getNoticeResidents().filter((resident) => {
                 if (!query) return true;
                 return searchNoticeText(
                     resident.name,
@@ -7912,14 +7954,14 @@
             });
             if (activeResidentId) {
                 const selected = noticeResidents.find((resident) => (
-                    String(resident.ownerBackendId || resident.backendId || resident.id).replace(/[^\d]/g, "") === String(activeResidentId).replace(/[^\d]/g, "")
+                    noticeResidentId(resident) === String(activeResidentId).replace(/[^\d]/g, "")
                 ));
-                const selectedId = selected ? String(selected.ownerBackendId || selected.backendId || selected.id) : "";
-                if (selected && !rows.some((resident) => String(resident.ownerBackendId || resident.backendId || resident.id) === selectedId)) {
+                const selectedId = selected ? noticeResidentId(selected) : "";
+                if (selected && !rows.some((resident) => noticeResidentId(resident) === selectedId)) {
                     rows.unshift(selected);
                 }
             }
-            return sortDebtors(rows);
+            return sortNoticeResidents(rows);
         };
 
         const buildAccount = (resident) => `ACC-${resident?.ownerBackendId || resident?.backendId || resident?.id || "000"}`;
@@ -7955,10 +7997,10 @@
                 activeResidentId = "";
                 return null;
             }
-            const current = rows.find((resident) => String(resident.ownerBackendId || resident.backendId || resident.id) === String(activeResidentId));
+            const current = rows.find((resident) => noticeResidentId(resident) === String(activeResidentId).replace(/[^\d]/g, ""));
             if (current) return current;
             const next = rows[0];
-            activeResidentId = String(next.ownerBackendId || next.backendId || next.id);
+            activeResidentId = noticeResidentId(next);
             return next;
         };
 
@@ -7971,8 +8013,8 @@
             }
             emptyNode.classList.add("hidden");
             listNode.innerHTML = rows.map((resident) => {
-                const residentId = String(resident.ownerBackendId || resident.backendId || resident.id);
-                const isActive = residentId === String(activeResidentId);
+                const residentId = noticeResidentId(resident);
+                const isActive = residentId === String(activeResidentId).replace(/[^\d]/g, "");
                 return `
                     <button
                         class="w-full text-left px-5 py-4 transition-colors ${isActive ? "bg-primary/5" : "bg-white hover:bg-surface-container-low"}"
@@ -8056,7 +8098,7 @@
         };
 
         const render = () => {
-            const rows = filteredDebtors();
+            const rows = filteredNoticeResidents();
             const resident = resolveActiveResident(rows);
             renderList(rows);
             renderPreview(resident);
