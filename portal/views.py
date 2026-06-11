@@ -76,7 +76,7 @@ def safe_portal_data(request=None):
 
 @method_decorator(ensure_csrf_cookie, name="dispatch")
 class PortalPageView(TemplateView):
-    page_title = "HydroFlow Enterprise"
+    page_title = "Utility Manager"
     active_page = ""
 
     def get_context_data(self, **kwargs):
@@ -89,31 +89,31 @@ class PortalPageView(TemplateView):
 
 class DashboardView(PortalPageView):
     template_name = "portal/dashboard.html"
-    page_title = "HydroFlow Enterprise | Overview Dashboard"
+    page_title = "Utility Manager | Dashboard"
     active_page = "dashboard"
 
 
 class ResidentialView(PortalPageView):
     template_name = "portal/residential.html"
-    page_title = "Residential Units Management | HydroFlow Enterprise"
+    page_title = "Utility Manager | Properties"
     active_page = "residential"
 
 
 class SystemHealthView(PortalPageView):
     template_name = "portal/system_health.html"
-    page_title = "Infrastructure & System Health | HydroFlow"
+    page_title = "Utility Manager | System Health"
     active_page = "system_health"
 
 
 class BillingView(PortalPageView):
     template_name = "portal/billing.html"
-    page_title = "Residential Complex Management | HydroFlow"
+    page_title = "Utility Manager | Payments"
     active_page = "billing"
 
 
 class BillingPeriodCreateView(PortalPageView):
     template_name = "portal/billing_period_create.html"
-    page_title = "Create Billing Period | HydroFlow"
+    page_title = "Utility Manager | Billing Period"
     active_page = "billing_period"
 
     def _redirect_with_filters(self, request):
@@ -408,7 +408,7 @@ class BillingPeriodCreateView(PortalPageView):
 
 class AnalyticsView(PortalPageView):
     template_name = "portal/analytics.html"
-    page_title = "HydroFlow Enterprise | Analytics Overview"
+    page_title = "Utility Manager | Reports"
     active_page = "analytics"
 
 
@@ -753,6 +753,10 @@ def _serialize_alert_row(item, alert_backend_id=""):
 
 
 def _serialize_audit_row(event):
+    complex_obj = event.complex
+    building = event.building
+    apartment = event.apartment
+    owner = event.owner
     return {
         "id": f"audit-{event.id}",
         "backendId": event.id,
@@ -765,6 +769,10 @@ def _serialize_audit_row(event):
         "complexId": f"complex-{event.complex_id}" if event.complex_id else "",
         "buildingId": f"building-{event.building_id}" if event.building_id else "",
         "ownerId": f"owner-{event.owner_id}" if event.owner_id else "",
+        "complexName": complex_obj.title if complex_obj else "",
+        "buildingName": building.number if building else "",
+        "apartmentNumber": apartment.number if apartment else "",
+        "ownerName": owner.fio if owner else "",
         "adminUrl": f"/admin/portal/auditevent/{event.id}/change/",
     }
 
@@ -1265,6 +1273,69 @@ def api_list_audit(request):
         return _paginated_response([], page, page_size, 0, ordering_raw)
 
 
+@extend_schema(request=OpenApiTypes.OBJECT, responses=OpenApiTypes.OBJECT)
+@api_view(["POST"])
+def api_export_audit(request):
+    payload = _json_payload(request)
+    language = str(payload.get("language") or "en").strip().lower()
+    lang = language if language in {"en", "ru", "uz"} else "en"
+    headers = {
+        "en": ["Audit ID", "Date and time", "Event type", "Title", "Message", "Actor", "Sector", "House", "Apartment", "Resident", "Admin link"],
+        "ru": ["ID аудита", "Дата и время", "Тип события", "Заголовок", "Сообщение", "Исполнитель", "Сектор", "Дом", "Квартира", "Абонент", "Ссылка admin"],
+        "uz": ["Audit ID", "Sana va vaqt", "Hodisa turi", "Sarlavha", "Xabar", "Ijrochi", "Sektor", "Uy", "Xonadon", "Abonent", "Admin havolasi"],
+    }
+    title = {"en": "Audit Log", "ru": "Журнал аудита", "uz": "Audit jurnali"}[lang]
+    search = str(payload.get("search") or "").strip()
+    event_type = str(payload.get("type") or "").strip().lower()
+    district_value = str(payload.get("district") or "").strip()
+    period_value = str(payload.get("period") or "all").strip().lower()
+    period_from = str(payload.get("period_from") or "").strip()
+    period_to = str(payload.get("period_to") or "").strip()
+    try:
+        queryset = AuditEvent.objects.select_related("complex", "building", "apartment", "owner")
+        if search:
+            queryset = queryset.filter(
+                Q(title__icontains=search)
+                | Q(message__icontains=search)
+                | Q(actor__icontains=search)
+                | Q(owner__fio__icontains=search)
+                | Q(complex__title__icontains=search)
+                | Q(building__number__icontains=search)
+                | Q(apartment__number__icontains=search)
+            )
+        if event_type:
+            queryset = queryset.filter(event_type=event_type)
+        queryset = _apply_related_district_filter(queryset, district_value, "complex__title", "complex__address", "message")
+        queryset = _apply_period_filter(queryset, "created_at", period_value, period_from, period_to)
+        rows = []
+        for event in queryset.order_by("-created_at", "-id")[:1000]:
+            rows.append([
+                event.id,
+                _datetime(event.created_at),
+                event.get_event_type_display(),
+                event.title,
+                event.message,
+                event.actor,
+                event.complex.title if event.complex_id and event.complex else "",
+                event.building.number if event.building_id and event.building else "",
+                event.apartment.number if event.apartment_id and event.apartment else "",
+                event.owner.fio if event.owner_id and event.owner else "",
+                f"/admin/portal/auditevent/{event.id}/change/",
+            ])
+    except (DatabaseError, OperationalError):
+        rows = []
+    filename = f"audit-log-{timezone.localtime():%Y%m%d-%H%M}.xlsx"
+    download = _build_xlsx_download(filename, title, headers[lang], rows)
+    AuditEvent.objects.create(
+        event_type=AuditEvent.TYPE_EXPORT,
+        title="Audit log exported",
+        message=f"XLSX audit log exported with {len(rows)} rows.",
+        actor=_actor(request),
+        metadata={"source": "portal_audit_export", "format": "XLSX", "rowCount": len(rows), "language": lang},
+    )
+    return JsonResponse({"ok": True, "download": download, "portalData": safe_portal_data(request)})
+
+
 @extend_schema(responses=OpenApiTypes.OBJECT)
 @api_view(["GET"])
 def api_list_complexes(request):
@@ -1540,6 +1611,102 @@ def _build_simple_pdf(title, rows):
         f"trailer << /Size {len(offsets)} /Root 1 0 R >>\nstartxref\n{xref_start}\n%%EOF".encode("ascii")
     )
     return bytes(pdf)
+
+
+def _build_xlsx_download(filename, title, header, rows):
+    def xml_escape(value):
+        return (
+            str(value or "")
+            .replace("&", "&amp;")
+            .replace("<", "&lt;")
+            .replace(">", "&gt;")
+            .replace('"', "&quot;")
+        )
+
+    def excel_col(index):
+        result = ""
+        while index:
+            index, remainder = divmod(index - 1, 26)
+            result = chr(65 + remainder) + result
+        return result or "A"
+
+    worksheet_rows = []
+    for row_index, row in enumerate([header, *rows], start=1):
+        cells = []
+        for col_index, cell in enumerate(row, start=1):
+            ref = f"{excel_col(col_index)}{row_index}"
+            cells.append(f'<c r="{ref}" t="inlineStr"><is><t>{xml_escape(cell)}</t></is></c>')
+        worksheet_rows.append(f'<row r="{row_index}">{"".join(cells)}</row>')
+
+    sheet_name = xml_escape((title or "Export")[:31])
+    sheet_xml = (
+        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+        '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
+        f'<sheetData>{"".join(worksheet_rows)}</sheetData>'
+        "</worksheet>"
+    )
+    workbook_xml = (
+        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+        '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" '
+        'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'
+        f'<sheets><sheet name="{sheet_name}" sheetId="1" r:id="rId1"/></sheets>'
+        "</workbook>"
+    )
+    workbook_rels = (
+        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+        '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+        '<Relationship Id="rId1" '
+        'Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" '
+        'Target="worksheets/sheet1.xml"/>'
+        '<Relationship Id="rId2" '
+        'Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" '
+        'Target="styles.xml"/>'
+        "</Relationships>"
+    )
+    root_rels = (
+        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+        '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+        '<Relationship Id="rId1" '
+        'Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" '
+        'Target="xl/workbook.xml"/>'
+        "</Relationships>"
+    )
+    content_types = (
+        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+        '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
+        '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
+        '<Default Extension="xml" ContentType="application/xml"/>'
+        '<Override PartName="/xl/workbook.xml" '
+        'ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>'
+        '<Override PartName="/xl/worksheets/sheet1.xml" '
+        'ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>'
+        '<Override PartName="/xl/styles.xml" '
+        'ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>'
+        "</Types>"
+    )
+    styles_xml = (
+        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+        '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
+        '<fonts count="1"><font><sz val="11"/><name val="Calibri"/></font></fonts>'
+        '<fills count="1"><fill><patternFill patternType="none"/></fill></fills>'
+        '<borders count="1"><border/></borders>'
+        '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>'
+        '<cellXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/></cellXfs>'
+        "</styleSheet>"
+    )
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, "w", compression=zipfile.ZIP_DEFLATED) as workbook:
+        workbook.writestr("[Content_Types].xml", content_types)
+        workbook.writestr("_rels/.rels", root_rels)
+        workbook.writestr("xl/workbook.xml", workbook_xml)
+        workbook.writestr("xl/_rels/workbook.xml.rels", workbook_rels)
+        workbook.writestr("xl/worksheets/sheet1.xml", sheet_xml)
+        workbook.writestr("xl/styles.xml", styles_xml)
+    return _encode_download(
+        filename,
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        buffer.getvalue(),
+    )
 
 
 def _backend_id_set(value):

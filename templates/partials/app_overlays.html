@@ -285,8 +285,8 @@
 <div class="h-full flex flex-col">
 <div class="px-6 py-5 border-b border-surface-container flex items-center justify-between">
 <div>
-<h2 class="text-lg font-black text-on-surface" id="audit-title">Audit log</h2>
-<p class="text-xs text-on-surface-variant mt-1">Live backend activity trail synced from Django admin and portal actions.</p>
+<h2 class="text-lg font-black text-on-surface" id="audit-title" data-i18n-key="Audit log">Audit log</h2>
+<p class="text-xs text-on-surface-variant mt-1" data-i18n-key="Live backend activity trail synced from Django admin and portal actions.">Live backend activity trail synced from Django admin and portal actions.</p>
 </div>
 <button aria-label="Close audit log" class="p-2 rounded-lg hover:bg-surface-container transition-colors" data-close-overlay type="button">
 <span class="material-symbols-outlined">close</span>
@@ -294,39 +294,32 @@
 </div>
 <div class="audit-drawer-body p-6 overflow-y-auto">
 <div class="audit-summary-grid">
-<div><span>Total events</span><strong data-audit-total>4</strong></div>
-<div><span>Visible</span><strong data-audit-visible>4</strong></div>
-<div><span>Mode</span><strong>Backend</strong></div>
-<div><span>Backend</span><strong>Connected</strong></div>
+<div><span data-i18n-key="Total events">Total events</span><strong data-audit-total>0</strong></div>
+<div><span data-i18n-key="Visible">Visible</span><strong data-audit-visible>0</strong></div>
 </div>
 <div class="audit-toolbox">
 <label class="audit-search-shell">
 <span class="material-symbols-outlined" aria-hidden="true">search</span>
-<input aria-label="Search audit log" data-audit-search placeholder="Search audit events..." type="search"/>
+<input aria-label="Search audit log" data-audit-search data-i18n-placeholder="Search audit events..." placeholder="Search audit events..." type="search"/>
 </label>
 <div class="audit-filter-row" data-audit-filters>
-<button class="is-active" data-audit-filter="all" type="button">All</button>
-<button data-audit-filter="export" type="button">Export</button>
-<button data-audit-filter="reminder" type="button">Reminder</button>
-<button data-audit-filter="alert" type="button">Alert</button>
-<button data-audit-filter="balance" type="button">Balance</button>
+<button class="is-active" data-audit-filter="all" data-i18n-key="All" type="button">All</button>
+<button data-audit-filter="export" data-i18n-key="Export" type="button">Export</button>
+<button data-audit-filter="reminder" data-i18n-key="Reminder" type="button">Reminder</button>
+<button data-audit-filter="alert" data-i18n-key="Alert" type="button">Alert</button>
+<button data-audit-filter="balance" data-i18n-key="Balance" type="button">Balance</button>
 </div>
 <div class="audit-action-row">
-<button data-audit-action="add-note" type="button"><span class="material-symbols-outlined">note_add</span><span>Add audit note</span></button>
-<button data-audit-action="copy-latest" type="button"><span class="material-symbols-outlined">content_copy</span><span>Copy latest</span></button>
-<button data-audit-action="export" type="button"><span class="material-symbols-outlined">download</span><span>Export log</span></button>
+<button data-audit-action="add-note" type="button"><span class="material-symbols-outlined">note_add</span><span data-i18n-key="Add audit note">Add audit note</span></button>
+<button data-audit-action="copy-latest" type="button"><span class="material-symbols-outlined">content_copy</span><span data-i18n-key="Copy latest">Copy latest</span></button>
+<button data-audit-action="export" type="button"><span class="material-symbols-outlined">download</span><span data-i18n-key="Export log">Export log</span></button>
 </div>
 </div>
-<div class="audit-timeline" data-audit-timeline>
-<div class="audit-event" data-audit-event data-type="export"><span class="audit-event-icon material-symbols-outlined">ios_share</span><div><time>13 Apr 2026, 10:12</time><p>Admin User exported billing report.</p><span>Export</span></div></div>
-<div class="audit-event" data-audit-event data-type="reminder"><span class="audit-event-icon material-symbols-outlined">notifications_active</span><div><time>13 Apr 2026, 09:40</time><p>Debt reminder sent to Harbor View Heights.</p><span>Reminder</span></div></div>
-<div class="audit-event" data-audit-event data-type="alert"><span class="audit-event-icon material-symbols-outlined">warning</span><div><time>12 Apr 2026, 18:05</time><p>Pressure alert closed after technician confirmation.</p><span>Alert</span></div></div>
-<div class="audit-event" data-audit-event data-type="balance"><span class="audit-event-icon material-symbols-outlined">account_balance_wallet</span><div><time>12 Apr 2026, 15:21</time><p>Balance adjustment queued for Residential Unit 402B.</p><span>Balance</span></div></div>
-</div>
+<div class="audit-timeline" data-audit-timeline></div>
 <div class="audit-empty-state hidden" data-audit-empty>
 <span class="material-symbols-outlined">manage_search</span>
-<strong>No audit events found</strong>
-<small>Clear search or switch the event type.</small>
+<strong data-i18n-key="No audit events found">No audit events found</strong>
+<small data-i18n-key="Clear search or switch the event type.">Clear search or switch the event type.</small>
 </div>
 </div>
 </div>
@@ -480,7 +473,6 @@
 </button>
 <div class="profile-avatar-xl" data-profile-field="initials">AU</div>
 <div>
-<p class="profile-kicker" data-i18n-key="Workspace profile">Workspace profile</p>
 <h2 id="profile-title" data-profile-field="name">Admin User</h2>
 <span class="profile-role-pill" data-profile-field="role">Administrator</span>
 </div>

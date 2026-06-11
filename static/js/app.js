@@ -25,6 +25,32 @@
         "Preferences": { ru: "Предпочтения", uz: "Afzalliklar" },
         "Organization settings": { ru: "Настройки организации", uz: "Tashkilot sozlamalari" },
         "Audit log": { ru: "Журнал аудита", uz: "Audit jurnali" },
+        "Live backend activity trail synced from Django admin and portal actions.": { ru: "Живая лента действий из Django admin и портала.", uz: "Django admin va portaldagi amallar jonli jurnali." },
+        "Total events": { ru: "Всего событий", uz: "Jami hodisalar" },
+        "Visible": { ru: "Показано", uz: "Ko'rinmoqda" },
+        "Search audit events...": { ru: "Поиск событий аудита...", uz: "Audit hodisalarini qidirish..." },
+        "Add audit note": { ru: "Добавить заметку", uz: "Izoh qo'shish" },
+        "Copy latest": { ru: "Копировать последнее", uz: "Oxirgisini nusxalash" },
+        "Export log": { ru: "Экспорт журнала", uz: "Jurnal eksporti" },
+        "No audit events found": { ru: "События аудита не найдены", uz: "Audit hodisalari topilmadi" },
+        "Clear search or switch the event type.": { ru: "Очистите поиск или смените тип события.", uz: "Qidiruvni tozalang yoki hodisa turini almashtiring." },
+        "Audit note added": { ru: "Заметка аудита добавлена", uz: "Audit izohi qo'shildi" },
+        "Latest audit event copied": { ru: "Последнее событие скопировано", uz: "Oxirgi hodisa nusxalandi" },
+        "Latest audit event ready": { ru: "Последнее событие готово", uz: "Oxirgi hodisa tayyor" },
+        "Audit log exported": { ru: "Журнал аудита экспортирован", uz: "Audit jurnali eksport qilindi" },
+        "Audit export failed": { ru: "Экспорт аудита не выполнен", uz: "Audit eksporti bajarilmadi" },
+        "No audit rows to export": { ru: "Нет строк аудита для экспорта", uz: "Eksport uchun audit qatorlari yo'q" },
+        "Audit ID": { ru: "ID аудита", uz: "Audit ID" },
+        "Date and time": { ru: "Дата и время", uz: "Sana va vaqt" },
+        "Event type": { ru: "Тип события", uz: "Hodisa turi" },
+        "Title": { ru: "Заголовок", uz: "Sarlavha" },
+        "Message": { ru: "Сообщение", uz: "Xabar" },
+        "Actor": { ru: "Исполнитель", uz: "Ijrochi" },
+        "Sector": { ru: "Сектор", uz: "Sektor" },
+        "House": { ru: "Дом", uz: "Uy" },
+        "Apartment": { ru: "Квартира", uz: "Xonadon" },
+        "Resident": { ru: "Абонент", uz: "Abonent" },
+        "Admin link": { ru: "Ссылка admin", uz: "Admin havolasi" },
         "Sign out": { ru: "Выйти", uz: "Chiqish" },
         "Account, role and access": { ru: "Аккаунт, роль и доступ", uz: "Akkaunt, rol va ruxsat" },
         "Display, language and theme": { ru: "Вид, язык и тема", uz: "Ko'rinish, til va mavzu" },
@@ -845,6 +871,7 @@
         "Recent requests": { ru: "Недавние запросы", uz: "So'nggi so'rovlar" },
         "No results": { ru: "Ничего не найдено", uz: "Natija topilmadi" },
         "Search inside table...": { ru: "Поиск в таблице...", uz: "Jadvaldan qidirish..." },
+        "Search audit events...": { ru: "Поиск событий аудита...", uz: "Audit hodisalarini qidirish..." },
         "Search residents...": { ru: "Поиск жильцов...", uz: "Yashovchilarni qidirish..." },
         "Search by name, phone, Telegram, house or apartment...": { ru: "Поиск по имени, телефону, Telegram, дому или квартире...", uz: "Ism, telefon, Telegram, uy yoki xonadon bo'yicha qidiring..." },
         "Search district, house, apartment, resident...": { ru: "Поиск района, дома, квартиры, жильца...", uz: "Hudud, uy, xonadon, yashovchi..." },
@@ -1112,7 +1139,7 @@
     const renderBackendProfile = () => {
         const profile = billingData.profile || {};
         const usernameName = String(profile.username || "").trim();
-        const fallbackName = usernameName || String(profile.name || "").trim() || "Admin";
+        const fallbackName = String(profile.name || "").trim() || usernameName || "Admin";
         const values = {
             name: fallbackName,
             initials: profile.initials || fallbackName.slice(0, 2).toUpperCase(),
@@ -4425,7 +4452,7 @@
             system: "settings_suggest",
         }[type] || "history");
         return items.map((event) => `
-            <div class="audit-event" data-audit-event data-type="${escapeAttr(event.type || "system")}" data-audit-backend-id="${escapeAttr(event.backendId || "")}">
+            <div class="audit-event" data-audit-event data-type="${escapeAttr(event.type || "system")}" data-audit-backend-id="${escapeAttr(event.backendId || "")}" data-audit-time="${escapeAttr(event.time || "")}" data-audit-label="${escapeAttr(event.label || event.type || "")}" data-audit-title="${escapeAttr(event.title || "")}" data-audit-message="${escapeAttr(event.message || event.title || "")}" data-audit-actor="${escapeAttr(event.actor || "")}" data-audit-complex="${escapeAttr(event.complexName || "")}" data-audit-building="${escapeAttr(event.buildingName || "")}" data-audit-apartment="${escapeAttr(event.apartmentNumber || "")}" data-audit-owner="${escapeAttr(event.ownerName || "")}" data-audit-admin-url="${escapeAttr(event.adminUrl || "")}">
                 <span class="audit-event-icon material-symbols-outlined">${escapeHtml(iconForType(event.type))}</span>
                 <div>
                     <time>${escapeHtml(event.time || "")}</time>
@@ -11554,7 +11581,7 @@ ${sheets}
             system: "settings_suggest",
         }[type] || "history");
         timeline.innerHTML = events.map((event) => `
-            <div class="audit-event" data-audit-event data-type="${escapeHtml(event.type || "system")}">
+            <div class="audit-event" data-audit-event data-type="${escapeAttr(event.type || "system")}" data-audit-backend-id="${escapeAttr(event.backendId || "")}" data-audit-time="${escapeAttr(event.time || "")}" data-audit-label="${escapeAttr(event.label || event.type || "")}" data-audit-title="${escapeAttr(event.title || "")}" data-audit-message="${escapeAttr(event.message || event.title || "")}" data-audit-actor="${escapeAttr(event.actor || "")}" data-audit-complex="${escapeAttr(event.complexName || "")}" data-audit-building="${escapeAttr(event.buildingName || "")}" data-audit-apartment="${escapeAttr(event.apartmentNumber || "")}" data-audit-owner="${escapeAttr(event.ownerName || "")}" data-audit-admin-url="${escapeAttr(event.adminUrl || "")}">
                 <span class="audit-event-icon material-symbols-outlined">${escapeHtml(iconForType(event.type))}</span>
                 <div>
                     <time>${escapeHtml(event.time || "")}</time>
@@ -11595,10 +11622,12 @@ ${sheets}
         const empty = drawer.querySelector("[data-audit-empty]");
         const totalLabel = drawer.querySelector("[data-audit-total]");
         const visibleLabel = drawer.querySelector("[data-audit-visible]");
+        const isServerDriven = timeline?.dataset.serverList === "audit";
         let activeType = "all";
 
         const getEvents = () => Array.from(drawer.querySelectorAll("[data-audit-event]"));
         const refreshAudit = () => {
+            if (isServerDriven) return;
             const query = search?.value.trim().toLowerCase() || "";
             const events = getEvents();
             let visible = 0;
@@ -11614,12 +11643,14 @@ ${sheets}
             empty?.classList.toggle("hidden", visible > 0);
         };
 
-        filters.forEach((button) => button.addEventListener("click", () => {
-            activeType = button.dataset.auditFilter || "all";
-            filters.forEach((item) => item.classList.toggle("is-active", item === button));
-            refreshAudit();
-        }));
-        search?.addEventListener("input", refreshAudit);
+        if (!isServerDriven) {
+            filters.forEach((button) => button.addEventListener("click", () => {
+                activeType = button.dataset.auditFilter || "all";
+                filters.forEach((item) => item.classList.toggle("is-active", item === button));
+                refreshAudit();
+            }));
+            search?.addEventListener("input", refreshAudit);
+        }
 
         drawer.querySelector("[data-audit-action='add-note']")?.addEventListener("click", async () => {
             try {
@@ -11630,38 +11661,50 @@ ${sheets}
                 rehydrateFromPortalData(payload.portalData);
                 activeType = "all";
                 filters.forEach((filter) => filter.classList.toggle("is-active", filter.dataset.auditFilter === "all"));
-                refreshAudit();
-                toast("Audit note added", "Stored in backend audit trail.", "success");
+                if (isServerDriven) {
+                    writeListUrlState("audit", { page: 1, search: "" });
+                    await serverListControllers.audit?.refresh?.();
+                } else {
+                    renderBackendAuditEvents();
+                    refreshAudit();
+                }
+                toast(t("Audit note added"), t("Stored in backend audit trail."), "success");
             } catch (error) {
-                toast("Audit note save failed", error.message || "Backend audit note was not saved.", "danger");
+                toast(t("Audit note save failed"), error.message || t("Backend audit note was not saved."), "danger");
             }
         });
 
         drawer.querySelector("[data-audit-action='copy-latest']")?.addEventListener("click", async () => {
             const latest = getEvents().find((event) => !event.classList.contains("hidden")) || getEvents()[0];
-            const text = latest?.textContent.trim().replace(/\s+/g, " ") || "No audit events";
+            const text = latest?.textContent.trim().replace(/\s+/g, " ") || t("No audit events found");
             try {
                 await navigator.clipboard?.writeText(text);
-                toast("Latest audit event copied", text, "success");
+                toast(t("Latest audit event copied"), text, "success");
             } catch {
-                toast("Latest audit event ready", text, "info");
+                toast(t("Latest audit event ready"), text, "info");
             }
         });
 
-        drawer.querySelector("[data-audit-action='export']")?.addEventListener("click", () => {
-            const rows = getEvents().map((event) => {
-                const time = event.querySelector("time")?.textContent.trim() || "";
-                const message = event.querySelector("p")?.textContent.trim() || "";
-                const type = event.dataset.type || "";
-                return `"${time}","${type}","${message.replace(/"/g, '""')}"`;
-            });
-            const blob = new Blob([["Time,Type,Message", ...rows].join("\n")], { type: "text/csv;charset=utf-8" });
-            const link = document.createElement("a");
-            link.href = URL.createObjectURL(blob);
-            link.download = "hydroflow-audit-log.csv";
-            link.click();
-            URL.revokeObjectURL(link.href);
-            toast("Audit log exported", "Backend audit CSV was generated from the current timeline.", "success");
+        drawer.querySelector("[data-audit-action='export']")?.addEventListener("click", async (event) => {
+            const button = event.currentTarget;
+            button.disabled = true;
+            try {
+                const activeFilter = filters.find((filter) => filter.classList.contains("is-active"))?.dataset.auditFilter || "all";
+                const { params } = currentGlobalListFilters();
+                const payload = await postPortalJson("/api/audit/export/", {
+                    ...params,
+                    search: search?.value.trim() || "",
+                    type: activeFilter === "all" ? "" : activeFilter,
+                    language: storage.getItem("hydroflow-lang") || "en",
+                });
+                triggerDownloadPayload(payload.download);
+                rehydrateFromPortalData(payload.portalData);
+                toast(t("Audit log exported"), "XLSX file generated from backend audit events.", "success");
+            } catch (error) {
+                toast(t("Audit export failed"), error.message || "Backend XLSX export was not generated.", "danger");
+            } finally {
+                button.disabled = false;
+            }
         });
 
         refreshAudit();

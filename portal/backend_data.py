@@ -97,7 +97,7 @@ def _serialize_profile(user=None) -> dict:
         profile, _ = WorkspaceProfile.objects.get_or_create(user=selected_user)
 
     username = selected_user.get_username() if selected_user else ""
-    name = username or _display_name(selected_user)
+    name = _display_name(selected_user) if selected_user else "Admin"
     role = _role_for_user(selected_user, profile)
     last_active = selected_user.last_login if selected_user else timezone.now()
     return {
@@ -346,6 +346,10 @@ def _serialize_audit_events() -> list[dict]:
         "owner",
     ).order_by("-created_at")[:120]
     for event in queryset:
+        complex_obj = event.complex
+        building = event.building
+        apartment = event.apartment
+        owner = event.owner
         rows.append({
             "id": _slug("audit", event.id),
             "backendId": event.id,
@@ -358,6 +362,10 @@ def _serialize_audit_events() -> list[dict]:
             "complexId": _slug("complex", event.complex_id) if event.complex_id else "",
             "buildingId": _slug("building", event.building_id) if event.building_id else "",
             "ownerId": _slug("owner", event.owner_id) if event.owner_id else "",
+            "complexName": complex_obj.title if complex_obj else "",
+            "buildingName": building.number if building else "",
+            "apartmentNumber": apartment.number if apartment else "",
+            "ownerName": owner.fio if owner else "",
         })
     return rows
 

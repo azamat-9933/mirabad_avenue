@@ -39,6 +39,92 @@ ALLOWED_REPORT_TYPES = {
     REPORT_TYPE_ALL,
 }
 
+REPORT_TEXT = {
+    "backend_export": {"en": "Backend Export", "ru": "Backend-экспорт", "uz": "Backend eksport"},
+    "backend_export_subtitle": {
+        "en": "Real billing and payment rows from the database",
+        "ru": "Реальные строки биллинга и платежей из базы данных",
+        "uz": "Bazadan olingan haqiqiy billing va to'lov qatorlari",
+    },
+    "generated": {"en": "Generated", "ru": "Сформировано", "uz": "Yaratilgan"},
+    "report_type": {"en": "Report type", "ru": "Тип отчёта", "uz": "Hisobot turi"},
+    "scope": {"en": "Scope", "ru": "Область", "uz": "Qamrov"},
+    "sheets": {"en": "Sheets", "ru": "Листы", "uz": "Varaqlar"},
+    "rows": {"en": "Rows", "ru": "Строки", "uz": "Qatorlar"},
+    "no_rows": {
+        "en": "No rows for current filters.",
+        "ru": "Нет строк для текущих фильтров.",
+        "uz": "Joriy filtrlar uchun qatorlar yo'q.",
+    },
+    "period": {"en": "Period", "ru": "Период", "uz": "Davr"},
+    "house": {"en": "House", "ru": "Дом", "uz": "Uy"},
+    "apartment": {"en": "Apartment", "ru": "Квартира", "uz": "Xonadon"},
+    "resident": {"en": "Resident", "ru": "Абонент", "uz": "Abonent"},
+    "address": {"en": "Address", "ru": "Адрес", "uz": "Manzil"},
+    "date": {"en": "Date", "ru": "Дата", "uz": "Sana"},
+    "date_from": {"en": "Date from", "ru": "Дата с", "uz": "Sana boshidan"},
+    "date_to": {"en": "Date to", "ru": "Дата по", "uz": "Sana oxirigacha"},
+    "start_reading": {"en": "Start reading", "ru": "Начальное показание", "uz": "Boshlang'ich ko'rsatkich"},
+    "end_reading": {"en": "End reading", "ru": "Конечное показание", "uz": "Yakuniy ko'rsatkich"},
+    "consumption_m3": {"en": "Consumption (m3)", "ru": "Расход (м3)", "uz": "Sarf (m3)"},
+    "amount_to_pay": {"en": "Amount to pay (UZS)", "ru": "Сумма к оплате (UZS)", "uz": "To'lov summasi (UZS)"},
+    "total_expenses": {"en": "Total expenses (UZS)", "ru": "Общие расходы (UZS)", "uz": "Umumiy xarajatlar (UZS)"},
+    "total_consumption": {"en": "Total consumption (m3)", "ru": "Общий расход (м3)", "uz": "Umumiy sarf (m3)"},
+    "tariff_m3": {"en": "Tariff per m3", "ru": "Тариф за м3", "uz": "1 m3 tarifi"},
+    "area_m2": {"en": "Area (m2)", "ru": "Площадь (м2)", "uz": "Maydon (m2)"},
+    "days_heated": {"en": "Days heated", "ru": "Дней отопления", "uz": "Isitilgan kunlar"},
+    "heated_area": {"en": "Heated area", "ru": "Отапливаемая площадь", "uz": "Isitilgan maydon"},
+    "amount": {"en": "Amount (UZS)", "ru": "Сумма (UZS)", "uz": "Summa (UZS)"},
+    "total_heated_area": {"en": "Total heated area", "ru": "Общая отапливаемая площадь", "uz": "Umumiy isitilgan maydon"},
+    "cost_sqm": {"en": "Cost per sqm-day", "ru": "Стоимость за м2-день", "uz": "m2-kun narxi"},
+    "fio": {"en": "Resident name", "ru": "ФИО абонента", "uz": "Abonent FIO"},
+    "payment_type": {"en": "Type", "ru": "Тип", "uz": "Turi"},
+    "created_by": {"en": "Created by", "ru": "Создал", "uz": "Yaratgan"},
+    "balance_before": {"en": "Balance before", "ru": "Баланс до", "uz": "Oldingi balans"},
+    "balance_after": {"en": "Balance after", "ru": "Баланс после", "uz": "Keyingi balans"},
+    "description": {"en": "Description", "ru": "Описание", "uz": "Tavsif"},
+    "payment_click": {"en": "Via Click", "ru": "Через Click", "uz": "Click orqali"},
+    "payment_payme": {"en": "Via Payme", "ru": "Через Payme", "uz": "Payme orqali"},
+    "payment_cash": {"en": "Cash", "ru": "Наличные", "uz": "Naqd"},
+    "payment_card": {"en": "By card", "ru": "Картой", "uz": "Karta orqali"},
+    "payment_terminal": {"en": "Terminal", "ru": "Терминал", "uz": "Terminal"},
+    "payment_manual": {"en": "Manual adjustment", "ru": "Ручная корректировка", "uz": "Qo'lda tuzatish"},
+    "payment_charge": {"en": "Monthly charge", "ru": "Начисление за месяц", "uz": "Oylik hisoblash"},
+    "payment_balance_debit": {"en": "Balance subtraction", "ru": "Вычитание баланса", "uz": "Balansdan ayirish"},
+    "payment_utility": {"en": "Utility payment", "ru": "Коммунальный платёж", "uz": "Kommunal to'lov"},
+    "payment_late_penalty": {"en": "Late penalty", "ru": "Пеня за просрочку", "uz": "Kechikish jarimasi"},
+    "payments_register": {"en": "Payments Register", "ru": "Реестр платежей", "uz": "To'lovlar reyestri"},
+    "payments_subtitle": {
+        "en": "Real payment and balance transactions from Django backend",
+        "ru": "Реальные платежи и изменения баланса из Django backend",
+        "uz": "Django backenddan haqiqiy to'lov va balans tranzaksiyalari",
+    },
+    "hot_water_summary": {"en": "Hot Water Summary", "ru": "Сводка ГВС", "uz": "Issiq suv xulosasi"},
+    "hot_water_summary_subtitle": {
+        "en": "Building totals, expenses and tariff per m3",
+        "ru": "Итоги по домам, расходы и тариф за м3",
+        "uz": "Uylar bo'yicha jami, xarajatlar va 1 m3 tarifi",
+    },
+    "heating_summary": {"en": "Heating Summary", "ru": "Сводка отопления", "uz": "Isitish xulosasi"},
+    "heating_summary_subtitle": {
+        "en": "Building totals, heated area and cost per sqm-day",
+        "ru": "Итоги по домам, отапливаемая площадь и стоимость за м2-день",
+        "uz": "Uylar bo'yicha jami, isitilgan maydon va m2-kun narxi",
+    },
+    "empty_report": {"en": "Report", "ru": "Отчёт", "uz": "Hisobot"},
+}
+
+
+def _lang(language: str | None) -> str:
+    value = str(language or "en").strip().lower()
+    return value if value in {"en", "ru", "uz"} else "en"
+
+
+def _t(key: str, language: str | None) -> str:
+    lang = _lang(language)
+    labels = REPORT_TEXT.get(key, {})
+    return labels.get(lang) or labels.get("en") or key
+
 
 def _money_text(value: Decimal | int | float | None) -> str:
     amount = Decimal(str(value or 0))
@@ -58,7 +144,57 @@ def _date_text(value: date | datetime | None) -> str:
     return value.strftime("%d.%m.%Y")
 
 
+def _transaction_channel_key(transaction: Transaction) -> str:
+    description = str(transaction.description or "").lower()
+    if "[portal:click-credit]" in description or transaction.payment_type == Transaction.TYPE_CLICK:
+        return "payment_click"
+    if "[portal:payme-credit]" in description or transaction.payment_type == Transaction.TYPE_PAYME:
+        return "payment_payme"
+    if "[portal:cash-credit]" in description or transaction.payment_type == Transaction.TYPE_CASH:
+        return "payment_cash"
+    if "[portal:terminal-credit]" in description:
+        return "payment_terminal"
+    if "[portal:card-credit]" in description:
+        return "payment_card"
+    if "[portal:balance-debit]" in description:
+        return "payment_balance_debit"
+    if transaction.payment_type == Transaction.TYPE_CHARGE:
+        return "payment_charge"
+    if transaction.payment_type == Transaction.TYPE_MANUAL:
+        return "payment_manual"
+    return ""
+
+
+def _transaction_type_text(transaction: Transaction, language: str) -> str:
+    key = _transaction_channel_key(transaction)
+    if key:
+        return _t(key, language)
+    return str(transaction.get_payment_type_display() or "")
+
+
+def _transaction_description_text(transaction: Transaction, language: str) -> str:
+    raw = str(transaction.description or "").strip()
+    normalized = raw.lower()
+    key = _transaction_channel_key(transaction)
+    if key:
+        return _t(key, language)
+    common_descriptions = {
+        "monthly utility payment": "payment_utility",
+        "late penalty": "payment_late_penalty",
+        "portal credit via click.": "payment_click",
+        "portal credit via payme.": "payment_payme",
+        "portal credit via cash.": "payment_cash",
+        "portal credit via card.": "payment_card",
+        "portal manual balance subtraction.": "payment_balance_debit",
+    }
+    common_key = common_descriptions.get(normalized)
+    if common_key:
+        return _t(common_key, language)
+    return raw
+
+
 def _report_type_label(report_type: str, language: str) -> str:
+    language = _lang(language)
     labels = {
         REPORT_TYPE_HOT_WATER: {"en": "Hot Water", "ru": "ГВС", "uz": "Issiq suv"},
         REPORT_TYPE_HEATING: {"en": "Heating", "ru": "Отопление", "uz": "Isitish"},
@@ -194,7 +330,7 @@ class WorkbookReportBuilder:
         if template == "heating_summary":
             self._write_heating_summary_sheet(ws, sheet)
             return
-        if template == "payments":
+        if template == "plain":
             self._write_plain_table_sheet(ws, sheet)
             return
 
@@ -243,7 +379,7 @@ class WorkbookReportBuilder:
             cell.border = border
         row_idx += 1
 
-        data_rows = sheet["data_rows"] or [[_text_cell("No rows for current filters.")]]
+        data_rows = sheet["data_rows"] or [[_text_cell(_t("no_rows", sheet.get("language", "en")))]]
         for row in data_rows:
             for col_idx, source in enumerate(row, start=1):
                 cell = ws.cell(row_idx, col_idx, self._cell_value(source))
@@ -297,22 +433,26 @@ class WorkbookReportBuilder:
         if is_number:
             cell.number_format = "#,##0.00"
 
+    def _write_empty_sample_row(self, ws, row_idx: int, start_col: int, end_col: int, message: str):
+        ws.merge_cells(start_row=row_idx, start_column=start_col, end_row=row_idx, end_column=end_col)
+        cell = ws.cell(row_idx, start_col, message)
+        cell.font = Font(name="Arial", size=10, italic=True, color="666666")
+        cell.alignment = Alignment(horizontal="left", vertical="center", wrap_text=True)
+        cell.border = self._base_border()
+        for col_idx in range(start_col, end_col + 1):
+            ws.cell(row_idx, col_idx).border = self._base_border()
+
     def _write_hot_water_sheet(self, ws, sheet: dict):
-        start_label = _date_text(sheet.get("period_start"))
-        end_label = _date_text(sheet.get("period_end"))
-        headers = [
-            "Квартира",
-            "ФИО абонента",
-            f"показание ГВС {start_label}",
-            f"показание ГВС {end_label}",
-            "Расход кубов",
-            "Cумма к оплате",
-        ]
+        headers = sheet["headers"]
         widths = [11, 36, 18, 15, 14, 16]
         for col_idx, header in enumerate(headers, start=1):
             cell = ws.cell(1, col_idx, header)
             self._sample_header_style(cell)
             ws.column_dimensions[get_column_letter(col_idx)].width = widths[col_idx - 1]
+        if not sheet["data_rows"]:
+            self._write_empty_sample_row(ws, 2, 1, 6, _t("no_rows", sheet.get("language")))
+            ws.sheet_view.showGridLines = True
+            return
         for row_idx, row in enumerate(sheet["data_rows"], start=2):
             for col_idx, source in enumerate(row, start=1):
                 value = self._cell_value(source)
@@ -325,7 +465,7 @@ class WorkbookReportBuilder:
         ws.sheet_view.showGridLines = True
 
     def _write_hot_water_summary_sheet(self, ws, sheet: dict):
-        headers = ["Дом №", "Обслуживание Котел", "Расход электроэнергии", "Счетчик газа", "Расход Газа", "Общая сумма расходов", "Показания обхода", "Тариф "]
+        headers = sheet["headers"]
         for col_idx, index in enumerate(range(1, len(headers) + 1), start=2):
             ws.cell(2, col_idx, index)
             self._sample_body_style(ws.cell(2, col_idx), True)
@@ -335,6 +475,10 @@ class WorkbookReportBuilder:
         widths = [9, 18, 27, 26, 17, 20, 25, 20, 16]
         for col_idx, width in enumerate(widths, start=1):
             ws.column_dimensions[get_column_letter(col_idx)].width = width
+        if not sheet["data_rows"]:
+            self._write_empty_sample_row(ws, 4, 2, 9, _t("no_rows", sheet.get("language")))
+            ws.sheet_view.showGridLines = True
+            return
         for row_idx, row in enumerate(sheet["data_rows"], start=4):
             house = row[0].get("value")
             total_expenses = self._cell_value(row[2])
@@ -347,7 +491,7 @@ class WorkbookReportBuilder:
         ws.sheet_view.showGridLines = True
 
     def _write_heating_sheet(self, ws, sheet: dict):
-        headers = ["№", "ФИО абонента", "Адрес", "Общая площадь", "Дата подключения", None, "сутки ", "отоплено за кв.м общ", "сумма к оплате "]
+        headers = sheet["headers"]
         for col_idx, header in enumerate(headers, start=1):
             cell = ws.cell(1, col_idx, header)
             self._sample_header_style(cell)
@@ -358,6 +502,10 @@ class WorkbookReportBuilder:
         widths = [7, 36, 30, 14, 15, 14, 12, 15, 15]
         for col_idx, width in enumerate(widths, start=1):
             ws.column_dimensions[get_column_letter(col_idx)].width = width
+        if not sheet["data_rows"]:
+            self._write_empty_sample_row(ws, 3, 1, 9, _t("no_rows", sheet.get("language")))
+            ws.sheet_view.showGridLines = True
+            return
         for row_idx, row in enumerate(sheet["data_rows"], start=3):
             values = [self._cell_value(cell) for cell in row[:9]]
             for col_idx, value in enumerate(values, start=1):
@@ -368,10 +516,14 @@ class WorkbookReportBuilder:
         ws.sheet_view.showGridLines = True
 
     def _write_heating_summary_sheet(self, ws, sheet: dict):
-        ws.cell(1, 3, "Расход газа")
+        ws.cell(1, 3, sheet["headers"][0] if sheet["headers"] else _t("total_expenses", sheet.get("language")))
         self._sample_header_style(ws.cell(1, 3))
         ws.column_dimensions["B"].width = 16
         ws.column_dimensions["C"].width = 21
+        if not sheet["data_rows"]:
+            self._write_empty_sample_row(ws, 2, 2, 3, _t("no_rows", sheet.get("language")))
+            ws.sheet_view.showGridLines = True
+            return
         last_row = 1
         for row_idx, row in enumerate(sheet["data_rows"], start=2):
             ws.cell(row_idx, 2, row[0].get("value"))
@@ -388,7 +540,8 @@ class WorkbookReportBuilder:
         for col_idx, header in enumerate(sheet["headers"], start=1):
             cell = ws.cell(1, col_idx, header)
             self._sample_header_style(cell)
-        for row_idx, row in enumerate(sheet["data_rows"], start=2):
+        data_rows = sheet["data_rows"] or [[_text_cell(_t("no_rows", sheet.get("language", "en")))]]
+        for row_idx, row in enumerate(data_rows, start=2):
             for col_idx, source in enumerate(row, start=1):
                 cell = ws.cell(row_idx, col_idx, self._cell_value(source))
                 self._sample_body_style(cell, source.get("type") == "number")
@@ -467,8 +620,8 @@ def _build_report_pdf(report_type: str, sheets: list[dict], summary_rows: list[t
         title=f"backend-report-{report_type}",
     )
     story = [
-        Paragraph("Backend Export", title_style),
-        Paragraph(f"{_report_type_label(report_type, language)} - real billing and payment rows", subtitle_style),
+        Paragraph(_t("backend_export", language), title_style),
+        Paragraph(f"{_report_type_label(report_type, language)} - {_t('backend_export_subtitle', language)}", subtitle_style),
     ]
 
     summary_table = Table(
@@ -504,7 +657,7 @@ def _build_report_pdf(report_type: str, sheets: list[dict], summary_rows: list[t
                     for cell in row
                 ])
         else:
-            table_rows.append([_pdf_cell("No rows for current filters.", cell_style)] + [_pdf_cell("", cell_style) for _ in sheet["headers"][1:]])
+            table_rows.append([_pdf_cell(_t("no_rows", language), cell_style)] + [_pdf_cell("", cell_style) for _ in sheet["headers"][1:]])
 
         col_count = max(1, len(sheet["headers"]))
         table = Table(table_rows, colWidths=[available_width / col_count] * col_count, repeatRows=1)
@@ -549,7 +702,7 @@ def _filter_hot_water_queryset(queryset, filters):
     if filters["apartment_ids"]:
         queryset = queryset.filter(apartment_id__in=filters["apartment_ids"])
     if filters["owner_ids"]:
-        queryset = queryset.filter(apartment__owner_id__in=filters["owner_ids"])
+        queryset = queryset.filter(apartment__owner__id__in=filters["owner_ids"])
     if filters["date_from"] or filters["date_to"]:
         periods = _periods_for_range(filters["date_from"], filters["date_to"])
         queryset = queryset.filter(period__in=periods)
@@ -562,7 +715,7 @@ def _filter_heating_queryset(queryset, filters):
     if filters["apartment_ids"]:
         queryset = queryset.filter(apartment_id__in=filters["apartment_ids"])
     if filters["owner_ids"]:
-        queryset = queryset.filter(apartment__owner_id__in=filters["owner_ids"])
+        queryset = queryset.filter(apartment__owner__id__in=filters["owner_ids"])
     if filters["date_from"] or filters["date_to"]:
         periods = _periods_for_range(filters["date_from"], filters["date_to"])
         queryset = queryset.filter(period__in=periods)
@@ -575,7 +728,7 @@ def _filter_invoice_queryset(queryset, filters):
     if filters["apartment_ids"]:
         queryset = queryset.filter(apartment_id__in=filters["apartment_ids"])
     if filters["owner_ids"]:
-        queryset = queryset.filter(apartment__owner_id__in=filters["owner_ids"])
+        queryset = queryset.filter(apartment__owner__id__in=filters["owner_ids"])
     if filters["date_from"] or filters["date_to"]:
         periods = _periods_for_range(filters["date_from"], filters["date_to"])
         queryset = queryset.filter(period__in=periods)
@@ -597,6 +750,7 @@ def _filter_transaction_queryset(queryset, filters):
 
 
 def _build_hot_water_report(filters, language):
+    language = _lang(language)
     reading_qs = _filter_hot_water_queryset(
         HotWaterMeterReading.objects.select_related(
             "period",
@@ -639,6 +793,29 @@ def _build_hot_water_report(filters, language):
             }
         )
 
+    hot_water_headers = [
+        _t("apartment", language),
+        _t("resident", language),
+        _t("start_reading", language),
+        _t("end_reading", language),
+        _t("consumption_m3", language),
+        _t("amount_to_pay", language),
+    ]
+
+    if not grouped and not summary_qs.exists():
+        return [
+            {
+                "name": _report_type_label(REPORT_TYPE_HOT_WATER, language),
+                "title": _report_type_label(REPORT_TYPE_HOT_WATER, language),
+                "subtitle": _t("backend_export_subtitle", language),
+                "template": "hot_water",
+                "language": language,
+                "section": REPORT_TYPE_HOT_WATER,
+                "headers": hot_water_headers,
+                "rows": [],
+            }
+        ]
+
     sheets = []
     summary_rows = []
     for summary in summary_qs:
@@ -660,20 +837,15 @@ def _build_hot_water_report(filters, language):
         sheets.append(
             {
                 "name": f"{building_name}",
-                "title": f"GVS - {building_name}",
-                "subtitle": f"Period: {period_name}",
+                "title": f"{_report_type_label(REPORT_TYPE_HOT_WATER, language)} - {building_name}",
+                "subtitle": f"{_t('period', language)}: {period_name}",
                 "template": "hot_water",
+                "language": language,
+                "section": REPORT_TYPE_HOT_WATER,
                 "period_start": getattr(first_period, "start_date", None),
                 "period_end": getattr(first_period, "end_date", None),
                 "tariff": getattr(summary, "tariff_per_m3", Decimal("0")) if summary else Decimal("0"),
-                "headers": [
-                    "Apartment",
-                    "Resident",
-                    "Start reading",
-                    "End reading",
-                    "Consumption (m3)",
-                    "Amount to pay (UZS)",
-                ],
+                "headers": hot_water_headers,
                 "rows": [
                     [
                         _text_cell(item["apartment"]),
@@ -687,20 +859,31 @@ def _build_hot_water_report(filters, language):
                 ],
             }
         )
-    sheets.append(
-        {
-            "name": "Лист2",
-            "title": "GVS Summary",
-            "subtitle": "Building totals, expenses and tariff per m3",
-            "template": "hot_water_summary",
-            "headers": ["House", "Period", "Total expenses (UZS)", "Total consumption (m3)", "Tariff per m3", "Rows"],
-            "rows": summary_rows,
-        }
-    )
+    if summary_rows:
+        sheets.append(
+            {
+                "name": _t("hot_water_summary", language),
+                "title": _t("hot_water_summary", language),
+                "subtitle": _t("hot_water_summary_subtitle", language),
+                "template": "hot_water_summary",
+                "language": language,
+                "section": "hot_water_summary",
+                "headers": [
+                    _t("house", language),
+                    _t("period", language),
+                    _t("total_expenses", language),
+                    _t("total_consumption", language),
+                    _t("tariff_m3", language),
+                    _t("rows", language),
+                ],
+                "rows": summary_rows,
+            }
+        )
     return sheets
 
 
 def _build_heating_report(filters, language):
+    language = _lang(language)
     record_qs = _filter_heating_queryset(
         HeatingRecord.objects.select_related(
             "period",
@@ -745,6 +928,33 @@ def _build_heating_report(filters, language):
             }
         )
 
+    heating_headers = [
+        "№",
+        _t("fio", language),
+        _t("address", language),
+        _t("area_m2", language),
+        _t("date_from", language),
+        _t("date_to", language),
+        _t("days_heated", language),
+        _t("heated_area", language),
+        _t("amount", language),
+    ]
+
+    if not grouped and not summary_qs.exists():
+        return [
+            {
+                "name": _report_type_label(REPORT_TYPE_HEATING, language),
+                "title": _report_type_label(REPORT_TYPE_HEATING, language),
+                "subtitle": _t("backend_export_subtitle", language),
+                "template": "heating",
+                "language": language,
+                "section": REPORT_TYPE_HEATING,
+                "total_area": "",
+                "headers": heating_headers,
+                "rows": [],
+            }
+        ]
+
     sheets = []
     summary_rows = []
     for summary in summary_qs:
@@ -765,21 +975,13 @@ def _build_heating_report(filters, language):
         sheets.append(
             {
                 "name": f"{building_name}",
-                "title": f"Heating - {building_name}",
-                "subtitle": f"Period: {period_name}",
+                "title": f"{_report_type_label(REPORT_TYPE_HEATING, language)} - {building_name}",
+                "subtitle": f"{_t('period', language)}: {period_name}",
                 "template": "heating",
+                "language": language,
+                "section": REPORT_TYPE_HEATING,
                 "total_area": getattr(summary, "total_heated_area", "") if summary else "",
-                "headers": [
-                    "Apartment",
-                    "Resident",
-                    "Address",
-                    "Area (m2)",
-                    "Date from",
-                    "Date to",
-                    "Days heated",
-                    "Heated area",
-                    "Amount (UZS)",
-                ],
+                "headers": heating_headers,
                 "rows": [
                     [
                         _text_cell(item["apartment"]),
@@ -796,20 +998,26 @@ def _build_heating_report(filters, language):
                 ],
             }
         )
-    sheets.append(
-        {
-            "name": "Лист1",
-            "title": "Heating Summary",
-            "subtitle": "Building totals, heated area and cost per sqm-day",
-            "template": "heating_summary",
-            "headers": ["House", "Period", "Total expenses (UZS)", "Total heated area", "Cost per sqm-day", "Rows"],
-            "rows": summary_rows,
-        }
-    )
+    if summary_rows:
+        sheets.append(
+            {
+                "name": _t("heating_summary", language),
+                "title": _t("heating_summary", language),
+                "subtitle": _t("heating_summary_subtitle", language),
+                "template": "heating_summary",
+                "language": language,
+                "section": "heating_summary",
+                "headers": [
+                    _t("total_expenses", language),
+                ],
+                "rows": summary_rows,
+            }
+        )
     return sheets
 
 
 def _build_payments_report(filters, language):
+    language = _lang(language)
     transaction_qs = _filter_transaction_queryset(
         Transaction.objects.select_related(
             "owner__apartment__building__complex",
@@ -826,32 +1034,34 @@ def _build_payments_report(filters, language):
             _text_cell(item.owner.fio),
             _text_cell(building.number if building else ""),
             _text_cell(apartment.number if apartment else ""),
-            _text_cell(item.get_payment_type_display()),
+            _text_cell(_transaction_type_text(item, language)),
             _text_cell(item.created_by or ""),
             _text_cell(item.invoice.period.title if item.invoice_id and item.invoice and item.invoice.period_id else ""),
             _number_cell(item.amount, style=6, display=_money_text(item.amount)),
             _number_cell(item.balance_before, style=6, display=_money_text(item.balance_before)),
             _number_cell(item.balance_after, style=6, display=_money_text(item.balance_after)),
-            _text_cell(item.description or ""),
+            _text_cell(_transaction_description_text(item, language)),
         ])
     return [
         {
-            "name": "Платежи",
-            "title": "Payments Register",
-            "subtitle": "Real payment and balance transactions from Django backend",
-            "template": "payments",
+            "name": _report_type_label(REPORT_TYPE_PAYMENTS, language),
+            "title": _t("payments_register", language),
+            "subtitle": _t("payments_subtitle", language),
+            "template": "plain",
+            "language": language,
+            "section": REPORT_TYPE_PAYMENTS,
             "headers": [
-                "Дата",
-                "ФИО абонента",
-                "Дом",
-                "Квартира",
-                "Тип",
-                "Создал",
-                "Период",
-                "Сумма (UZS)",
-                "Баланс до",
-                "Баланс после",
-                "Описание",
+                _t("date", language),
+                _t("fio", language),
+                _t("house", language),
+                _t("apartment", language),
+                _t("payment_type", language),
+                _t("created_by", language),
+                _t("period", language),
+                _t("amount", language),
+                _t("balance_before", language),
+                _t("balance_after", language),
+                _t("description", language),
             ],
             "rows": rows,
         }
@@ -859,6 +1069,7 @@ def _build_payments_report(filters, language):
 
 
 def build_report_payload(payload, language: str, export_format: str):
+    language = _lang(language)
     filters = _collect_export_filters(payload)
     report_type = str(payload.get("report_type") or REPORT_TYPE_ALL).strip().lower()
     if report_type not in ALLOWED_REPORT_TYPES:
@@ -873,19 +1084,35 @@ def build_report_payload(payload, language: str, export_format: str):
         sheets.extend(_build_payments_report(filters, language))
     if report_type == REPORT_TYPE_ALL:
         for sheet in sheets:
-            if sheet.get("template") == "hot_water":
-                sheet["name"] = f"{sheet['name']} ГВС"
-            elif sheet.get("template") == "heating":
-                sheet["name"] = f"{sheet['name']} отопл"
+            if sheet.get("section") == REPORT_TYPE_HOT_WATER:
+                label = _report_type_label(REPORT_TYPE_HOT_WATER, language)
+                if label.lower() not in sheet["name"].lower():
+                    sheet["name"] = f"{sheet['name']} {label}"
+            elif sheet.get("section") == REPORT_TYPE_HEATING:
+                label = _report_type_label(REPORT_TYPE_HEATING, language)
+                if label.lower() not in sheet["name"].lower():
+                    sheet["name"] = f"{sheet['name']} {label}"
+
+    if not sheets:
+        sheets.append(
+            {
+                "name": _t("empty_report", language),
+                "title": _t("backend_export", language),
+                "subtitle": _t("backend_export_subtitle", language),
+                "language": language,
+                "headers": [_t("scope", language), _t("rows", language)],
+                "rows": [],
+            }
+        )
 
     summary_rows = []
     total_rows = sum(len(sheet["rows"]) for sheet in sheets)
     generated_at = timezone.localtime()
-    summary_rows.append(("Report type", _report_type_label(report_type, language)))
-    summary_rows.append(("Generated", generated_at.strftime("%d.%m.%Y %H:%M")))
-    summary_rows.append(("Scope", _scope_text(filters["building_ids"], filters["apartment_ids"], filters["owner_ids"], language)))
-    summary_rows.append(("Sheets", str(len(sheets))))
-    summary_rows.append(("Rows", str(total_rows)))
+    summary_rows.append((_t("report_type", language), _report_type_label(report_type, language)))
+    summary_rows.append((_t("generated", language), generated_at.strftime("%d.%m.%Y %H:%M")))
+    summary_rows.append((_t("scope", language), _scope_text(filters["building_ids"], filters["apartment_ids"], filters["owner_ids"], language)))
+    summary_rows.append((_t("sheets", language), str(len(sheets))))
+    summary_rows.append((_t("rows", language), str(total_rows)))
 
     builder = WorkbookReportBuilder()
     for sheet in sheets:
@@ -898,16 +1125,6 @@ def build_report_payload(payload, language: str, export_format: str):
             sheet["rows"],
             **{key: value for key, value in sheet.items() if key not in {"name", "title", "subtitle", "headers", "rows"}},
         )
-    if not sheets:
-        builder.add_sheet(
-            "Отчёт",
-            "Backend Export",
-            "Real backend workbook generated from Django billing and payment data",
-            summary_rows,
-            ["Section", "Value"],
-            [[_text_cell(label), _text_cell(value)] for label, value in summary_rows],
-        )
-
     if export_format == "PDF":
         return {
             "filename": f"backend-report-{report_type}-{generated_at:%Y%m%d-%H%M}.pdf",

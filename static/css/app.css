@@ -18413,7 +18413,7 @@ html.dark .resident-kit-textarea,
 
 .audit-summary-grid {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 10px;
 }
 
@@ -21444,4 +21444,647 @@ html.dark .building-summary-field.is-success,
     .building-summary-footer {
         padding: 0 16px 18px !important;
     }
+}
+
+/* Premium glass day/night theme switch. */
+.theme-toggle {
+    position: relative !important;
+    width: 3.55rem !important;
+    height: 2rem !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    border: 1px solid rgba(79, 142, 247, 0.14) !important;
+    border-radius: 999px !important;
+    background:
+        radial-gradient(circle at 22% 24%, rgba(255, 255, 255, 0.92), transparent 28%),
+        linear-gradient(135deg, rgba(239, 248, 252, 0.96), rgba(216, 231, 236, 0.86)) !important;
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.95),
+        inset 0 -1px 0 rgba(15, 23, 42, 0.06),
+        0 10px 24px rgba(15, 23, 42, 0.08) !important;
+    transition: background 0.28s ease, border-color 0.28s ease, box-shadow 0.28s ease !important;
+}
+
+.theme-toggle::before {
+    content: none !important;
+    display: none !important;
+}
+
+.theme-toggle::after {
+    display: none !important;
+}
+
+.theme-toggle-orb {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    z-index: 2;
+    width: 1.625rem;
+    height: 1.625rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    background:
+        radial-gradient(circle at 32% 22%, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.54) 34%, transparent 36%),
+        linear-gradient(145deg, rgba(255, 255, 255, 0.96), rgba(222, 237, 244, 0.78)) !important;
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.96),
+        inset 0 -1px 0 rgba(15, 23, 42, 0.08),
+        0 6px 16px rgba(15, 23, 42, 0.16) !important;
+    transition: transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1), background 0.28s ease, box-shadow 0.28s ease !important;
+}
+
+.theme-toggle-symbol {
+    position: absolute;
+    width: 1rem;
+    height: 1rem;
+    font-size: 1rem !important;
+    line-height: 1 !important;
+    color: #4F8EF7 !important;
+    font-variation-settings: "FILL" 0, "wght" 520, "GRAD" 0, "opsz" 20 !important;
+    transition: opacity 0.2s ease, transform 0.28s ease, color 0.28s ease !important;
+}
+
+.theme-toggle-sun {
+    opacity: 1;
+    transform: rotate(0deg) scale(1);
+}
+
+.theme-toggle-moon {
+    opacity: 0;
+    transform: rotate(-35deg) scale(0.72);
+}
+
+.theme-toggle:hover {
+    border-color: rgba(79, 142, 247, 0.28) !important;
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.96),
+        inset 0 -1px 0 rgba(15, 23, 42, 0.06),
+        0 12px 28px rgba(79, 142, 247, 0.14) !important;
+}
+
+html.dark .theme-toggle,
+[data-theme="dark"] .theme-toggle {
+    border-color: rgba(255, 255, 255, 0.08) !important;
+    background:
+        radial-gradient(circle at 75% 28%, rgba(148, 163, 184, 0.10), transparent 34%),
+        linear-gradient(135deg, rgba(20, 25, 36, 0.96), rgba(30, 37, 51, 0.92)) !important;
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.08),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.22),
+        0 8px 20px rgba(0, 0, 0, 0.22) !important;
+}
+
+html.dark .theme-toggle::before,
+[data-theme="dark"] .theme-toggle::before {
+    content: none !important;
+    display: none !important;
+}
+
+html.dark .theme-toggle-orb,
+[data-theme="dark"] .theme-toggle-orb {
+    transform: translateX(1.55rem);
+    background:
+        radial-gradient(circle at 35% 24%, rgba(255, 255, 255, 0.18), transparent 34%),
+        linear-gradient(145deg, rgba(60, 70, 94, 0.96), rgba(42, 50, 68, 0.94)) !important;
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.18),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.28),
+        0 6px 14px rgba(0, 0, 0, 0.24) !important;
+}
+
+html.dark .theme-toggle-sun,
+[data-theme="dark"] .theme-toggle-sun {
+    opacity: 0;
+    transform: rotate(35deg) scale(0.72);
+}
+
+html.dark .theme-toggle-moon,
+[data-theme="dark"] .theme-toggle-moon {
+    opacity: 1;
+    color: #C8D3E6 !important;
+    transform: rotate(0deg) scale(1);
+}
+
+/* Compact premium account capsule in the topbar. */
+.topbar-account-chip {
+    min-height: 2.8rem;
+    margin-left: 0.125rem;
+    padding: 0.25rem 0.34rem 0.25rem 0.9rem !important;
+    border-left-color: rgba(15, 23, 42, 0.10) !important;
+    border-radius: 999px;
+    background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.58), rgba(239, 248, 252, 0.30)) !important;
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.62),
+        0 8px 22px rgba(15, 23, 42, 0.045);
+    transition:
+        transform 0.22s ease,
+        border-color 0.22s ease,
+        background 0.22s ease,
+        box-shadow 0.22s ease;
+}
+
+.topbar-account-chip:hover {
+    transform: translateY(-1px);
+    border-left-color: rgba(0, 67, 84, 0.18) !important;
+    background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.72), rgba(230, 245, 250, 0.38)) !important;
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.78),
+        0 10px 26px rgba(15, 23, 42, 0.07);
+}
+
+.topbar-account-copy {
+    display: grid;
+    gap: 0.08rem;
+    align-content: center;
+    min-width: 5.4rem;
+}
+
+.topbar-account-name {
+    margin: 0 !important;
+    color: #073F4C !important;
+    font-size: 0.75rem !important;
+    line-height: 1.05 !important;
+    letter-spacing: -0.015em;
+}
+
+.topbar-account-role {
+    margin: 0 !important;
+    color: #738196 !important;
+    font-size: 0.585rem !important;
+    line-height: 1.1 !important;
+    letter-spacing: 0.145em !important;
+}
+
+.topbar-account-chip .account-avatar-trigger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    transition: transform 0.22s ease, filter 0.22s ease;
+}
+
+.topbar-account-chip .account-avatar-trigger:hover {
+    transform: translateY(-1px);
+    filter: none;
+}
+
+.topbar-account-chip .avatar-placeholder {
+    position: relative;
+    width: 2.35rem !important;
+    height: 2.35rem !important;
+    border: 1px solid rgba(69, 127, 142, 0.28) !important;
+    background:
+        linear-gradient(145deg, rgba(7, 82, 101, 0.98), rgba(5, 58, 73, 0.98)) !important;
+    color: #EEF7FA !important;
+    font-size: 0.74rem !important;
+    letter-spacing: -0.02em;
+    box-shadow:
+        0 0 0 3px rgba(7, 80, 100, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.12),
+        inset 0 -2px 5px rgba(0, 20, 28, 0.28),
+        0 8px 16px rgba(15, 23, 42, 0.12) !important;
+    text-shadow: 0 1px 1px rgba(0, 20, 28, 0.34);
+    transition:
+        transform 0.22s ease,
+        border-color 0.22s ease,
+        box-shadow 0.22s ease,
+        background 0.22s ease;
+}
+
+.topbar-account-chip:hover .avatar-placeholder {
+    border-color: rgba(84, 147, 162, 0.38) !important;
+    box-shadow:
+        0 0 0 3px rgba(7, 80, 100, 0.11),
+        inset 0 1px 0 rgba(255, 255, 255, 0.14),
+        inset 0 -2px 5px rgba(0, 20, 28, 0.28),
+        0 9px 18px rgba(15, 23, 42, 0.14) !important;
+}
+
+html.dark .topbar-account-chip,
+[data-theme="dark"] .topbar-account-chip {
+    border-left-color: rgba(148, 163, 184, 0.13) !important;
+    background:
+        linear-gradient(135deg, rgba(23, 30, 43, 0.64), rgba(15, 23, 42, 0.30)) !important;
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.06),
+        0 8px 20px rgba(0, 0, 0, 0.16);
+}
+
+html.dark .topbar-account-chip:hover,
+[data-theme="dark"] .topbar-account-chip:hover {
+    border-left-color: rgba(148, 163, 184, 0.20) !important;
+    background:
+        linear-gradient(135deg, rgba(30, 39, 55, 0.72), rgba(15, 23, 42, 0.40)) !important;
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.08),
+        0 10px 24px rgba(0, 0, 0, 0.20);
+}
+
+html.dark .topbar-account-name,
+[data-theme="dark"] .topbar-account-name {
+    color: #EEF4FA !important;
+}
+
+html.dark .topbar-account-role,
+[data-theme="dark"] .topbar-account-role {
+    color: #8FA0B6 !important;
+}
+
+html.dark .topbar-account-chip .avatar-placeholder,
+[data-theme="dark"] .topbar-account-chip .avatar-placeholder {
+    border-color: rgba(148, 163, 184, 0.30) !important;
+    background:
+        linear-gradient(145deg, rgba(55, 65, 84, 0.98), rgba(32, 40, 54, 0.98)) !important;
+    color: #EEF4FA !important;
+    box-shadow:
+        0 0 0 3px rgba(148, 163, 184, 0.07),
+        inset 0 1px 0 rgba(255, 255, 255, 0.10),
+        inset 0 -2px 5px rgba(0, 0, 0, 0.30),
+        0 7px 15px rgba(0, 0, 0, 0.20) !important;
+    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.34);
+}
+
+html.dark .topbar-account-chip:hover .avatar-placeholder,
+[data-theme="dark"] .topbar-account-chip:hover .avatar-placeholder {
+    border-color: rgba(174, 187, 206, 0.40) !important;
+    box-shadow:
+        0 0 0 3px rgba(148, 163, 184, 0.09),
+        inset 0 1px 0 rgba(255, 255, 255, 0.12),
+        inset 0 -2px 5px rgba(0, 0, 0, 0.30),
+        0 8px 17px rgba(0, 0, 0, 0.24) !important;
+}
+
+/* Compact profile drawer header. */
+#profile-drawer .profile-drawer-hero {
+    gap: 12px !important;
+    padding: 16px 18px 14px !important;
+    min-height: 86px;
+}
+
+#profile-drawer .profile-drawer-hero::before {
+    background:
+        radial-gradient(circle at 16% 8%, rgba(79, 142, 247, 0.08), transparent 30%),
+        radial-gradient(circle at 86% 10%, rgba(0, 67, 84, 0.06), transparent 28%) !important;
+}
+
+#profile-drawer .profile-avatar-xl {
+    width: 46px !important;
+    height: 46px !important;
+    border-radius: 15px !important;
+    font-size: 15px !important;
+    background:
+        linear-gradient(145deg, rgba(7, 82, 101, 0.98), rgba(5, 58, 73, 0.98)) !important;
+    box-shadow:
+        0 0 0 3px rgba(7, 80, 100, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.12),
+        inset 0 -2px 5px rgba(0, 20, 28, 0.28),
+        0 8px 16px rgba(15, 23, 42, 0.12) !important;
+}
+
+#profile-drawer .profile-drawer-hero h2 {
+    font-size: 20px !important;
+    line-height: 1.05 !important;
+    letter-spacing: -0.035em !important;
+}
+
+#profile-drawer .profile-role-pill {
+    min-height: 21px !important;
+    margin-top: 6px !important;
+    padding: 0 9px !important;
+    font-size: 10px !important;
+}
+
+#profile-drawer .profile-drawer-close {
+    top: 12px !important;
+    right: 12px !important;
+    width: 30px !important;
+    height: 30px !important;
+    border-radius: 10px !important;
+}
+
+#profile-drawer .profile-drawer-body {
+    padding: 16px 18px !important;
+}
+
+html.dark #profile-drawer .profile-avatar-xl,
+[data-theme="dark"] #profile-drawer .profile-avatar-xl {
+    background:
+        linear-gradient(145deg, rgba(55, 65, 84, 0.98), rgba(32, 40, 54, 0.98)) !important;
+    box-shadow:
+        0 0 0 3px rgba(148, 163, 184, 0.07),
+        inset 0 1px 0 rgba(255, 255, 255, 0.10),
+        inset 0 -2px 5px rgba(0, 0, 0, 0.30),
+        0 7px 15px rgba(0, 0, 0, 0.20) !important;
+}
+
+/* Muted account menu avatar, no saturated purple/blue badge. */
+.account-menu-avatar {
+    border: 1px solid rgba(69, 127, 142, 0.24) !important;
+    background:
+        linear-gradient(145deg, rgba(8, 78, 96, 0.94), rgba(6, 55, 69, 0.96)) !important;
+    color: #F0F8FB !important;
+    text-shadow: 0 1px 1px rgba(0, 20, 28, 0.28);
+    box-shadow:
+        0 0 0 3px rgba(7, 80, 100, 0.055),
+        inset 0 1px 0 rgba(255, 255, 255, 0.10),
+        inset 0 -2px 5px rgba(0, 20, 28, 0.22),
+        0 7px 16px rgba(15, 23, 42, 0.10) !important;
+}
+
+html.dark .account-menu-avatar,
+[data-theme="dark"] .account-menu-avatar {
+    border-color: rgba(148, 163, 184, 0.25) !important;
+    background:
+        linear-gradient(145deg, rgba(55, 64, 82, 0.96), rgba(34, 42, 56, 0.98)) !important;
+    color: #EEF4FA !important;
+    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.30);
+    box-shadow:
+        0 0 0 3px rgba(148, 163, 184, 0.055),
+        inset 0 1px 0 rgba(255, 255, 255, 0.09),
+        inset 0 -2px 5px rgba(0, 0, 0, 0.28),
+        0 7px 15px rgba(0, 0, 0, 0.18) !important;
+}
+
+/* Dark theme: remove transient glass sweep stripes without changing static styling. */
+html.dark [data-sidebar] .sidebar-link::after,
+html.dark .app-topbar form[role="search"]::before,
+html.dark .app-topbar form[role="search"]::after,
+html.dark .residential-kpi-card::before,
+html.dark .residential-kpi-card::after,
+html.dark .filter-chip::before,
+html.dark .resident-filter-button::before,
+html.dark .quick-actions-card[data-card="quick-actions"]::before,
+html.dark [data-card="quick-actions"].quick-actions-card::before,
+[data-theme="dark"] [data-sidebar] .sidebar-link::after,
+[data-theme="dark"] .app-topbar form[role="search"]::before,
+[data-theme="dark"] .app-topbar form[role="search"]::after,
+[data-theme="dark"] .residential-kpi-card::before,
+[data-theme="dark"] .residential-kpi-card::after,
+[data-theme="dark"] .filter-chip::before,
+[data-theme="dark"] .resident-filter-button::before,
+[data-theme="dark"] .quick-actions-card[data-card="quick-actions"]::before,
+[data-theme="dark"] [data-card="quick-actions"].quick-actions-card::before {
+    content: none !important;
+    display: none !important;
+    opacity: 0 !important;
+    transform: none !important;
+    animation: none !important;
+    transition: none !important;
+    background: none !important;
+}
+
+html.dark [data-sidebar] .sidebar-link,
+html.dark .residential-kpi-card,
+html.dark .app-topbar form[role="search"],
+html.dark .filter-chip,
+html.dark .resident-filter-button,
+[data-theme="dark"] [data-sidebar] .sidebar-link,
+[data-theme="dark"] .residential-kpi-card,
+[data-theme="dark"] .app-topbar form[role="search"],
+[data-theme="dark"] .filter-chip,
+[data-theme="dark"] .resident-filter-button {
+    background-image: none !important;
+    will-change: auto !important;
+}
+
+/* Modal selects: keep a single native-looking chevron instead of repeated tiled arrows. */
+.app-modal select,
+.modal-panel select,
+.premium-center-panel select,
+.export-preview-panel select,
+.system-alerts-config-modal select,
+.checklist-note-template-row select,
+.resident-create-field select {
+    -webkit-appearance: none !important;
+    appearance: none !important;
+    background-image:
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%236B7A90' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m7 10 5 5 5-5'/%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-position: right 13px center !important;
+    background-size: 18px 18px !important;
+    padding-right: 42px !important;
+}
+
+html.dark .app-modal select,
+html.dark .modal-panel select,
+html.dark .premium-center-panel select,
+html.dark .export-preview-panel select,
+html.dark .system-alerts-config-modal select,
+html.dark .checklist-note-template-row select,
+html.dark .resident-create-field select,
+[data-theme="dark"] .app-modal select,
+[data-theme="dark"] .modal-panel select,
+[data-theme="dark"] .premium-center-panel select,
+[data-theme="dark"] .export-preview-panel select,
+[data-theme="dark"] .system-alerts-config-modal select,
+[data-theme="dark"] .checklist-note-template-row select,
+[data-theme="dark"] .resident-create-field select {
+    background-color: rgba(255, 255, 255, 0.045) !important;
+    background-image:
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%23A8B3C7' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m7 10 5 5 5-5'/%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-position: right 13px center !important;
+    background-size: 18px 18px !important;
+}
+
+/* Dark notifications: remove washed-out panels and aggressive glossy tabs. */
+html.dark #notifications-drawer .premium-notifications-panel,
+[data-theme="dark"] #notifications-drawer .premium-notifications-panel {
+    background: rgba(14, 20, 30, 0.96) !important;
+    border-color: rgba(125, 155, 185, 0.28) !important;
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.055) !important;
+}
+
+html.dark #notifications-drawer .notification-tabs,
+[data-theme="dark"] #notifications-drawer .notification-tabs {
+    background: rgba(22, 31, 43, 0.72) !important;
+    border-color: rgba(98, 130, 158, 0.32) !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.045) !important;
+}
+
+html.dark #notifications-drawer .notification-tabs button,
+[data-theme="dark"] #notifications-drawer .notification-tabs button {
+    min-height: 34px !important;
+    background: transparent !important;
+    border-color: transparent !important;
+    box-shadow: none !important;
+    transform: none !important;
+}
+
+html.dark #notifications-drawer .notification-tabs button::after,
+[data-theme="dark"] #notifications-drawer .notification-tabs button::after {
+    content: none !important;
+    display: none !important;
+}
+
+html.dark #notifications-drawer .notification-tabs button:hover,
+html.dark #notifications-drawer .notification-tabs button.is-active,
+[data-theme="dark"] #notifications-drawer .notification-tabs button:hover,
+[data-theme="dark"] #notifications-drawer .notification-tabs button.is-active {
+    background: rgba(255, 255, 255, 0.055) !important;
+    border-color: rgba(125, 155, 185, 0.22) !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.055) !important;
+}
+
+html.dark #notifications-drawer .notification-tabs button[data-notification-filter="todo"],
+html.dark #notifications-drawer .notification-tabs button[data-notification-filter="todo"].is-active,
+[data-theme="dark"] #notifications-drawer .notification-tabs button[data-notification-filter="todo"],
+[data-theme="dark"] #notifications-drawer .notification-tabs button[data-notification-filter="todo"].is-active {
+    background: rgba(14, 116, 144, 0.16) !important;
+    border-color: rgba(56, 189, 248, 0.24) !important;
+}
+
+html.dark #notifications-drawer .empty-state,
+html.dark #notifications-drawer .notification-todo-inline,
+html.dark #notifications-drawer .notification-todo-progress-card,
+html.dark #notifications-drawer .checklist-toolbar button,
+html.dark #notifications-drawer .checklist-add-note-main,
+html.dark #notifications-drawer .checklist-footer,
+html.dark #notifications-drawer .checklist-footer button,
+[data-theme="dark"] #notifications-drawer .empty-state,
+[data-theme="dark"] #notifications-drawer .notification-todo-inline,
+[data-theme="dark"] #notifications-drawer .notification-todo-progress-card,
+[data-theme="dark"] #notifications-drawer .checklist-toolbar button,
+[data-theme="dark"] #notifications-drawer .checklist-add-note-main,
+[data-theme="dark"] #notifications-drawer .checklist-footer,
+[data-theme="dark"] #notifications-drawer .checklist-footer button {
+    background: rgba(20, 29, 41, 0.82) !important;
+    border-color: rgba(125, 155, 185, 0.18) !important;
+    color: #D9E4F2 !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.045) !important;
+}
+
+html.dark #notifications-drawer .empty-state p,
+html.dark #notifications-drawer .empty-state span,
+[data-theme="dark"] #notifications-drawer .empty-state p,
+[data-theme="dark"] #notifications-drawer .empty-state span {
+    color: #D9E4F2 !important;
+}
+
+/* Dark theme: soften modal/card gloss without flattening the interface. */
+html.dark .modal-panel,
+html.dark .premium-center-panel,
+html.dark .add-payment-panel,
+html.dark .resident-command-profile-panel,
+html.dark .system-alerts-config-panel,
+[data-theme="dark"] .modal-panel,
+[data-theme="dark"] .premium-center-panel,
+[data-theme="dark"] .add-payment-panel,
+[data-theme="dark"] .resident-command-profile-panel,
+[data-theme="dark"] .system-alerts-config-panel {
+    background:
+        linear-gradient(180deg, rgba(20, 25, 35, 0.97), rgba(14, 18, 27, 0.95)) !important;
+    box-shadow:
+        0 28px 76px rgba(0, 0, 0, 0.42),
+        inset 0 1px 0 rgba(255, 255, 255, 0.035) !important;
+}
+
+html.dark .add-payment-hero,
+html.dark .export-preview-hero,
+html.dark .support-drawer-hero,
+html.dark .resident-command-profile-hero,
+html.dark .profile-drawer-hero,
+[data-theme="dark"] .add-payment-hero,
+[data-theme="dark"] .export-preview-hero,
+[data-theme="dark"] .support-drawer-hero,
+[data-theme="dark"] .resident-command-profile-hero,
+[data-theme="dark"] .profile-drawer-hero {
+    background:
+        linear-gradient(180deg, rgba(25, 31, 42, 0.78), rgba(18, 23, 33, 0.52)) !important;
+    border-color: rgba(148, 163, 184, 0.10) !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035) !important;
+}
+
+html.dark .add-payment-hero::before,
+html.dark .export-preview-hero::before,
+html.dark .support-drawer-hero::before,
+html.dark .resident-command-profile-hero::before,
+html.dark .profile-drawer-hero::before,
+[data-theme="dark"] .add-payment-hero::before,
+[data-theme="dark"] .export-preview-hero::before,
+[data-theme="dark"] .support-drawer-hero::before,
+[data-theme="dark"] .resident-command-profile-hero::before,
+[data-theme="dark"] .profile-drawer-hero::before {
+    content: none !important;
+    display: none !important;
+}
+
+html.dark .add-payment-hero > .material-symbols-outlined,
+html.dark .export-preview-hero > .material-symbols-outlined,
+html.dark .support-hero-icon,
+html.dark .checklist-hero-icon,
+html.dark .profile-avatar-xl,
+html.dark .resident-command-profile-icon,
+[data-theme="dark"] .add-payment-hero > .material-symbols-outlined,
+[data-theme="dark"] .export-preview-hero > .material-symbols-outlined,
+[data-theme="dark"] .support-hero-icon,
+[data-theme="dark"] .checklist-hero-icon,
+[data-theme="dark"] .profile-avatar-xl,
+[data-theme="dark"] .resident-command-profile-icon {
+    background: rgba(28, 38, 54, 0.78) !important;
+    background-image: none !important;
+    border: 1px solid rgba(124, 160, 205, 0.22) !important;
+    color: #79AFFF !important;
+    box-shadow:
+        0 10px 24px rgba(0, 0, 0, 0.18),
+        inset 0 1px 0 rgba(255, 255, 255, 0.045) !important;
+    filter: none !important;
+}
+
+html.dark .add-payment-search-shell input,
+html.dark .add-payment-result,
+html.dark .add-payment-sheet,
+html.dark .add-payment-resident-sheet,
+html.dark .add-payment-resident-field,
+html.dark .add-payment-balance-field,
+html.dark .add-payment-amount-field,
+html.dark .add-payment-toggle-group,
+html.dark .add-payment-resident-photo-shell,
+[data-theme="dark"] .add-payment-search-shell input,
+[data-theme="dark"] .add-payment-result,
+[data-theme="dark"] .add-payment-sheet,
+[data-theme="dark"] .add-payment-resident-sheet,
+[data-theme="dark"] .add-payment-resident-field,
+[data-theme="dark"] .add-payment-balance-field,
+[data-theme="dark"] .add-payment-amount-field,
+[data-theme="dark"] .add-payment-toggle-group,
+[data-theme="dark"] .add-payment-resident-photo-shell {
+    background:
+        linear-gradient(180deg, rgba(23, 30, 42, 0.86), rgba(18, 24, 34, 0.82)) !important;
+    background-image: linear-gradient(180deg, rgba(23, 30, 42, 0.86), rgba(18, 24, 34, 0.82)) !important;
+    border-color: rgba(148, 163, 184, 0.13) !important;
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.035),
+        0 10px 26px rgba(0, 0, 0, 0.12) !important;
+}
+
+html.dark .add-payment-hero > .material-symbols-outlined::before,
+html.dark .add-payment-hero > .material-symbols-outlined::after,
+html.dark .export-preview-hero > .material-symbols-outlined::before,
+html.dark .export-preview-hero > .material-symbols-outlined::after,
+html.dark .sidebar-premium-icon::before,
+html.dark .sidebar-premium-icon::after,
+[data-theme="dark"] .add-payment-hero > .material-symbols-outlined::before,
+[data-theme="dark"] .add-payment-hero > .material-symbols-outlined::after,
+[data-theme="dark"] .export-preview-hero > .material-symbols-outlined::before,
+[data-theme="dark"] .export-preview-hero > .material-symbols-outlined::after,
+[data-theme="dark"] .sidebar-premium-icon::before,
+[data-theme="dark"] .sidebar-premium-icon::after {
+    content: none !important;
+    display: none !important;
+}
+
+html.dark .sidebar-premium-icon,
+[data-theme="dark"] .sidebar-premium-icon {
+    background: rgba(28, 38, 54, 0.72) !important;
+    background-image: none !important;
+    border-color: rgba(124, 160, 205, 0.18) !important;
+    box-shadow:
+        0 8px 20px rgba(0, 0, 0, 0.14),
+        inset 0 1px 0 rgba(255, 255, 255, 0.04) !important;
+    filter: none !important;
 }

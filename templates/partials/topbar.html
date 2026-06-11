@@ -32,12 +32,16 @@
 </div>
 </div>
 <button aria-label="Toggle theme" class="theme-toggle" data-theme-toggle type="button">
+<span class="theme-toggle-orb" aria-hidden="true">
+<span class="material-symbols-outlined theme-toggle-symbol theme-toggle-sun">light_mode</span>
+<span class="material-symbols-outlined theme-toggle-symbol theme-toggle-moon">dark_mode</span>
+</span>
 <span class="sr-only" data-theme-label>Light</span>
 </button>
-<div class="flex items-center gap-3 pl-4 border-l border-slate-200">
-<div class="text-right hidden sm:block">
-<p class="text-xs font-bold text-teal-950" data-profile-field="name">Admin User</p>
-<p class="text-[10px] text-slate-500 uppercase tracking-widest" data-profile-field="role">Administrator</p>
+<div class="topbar-account-chip flex items-center gap-3 pl-4 border-l border-slate-200">
+<div class="topbar-account-copy text-right hidden sm:block">
+<p class="topbar-account-name text-xs font-bold text-teal-950" data-profile-field="name">Admin User</p>
+<p class="topbar-account-role text-[10px] text-slate-500 uppercase tracking-widest" data-profile-field="role">Administrator</p>
 </div>
 <div class="relative">
 <button aria-expanded="false" aria-label="Open account menu" class="account-avatar-trigger rounded-full focus:ring-2 focus:ring-primary/30" data-account-toggle type="button">

@@ -4,7 +4,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>{% block title %}HydroFlow Enterprise{% endblock %}</title>
+<title>{% block title %}Utility Manager{% endblock %}</title>
 <script>
     (() => {
         const theme = localStorage.getItem("hydroflow-theme");
@@ -17,7 +17,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
 <link href="{% static 'img/favicon.svg' %}" rel="icon" type="image/svg+xml"/>
-<link href="{% static 'css/app.css' %}?v=building-summary-admin-20260517-1" rel="stylesheet"/>
+<link href="{% static 'css/app.css' %}?v=dark-gloss-soften-20260611-1" rel="stylesheet"/>
 <script id="tailwind-config">
         tailwind.config = {
             darkMode: "class",
@@ -915,7 +915,7 @@
 <script>
     window.HydroFlowBackendData = JSON.parse("{{ backend_billing_data_json|default:'{}'|escapejs }}");
 </script>
-<script src="{% static 'js/app.js' %}?v=system-alert-admin-assignee-20260515-1"></script>
+<script src="{% static 'js/app.js' %}?v=audit-xlsx-export-fix-20260611-1"></script>
 </body>
 </html>
 
