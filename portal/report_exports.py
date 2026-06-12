@@ -32,6 +32,9 @@ REPORT_TYPE_HOT_WATER = "hot_water"
 REPORT_TYPE_HEATING = "heating"
 REPORT_TYPE_PAYMENTS = "payments"
 REPORT_TYPE_ALL = "all"
+EXCEL_MONEY_FORMAT = '#,##0 "UZS"'
+EXCEL_DECIMAL_FORMAT = "#,##0.00"
+EXCEL_INTEGER_FORMAT = "0"
 ALLOWED_REPORT_TYPES = {
     REPORT_TYPE_HOT_WATER,
     REPORT_TYPE_HEATING,
@@ -124,6 +127,15 @@ def _t(key: str, language: str | None) -> str:
     lang = _lang(language)
     labels = REPORT_TEXT.get(key, {})
     return labels.get(lang) or labels.get("en") or key
+
+
+def _excel_number_format(cell: dict | None = None) -> str:
+    style = (cell or {}).get("style")
+    if style == 6:
+        return EXCEL_MONEY_FORMAT
+    if style == 8:
+        return EXCEL_INTEGER_FORMAT
+    return EXCEL_DECIMAL_FORMAT
 
 
 def _money_text(value: Decimal | int | float | None) -> str:
@@ -388,7 +400,7 @@ class WorkbookReportBuilder:
                 cell.font = Font(name="Arial", size=10, color="1F2937")
                 cell.alignment = Alignment(horizontal="right" if source.get("type") == "number" else "left", vertical="center")
                 if source.get("type") == "number":
-                    cell.number_format = "#,##0.00" if source.get("style") != 8 else "0"
+                    cell.number_format = _excel_number_format(source)
             row_idx += 1
 
         ws.freeze_panes = ws.cell(header_row + 1, 1)
@@ -426,12 +438,12 @@ class WorkbookReportBuilder:
         cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
         cell.border = self._base_border()
 
-    def _sample_body_style(self, cell, is_number=False):
+    def _sample_body_style(self, cell, is_number=False, source: dict | None = None):
         cell.font = Font(name="Arial", size=10, color="000000")
         cell.alignment = Alignment(horizontal="right" if is_number else "left", vertical="center", wrap_text=True)
         cell.border = self._base_border()
         if is_number:
-            cell.number_format = "#,##0.00"
+            cell.number_format = _excel_number_format(source)
 
     def _write_empty_sample_row(self, ws, row_idx: int, start_col: int, end_col: int, message: str):
         ws.merge_cells(start_row=row_idx, start_column=start_col, end_row=row_idx, end_column=end_col)
@@ -459,9 +471,9 @@ class WorkbookReportBuilder:
                 if col_idx == 5:
                     value = f"=D{row_idx}-C{row_idx}"
                 cell = ws.cell(row_idx, col_idx, value)
-                self._sample_body_style(cell, source.get("type") == "number" or col_idx in {3, 4, 5, 6})
+                self._sample_body_style(cell, source.get("type") == "number" or col_idx in {3, 4, 5, 6}, source)
             ws.cell(row_idx, 6, self._cell_value(row[5]))
-            self._sample_body_style(ws.cell(row_idx, 6), True)
+            self._sample_body_style(ws.cell(row_idx, 6), True, row[5])
         ws.sheet_view.showGridLines = True
 
     def _write_hot_water_summary_sheet(self, ws, sheet: dict):
@@ -487,7 +499,8 @@ class WorkbookReportBuilder:
             values = [None, house, total_expenses, 0, "", 0, f"=C{row_idx}+D{row_idx}+F{row_idx}", consumption, tariff]
             for col_idx, value in enumerate(values, start=1):
                 cell = ws.cell(row_idx, col_idx, value)
-                self._sample_body_style(cell, col_idx not in {1, 2, 5})
+                source = row[2] if col_idx in {3, 7, 9} else row[3] if col_idx == 8 else row[4] if col_idx == 9 else None
+                self._sample_body_style(cell, col_idx not in {1, 2, 5}, source)
         ws.sheet_view.showGridLines = True
 
     def _write_heating_sheet(self, ws, sheet: dict):
@@ -510,7 +523,7 @@ class WorkbookReportBuilder:
             values = [self._cell_value(cell) for cell in row[:9]]
             for col_idx, value in enumerate(values, start=1):
                 cell = ws.cell(row_idx, col_idx, value)
-                self._sample_body_style(cell, col_idx in {1, 4, 7, 8, 9})
+                self._sample_body_style(cell, col_idx in {1, 4, 7, 8, 9}, row[col_idx - 1] if col_idx <= len(row) else None)
                 if col_idx in {5, 6}:
                     cell.number_format = "dd.mm.yyyy"
         ws.sheet_view.showGridLines = True
@@ -529,11 +542,11 @@ class WorkbookReportBuilder:
             ws.cell(row_idx, 2, row[0].get("value"))
             ws.cell(row_idx, 3, self._cell_value(row[2]))
             self._sample_body_style(ws.cell(row_idx, 2), False)
-            self._sample_body_style(ws.cell(row_idx, 3), True)
+            self._sample_body_style(ws.cell(row_idx, 3), True, row[2])
             last_row = row_idx
         if last_row >= 2:
             ws.cell(last_row + 1, 3, f"=SUM(C2:C{last_row})")
-            self._sample_body_style(ws.cell(last_row + 1, 3), True)
+            self._sample_body_style(ws.cell(last_row + 1, 3), True, _number_cell(0, style=6))
         ws.sheet_view.showGridLines = True
 
     def _write_plain_table_sheet(self, ws, sheet: dict):
@@ -544,7 +557,7 @@ class WorkbookReportBuilder:
         for row_idx, row in enumerate(data_rows, start=2):
             for col_idx, source in enumerate(row, start=1):
                 cell = ws.cell(row_idx, col_idx, self._cell_value(source))
-                self._sample_body_style(cell, source.get("type") == "number")
+                self._sample_body_style(cell, source.get("type") == "number", source)
         self._apply_widths(ws, sheet)
         ws.sheet_view.showGridLines = True
 
