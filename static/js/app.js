@@ -17,6 +17,7 @@
         "Settings": { ru: "Настройки", uz: "Sozlamalar" },
         "Recent requests": { ru: "Недавние запросы", uz: "So'nggi so'rovlar" },
         "No results": { ru: "Ничего не найдено", uz: "Natija topilmadi" },
+        "Loading profile": { ru: "Загрузка профиля", uz: "Profil yuklanmoqda" },
         "Admin User": { ru: "Администратор", uz: "Administrator" },
         "Administrator": { ru: "Администратор", uz: "Administrator" },
         "Staff": { ru: "Сотрудник", uz: "Xodim" },
@@ -2422,6 +2423,16 @@
             tone({ frequency: 760, endFrequency: 920, duration: 0.085, delay: 0.028, volume: 0.014, type: "sine" });
             return;
         }
+        if (kind === "profile-open") {
+            tone({ frequency: 410, endFrequency: 520, duration: 0.060, volume: 0.012, type: "triangle" });
+            tone({ frequency: 720, endFrequency: 880, duration: 0.074, delay: 0.026, volume: 0.010, type: "sine" });
+            return;
+        }
+        if (kind === "copy") {
+            tone({ frequency: 660, endFrequency: 760, duration: 0.040, volume: 0.010, type: "sine" });
+            tone({ frequency: 940, endFrequency: 1080, duration: 0.052, delay: 0.030, volume: 0.009, type: "triangle" });
+            return;
+        }
         if (kind === "modal-close-water") {
             tone({ frequency: 760, endFrequency: 520, duration: 0.080, volume: 0.013, type: "sine" });
             tone({ frequency: 540, endFrequency: 350, duration: 0.105, delay: 0.032, volume: 0.010, type: "triangle" });
@@ -2704,16 +2715,17 @@
     document.addEventListener("click", (event) => {
         const target = event.target.closest("button, a, [role='button']");
         if (!target || target.closest("[data-sound-toggle]")) return;
-        playSound(target.dataset.soundKind || "click");
+        if (!target.dataset.soundKind) return;
+        playSound(target.dataset.soundKind);
     }, true);
 
     document.addEventListener("pointerenter", (event) => {
-        const target = event.target.closest?.(".sidebar-link, .topbar-action-button, .theme-toggle, .lang-toggle, .drawer-action, .settings-primary-action, .account-avatar-trigger, .account-menu-item, .resident-filter-button, .network-filter, .debtor-primary-action, [data-sound-hover]");
+        const target = event.target.closest?.("[data-sound-hover]");
         if (!target) return;
         playSound("hover");
     }, true);
 
-    const searchSoundSelector = "input[type='search'], [data-command-input], [data-command-open], [data-resident-search], .table-search";
+    const searchSoundSelector = "[data-sound-search]";
     document.addEventListener("focusin", (event) => {
         const input = event.target.closest?.(searchSoundSelector);
         if (!input) return;
@@ -9188,6 +9200,7 @@
     const residentProfileModal = document.getElementById("resident-command-profile-modal");
     const residentProfileState = { resident: null };
     const residentProfileNodes = residentProfileModal ? {
+        panel: residentProfileModal.querySelector(".resident-command-profile-panel"),
         nameTitle: residentProfileModal.querySelector("[data-resident-profile-name]"),
         nameCopy: residentProfileModal.querySelector("[data-resident-profile-name-copy]"),
         subtitle: residentProfileModal.querySelector("[data-resident-profile-subtitle]"),
@@ -9229,9 +9242,52 @@
         const contractValue = String(resident.contract ?? resident.contractStatus ?? "").toLowerCase();
         return contractValue === "true" || contractValue === "1" || contractValue === "yes";
     };
+    const setResidentProfileLoading = (isLoading) => {
+        residentProfileNodes?.panel?.classList.toggle("is-loading", Boolean(isLoading));
+        residentProfileNodes?.copyButtons?.forEach((button) => {
+            button.disabled = Boolean(isLoading) || !button.dataset.copyValue;
+        });
+    };
+    const renderResidentCommandProfileSkeleton = (fallback = null) => {
+        if (!residentProfileNodes) return;
+        residentProfileState.resident = null;
+        const fallbackName = fallback?.name || t("Loading profile");
+        residentProfileNodes.nameTitle.textContent = fallbackName;
+        residentProfileNodes.nameCopy.textContent = fallbackName;
+        residentProfileNodes.subtitle.textContent = t("Loaded from database");
+        residentProfileNodes.id.textContent = fallback?.displayId || extractOwnerBackendId(fallback?.ownerBackendId, fallback?.backendId, fallback?.id) || "000";
+        residentProfileNodes.phone.textContent = fallback?.phone || "+998 00 000-0000";
+        residentProfileNodes.house.textContent = fallback?.building || "House";
+        residentProfileNodes.apartment.textContent = String(fallback?.apartmentNumber || fallback?.apartment || "000");
+        residentProfileNodes.balance.textContent = formatBillingUzs(Number(fallback?.balance || 0));
+        residentProfileNodes.balanceIcon.textContent = "hourglass_top";
+        residentProfileNodes.balanceWrap.classList.remove("is-negative");
+        residentProfileNodes.balanceWrap.classList.add("is-positive");
+        residentProfileNodes.tgUser.textContent = formatTelegramHandle(fallback?.telegramUser) || "@telegram";
+        residentProfileNodes.tgStatus.textContent = t("Connected");
+        residentProfileNodes.contract.textContent = t("True");
+        residentProfileNodes.copyButtons.forEach((button) => {
+            button.dataset.copyValue = "";
+            button.disabled = true;
+            button.classList.remove("is-copied");
+            const icon = button.querySelector(".material-symbols-outlined");
+            if (icon) icon.textContent = "content_copy";
+        });
+        residentProfileNodes.photo.classList.add("hidden");
+        residentProfileNodes.photo.src = "";
+        residentProfileNodes.fallback.classList.remove("hidden");
+        if (residentProfileNodes.editLink) {
+            residentProfileNodes.editLink.href = "#";
+            residentProfileNodes.editLink.classList.add("is-disabled");
+        }
+        residentProfileNodes.historyButton?.removeAttribute("data-owner-backend-id");
+        residentProfileNodes.billingButton?.removeAttribute("data-owner-backend-id");
+        setResidentProfileLoading(true);
+    };
     const renderResidentCommandProfile = (resident) => {
         if (!residentProfileNodes || !resident) return;
         residentProfileState.resident = resident;
+        setResidentProfileLoading(false);
         const displayId = resident.displayId || extractOwnerBackendId(resident.ownerBackendId, resident.backendId, resident.id) || "--";
         const name = resident.name || "Resident";
         const phone = resident.phone || "--";
@@ -9313,6 +9369,9 @@
             toast("Resident profile", "Could not resolve resident ID for database lookup.", "warning");
             return;
         }
+        renderResidentCommandProfileSkeleton(fallback);
+        openOverlayById("resident-command-profile-modal");
+        playSound("profile-open");
         let resident = null;
         try {
             resident = await fetchResidentForCommand(ownerBackendId);
@@ -9323,11 +9382,12 @@
             resident = fallback;
         }
         if (!resident) {
+            setResidentProfileLoading(false);
+            closeOverlayById("resident-command-profile-modal");
             toast("Resident profile", "Could not load resident data from database.", "warning");
             return;
         }
         renderResidentCommandProfile(resident);
-        openOverlayById("resident-command-profile-modal");
     };
     const openResidentCommandProfile = async (button) => {
         if (!button || !residentProfileModal || !residentProfileNodes) return;
@@ -9371,10 +9431,24 @@
                 const value = String(button.dataset.copyValue || "").trim();
                 if (!value) return;
                 const label = t(button.dataset.copyLabel || "Copy");
+                const icon = button.querySelector(".material-symbols-outlined");
+                window.clearTimeout(button._copyFeedbackTimer);
                 try {
-                    await navigator.clipboard?.writeText(value);
-                    toast(t("Copied"), `${label}: ${value}`, "success");
+                    if (!navigator.clipboard?.writeText) {
+                        throw new Error("Clipboard API is unavailable");
+                    }
+                    await navigator.clipboard.writeText(value);
+                    playSound("copy");
+                    button.classList.add("is-copied");
+                    if (icon) icon.textContent = "check";
+                    button._copyFeedbackTimer = window.setTimeout(() => {
+                        button.classList.remove("is-copied");
+                        if (icon) icon.textContent = "content_copy";
+                    }, 850);
+                    toast(t("Copied"), `${label}: ${value}`, "success", { sound: false });
                 } catch {
+                    if (icon) icon.textContent = "content_copy";
+                    playSound("error");
                     toast(label, value, "info");
                 }
             });
