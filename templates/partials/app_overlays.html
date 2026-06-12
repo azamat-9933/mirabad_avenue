@@ -481,13 +481,43 @@
 <section class="profile-info-section">
 <div class="profile-section-heading">
 <span class="material-symbols-outlined">badge</span>
-<h3 data-i18n-key="Profile details">Profile details</h3>
+<h3 data-i18n-key="Personal data">Personal data</h3>
 </div>
 <div class="profile-info-list">
-<div><span data-i18n-key="Email">Email</span><strong data-profile-field="email">admin@hydroflow.uz</strong></div>
+<div><span data-i18n-key="Full name">Full name</span><strong data-profile-field="fullName">Admin User</strong></div>
+<div><span data-i18n-key="Username">Username</span><strong data-profile-field="username">admin</strong></div>
+<div><span data-i18n-key="Django user ID">Django user ID</span><strong data-profile-field="id">--</strong></div>
+<div><span data-i18n-key="Email">Email</span><strong data-profile-field="email">--</strong></div>
 <div><span data-i18n-key="Role">Role</span><strong data-profile-field="role">Administrator</strong></div>
+</div>
+</section>
+<section class="profile-info-section">
+<div class="profile-section-heading">
+<span class="material-symbols-outlined">admin_panel_settings</span>
+<h3 data-i18n-key="Access and permissions">Access and permissions</h3>
+</div>
+<div class="profile-info-list">
 <div><span data-i18n-key="Organization">Organization</span><strong data-profile-field="organization">HydroFlow Utility Management</strong></div>
 <div><span data-i18n-key="Access level">Access level</span><strong data-profile-field="accessLevel">Full operations access</strong></div>
+<div><span data-i18n-key="Staff account">Staff account</span><strong data-profile-field="staffStatus">--</strong></div>
+<div><span data-i18n-key="Superuser">Superuser</span><strong data-profile-field="superuserStatus">--</strong></div>
+<div><span data-i18n-key="Account active">Account active</span><strong data-profile-field="activeStatus">--</strong></div>
+<div><span data-i18n-key="Groups">Groups</span><strong data-profile-field="groupsLabel">--</strong></div>
+<div><span data-i18n-key="Permissions">Permissions</span><strong data-profile-field="permissionsCount">0</strong></div>
+</div>
+</section>
+<section class="profile-info-section">
+<div class="profile-section-heading">
+<span class="material-symbols-outlined">event_note</span>
+<h3 data-i18n-key="Dates and session">Dates and session</h3>
+</div>
+<div class="profile-info-list">
+<div><span data-i18n-key="Time zone">Time zone</span><strong data-profile-field="timezone">Asia/Tashkent</strong></div>
+<div><span data-i18n-key="Last login">Last login</span><strong data-profile-field="lastLogin">--</strong></div>
+<div><span data-i18n-key="Joined">Joined</span><strong data-profile-field="dateJoined">--</strong></div>
+<div><span data-i18n-key="Profile updated">Profile updated</span><strong data-profile-field="profileUpdated">--</strong></div>
+<div><span data-i18n-key="Session status">Session status</span><strong data-profile-field="sessionStatus">Active</strong></div>
+<div><span data-i18n-key="Two-factor authentication">Two-factor authentication</span><strong data-profile-field="twoFactor">Enabled</strong></div>
 </div>
 </section>
 </div>
@@ -572,6 +602,9 @@
 </article>
 <article class="resident-command-profile-field">
 <span data-i18n-key="Telegram user">Telegram user</span>
+<button aria-label="Copy Telegram user" class="resident-command-profile-copy" data-copy-label="Telegram user" data-resident-profile-copy="telegram" type="button">
+<span class="material-symbols-outlined" aria-hidden="true">content_copy</span>
+</button>
 <strong class="resident-command-profile-chip is-connected" data-resident-profile-tg-user>--</strong>
 </article>
 <article class="resident-command-profile-field">
@@ -584,10 +617,16 @@
 </article>
 <article class="resident-command-profile-field">
 <span data-i18n-key="House">House</span>
+<button aria-label="Copy house" class="resident-command-profile-copy" data-copy-label="House" data-resident-profile-copy="house" type="button">
+<span class="material-symbols-outlined" aria-hidden="true">content_copy</span>
+</button>
 <strong data-resident-profile-house>--</strong>
 </article>
 <article class="resident-command-profile-field">
 <span data-i18n-key="Apartment">Apartment</span>
+<button aria-label="Copy apartment" class="resident-command-profile-copy" data-copy-label="Apartment" data-resident-profile-copy="apartment" type="button">
+<span class="material-symbols-outlined" aria-hidden="true">content_copy</span>
+</button>
 <strong data-resident-profile-apartment>--</strong>
 </article>
 </div>

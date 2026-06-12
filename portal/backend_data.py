@@ -94,33 +94,52 @@ def _serialize_profile(user=None) -> dict:
 
     profile = None
     if selected_user:
-        profile, _ = WorkspaceProfile.objects.get_or_create(user=selected_user)
+        profile = getattr(selected_user, "workspace_profile", None)
 
     username = selected_user.get_username() if selected_user else ""
     name = _display_name(selected_user) if selected_user else "Admin"
     role = _role_for_user(selected_user, profile)
     last_active = selected_user.last_login if selected_user else timezone.now()
+    groups = list(selected_user.groups.values_list("name", flat=True)) if selected_user else []
+    permission_count = len(selected_user.get_all_permissions()) if selected_user else 0
+    workspace_name = (profile.workspace_name if profile else "") or "Mirabad Avenue"
+    organization = (profile.organization if profile else "") or "Mirabad Avenue"
+    if workspace_name.strip().lower() == "hydroflow":
+        workspace_name = "Mirabad Avenue"
+    if organization.strip().lower() == "hydroflow utility management":
+        organization = "Mirabad Avenue"
     return {
         "id": selected_user.id if selected_user else None,
         "username": username,
         "name": name,
+        "fullName": name,
+        "firstName": selected_user.first_name if selected_user else "",
+        "lastName": selected_user.last_name if selected_user else "",
         "initials": _initials(name),
         "email": selected_user.email if selected_user else "",
         "role": role,
         "status": profile.get_status_display() if profile else "Active",
         "statusKey": profile.status if profile else WorkspaceProfile.STATUS_ACTIVE,
-        "workspace": profile.workspace_name if profile else "HydroFlow",
-        "organization": profile.organization if profile else "HydroFlow Utility Management",
+        "workspace": workspace_name,
+        "organization": organization,
         "accessLevel": profile.access_level if profile else "Full operations access",
         "timezone": profile.timezone_name if profile else "Asia/Tashkent",
         "lastActive": _datetime(last_active),
+        "lastLogin": _datetime(selected_user.last_login) if selected_user else "",
+        "dateJoined": _datetime(selected_user.date_joined) if selected_user else "",
+        "profileUpdated": _datetime(profile.updated_at) if profile else "",
         "twoFactor": "Enabled" if (profile.two_factor_enabled if profile else True) else "Disabled",
         "sessionStatus": profile.get_session_status_display() if profile else "Active",
         "note": profile.note if profile else "Profile data is loaded from Django admin.",
-        "adminUrl": f"/admin/portal/workspaceprofile/{profile.id}/change/" if profile else "/admin/portal/workspaceprofile/",
+        "adminUrl": f"/admin/portal/workspaceprofile/{profile.id}/change/" if profile else "/admin/portal/workspaceprofile/add/",
         "isAuthenticated": bool(selected_user),
         "isStaff": bool(selected_user and selected_user.is_staff),
         "isSuperuser": bool(selected_user and selected_user.is_superuser),
+        "isActive": bool(selected_user and selected_user.is_active),
+        "groups": groups,
+        "groupsLabel": ", ".join(groups),
+        "permissionsCount": permission_count,
+        "backendSource": "Django User + WorkspaceProfile" if profile else "Django User",
     }
 
 

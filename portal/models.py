@@ -27,8 +27,8 @@ class WorkspaceProfile(models.Model):
         on_delete=models.CASCADE,
         related_name="workspace_profile",
     )
-    workspace_name = models.CharField(max_length=120, default="HydroFlow")
-    organization = models.CharField(max_length=180, default="HydroFlow Utility Management")
+    workspace_name = models.CharField(max_length=120, default="Mirabad Avenue")
+    organization = models.CharField(max_length=180, default="Mirabad Avenue")
     access_level = models.CharField(max_length=180, default="Full operations access")
     role_label = models.CharField(max_length=120, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_ACTIVE)

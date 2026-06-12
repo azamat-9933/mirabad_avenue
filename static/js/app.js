@@ -3,7 +3,7 @@
     const storage = window.localStorage;
     const languageOrder = ["en", "ru", "uz"];
     const translations = {
-        "Utility Management": { ru: "Управление коммунальными услугами", uz: "Kommunal boshqaruv" },
+        "Utility Management": { ru: "Коммунальные услуги", uz: "Kommunal boshqaruv" },
         "Dashboard": { ru: "Обзор", uz: "Boshqaruv paneli" },
         "Residents": { ru: "Абоненты", uz: "Abonentlar" },
         "Residential Units": { ru: "Жилые объекты", uz: "Turar joy obyektlari" },
@@ -19,6 +19,8 @@
         "No results": { ru: "Ничего не найдено", uz: "Natija topilmadi" },
         "Admin User": { ru: "Администратор", uz: "Administrator" },
         "Administrator": { ru: "Администратор", uz: "Administrator" },
+        "Staff": { ru: "Сотрудник", uz: "Xodim" },
+        "Operator": { ru: "Оператор", uz: "Operator" },
         "Profile": { ru: "Профиль", uz: "Profil" },
         "Logs": { ru: "Логи", uz: "Loglar" },
         "Action history": { ru: "История действий", uz: "Amallar tarixi" },
@@ -31,6 +33,8 @@
         "Search audit events...": { ru: "Поиск событий аудита...", uz: "Audit hodisalarini qidirish..." },
         "Add audit note": { ru: "Добавить заметку", uz: "Izoh qo'shish" },
         "Copy latest": { ru: "Копировать последнее", uz: "Oxirgisini nusxalash" },
+        "Copy": { ru: "Скопировать", uz: "Nusxalash" },
+        "Copied": { ru: "Скопировано", uz: "Nusxalandi" },
         "Export log": { ru: "Экспорт журнала", uz: "Jurnal eksporti" },
         "No audit events found": { ru: "События аудита не найдены", uz: "Audit hodisalari topilmadi" },
         "Clear search or switch the event type.": { ru: "Очистите поиск или смените тип события.", uz: "Qidiruvni tozalang yoki hodisa turini almashtiring." },
@@ -63,22 +67,45 @@
         "Time zone": { ru: "Часовой пояс", uz: "Vaqt mintaqasi" },
         "Last active": { ru: "Последняя активность", uz: "Oxirgi faollik" },
         "Profile details": { ru: "Данные профиля", uz: "Profil tafsilotlari" },
+        "Personal data": { ru: "Личные данные", uz: "Shaxsiy ma'lumotlar" },
+        "Access and permissions": { ru: "Доступ и права", uz: "Ruxsat va huquqlar" },
+        "Dates and session": { ru: "Даты и сессия", uz: "Sana va sessiya" },
+        "Full name": { ru: "ФИО", uz: "FIO" },
+        "Username": { ru: "Логин", uz: "Login" },
+        "Django user ID": { ru: "Django user ID", uz: "Django user ID" },
         "Email": { ru: "Email", uz: "Email" },
         "Role": { ru: "Роль", uz: "Rol" },
         "Organization": { ru: "Организация", uz: "Tashkilot" },
         "Access level": { ru: "Уровень доступа", uz: "Ruxsat darajasi" },
         "Full operations access": { ru: "Полный операционный доступ", uz: "To'liq operatsion ruxsat" },
+        "Staff access": { ru: "Staff доступ", uz: "Staff ruxsati" },
+        "Staff account": { ru: "Staff доступ", uz: "Staff ruxsati" },
+        "Superuser": { ru: "Суперпользователь", uz: "Superuser" },
+        "Account active": { ru: "Аккаунт активен", uz: "Akkaunt faol" },
+        "Groups": { ru: "Группы", uz: "Guruhlar" },
+        "Permissions": { ru: "Права", uz: "Ruxsatlar" },
+        "Last login": { ru: "Последний вход", uz: "Oxirgi kirish" },
+        "Joined": { ru: "Создан", uz: "Yaratilgan" },
+        "Profile updated": { ru: "Профиль обновлён", uz: "Profil yangilangan" },
+        "Backend source": { ru: "Источник backend", uz: "Backend manbasi" },
+        "Not set": { ru: "Не указано", uz: "Kiritilmagan" },
+        "No groups": { ru: "Без групп", uz: "Guruhsiz" },
+        "Yes": { ru: "Да", uz: "Ha" },
+        "No": { ru: "Нет", uz: "Yo'q" },
         "Security": { ru: "Безопасность", uz: "Xavfsizlik" },
         "Two-factor authentication": { ru: "Двухфакторная аутентификация", uz: "Ikki faktorli autentifikatsiya" },
         "Enabled": { ru: "Включено", uz: "Yoqilgan" },
+        "Disabled": { ru: "Отключено", uz: "O'chirilgan" },
         "Session status": { ru: "Статус сессии", uz: "Sessiya holati" },
+        "Django User": { ru: "Django user", uz: "Django user" },
+        "Django User + WorkspaceProfile": { ru: "Django user + WorkspaceProfile", uz: "Django user + WorkspaceProfile" },
         "This profile preview is local until the backend admin panel is connected.": { ru: "Профиль пока локальный, пока не подключена backend admin panel.", uz: "Backend admin panel ulanmaguncha profil mahalliy ko'rinishda." },
         "Edit profile": { ru: "Редактировать профиль", uz: "Profilni tahrirlash" },
         "Profile update queued": { ru: "Обновление профиля поставлено в очередь", uz: "Profil yangilanishi navbatga qo'yildi" },
         "Sign out unavailable": { ru: "Выход пока недоступен", uz: "Chiqish hozircha mavjud emas" },
         "Notifications": { ru: "Уведомления", uz: "Bildirishnomalar" },
         "To do": { ru: "Задачи", uz: "Vazifalar" },
-        "Resolved tasks": { ru: "Решённые задачи", uz: "Hal qilingan vazifalar" },
+        "Resolved tasks": { ru: "Закрытые", uz: "Yopilgan" },
         "Resolved by": { ru: "Решил", uz: "Hal qilgan" },
         "Unknown admin": { ru: "Неизвестный админ", uz: "Noma'lum admin" },
         "No resolved tasks yet": { ru: "Пока нет решённых задач", uz: "Hali hal qilingan vazifalar yo'q" },
@@ -1138,22 +1165,43 @@
 
     const renderBackendProfile = () => {
         const profile = billingData.profile || {};
+        const lang = currentInterfaceLang();
+        const valueOrDash = (value) => {
+            const text = String(value ?? "").trim();
+            return text || translateValue("Not set", lang);
+        };
+        const boolLabel = (value) => translateValue(value ? "Yes" : "No", lang);
         const usernameName = String(profile.username || "").trim();
         const fallbackName = String(profile.name || "").trim() || usernameName || "Admin";
+        const groupsLabel = Array.isArray(profile.groups) && profile.groups.length
+            ? profile.groups.join(", ")
+            : valueOrDash(profile.groupsLabel || translateValue("No groups", lang));
         const values = {
             name: fallbackName,
+            fullName: valueOrDash(profile.fullName || profile.name || fallbackName),
+            username: valueOrDash(profile.username),
+            id: valueOrDash(profile.id),
             initials: profile.initials || fallbackName.slice(0, 2).toUpperCase(),
-            role: profile.role || "Operator",
-            email: profile.email || "No email in admin",
-            status: profile.status || "Active",
-            workspace: profile.workspace || "Mirabad Avenue",
-            organization: profile.organization || "Mirabad Avenue",
-            accessLevel: profile.accessLevel || "Staff access",
-            timezone: profile.timezone || "Asia/Tashkent",
-            lastActive: profile.lastActive || billingData.generatedAt || "Backend session",
-            twoFactor: profile.twoFactor || "Disabled",
-            sessionStatus: profile.sessionStatus || "Active",
-            note: profile.note || "Profile data is loaded from Django admin.",
+            role: translateValue(profile.role || "Operator", lang),
+            email: valueOrDash(profile.email),
+            status: translateValue(profile.status || "Active", lang),
+            workspace: valueOrDash(profile.workspace || "Mirabad Avenue"),
+            organization: valueOrDash(profile.organization || "Mirabad Avenue"),
+            accessLevel: translateValue(profile.accessLevel || "Staff access", lang),
+            timezone: valueOrDash(profile.timezone || "Asia/Tashkent"),
+            lastActive: valueOrDash(profile.lastActive || billingData.generatedAt),
+            lastLogin: valueOrDash(profile.lastLogin),
+            dateJoined: valueOrDash(profile.dateJoined),
+            profileUpdated: valueOrDash(profile.profileUpdated),
+            twoFactor: translateValue(profile.twoFactor || "Disabled", lang),
+            sessionStatus: translateValue(profile.sessionStatus || "Active", lang),
+            staffStatus: boolLabel(Boolean(profile.isStaff)),
+            superuserStatus: boolLabel(Boolean(profile.isSuperuser)),
+            activeStatus: boolLabel(profile.isActive !== false),
+            groupsLabel,
+            permissionsCount: valueOrDash(profile.permissionsCount),
+            backendSource: profile.backendSource ? translateValue(profile.backendSource, lang) : translateValue("Not set", lang),
+            note: valueOrDash(profile.note || "Profile data is loaded from Django admin."),
         };
         document.querySelectorAll("[data-profile-field]").forEach((node) => {
             const key = node.dataset.profileField;
@@ -9153,6 +9201,7 @@
         contract: residentProfileModal.querySelector("[data-resident-profile-contract]"),
         house: residentProfileModal.querySelector("[data-resident-profile-house]"),
         apartment: residentProfileModal.querySelector("[data-resident-profile-apartment]"),
+        copyButtons: residentProfileModal.querySelectorAll("[data-resident-profile-copy]"),
         photo: residentProfileModal.querySelector("[data-resident-profile-photo]"),
         fallback: residentProfileModal.querySelector("[data-resident-profile-fallback]"),
         historyButton: residentProfileModal.querySelector("[data-resident-profile-history]"),
@@ -9205,6 +9254,13 @@
         residentProfileNodes.phone.textContent = phone;
         residentProfileNodes.house.textContent = house;
         residentProfileNodes.apartment.textContent = String(apartment);
+        residentProfileNodes.copyButtons.forEach((button) => {
+            const type = button.dataset.residentProfileCopy;
+            const value = type === "telegram" ? telegramUser : type === "house" ? house : String(apartment);
+            button.dataset.copyValue = value && value !== "--" ? value : "";
+            button.disabled = !button.dataset.copyValue;
+            button.setAttribute("aria-label", `${t("Copy")} ${t(button.dataset.copyLabel || "")}`.trim());
+        });
 
         residentProfileNodes.balance.textContent = formatBillingUzs(balanceValue);
         residentProfileNodes.balanceIcon.textContent = isPositiveBalance ? "verified" : "error";
@@ -9307,6 +9363,21 @@
                 return;
             }
             document.querySelector("[data-billing-notice-open]")?.click();
+        });
+        residentProfileNodes.copyButtons.forEach((button) => {
+            button.addEventListener("click", async (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                const value = String(button.dataset.copyValue || "").trim();
+                if (!value) return;
+                const label = t(button.dataset.copyLabel || "Copy");
+                try {
+                    await navigator.clipboard?.writeText(value);
+                    toast(t("Copied"), `${label}: ${value}`, "success");
+                } catch {
+                    toast(label, value, "info");
+                }
+            });
         });
     }
     const addPaymentModal = document.getElementById("add-payment-modal");
