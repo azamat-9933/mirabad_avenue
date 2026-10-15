@@ -3,7 +3,7 @@
 ## 1. Назначение проекта
 Проект — это Django-система для управления жилым сектором (`Mirabad Avenue`) с двумя основными контурами:
 - операционный веб-портал (кастомный frontend на шаблонах + JS/CSS),
-- административная панель Django (Jazzmin) и backend-API для операций по жильцам, платежам, уведомлениям, техобслуживанию и экспортам.
+- административная панель Django (Jazzmin) и backend-API для операций по жильцам, платежам, уведомлениям и экспортам.
 
 Система объединяет:
 - учет структуры недвижимости (комплекс → дом → квартира → владелец),
@@ -16,21 +16,23 @@
 ## 2. Технологический стек
 
 ### 2.1 Backend
+Версии из `requirements.txt`:
 - Python + Django `>=5.1,<6` (нужен `LoginRequiredMiddleware`)
 - Django REST Framework `3.17.1`
-- `drf-spectacular` (OpenAPI schema + Swagger UI)
-- `django-jazzmin` (оформление admin)
-- `django-cors-headers`
-- `psycopg2` (PostgreSQL)
-- `python-dotenv` (загрузка `.env`)
-- `openpyxl` (XLSX-экспорты)
-- `reportlab` (PDF-экспорты)
+- `drf-spectacular` `0.29.0` (OpenAPI schema + Swagger UI)
+- `django-jazzmin` `3.0.4` (оформление admin)
+- `django-cors-headers` `4.9.0`
+- `psycopg2` `2.9.11` (PostgreSQL)
+- `python-dotenv` `1.2.2` (загрузка `.env`)
+- `openpyxl` `>=3.1,<4` (XLSX-экспорты)
+- `reportlab` `>=4.2,<5` (PDF-экспорты)
 
 ### 2.2 Frontend
 - Django Templates
 - Tailwind через CDN
 - Chart.js через CDN
-- Кастомный `static/js/app.js` и `static/css/app.css`
+- Шрифт Inter и иконки Material Symbols через Google Fonts
+- Кастомный `static/js/app.js`, `static/css/app.css` и адаптивный слой `static/css/responsive.css`
 - Кастомный admin JS/CSS (`admin_custom.js`, `admin_custom.css`)
 
 ### 2.3 БД
@@ -73,8 +75,10 @@ flowchart LR
 - `manage.py`
 - `requirements.txt`
 - `.env.example`
-- `.gitignore`
-- `schema_tmp.yml` и файл `-` (дубликат OpenAPI-снимка).
+- `.gitignore` (игнорирует `.env`, `.venv/`, `local.sqlite3`, `static_collected/`, `media/`)
+- `db.sqlite3` — пустая SQLite-база в репозитории; для локальной работы лучше указать свою (`DB_NAME`), чтобы не коммитить данные.
+
+OpenAPI-схема в репозитории не хранится: она генерируется на лету (`/api/schema/`).
 
 ---
 
@@ -97,6 +101,8 @@ flowchart LR
 - `SECURE_SSL_REDIRECT` и `SECURE_HSTS_SECONDS` выключены: включать, когда весь сайт работает по HTTPS (HSTS необратим для браузеров на срок действия). `manage.py check --deploy` напоминает о них предупреждениями `security.W004/W008`.
 - CORS выключен (`CORS_ALLOWED_ORIGINS` пуст, без credentials): портал работает с того же origin.
 
+`.env.example` рассчитан на локальную разработку: в нем `DEBUG=True`, PostgreSQL (`DB_ENGINE=django.db.backends.postgresql`) и CORS для `http://localhost:3000`. Для портала на том же origin CORS-строки можно удалить.
+
 Важно:
 - в рабочем `.env` хранятся реальные секреты/пароли — их нельзя публиковать.
 
@@ -115,8 +121,8 @@ flowchart LR
 - `MEDIA_ROOT = BASE_DIR/media`
 
 ### 5.5 Запуск (Windows)
-1. `python -m venv venv`
-2. `venv\Scripts\activate`
+1. `python -m venv .venv`
+2. `.venv\Scripts\activate`
 3. `pip install -r requirements.txt`
 4. `copy .env.example .env` и оставить `DEBUG=True` (для SQLite очистить `DB_ENGINE`)
 5. `python manage.py migrate`
@@ -154,8 +160,10 @@ Portal page routes:
 - `/` dashboard
 - `/residential/`
 - `/billing/`
-- `/billing/periods/create`
+- `/billing/periods/create` (и с `/` на конце)
 - `/analytics/`
+
+Почти у всех POST endpoints есть дубль без завершающего `/` (например, `/api/payments/create`), а `/api` перенаправляет на `/api/`.
 
 ---
 
@@ -235,7 +243,7 @@ Proxy-модели (`Complex`, `Building`, `BuildingSection`, `Apartment`, `Owne
 - `payment_type` (`payme`, `click`, `cash`, `manual`, `charge`)
 - `amount` (может быть +/-)
 - `balance_before`, `balance_after`
-- `external_id` (уникальный)
+- `external_id` (уникальный), `description`, `created_by`, `created_at`
 - `invoice(FK optional)`, `owner(FK)`
 
 ### Баланс меняется только через журнал
@@ -273,16 +281,16 @@ Proxy-модели (`Complex`, `Building`, `BuildingSection`, `Apartment`, `Owne
 
 ## 8. Миграции и эволюция схемы
 
-Количество миграций по приложениям:
-- `main_app`: 5 (последняя `0005_consolidate_single_sector`)
-- `billing`: 3 (последняя `0003_backfill_billing_core`)
-- `payments`: 1
-- `portal`: 4
-- `properties`: 1
+Миграции по приложениям:
+- `main_app`: `0001_initial`
+- `billing`: `0001_initial`
+- `payments`: `0001_initial`
+- `properties`: `0001_initial`
+- `portal`: `0001_initial`, `0002_alter_workspaceprofile_organization_and_more`, `0003_remove_system_health`
 
-Критичные миграции:
-- `main_app 0005`: консолидация всех комплексов в единый сектор `Mirabad Avenue`.
-- `billing 0003`: backfill данных из legacy-таблиц в новый billing-core слой.
+Ранние миграции (в т.ч. консолидация в единый сектор и backfill billing-core) были объединены в `0001_initial`, поэтому новая база создается сразу в актуальной схеме. Единый сектор поддерживается кодом: `Complex.save()` и admin-редирект `/admin/main_app/sector/`.
+
+`portal 0003_remove_system_health` удаляет таблицы `MaintenanceTask`, `TelemetryNode`, `TelemetrySample` (страница System Health убрана) и чистит связанные с ними `PortalStatusOverride`. Операция необратима для данных в этих таблицах.
 
 ---
 
@@ -328,7 +336,9 @@ Proxy-модели (`Complex`, `Building`, `BuildingSection`, `Apartment`, `Owne
 
 ### Audit/checklist/support/session
 - `POST /api/audit/note/` — добавить `AuditEvent`.
+- `POST /api/audit/export/` — выгрузка журнала аудита в XLSX.
 - `POST /api/checklist/note/` — create/toggle checklist note.
+- `POST /api/checklist/item/` — отметить/сбросить пункты чеклиста.
 - `POST /api/support/ticket/` — создать `SupportTicket` + `AuditEvent`.
 - `POST /api/logout/` — logout + `redirectUrl` (`/login/`). GET больше не поддерживается.
 
@@ -365,7 +375,7 @@ Proxy-модели (`Complex`, `Building`, `BuildingSection`, `Apartment`, `Owne
 ## 10. Контракт `portal-data`
 
 Top-level ключи snapshot (`GET /api/portal-data/`):
-- `source`, `generatedAt`, `profile`,
+- `source`, `generatedAt`, `profile`, `adminUsers`,
 - `complexes`, `residents`, `transactions`,
 - `notifications`, `systemAlerts`,
 - `auditEvents`, `checklistItems`, `checklistNotes`,
@@ -407,7 +417,7 @@ Snapshot отдается целиком: встраивается в кажду
 
 Файлы:
 - `portal/views.py` — endpoints `POST /api/export/report/` и `POST /api/audit/export/`: собирают строки и заголовки,
-- `portal/report_exports.py` — единственный генератор файлов: billing-отчеты (`build_report_payload`) и простые таблицы (`build_table_export` — экспорт жилого фонда, транзакций, обслуживания и журнала аудита).
+- `portal/report_exports.py` — единственный генератор файлов: billing-отчеты (`build_report_payload`) и простые таблицы (`build_table_export` — экспорт жилого фонда, транзакций и журнала аудита).
 
 Фронтенд файлы не генерирует: он вызывает эти endpoints и сохраняет `download` (base64) из ответа.
 
@@ -425,6 +435,8 @@ Snapshot отдается целиком: встраивается в кажду
 - `XLSX` (openpyxl, многошитовые книги + стили),
 - `PDF` (reportlab, таблицы и summary).
 
+Контексты табличного экспорта: `residential`, `transactions`. Неизвестный контекст определяется по `source`: `transactions`, если в нем есть «transaction», иначе `residential`.
+
 Фильтры в payload экспорта:
 - `complex_backend_ids`
 - `building_backend_ids`
@@ -441,17 +453,18 @@ Snapshot отдается целиком: встраивается в кажду
 - `templates/base.html` — основной layout, подключение Tailwind CDN, Chart.js, `app.css`, `app.js`, гидрация `window.HydroFlowBackendData` из `<script id="hydroflow-backend-data" type="application/json">`.
 - `templates/partials/sidebar.html`, `topbar.html`.
 - `templates/partials/app_overlays.html` — модалки/дроверы.
+- `templates/portal/login.html` — самостоятельная страница входа (не наследует `base.html`).
 - Страницы: `dashboard`, `residential`, `billing`, `analytics`, `billing_period_create`.
 - Body-фрагменты: `templates/portal/bodies/*.html`.
 
-## 12.2 Оверлеи (54 id)
+## 12.2 Оверлеи (23 модалки и дровера)
 Ключевые группы:
 - notifications/audit/support/checklist/profile/settings drawers,
 - details/apartment details drawers,
 - create/modification modals (`create-building`, `create-apartment`, `add-payment`, `system-alerts-config`, `assign-status`, `export-preview`, `billing-notice`, `confirm`).
 
 ## 12.3 JS логика (`static/js/app.js`)
-Крупный монолитный скрипт (~11k строк), включает:
+Крупный монолитный скрипт (~9.7k строк), включает:
 - i18n словари (en/ru/uz),
 - theme/lang state,
 - таблицы (поиск, пагинация, сортировки, bulk-выбор),
@@ -475,7 +488,9 @@ API пути, используемые frontend:
 - `/api/payments/create/`
 - `/api/system-alerts/configure/`
 - `/api/audit/note/`
+- `/api/audit/export/`
 - `/api/checklist/note/`
+- `/api/checklist/item/`
 - `/api/support/ticket/`
 - `/api/export/report/`
 - `/api/reminders/send/`
@@ -484,7 +499,7 @@ API пути, используемые frontend:
 - `/api/logout/`
 
 ## 12.4 CSS
-- `static/css/app.css` (~21k строк): темы, компоненты, анимации.
+- `static/css/app.css` (~21.5k строк): темы, компоненты, анимации.
 - `static/css/responsive.css`: адаптивный слой (desktop ≥1280px — полный sidebar, 768–1279px — icon rail, <768px — off-canvas drawer; сетки страниц через container queries), подключается после `app.css`.
 - CSS vars (`:root`): `--hf-primary`, `--hf-surface`, `--hf-panel`, `--hf-border`, и т.д.
 
@@ -498,24 +513,23 @@ API пути, используемые frontend:
 - `static/css/admin_custom.css`: визуальная полировка admin интерфейса.
 
 Особые правила admin-домена:
-- единый сектор (`Mirabad Avenue`) enforced через model/save, admin redirect и миграцию.
+- единый сектор (`Mirabad Avenue`) enforced через `Complex.save()` и admin redirect.
 - часть сущностей в admin read-only по бизнес-смыслу (например, transaction history/invoices, баланс жильца после создания).
 
 ---
 
 ## 14. Тесты и качество
 
+Запуск: `python manage.py test` — 65 тестов (нужен `.env` или `DEBUG=True`, см. 5.5).
+
 Наличие тестов:
-- `billing/tests.py` — полноценный набор unit/integration сценариев core биллинга (15 тестов).
-- `main_app/tests.py`, `payments/tests.py`, `portal/tests.py` — заглушки.
+- `billing/tests.py` (21) — core биллинга: расчеты, `close_period`, `recalculate`, `Payment.apply`, проводки в журнал.
+- `payments/tests.py` (9) — журнал баланса: `apply_balance_change`, платежи и начальный баланс из портала и admin, что считается платежом.
+- `portal/tests.py` (30) — вход/выход и закрытость страниц и API, CSRF, snapshot (`<script>`-встраивание, gzip, совпадение snapshot и `/api/lists/*`), XLSX/PDF-экспорты, отсутствие демо-данных, удаленные страницы System Health.
+- `config/tests.py` (5) — безопасные настройки production (секретный ключ, cookies) в отдельных процессах.
+- `main_app/tests.py` — тестов нет.
 
-Проверка в текущем окружении:
-- запуск `manage.py test billing` стартует миграции и доходит до import check,
-- падает из-за отсутствующего пакета `openpyxl` в активном окружении (`ModuleNotFoundError`).
-
-Вывод:
-- ядро биллинга покрыто лучше остальных частей,
-- frontend/API портала и admin workflows практически без автотестов.
+Не покрыты: большинство action endpoints портала (создание дома/квартиры/жильца, алерты, чеклисты, напоминания, статусы), фильтры list endpoints и frontend (JS) — автотестов браузера нет.
 
 ---
 
@@ -525,7 +539,7 @@ API пути, используемые frontend:
 - `app.js` и `app.css` очень большие, низкая модульность.
 
 2. Неполное тестовое покрытие:
-- только billing покрыт системно.
+- биллинг, журнал баланса, аутентификация и экспорты покрыты; action endpoints портала и frontend — нет (см. раздел 14).
 
 3. Зависимость от env-конфигурации и внешних пакетов:
 - для корректного тест/экспорт контура нужны установленные `openpyxl` и `reportlab`.
@@ -541,8 +555,8 @@ API пути, используемые frontend:
 - вынести API client, overlay manager, table layer, i18n и page-specific controllers в отдельные модули.
 
 2. Закрыть тестовые пробелы:
-- API тесты для `portal/views.py` (filters + actions + error cases),
-- smoke tests для critical workflows: create resident/payment, export/report.
+- API тесты для action endpoints `portal/views.py` (create building/apartment/resident, alerts, checklist, reminders, statuses) и фильтров list endpoints,
+- браузерные smoke tests основных страниц на desktop/tablet/phone.
 
 3. Упорядочить контракты API:
 - формализовать request/response схемы для action endpoints (сейчас OpenAPI в основном `additionalProperties`).
@@ -586,4 +600,4 @@ Admin UX:
 ---
 
 ## 18. Статус документа
-Документ собран по текущему состоянию кода в репозитории `D:\!!!project_mirabad` и отражает фактическую реализацию маршрутов, моделей и frontend-интеграций на момент анализа.
+Документ сверен с кодом репозитория (маршруты, модели, миграции, API, snapshot, тесты) после удаления страницы System Health и добавления адаптивного слоя. При изменении моделей, API или frontend-контрактов обновляйте соответствующий раздел.

@@ -1,4 +1,6 @@
 .env
+.venv/
+local.sqlite3
 *.log
 *.py[cod]
 .idea/
