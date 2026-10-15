@@ -260,6 +260,38 @@ class BillingCoreModelTests(TestCase):
         self.assertEqual(self.owner_1.balance, original_balances[self.owner_1.pk] + Decimal("125.00"))
         self.assertEqual(self.owner_2.balance, original_balances[self.owner_2.pk] + Decimal("125.00"))
 
+    def test_close_or_recalculate_closes_a_reopened_period_again(self):
+        service = BuildingService.objects.create(period=self.period, building=self.building, service_type="hot_water")
+        ServiceExpense.objects.create(service=service, title="Pump", amount=Decimal("750.00"))
+        HotWaterReading.objects.create(service=service, apartment=self.apartment_1, start_value=0, end_value=5)
+        HotWaterReading.objects.create(service=service, apartment=self.apartment_2, start_value=0, end_value=5)
+        self.period.close_or_recalculate()
+        balance_after_close = Owner.objects.get(pk=self.owner_1.pk).balance
+
+        self.period.reopen_period()
+        # close_period() alone refuses a reopened period: its charges are already posted.
+        with self.assertRaises(ValidationError):
+            self.period.close_period()
+        ServiceExpense.objects.filter(service=service).update(amount=Decimal("500.00"))
+        self.period.close_or_recalculate(reason="Pump invoice corrected")
+
+        self.period.refresh_from_db()
+        self.assertEqual(self.period.status, BillingPeriod.STATUS_CLOSED)
+        self.assertEqual(RecalculationLog.objects.get(period=self.period).reason, "Pump invoice corrected")
+        self.assertEqual(Owner.objects.get(pk=self.owner_1.pk).balance, balance_after_close + Decimal("125.00"))
+
+    def test_heating_record_validates_excluded_dates(self):
+        record = HeatingRecord(period=self.period, apartment=self.apartment_1, excluded_dates=["2026-05-01"])
+        with self.assertRaises(ValidationError):
+            record.full_clean()
+        record.excluded_dates = ["2026-02-30"]
+        with self.assertRaises(ValidationError):
+            record.full_clean()
+        record.excluded_dates = ["2026-04-03", "2026-04-02", "2026-04-03"]
+        record.full_clean()
+        self.assertEqual(record.excluded_dates, ["2026-04-02", "2026-04-03"])
+        self.assertEqual(record.heated_days, 28)
+
     def test_payment_apply_updates_balance_and_cannot_apply_twice(self):
         payment = Payment.objects.create(owner=self.owner_1, amount=Decimal("250.00"), method=Payment.METHOD_MANUAL)
         payment.apply()

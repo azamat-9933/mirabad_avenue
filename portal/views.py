@@ -3,7 +3,7 @@ import base64
 import re
 from collections import defaultdict
 from urllib.parse import urlencode
-from decimal import Decimal, InvalidOperation
+from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
 from datetime import datetime, time, timedelta
 
 from django.conf import settings
@@ -12,7 +12,7 @@ from django.contrib.auth import logout
 from django.core.paginator import EmptyPage, Paginator
 from django.core.exceptions import ImproperlyConfigured, ValidationError
 from django.db import DatabaseError, OperationalError, connection, transaction
-from django.db.models import Case, IntegerField, Max, Prefetch, Q, Value, When
+from django.db.models import Case, Count, IntegerField, Max, Prefetch, Q, Value, When
 from django.http import JsonResponse
 from django.http.request import RawPostDataException
 from django.shortcuts import redirect, resolve_url
@@ -28,7 +28,7 @@ from drf_spectacular.utils import extend_schema
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 
-from billing.models import BillingPeriod, Expense, HeatingApartmentUsage, HeatingRecord
+from billing.models import BillingPeriod, Charge, Expense, HeatingApartmentUsage, HeatingRecord, Invoice
 from properties.models import Apartment, Building, Complex, Owner
 from payments.models import Transaction
 from payments.services import OPENING_BALANCE_TAG, apply_balance_change, incoming_payment_q
@@ -46,6 +46,7 @@ from .backend_data import (
     _datetime,
     _normalized_telegram_status,
     _payment_type_labels,
+    _serialize_audit_events,
     account_payment_totals,
     build_portal_data,
     hot_water_totals_by_complex,
@@ -153,6 +154,11 @@ class BillingPeriodCreateView(PortalPageView):
         }
         return sorted(required - existing)
 
+    def _ensure_editable(self, period):
+        # Inputs of a closed period are already billed; edits would silently diverge from its charges.
+        if period.status == BillingPeriod.STATUS_CLOSED:
+            raise ValidationError("Davr yopilgan. O'zgartirish uchun avval davrni qayta oching (Reopened).")
+
     def _parse_excluded_dates(self, raw_value, period):
         raw = str(raw_value or "").strip()
         if not raw:
@@ -161,7 +167,10 @@ class BillingPeriodCreateView(PortalPageView):
         values = []
         seen = set()
         for token in tokens:
-            date_value = parse_date(token)
+            try:
+                date_value = parse_date(token)
+            except ValueError:  # well-formed but impossible, e.g. 2026-02-30
+                date_value = None
             if not date_value:
                 raise ValidationError(f"Noto'g'ri sana formati: {token}. Format YYYY-MM-DD.")
             if date_value < period.start_date or date_value > period.end_date:
@@ -217,6 +226,7 @@ class BillingPeriodCreateView(PortalPageView):
             raise ValidationError("Summa 0 dan katta bo'lishi kerak.")
 
         period = BillingPeriod.objects.get(pk=period_id)
+        self._ensure_editable(period)
         building = Building.objects.get(pk=building_id)
         Expense.objects.create(
             period=period,
@@ -245,8 +255,15 @@ class BillingPeriodCreateView(PortalPageView):
                     "Hisoblarni yopish uchun billing migratsiyalarini qo'llang. "
                     f"Yo'q jadvallar: {', '.join(missing_tables)}."
                 )
-            period.close_period()
-            messages.success(request, "Davr yopildi, hisoblar foydalanuvchilarga qo'yildi.")
+            was_reopened = period.status == BillingPeriod.STATUS_REOPENED
+            period.close_or_recalculate(
+                author=request.user,
+                reason=str(request.POST.get("reason") or "").strip(),
+            )
+            if was_reopened:
+                messages.success(request, "Davr qayta hisoblandi va yopildi, balanslar farq bo'yicha tuzatildi.")
+            else:
+                messages.success(request, "Davr yopildi, hisoblar foydalanuvchilarga qo'yildi.")
             return
         if status == BillingPeriod.STATUS_REOPENED:
             if missing_tables:
@@ -258,6 +275,11 @@ class BillingPeriodCreateView(PortalPageView):
             messages.warning(request, "Davr qayta ochildi.")
             return
         if status == BillingPeriod.STATUS_DRAFT:
+            if period.charges.filter(is_cancelled=False).exists():
+                # Draft would strand the posted charges: it can be neither closed nor reopened again.
+                raise ValidationError(
+                    "Hisoblar qo'yilgan davrni draft ga qaytarib bo'lmaydi. Qayta oching va qayta yoping."
+                )
             period.status = BillingPeriod.STATUS_DRAFT
             period.closed_at = None
             period.save(update_fields=["status", "closed_at"])
@@ -272,6 +294,7 @@ class BillingPeriodCreateView(PortalPageView):
             raise ValidationError("Davr yoki kvartira tanlanmadi.")
 
         period = BillingPeriod.objects.get(pk=period_id)
+        self._ensure_editable(period)
         apartment = Apartment.objects.select_related("building").get(pk=apartment_id)
         excluded_dates = self._parse_excluded_dates(request.POST.get("excluded_dates", ""), period)
 
@@ -295,9 +318,7 @@ class BillingPeriodCreateView(PortalPageView):
         can_count_charges = "billing_charge" not in missing_core_tables
         can_count_invoices = "billing_invoice" not in missing_core_tables
 
-        buildings = list(
-            Building.objects.select_related("complex").prefetch_related("apartments").order_by("number", "id")
-        )
+        buildings = list(Building.objects.select_related("complex").order_by("number", "id"))
         periods = list(
             BillingPeriod.objects.prefetch_related("buildings").order_by("-start_date", "-id")
         )
@@ -309,6 +330,26 @@ class BillingPeriodCreateView(PortalPageView):
         expense_totals = defaultdict(Decimal)
         for expense in expenses:
             expense_totals[(expense.period_id, expense.building_id, expense.service_type)] += expense.amount or Decimal("0")
+
+        # One grouped query each instead of two COUNT queries per (building, period) row.
+        charge_counts = (
+            {
+                (row["period_id"], row["apartment__building_id"]): row["total"]
+                for row in Charge.objects.filter(is_cancelled=False)
+                .values("period_id", "apartment__building_id")
+                .annotate(total=Count("id"))
+            }
+            if can_count_charges
+            else {}
+        )
+        invoice_counts = (
+            {
+                (row["period_id"], row["apartment__building_id"]): row["total"]
+                for row in Invoice.objects.values("period_id", "apartment__building_id").annotate(total=Count("id"))
+            }
+            if can_count_invoices
+            else {}
+        )
 
         periods_by_building = defaultdict(list)
         for period in periods:
@@ -329,19 +370,8 @@ class BillingPeriodCreateView(PortalPageView):
                         "status": period.status,
                         "heating_expense": expense_totals[(period.id, building.id, "heating")],
                         "hot_water_expense": expense_totals[(period.id, building.id, "hot_water")],
-                        "charges_count": (
-                            period.charges.filter(
-                                apartment__building=building,
-                                is_cancelled=False,
-                            ).count()
-                            if can_count_charges
-                            else 0
-                        ),
-                        "invoices_count": (
-                            period.invoices.filter(apartment__building=building).count()
-                            if can_count_invoices
-                            else 0
-                        ),
+                        "charges_count": charge_counts.get((period.id, building.id), 0),
+                        "invoices_count": invoice_counts.get((period.id, building.id), 0),
                     }
                 )
             building_period_cards.append(
@@ -1045,9 +1075,28 @@ def _json_payload(request):
 
 def _decimal_or_zero(value):
     try:
-        return Decimal(str(value or "0").replace(",", "").strip() or "0")
+        result = Decimal(str(value or "0").replace(",", "").strip() or "0")
     except (InvalidOperation, ValueError):
         return Decimal("0")
+    # NaN/Infinity parse fine but break comparisons and cannot be stored.
+    return result if result.is_finite() else Decimal("0")
+
+
+# Ledger amounts are DecimalField(max_digits=14, decimal_places=2).
+MONEY_LIMIT = Decimal("1000000000000")
+
+
+def _money_or_none(value):
+    """Amount rounded to tiyin, or None when it is not a finite number the ledger can store."""
+    amount = _decimal_or_zero(value).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+    return amount if abs(amount) < MONEY_LIMIT else None
+
+
+def _int_or_zero(value):
+    try:
+        return int(value or 0)
+    except (TypeError, ValueError):
+        return 0
 
 
 def _to_bool(value):
@@ -1618,9 +1667,12 @@ def api_create_apartment(request):
         return JsonResponse({"ok": False, "error": "Selected building was not found."}, status=404)
 
     try:
-        area = float(area_raw)
-    except (TypeError, ValueError):
+        area = Decimal(str(area_raw).replace(",", ".").strip())
+    except (InvalidOperation, ValueError):
         return JsonResponse({"ok": False, "error": "Area must be a valid number."}, status=400)
+    if not area.is_finite() or area >= Decimal("10000000000"):
+        return JsonResponse({"ok": False, "error": "Area must be a valid number."}, status=400)
+    area = area.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
     if area <= 0:
         return JsonResponse({"ok": False, "error": "Area must be greater than zero."}, status=400)
@@ -1693,7 +1745,9 @@ def api_create_resident(request):
     if telegram_id or telegram_user:
         telegram_status = "connected"
 
-    opening_balance = _decimal_or_zero(payload.get("balance"))
+    opening_balance = _money_or_none(payload.get("balance"))
+    if opening_balance is None:
+        return JsonResponse({"ok": False, "error": "Opening balance is out of range."}, status=400)
     with transaction.atomic():
         owner = Owner.objects.create(
             fio=fio,
@@ -1741,11 +1795,13 @@ def api_create_payment(request):
     owner_id_raw = payload.get("owner_id")
     operation = str(payload.get("operation") or "credit").strip().lower()
     channel = str(payload.get("channel") or "cash").strip().lower()
-    amount = _decimal_or_zero(payload.get("amount"))
+    amount = _money_or_none(payload.get("amount"))
 
     owner_id_digits = re.sub(r"[^\d]", "", str(owner_id_raw or ""))
     if not owner_id_digits:
         return JsonResponse({"ok": False, "error": "Resident ID is required."}, status=400)
+    if amount is None:
+        return JsonResponse({"ok": False, "error": "Amount is out of range."}, status=400)
     if amount <= 0:
         return JsonResponse({"ok": False, "error": "Amount must be greater than zero."}, status=400)
     if operation not in {"credit", "debit"}:
@@ -1829,8 +1885,8 @@ def api_create_payment(request):
 def api_resident_kit_action(request):
     payload = _json_payload(request)
     action = str(payload.get("action") or "").strip().lower()
-    visible_count = int(payload.get("visible_count") or 0)
-    debtor_count = int(payload.get("debtor_count") or 0)
+    visible_count = _int_or_zero(payload.get("visible_count"))
+    debtor_count = _int_or_zero(payload.get("debtor_count"))
     owner_ids = []
     for value in payload.get("owner_ids") or []:
         try:
@@ -1892,7 +1948,7 @@ def api_usage_report_export(request):
     if export_format not in {"XLSX", "PDF"}:
         export_format = "XLSX"
     source = str(payload.get("source") or "Usage Report").strip() or "Usage Report"
-    row_count = int(payload.get("row_count") or 0)
+    row_count = _int_or_zero(payload.get("row_count"))
     total_usage = _decimal_or_zero(payload.get("total_usage"))
 
     AuditEvent.objects.create(
@@ -2108,6 +2164,7 @@ def api_export_report(request):
 
     language = str(payload.get("language") or "en").strip().lower()
     source = str(payload.get("source") or "Current page").strip() or "Current page"
+    portal_data = None
     if report_type in ALLOWED_REPORT_TYPES:
         generated = build_report_payload(payload, language, export_format)
         download = _encode_download(generated["filename"], generated["mime"], generated["content"])
@@ -2132,7 +2189,12 @@ def api_export_report(request):
             "rowCount": row_count,
         },
     )
-    return JsonResponse({"ok": True, "download": download, "portalData": safe_portal_data(request)})
+    if portal_data is None:
+        portal_data = safe_portal_data(request)
+    else:
+        # Reuse the snapshot built for the rows; only the audit feed changed since.
+        portal_data["auditEvents"] = _serialize_audit_events()
+    return JsonResponse({"ok": True, "download": download, "portalData": portal_data})
 
 
 @extend_schema(request=OpenApiTypes.OBJECT, responses=OpenApiTypes.OBJECT)
@@ -2303,6 +2365,8 @@ def api_assign_status(request):
 
     with transaction.atomic():
         for item in selected:
+            if not isinstance(item, dict):
+                continue
             target_type = str(item.get("target_type") or "").strip().lower()
             target_id = item.get("target_id")
             try:

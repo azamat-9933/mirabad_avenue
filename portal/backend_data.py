@@ -5,7 +5,7 @@ from datetime import timedelta
 from decimal import Decimal
 
 from django.contrib.auth import get_user_model
-from django.db.models import F, Max, Prefetch, Q, Sum, Window
+from django.db.models import Case, DecimalField, F, Max, Prefetch, Q, Sum, Value, When, Window
 from django.db.models.functions import RowNumber, TruncMonth
 from django.urls import reverse
 from django.utils import timezone
@@ -573,9 +573,20 @@ def serialize_complex(complex_obj, owner_for, payment_totals_for, override_maps,
 
 
 def hot_water_totals_by_complex() -> dict[int, float]:
+    """Metered hot-water consumption per complex, the same per-row rule as HotWaterMeterReading.consumption.
+
+    Meter readings are cumulative, so summing raw end readings would count every past period again.
+    """
+    consumption = Case(
+        When(end_reading__isnull=True, then=Value(Decimal("0"))),
+        When(start_reading__isnull=True, then=F("end_reading")),
+        When(end_reading__gte=F("start_reading"), then=F("end_reading") - F("start_reading")),
+        default=Value(Decimal("0")),
+        output_field=DecimalField(max_digits=12, decimal_places=2),
+    )
     return {
         row["apartment__building__complex_id"]: _money(row["total"])
-        for row in HotWaterMeterReading.objects.values("apartment__building__complex_id").annotate(total=Sum("end_reading"))
+        for row in HotWaterMeterReading.objects.values("apartment__building__complex_id").annotate(total=Sum(consumption))
     }
 
 

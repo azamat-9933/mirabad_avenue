@@ -9,6 +9,7 @@ from django.core.exceptions import ValidationError
 from django.db import models, transaction
 from django.db.models import Sum
 from django.utils import timezone
+from django.utils.dateparse import parse_date
 
 from properties.models import Apartment, Building, BuildingSection, Owner
 
@@ -503,6 +504,12 @@ class BillingPeriod(models.Model):
             self.closed_at = locked.closed_at
             return charge_rows
 
+    def close_or_recalculate(self, author=None, reason=""):
+        """Close a draft period, or recalculate a reopened one, which closes it again."""
+        if self.status == self.STATUS_REOPENED:
+            return self.recalculate(reason or "Reopened period closed again.", author)
+        return self.close_period()
+
     def reopen_period(self):
         if self.status != self.STATUS_CLOSED:
             raise ValidationError("Only closed periods can be reopened.")
@@ -900,6 +907,27 @@ class HeatingRecord(models.Model):
         verbose_name = "Isitish hisobi"
         verbose_name_plural = "Isitish hisoblari"
         unique_together = ("period", "apartment")
+
+    def clean(self):
+        super().clean()
+        if not isinstance(self.excluded_dates, list):
+            raise ValidationError({"excluded_dates": 'Sanalar ro\'yxat bo\'lishi kerak: ["YYYY-MM-DD", ...].'})
+        period = self.period if self.period_id else None
+        normalized = set()
+        for token in self.excluded_dates:
+            try:
+                date_value = parse_date(str(token)) if token else None
+            except ValueError:  # well-formed but impossible, e.g. 2026-02-30
+                date_value = None
+            if date_value is None:
+                raise ValidationError({"excluded_dates": f"Noto'g'ri sana: {token}. Format YYYY-MM-DD."})
+            if period and not (period.start_date <= date_value <= period.end_date):
+                raise ValidationError(
+                    {"excluded_dates": f"Sana davr oralig'idan tashqarida: {token} ({period.start_date} - {period.end_date})."}
+                )
+            normalized.add(date_value.isoformat())
+        # Duplicates would be subtracted twice from the heated days.
+        self.excluded_dates = sorted(normalized)
 
     @property
     def heated_days(self):

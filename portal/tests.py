@@ -1,3 +1,4 @@
+from datetime import date
 import base64
 import gzip
 import io
@@ -12,6 +13,7 @@ from django.test import Client, TestCase
 from django.urls import reverse
 from openpyxl import load_workbook
 
+from billing.models import BillingPeriod, Charge, Expense, HeatingRecord, HotWaterMeterReading, RecalculationLog
 from main_app.models import Apartment, Building, Complex, Owner
 from payments.models import Transaction
 from payments.services import OPENING_BALANCE_TAG, apply_account_change, apply_balance_change
@@ -456,3 +458,126 @@ class PortalBoundedSnapshotTests(TestCase):
             reverse("portal:api_list_transactions"), {"apartment_id": self.owner.apartment_id, "page_size": 100}
         )
         self.assertEqual(response.json()["total"], 13)
+
+
+class PortalBillingPeriodLifecycleTests(TestCase):
+    """The portal status form can always move a period forward and never strands posted charges."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = get_user_model().objects.create_user(username="operator", password="unused-password")
+        complex_obj = Complex.objects.create(title="Mirabad Avenue", address="", author="test")
+        cls.building = Building.objects.create(number="64", complex=complex_obj, author="test")
+        cls.apartment = Apartment.objects.create(number="1", area=Decimal("50.00"), building=cls.building, author="test")
+        cls.owner = Owner.objects.create(fio="Heated Owner", phone="+998901234567", apartment=cls.apartment)
+
+    def setUp(self):
+        self.client.force_login(self.user)
+        self.period = BillingPeriod.objects.create(name="April 2026", start_date=date(2026, 4, 1), end_date=date(2026, 4, 30))
+        self.period.buildings.add(self.building.pk)
+        self.expense = Expense.objects.create(
+            period=self.period, building_id=self.building.pk, service_type="heating", name="Boiler", amount=Decimal("3000")
+        )
+
+    def _post(self, **data):
+        data.setdefault("period_id", self.period.id)
+        data.setdefault("building_id", self.building.id)
+        return self.client.post(reverse("portal:billing_period_create"), data, follow=True)
+
+    def _messages(self, response):
+        return [str(message) for message in response.context["messages"]]
+
+    def test_reopened_period_is_recalculated_when_closed_again(self):
+        self._post(action="update_status", status="closed")
+        self.owner.refresh_from_db()
+        self.assertEqual(self.owner.balance, Decimal("-3000.00"))
+
+        self._post(action="update_status", status="reopened")
+        Expense.objects.filter(pk=self.expense.pk).update(amount=Decimal("1500"))
+        self._post(action="update_status", status="closed", reason="Boiler invoice corrected")
+
+        self.period.refresh_from_db()
+        self.owner.refresh_from_db()
+        self.assertEqual(self.period.status, BillingPeriod.STATUS_CLOSED)
+        self.assertEqual(self.owner.balance, Decimal("-1500.00"))
+        self.assertEqual(RecalculationLog.objects.get(period=self.period).author, self.user)
+
+    def test_billed_period_cannot_go_back_to_draft(self):
+        self._post(action="update_status", status="closed")
+        response = self._post(action="update_status", status="draft")
+        self.period.refresh_from_db()
+        self.assertEqual(self.period.status, BillingPeriod.STATUS_CLOSED)
+        self.assertTrue(any("draft" in message for message in self._messages(response)))
+
+    def test_closed_period_inputs_are_read_only(self):
+        self._post(action="update_status", status="closed")
+        self._post(action="add_expense", service_type="heating", name="Late", amount="10")
+        self._post(action="update_heating_record", apartment_id=self.apartment.id, excluded_dates="2026-04-02")
+        self.assertEqual(Expense.objects.filter(period=self.period).count(), 1)
+        self.assertEqual(HeatingRecord.objects.get(period=self.period, apartment=self.apartment).excluded_dates, [])
+
+    def test_impossible_excluded_date_is_reported_not_a_server_error(self):
+        response = self._post(action="update_heating_record", apartment_id=self.apartment.id, excluded_dates="2026-02-30")
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(any("2026-02-30" in message for message in self._messages(response)))
+
+    def test_period_page_counts_charges_per_house(self):
+        self._post(action="update_status", status="closed")
+        response = self.client.get(reverse("portal:billing_period_create"))
+        row = response.context["building_period_cards"][0]["periods"][0]
+        self.assertEqual((row["charges_count"], row["invoices_count"]), (1, 1))
+        self.assertEqual(Charge.objects.count(), 1)
+
+
+class PortalInputValidationTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = get_user_model().objects.create_user(username="operator", password="unused-password")
+        complex_obj = Complex.objects.create(title="Mirabad Avenue", address="", author="test")
+        cls.building = Building.objects.create(number="64", complex=complex_obj, author="test")
+        cls.apartment = Apartment.objects.create(number="1", area=Decimal("50.00"), building=cls.building, author="test")
+        cls.owner = Owner.objects.create(fio="Owner", phone="+998901234567", apartment=cls.apartment)
+
+    def setUp(self):
+        self.client.force_login(self.user)
+
+    def _post(self, name, payload):
+        return self.client.post(reverse(name), json.dumps(payload), content_type="application/json")
+
+    def test_payment_rejects_non_finite_and_oversized_amounts(self):
+        for amount in ["NaN", "Infinity", "-Infinity", "1e15", "0.001"]:
+            response = self._post(
+                "portal:api_create_payment",
+                {"owner_id": self.owner.id, "amount": amount, "operation": "credit", "channel": "cash"},
+            )
+            self.assertEqual(response.status_code, 400, amount)
+        self.assertFalse(Transaction.objects.exists())
+
+    def test_payment_amount_is_rounded_to_tiyin(self):
+        response = self._post(
+            "portal:api_create_payment",
+            {"owner_id": self.owner.id, "amount": "100.005", "operation": "credit", "channel": "cash"},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(Transaction.objects.get().amount, Decimal("100.01"))
+
+    def test_apartment_rejects_non_finite_area(self):
+        for area in ["nan", "inf", "abc"]:
+            response = self._post(
+                "portal:api_create_apartment", {"building_id": self.building.id, "number": f"x-{area}", "area": area}
+            )
+            self.assertEqual(response.status_code, 400, area)
+
+    def test_bad_counters_do_not_crash(self):
+        response = self._post("portal:api_resident_kit_action", {"action": "contact_sheet", "visible_count": "many"})
+        self.assertEqual(response.status_code, 200)
+        response = self._post("portal:api_assign_status", {"context": "transactions", "status": "x", "selected": ["bad"]})
+        self.assertEqual(response.json()["updated"], 0)
+
+    def test_hot_water_total_is_consumption_not_raw_meter_readings(self):
+        period = BillingPeriod.objects.create(name="April", start_date=date(2026, 4, 1), end_date=date(2026, 4, 30))
+        HotWaterMeterReading.objects.create(
+            period=period, apartment_id=self.apartment.pk, start_reading=Decimal("1200"), end_reading=Decimal("1205.5")
+        )
+        complex_row = build_portal_data(self.user)["complexes"][0]
+        self.assertEqual(complex_row["waterM3"], 5.5)

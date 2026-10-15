@@ -69,7 +69,9 @@ class BillingPeriodAdmin(admin.ModelAdmin):
     list_filter   = ("status",)
     search_fields = ("name",)
     filter_horizontal = ("buildings",)
-    readonly_fields   = ("created_at", "closed_at", "total_days")
+    # Status changes only through the close/reopen actions: editing it here would mark a period
+    # closed without posting its charges, or strand a reopened period's charges.
+    readonly_fields   = ("created_at", "closed_at", "total_days", "status")
     inlines           = [ExpenseInline, GasMeterReadingInline]
     actions           = ["action_close_period", "action_reopen_period"]
 
@@ -163,7 +165,8 @@ class BillingPeriodAdmin(admin.ModelAdmin):
         errors_count = 0
         for period in queryset:
             try:
-                period.close_period()
+                # A reopened period is recalculated, which closes it again with delta postings.
+                period.close_or_recalculate(author=request.user)
                 closed_count += 1
             except ValidationError as exc:
                 errors_count += 1
