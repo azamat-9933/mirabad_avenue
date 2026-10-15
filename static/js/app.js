@@ -669,6 +669,10 @@
         "No active alerts for this node.": { ru: "По этому узлу нет активных оповещений.", uz: "Bu tugun bo'yicha faol ogohlantirishlar yo'q." },
         "No active alerts": { ru: "Нет активных уведомлений", uz: "Faol ogohlantirishlar yo'q" },
         "No recent activity": { ru: "Нет недавних действий", uz: "So'nggi amallar yo'q" },
+        "Debt by house": { ru: "Долг по домам", uz: "Uylar bo'yicha qarz" },
+        "Current outstanding debt of residents in each house.": { ru: "Текущий долг жильцов каждого дома.", uz: "Har bir uydagi abonentlarning joriy qarzi." },
+        "No debt": { ru: "Нет долга", uz: "Qarz yo'q" },
+        "No houses yet": { ru: "Домов пока нет", uz: "Hozircha uylar yo'q" },
         "All residential systems are synced with current local data.": { ru: "Все жилые системы синхронизированы с текущими локальными данными.", uz: "Barcha turar joy tizimlari joriy lokal ma'lumotlar bilan sinxronlangan." },
         "No transactions for selected filters": { ru: "Нет данных по выбранным фильтрам", uz: "Tanlangan filtrlarda ma'lumot topilmadi" },
         "Try another search term or reset filters. Backend data will refresh on retry.": { ru: "Попробуйте другой поисковый запрос или сбросьте фильтры. При повторе данные backend обновятся.", uz: "Boshqa qidiruv so'rovini kiriting yoki filtrlarni tiklang. Qayta urinishda backend ma'lumotlari yangilanadi." },
@@ -996,6 +1000,9 @@
     };
 
     const moneyFormatter = new Intl.NumberFormat("en-US");
+    // Space-grouped amounts ("1 000 000 000 UZS"), as written in Uzbek and Russian.
+    const spacedNumberFormatter = new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 0 });
+    const formatSpacedUzs = (value) => `${spacedNumberFormatter.format(Math.round(Number(value) || 0)).replace(/\u00a0|\u202f/g, " ")} UZS`;
     const formatBillingUzs = (value) => `${moneyFormatter.format(Math.round(Number(value) || 0))} UZS`;
     const formatAreaM2 = (value) => {
         const numeric = Number(value || 0);
@@ -1582,70 +1589,17 @@
             const residentKey = String(resident?.backendId || resident?.ownerBackendId || transaction.ownerBackendId || transaction.residentId || "");
             if (residentKey) channelResidents[channel].add(residentKey);
         });
-        const balanceSplit = {
-            debt: selectedResidents.filter((resident) => Number(resident.balance || 0) < 0).length,
-            overpaid: selectedResidents.filter((resident) => Number(resident.balance || 0) > 0).length,
-            zero: selectedResidents.filter((resident) => Number(resident.balance || 0) === 0).length,
-        };
-        const [selectedYear, selectedMonth] = String(analyticsDashboardState.month).split("-").map(Number);
-        const selectedMonthEnd = new Date(Number(selectedYear || new Date().getFullYear()), Number(selectedMonth || 1), 0);
-        const lastSuccessfulPaymentByResident = new Map();
-        selectedTransactionsAll.forEach((transaction) => {
-            const signedAmount = Number(transaction.signedAmount ?? transaction.amount ?? 0);
-            if (String(transaction.status || "").toLowerCase() !== "success" || signedAmount <= 0) return;
-            const resident = residentsById.get(String(transaction.residentId || "")) || residentsByOwner.get(String(transaction.ownerBackendId || ""));
-            const keys = [
-                resident?.id,
-                resident?.backendId,
-                resident?.ownerBackendId,
-                transaction.residentId,
-                transaction.ownerBackendId,
-            ].map((value) => String(value || "")).filter(Boolean);
-            keys.forEach((key) => {
-                const previous = lastSuccessfulPaymentByResident.get(key);
-                if (!previous || transaction._dateObj > previous) lastSuccessfulPaymentByResident.set(key, transaction._dateObj);
-            });
-        });
-        const debtAgingBuckets = [
-            { key: "0-30", label: t("0-30 days"), count: 0 },
-            { key: "31-60", label: t("31-60 days"), count: 0 },
-            { key: "61-90", label: t("61-90 days"), count: 0 },
-            { key: "90+", label: t("90+ days"), count: 0 },
-        ];
-        selectedResidents.filter((resident) => Number(resident.balance || 0) < 0).forEach((resident) => {
-            const keys = [resident.id, resident.backendId, resident.ownerBackendId].map((value) => String(value || "")).filter(Boolean);
-            const lastPayment = keys.map((key) => lastSuccessfulPaymentByResident.get(key)).filter(Boolean).sort((a, b) => b - a)[0];
-            const daysWithoutPayment = lastPayment
-                ? Math.max(0, Math.floor((selectedMonthEnd - lastPayment) / 86400000))
-                : 91;
-            const bucket = daysWithoutPayment <= 30
-                ? debtAgingBuckets[0]
-                : daysWithoutPayment <= 60
-                    ? debtAgingBuckets[1]
-                    : daysWithoutPayment <= 90
-                        ? debtAgingBuckets[2]
-                        : debtAgingBuckets[3];
-            bucket.count += 1;
-        });
-        const housePressureRows = selectedBuildings.map((building) => {
+        // Debt by house: current negative balances of each house's residents, largest first.
+        const houseDebtRows = selectedBuildings.map((building) => {
             const buildingResidents = residents.filter((resident) => String(resident.buildingId || "") === String(building.id) || String(resident.buildingBackendId || "") === String(building.backendId || ""));
-            const buildingTransactions = successfulMonthTransactions.filter((transaction) => {
-                if (String(transaction.buildingId || "") === String(building.id)) return true;
-                if (String(transaction.buildingBackendId || "") === String(building.backendId || "")) return true;
-                const resident = residentsById.get(String(transaction.residentId || "")) || residentsByOwner.get(String(transaction.ownerBackendId || ""));
-                return resident
-                    ? String(resident.buildingId || "") === String(building.id) || String(resident.buildingBackendId || "") === String(building.backendId || "")
-                    : false;
-            });
             return {
-                name: building.name || building.complexName || t("House"),
+                label: building.number || building.name || t("House"),
                 debt: sumBy(buildingResidents, (resident) => {
                     const balance = Number(resident.balance || 0);
                     return balance < 0 ? Math.abs(balance) : 0;
                 }),
-                paid: sumBy(buildingTransactions, (transaction) => transaction.amount),
             };
-        }).sort((left, right) => (right.debt + right.paid) - (left.debt + left.paid)).slice(0, 7);
+        }).sort((left, right) => right.debt - left.debt);
 
         setText('[data-analytics-value="paid-this-month"]', formatBillingUzs(monthPaid));
         setText('[data-analytics-value="payments-count"]', moneyFormatter.format(monthPaymentCount));
@@ -1655,10 +1609,6 @@
         setText('[data-analytics-value="average-payment"]', formatBillingUzs(averagePayment));
         setText('[data-analytics-value="with-contract"]', moneyFormatter.format(withContract));
         setText('[data-analytics-value="average-balance"]', formatSignedUzs(averageBalance));
-        setText('[data-analytics-value="aged-debtors"]', `${moneyFormatter.format(debtorsCount)} ${t("Debtors").toLowerCase()}`);
-        setText('[data-analytics-value="balance-debt-count"]', moneyFormatter.format(balanceSplit.debt));
-        setText('[data-analytics-value="balance-overpaid-count"]', moneyFormatter.format(balanceSplit.overpaid));
-        setText('[data-analytics-value="balance-zero-count"]', moneyFormatter.format(balanceSplit.zero));
 
         const rollingMonthKeys = rollingMonths(analyticsDashboardState.month, 6);
         const monthlyPaid = rollingMonthKeys.map((monthKey) => sumBy(
@@ -1666,10 +1616,6 @@
             (transaction) => transaction.amount
         ));
         const monthlyOps = rollingMonthKeys.map((monthKey) => selectedTransactionsAll.filter((transaction) => transaction._monthKey === monthKey && String(transaction.status || "").toLowerCase() === "success" && Number(transaction.signedAmount ?? transaction.amount ?? 0) > 0).length);
-        const monthlySubtracted = rollingMonthKeys.map((monthKey) => sumBy(
-            selectedTransactionsAll.filter((transaction) => transaction._monthKey === monthKey && String(transaction.status || "").toLowerCase() === "success" && Number(transaction.signedAmount ?? transaction.amount ?? 0) < 0),
-            (transaction) => Math.abs(Number(transaction.signedAmount ?? transaction.amount ?? 0))
-        ));
 
         if (window.Chart) {
             destroyChart("analytics-payments");
@@ -1769,7 +1715,9 @@
 
             destroyChart("analytics-channels");
             const channelsCanvas = document.getElementById("analytics-channel-chart");
-            if (channelsCanvas) {
+            const hasChannelPayments = channelDisplayOrder.some((channel) => (channelTotals[channel] || 0) > 0);
+            document.querySelector("[data-analytics-channel-layout]")?.classList.toggle("is-empty", !hasChannelPayments);
+            if (channelsCanvas && hasChannelPayments) {
                 analyticsChartRegistry["analytics-channels"] = new window.Chart(channelsCanvas, {
                     type: "doughnut",
                     data: {
@@ -1815,227 +1763,37 @@
                     },
                 });
             }
+        }
 
-            destroyChart("analytics-debt-aging");
-            const debtAgingCanvas = document.getElementById("analytics-debt-aging-chart");
-            if (debtAgingCanvas) {
-                analyticsChartRegistry["analytics-debt-aging"] = new window.Chart(debtAgingCanvas, {
-                    type: "bar",
-                    data: {
-                        labels: debtAgingBuckets.map((bucket) => bucket.label),
-                        datasets: [{
-                            label: t("Debtors"),
-                            data: debtAgingBuckets.map((bucket) => bucket.count),
-                            backgroundColor: ["rgba(34, 197, 94, 0.78)", "rgba(245, 158, 11, 0.78)", "rgba(249, 115, 22, 0.78)", "rgba(239, 68, 68, 0.78)"],
-                            borderRadius: 12,
-                            maxBarThickness: 42,
-                        }],
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        animation: false,
-                        animations: false,
-                        resizeDelay: 0,
-                        plugins: {
-                            legend: { display: false },
-                            tooltip: {
-                                animation: false,
-                                backgroundColor: tooltipBg,
-                                titleColor: tooltipText,
-                                bodyColor: tooltipText,
-                            },
-                        },
-                        scales: {
-                            x: {
-                                ticks: { color: chartTextColor, font: { weight: "850" } },
-                                grid: { display: false },
-                            },
-                            y: {
-                                beginAtZero: true,
-                                ticks: { color: chartTextColor, precision: 0 },
-                                grid: { color: chartGridColor },
-                            },
-                        },
-                    },
-                });
-            }
-
-            destroyChart("analytics-balance-structure");
-            const balanceStructureCanvas = document.getElementById("analytics-balance-structure-chart");
-            if (balanceStructureCanvas) {
-                analyticsChartRegistry["analytics-balance-structure"] = new window.Chart(balanceStructureCanvas, {
-                    type: "doughnut",
-                    data: {
-                        labels: [t("Debt"), t("Zero balance"), t("Overpayment")],
-                        datasets: [{
-                            data: [balanceSplit.debt, balanceSplit.zero, balanceSplit.overpaid],
-                            backgroundColor: ["#EF4444", "#94A3B8", "#17B26A"],
-                            borderWidth: 0,
-                            hoverOffset: 3,
-                        }],
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        animation: false,
-                        animations: false,
-                        resizeDelay: 0,
-                        cutout: "68%",
-                        plugins: {
-                            legend: { display: false },
-                            tooltip: {
-                                animation: false,
-                                backgroundColor: tooltipBg,
-                                titleColor: tooltipText,
-                                bodyColor: tooltipText,
-                            },
-                        },
-                    },
-                });
-            }
-
-            destroyChart("analytics-house-pressure");
-            const housePressureCanvas = document.getElementById("analytics-house-pressure-chart");
-            if (housePressureCanvas) {
-                analyticsChartRegistry["analytics-house-pressure"] = new window.Chart(housePressureCanvas, {
-                    type: "bar",
-                    data: {
-                        labels: housePressureRows.map((row) => row.name),
-                        datasets: [
-                            {
-                                label: t("Debt"),
-                                data: housePressureRows.map((row) => row.debt),
-                                backgroundColor: "rgba(239, 68, 68, 0.72)",
-                                borderRadius: 10,
-                                maxBarThickness: 24,
-                            },
-                            {
-                                label: t("Collected"),
-                                data: housePressureRows.map((row) => row.paid),
-                                backgroundColor: "rgba(23, 178, 106, 0.72)",
-                                borderRadius: 10,
-                                maxBarThickness: 24,
-                            },
-                        ],
-                    },
-                    options: {
-                        indexAxis: "y",
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        animation: false,
-                        animations: false,
-                        resizeDelay: 0,
-                        plugins: {
-                            legend: { display: false },
-                            tooltip: {
-                                animation: false,
-                                backgroundColor: tooltipBg,
-                                titleColor: tooltipText,
-                                bodyColor: tooltipText,
-                                callbacks: {
-                                    label: (context) => `${context.dataset.label}: ${formatBillingUzs(context.raw)}`,
-                                },
-                            },
-                        },
-                        scales: {
-                            x: {
-                                beginAtZero: true,
-                                stacked: false,
-                                ticks: {
-                                    color: chartTextColor,
-                                    callback: (value) => formatCompactUzs(value),
-                                },
-                                grid: { color: chartGridColor },
-                            },
-                            y: {
-                                ticks: { color: chartTextColor, font: { weight: "850" } },
-                                grid: { display: false },
-                            },
-                        },
-                    },
-                });
-            }
-
-            destroyChart("analytics-balance-movement");
-            const balanceMovementCanvas = document.getElementById("analytics-balance-movement-chart");
-            if (balanceMovementCanvas) {
-                analyticsChartRegistry["analytics-balance-movement"] = new window.Chart(balanceMovementCanvas, {
-                    type: "line",
-                    data: {
-                        labels: rollingMonthKeys.map((monthKey) => monthLabel(monthKey)),
-                        datasets: [
-                            {
-                                label: t("Collected"),
-                                data: monthlyPaid,
-                                borderColor: "#17B26A",
-                                backgroundColor: "rgba(23, 178, 106, 0.14)",
-                                fill: true,
-                                borderWidth: 2,
-                                pointRadius: 2,
-                                pointHoverRadius: 2,
-                                pointHitRadius: 12,
-                                tension: 0.38,
-                            },
-                            {
-                                label: t("Subtracted"),
-                                data: monthlySubtracted,
-                                borderColor: "#EF4444",
-                                backgroundColor: "rgba(239, 68, 68, 0.10)",
-                                fill: true,
-                                borderWidth: 2,
-                                pointRadius: 2,
-                                pointHoverRadius: 2,
-                                pointHitRadius: 12,
-                                tension: 0.38,
-                            },
-                        ],
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        animation: false,
-                        animations: false,
-                        resizeDelay: 0,
-                        plugins: {
-                            legend: { display: false },
-                            tooltip: {
-                                animation: false,
-                                backgroundColor: tooltipBg,
-                                titleColor: tooltipText,
-                                bodyColor: tooltipText,
-                                callbacks: {
-                                    label: (context) => `${context.dataset.label}: ${formatBillingUzs(context.raw)}`,
-                                },
-                            },
-                        },
-                        scales: {
-                            x: {
-                                ticks: { color: chartTextColor, font: { weight: "800" } },
-                                grid: { display: false },
-                            },
-                            y: {
-                                beginAtZero: true,
-                                ticks: {
-                                    color: chartTextColor,
-                                    callback: (value) => formatCompactUzs(value),
-                                },
-                                grid: { color: chartGridColor },
-                            },
-                        },
-                    },
-                });
-            }
+        const houseDebtList = document.querySelector("[data-analytics-house-debt-list]");
+        if (houseDebtList) {
+            const maxHouseDebt = Math.max(0, ...houseDebtRows.map((row) => row.debt));
+            houseDebtList.innerHTML = houseDebtRows.length
+                ? houseDebtRows.map((row) => `
+                    <li class="analytics-house-debt-row ${row.debt ? "" : "is-clear"}">
+                        <span class="analytics-house-debt-name">${escapeHtml(row.label)}</span>
+                        <span class="analytics-house-debt-bar" aria-hidden="true"><i style="width:${row.debt && maxHouseDebt ? Math.max(2, (row.debt / maxHouseDebt) * 100) : 0}%"></i></span>
+                        <strong class="analytics-house-debt-amount">${escapeHtml(row.debt ? formatSpacedUzs(row.debt) : t("No debt"))}</strong>
+                    </li>
+                `).join("")
+                : `<li class="analytics-house-debt-empty">${escapeHtml(t("No houses yet"))}</li>`;
         }
 
         const channelList = document.querySelector("[data-analytics-channel-list]");
         if (channelList) {
+            // Same marks as the Payments page; the donut color stays as the card's left edge.
+            const channelIcons = {
+                Cash: '<span class="material-symbols-outlined analytics-v2-channel-symbol analytics-v2-channel-symbol--cash" aria-hidden="true">payments</span>',
+                Card: '<span class="material-symbols-outlined analytics-v2-channel-symbol analytics-v2-channel-symbol--card" aria-hidden="true">credit_card</span>',
+                Click: `<img alt="" class="payment-brand-logo payment-brand-logo-click" src="${escapeHtml(channelList.dataset.clickLogo || "")}">`,
+                Payme: `<img alt="" class="payment-brand-logo payment-brand-logo-payme" src="${escapeHtml(channelList.dataset.paymeLogo || "")}">`,
+            };
             channelList.innerHTML = channelDisplayOrder.map((channel) => {
                 const amount = channelTotals[channel] || 0;
                 const residentsCount = channelResidents[channel]?.size || 0;
                 return `
-                <div class="analytics-v2-channel-card">
-                    <span class="analytics-v2-channel-badge" style="background:${channelPalette[channel]}"></span>
+                <div class="analytics-v2-channel-card" style="--channel-color:${channelPalette[channel]}">
+                    <span class="analytics-v2-channel-avatar">${channelIcons[channel] || ""}</span>
                     <div class="analytics-v2-channel-copy">
                         <strong>${escapeHtml(t(channel))}</strong>
                         <span>${escapeHtml(`${moneyFormatter.format(residentsCount)} ${t("Residents").toLowerCase()}`)}</span>

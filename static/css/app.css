@@ -17051,6 +17051,98 @@ html.dark .add-payment-resident-photo-shell,
 .analytics-v2-dot--red { background: #EF4444; }
 .analytics-v2-dot--green { background: #17B26A; }
 
+.analytics-house-debt-list {
+    display: grid;
+    gap: 10px;
+    margin: 4px 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.analytics-house-debt-row {
+    display: grid;
+    /* Fixed amount column so every bar track has the same length. */
+    grid-template-columns: minmax(64px, 140px) minmax(0, 1fr) 240px;
+    align-items: center;
+    gap: 18px;
+    padding: 12px 18px;
+    border-radius: 16px;
+    border: 1px solid rgba(174, 194, 220, 0.24);
+    background: rgba(255, 255, 255, 0.78);
+}
+
+.analytics-house-debt-name {
+    color: #1A2535;
+    font-size: 20px;
+    font-weight: 900;
+    letter-spacing: -0.02em;
+}
+
+.analytics-house-debt-bar {
+    height: 8px;
+    border-radius: 999px;
+    background: rgba(239, 68, 68, 0.10);
+    overflow: hidden;
+}
+
+.analytics-house-debt-bar i {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: #EF4444;
+}
+
+.analytics-house-debt-amount {
+    color: #DC2626;
+    font-size: 20px;
+    font-weight: 900;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+    white-space: nowrap;
+}
+
+.analytics-house-debt-row.is-clear .analytics-house-debt-amount {
+    color: #17B26A;
+}
+
+.analytics-house-debt-empty {
+    padding: 16px;
+    color: #64748B;
+    font-weight: 700;
+}
+
+html.dark .analytics-house-debt-row,
+[data-theme="dark"] .analytics-house-debt-row {
+    border-color: rgba(116, 139, 170, 0.18);
+    background: rgba(255, 255, 255, 0.04);
+}
+
+html.dark .analytics-house-debt-name,
+[data-theme="dark"] .analytics-house-debt-name {
+    color: #E5EDF7;
+}
+
+html.dark .analytics-house-debt-amount,
+[data-theme="dark"] .analytics-house-debt-amount {
+    color: #FF8A8A;
+}
+
+html.dark .analytics-house-debt-row.is-clear .analytics-house-debt-amount,
+[data-theme="dark"] .analytics-house-debt-row.is-clear .analytics-house-debt-amount {
+    color: #4ADE80;
+}
+
+@media (max-width: 640px) {
+    .analytics-house-debt-row {
+        grid-template-columns: minmax(0, 1fr) auto;
+    }
+
+    .analytics-house-debt-bar {
+        grid-column: 1 / -1;
+        grid-row: 2;
+    }
+}
+
 .analytics-v2-panel-pill {
     display: inline-flex;
     align-items: center;
@@ -17214,6 +17306,86 @@ html.dark .add-payment-resident-photo-shell,
     box-shadow:
         0 10px 24px rgba(73, 101, 139, 0.10),
         inset 0 1px 0 rgba(255, 255, 255, 0.92);
+}
+
+/* base.html sets .chart-canvas-wrap { min-height: 22rem }, which overrode these chart sizes. */
+.chart-canvas-wrap.analytics-v2-chart-wrap--tall {
+    min-height: 300px;
+}
+
+/* When the channels panel next to it is taller, the payments chart grows instead of leaving a gap. */
+.analytics-v2-grid--top > .analytics-v2-panel--chart {
+    display: flex;
+    flex-direction: column;
+}
+
+.analytics-v2-grid--top .analytics-v2-chart-wrap--tall {
+    flex: 1 1 auto;
+    height: auto;
+    max-height: none;
+}
+
+.chart-canvas-wrap.analytics-v2-chart-wrap--donut {
+    min-height: 184px;
+}
+
+.analytics-v2-channel-layout.is-empty {
+    grid-template-columns: minmax(0, 1fr);
+}
+
+/* Donut beside the list only when the panel itself has room; otherwise stack them. */
+.analytics-v2-panel--side {
+    container-type: inline-size;
+}
+
+@container (max-width: 560px) {
+    .analytics-v2-channel-layout {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+.analytics-v2-channel-layout.is-empty .analytics-v2-chart-wrap--donut {
+    display: none;
+}
+
+.analytics-v2-channel-card {
+    border-left: 4px solid var(--channel-color, rgba(174, 194, 220, 0.24));
+}
+
+.analytics-v2-channel-avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 40px;
+    padding: 6px;
+    border-radius: 12px;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    background: rgba(255, 255, 255, 0.92);
+    box-shadow: 0 6px 14px rgba(15, 23, 42, 0.06);
+}
+
+.analytics-v2-channel-avatar .payment-brand-logo {
+    max-width: 44px;
+    max-height: 24px;
+}
+
+.analytics-v2-channel-symbol {
+    font-size: 26px;
+}
+
+.analytics-v2-channel-symbol--cash {
+    color: #059669;
+}
+
+.analytics-v2-channel-symbol--card {
+    color: #0284C7;
+}
+
+html.dark .analytics-v2-channel-avatar,
+[data-theme="dark"] .analytics-v2-channel-avatar {
+    border-color: rgba(255, 255, 255, 0.10);
+    background: rgba(255, 255, 255, 0.92);
 }
 
 .analytics-v2-channel-badge {

@@ -1,3 +1,4 @@
+{% load static %}
 <main class="pl-64 min-h-screen flex flex-col pt-16 analytics-v2-shell" data-analytics-dashboard-page>
     <div class="analytics-v2-page p-8 flex-1">
         <section class="analytics-v2-hero">
@@ -97,85 +98,24 @@
                         <p data-i18n-key="Distribution by real backend payment methods.">Distribution by real backend payment methods.</p>
                     </div>
                 </header>
-                <div class="analytics-v2-channel-layout">
+                <div class="analytics-v2-channel-layout" data-analytics-channel-layout>
                     <div class="chart-canvas-wrap analytics-v2-chart-wrap analytics-v2-chart-wrap--donut">
                         <canvas id="analytics-channel-chart" aria-label="Payment channels chart" role="img"></canvas>
                     </div>
-                    <div class="analytics-v2-channel-list" data-analytics-channel-list></div>
+                    <div class="analytics-v2-channel-list" data-analytics-channel-list data-click-logo="{% static 'img/click-logo.png' %}" data-payme-logo="{% static 'img/payme-logo.png' %}"></div>
                 </div>
             </article>
         </section>
 
-        <section class="analytics-v2-grid analytics-v2-grid--deep">
-            <article class="analytics-v2-panel analytics-v2-panel--chart">
+        <section class="analytics-v2-grid">
+            <article class="analytics-v2-panel">
                 <header class="analytics-v2-panel__head">
                     <div>
-                        <h2 data-i18n-key="Debt aging">Debt aging</h2>
-                        <p data-i18n-key="How long current debtors have gone without a successful payment.">How long current debtors have gone without a successful payment.</p>
-                    </div>
-                    <span class="analytics-v2-panel-pill" data-analytics-value="aged-debtors">0</span>
-                </header>
-                <div class="chart-canvas-wrap analytics-v2-chart-wrap analytics-v2-chart-wrap--compact">
-                    <canvas id="analytics-debt-aging-chart" aria-label="Debt aging chart" role="img"></canvas>
-                </div>
-            </article>
-
-            <article class="analytics-v2-panel analytics-v2-panel--chart">
-                <header class="analytics-v2-panel__head">
-                    <div>
-                        <h2 data-i18n-key="Balance structure">Balance structure</h2>
-                        <p data-i18n-key="Current resident balance split by debt, zero and overpayment.">Current resident balance split by debt, zero and overpayment.</p>
+                        <h2 data-i18n-key="Debt by house">Debt by house</h2>
+                        <p data-i18n-key="Current outstanding debt of residents in each house.">Current outstanding debt of residents in each house.</p>
                     </div>
                 </header>
-                <div class="analytics-v2-split-layout">
-                    <div class="chart-canvas-wrap analytics-v2-chart-wrap analytics-v2-chart-wrap--mini-donut">
-                        <canvas id="analytics-balance-structure-chart" aria-label="Balance structure chart" role="img"></canvas>
-                    </div>
-                    <div class="analytics-v2-split-list">
-                        <div class="analytics-v2-split-card analytics-v2-split-card--red">
-                            <span data-i18n-key="Debt">Debt</span>
-                            <strong data-analytics-value="balance-debt-count">0</strong>
-                        </div>
-                        <div class="analytics-v2-split-card analytics-v2-split-card--green">
-                            <span data-i18n-key="Overpayment">Overpayment</span>
-                            <strong data-analytics-value="balance-overpaid-count">0</strong>
-                        </div>
-                        <div class="analytics-v2-split-card">
-                            <span data-i18n-key="Zero balance">Zero balance</span>
-                            <strong data-analytics-value="balance-zero-count">0</strong>
-                        </div>
-                    </div>
-                </div>
-            </article>
-        </section>
-
-        <section class="analytics-v2-grid analytics-v2-grid--wide">
-            <article class="analytics-v2-panel analytics-v2-panel--chart">
-                <header class="analytics-v2-panel__head">
-                    <div>
-                        <h2 data-i18n-key="House debt pressure">House debt pressure</h2>
-                        <p data-i18n-key="Top houses by current outstanding balance from real residents.">Top houses by current outstanding balance from real residents.</p>
-                    </div>
-                    <div class="analytics-v2-legend">
-                        <span><i class="analytics-v2-dot analytics-v2-dot--red"></i><b data-i18n-key="Debt">Debt</b></span>
-                        <span><i class="analytics-v2-dot analytics-v2-dot--green"></i><b data-i18n-key="Collected">Collected</b></span>
-                    </div>
-                </header>
-                <div class="chart-canvas-wrap analytics-v2-chart-wrap analytics-v2-chart-wrap--pressure">
-                    <canvas id="analytics-house-pressure-chart" aria-label="House debt pressure chart" role="img"></canvas>
-                </div>
-            </article>
-
-            <article class="analytics-v2-panel analytics-v2-panel--chart">
-                <header class="analytics-v2-panel__head">
-                    <div>
-                        <h2 data-i18n-key="Monthly balance movement">Monthly balance movement</h2>
-                        <p data-i18n-key="Collected payments compared with current outstanding debt.">Collected payments compared with current outstanding debt.</p>
-                    </div>
-                </header>
-                <div class="chart-canvas-wrap analytics-v2-chart-wrap analytics-v2-chart-wrap--compact">
-                    <canvas id="analytics-balance-movement-chart" aria-label="Monthly balance movement chart" role="img"></canvas>
-                </div>
+                <ol class="analytics-house-debt-list" data-analytics-house-debt-list></ol>
             </article>
         </section>
 
