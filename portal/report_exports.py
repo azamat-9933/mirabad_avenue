@@ -15,7 +15,7 @@ from billing.models import (
 )
 from django.utils import timezone
 from openpyxl import Workbook
-from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
+from openpyxl.styles import Alignment, Border, Font, NamedStyle, PatternFill, Side
 from openpyxl.utils import get_column_letter
 from payments.models import Transaction
 from reportlab.lib import colors
@@ -35,6 +35,7 @@ REPORT_TYPE_ALL = "all"
 EXCEL_MONEY_FORMAT = '#,##0 "UZS"'
 EXCEL_DECIMAL_FORMAT = "#,##0.00"
 EXCEL_INTEGER_FORMAT = "0"
+XLSX_MIME = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 ALLOWED_REPORT_TYPES = {
     REPORT_TYPE_HOT_WATER,
     REPORT_TYPE_HEATING,
@@ -293,6 +294,23 @@ def _scope_text(building_ids, apartment_ids, owner_ids, language: str) -> str:
     }[language]
 
 
+# Shared style objects: building new Font/Border/Alignment objects for every cell made
+# large exports (tens of thousands of rows) take ~30 s; reusing them gives identical files.
+_BASE_BORDER = Border(
+    left=Side(style="thin", color="D9D9D9"),
+    right=Side(style="thin", color="D9D9D9"),
+    top=Side(style="thin", color="D9D9D9"),
+    bottom=Side(style="thin", color="D9D9D9"),
+)
+_HEADER_FONT = Font(name="Arial", size=10, bold=True, color="000000")
+_HEADER_ALIGNMENT = Alignment(horizontal="center", vertical="center", wrap_text=True)
+_BODY_FONT = Font(name="Arial", size=10, color="000000")
+_BODY_ALIGNMENT_TEXT = Alignment(horizontal="left", vertical="center", wrap_text=True)
+_BODY_ALIGNMENT_NUMBER = Alignment(horizontal="right", vertical="center", wrap_text=True)
+_BODY_TEXT_STYLE = "Mirabad body text"
+_BODY_NUMBER_STYLE = "Mirabad body number"
+
+
 class WorkbookReportBuilder:
     def __init__(self):
         self._sheets = []
@@ -312,6 +330,10 @@ class WorkbookReportBuilder:
     def build(self) -> bytes:
         workbook = Workbook()
         workbook.remove(workbook.active)
+        # Body cells reference these by name, which copies a prepared style instead of
+        # hashing Font/Border/Alignment objects for every cell.
+        for name, alignment in ((_BODY_TEXT_STYLE, _BODY_ALIGNMENT_TEXT), (_BODY_NUMBER_STYLE, _BODY_ALIGNMENT_NUMBER)):
+            workbook.add_named_style(NamedStyle(name=name, font=_BODY_FONT, alignment=alignment, border=_BASE_BORDER))
         used_names = set()
         for sheet in self._sheets:
             ws = workbook.create_sheet(self._unique_sheet_name(sheet["name"], used_names))
@@ -429,22 +451,15 @@ class WorkbookReportBuilder:
             ws.column_dimensions[get_column_letter(col_idx)].width = width
 
     def _base_border(self):
-        return Border(
-            left=Side(style="thin", color="D9D9D9"),
-            right=Side(style="thin", color="D9D9D9"),
-            top=Side(style="thin", color="D9D9D9"),
-            bottom=Side(style="thin", color="D9D9D9"),
-        )
+        return _BASE_BORDER
 
     def _sample_header_style(self, cell):
-        cell.font = Font(name="Arial", size=10, bold=True, color="000000")
-        cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
-        cell.border = self._base_border()
+        cell.font = _HEADER_FONT
+        cell.alignment = _HEADER_ALIGNMENT
+        cell.border = _BASE_BORDER
 
     def _sample_body_style(self, cell, is_number=False, source: dict | None = None):
-        cell.font = Font(name="Arial", size=10, color="000000")
-        cell.alignment = Alignment(horizontal="right" if is_number else "left", vertical="center", wrap_text=True)
-        cell.border = self._base_border()
+        cell.style = _BODY_NUMBER_STYLE if is_number else _BODY_TEXT_STYLE
         if is_number:
             cell.number_format = _excel_number_format(source)
 
@@ -574,12 +589,25 @@ def _number_cell(value, style: int = 6, display: str | None = None):
     return {"value": raw, "style": style, "type": "number", "display": display or str(raw)}
 
 
+# Fonts with Cyrillic and Uzbek Latin glyphs; Helvetica (the fallback) has neither.
+REPORT_FONT_CANDIDATES = [
+    r"C:\Windows\Fonts\arial.ttf",
+    "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+    "/usr/share/fonts/dejavu/DejaVuSans.ttf",
+    "/usr/share/fonts/TTF/DejaVuSans.ttf",
+    "/Library/Fonts/Arial.ttf",
+    "/System/Library/Fonts/Supplemental/Arial.ttf",
+]
+
+
 def _report_font_name() -> str:
-    try:
-        pdfmetrics.registerFont(TTFont("MirabadReport", r"C:\Windows\Fonts\arial.ttf"))
-        return "MirabadReport"
-    except Exception:
-        return "Helvetica"
+    for path in REPORT_FONT_CANDIDATES:
+        try:
+            pdfmetrics.registerFont(TTFont("MirabadReport", path))
+            return "MirabadReport"
+        except Exception:
+            continue
+    return "Helvetica"
 
 
 def _pdf_cell(value, style: ParagraphStyle):
@@ -587,6 +615,29 @@ def _pdf_cell(value, style: ParagraphStyle):
 
 
 def _build_report_pdf(report_type: str, sheets: list[dict], summary_rows: list[tuple[str, str]], language: str) -> bytes:
+    return _build_pdf(
+        f"backend-report-{report_type}",
+        _t("backend_export", language),
+        f"{_report_type_label(report_type, language)} - {_t('backend_export_subtitle', language)}",
+        sheets,
+        summary_rows,
+        language,
+    )
+
+
+def _build_pdf(
+    document_title: str,
+    heading: str,
+    subheading: str,
+    sheets: list[dict],
+    summary_rows: list[tuple[str, str]],
+    language: str,
+) -> bytes:
+    """Landscape A4 PDF: heading, optional summary table on its own page, then one table per sheet.
+
+    Each sheet needs "headers" and "rows" (cells from _text_cell/_number_cell); "title" and
+    "subtitle" are printed above the table when present.
+    """
     font_name = _report_font_name()
     styles = getSampleStyleSheet()
     title_style = ParagraphStyle(
@@ -633,38 +684,41 @@ def _build_report_pdf(report_type: str, sheets: list[dict], summary_rows: list[t
         rightMargin=10 * mm,
         topMargin=10 * mm,
         bottomMargin=10 * mm,
-        title=f"backend-report-{report_type}",
+        title=document_title,
     )
     story = [
-        Paragraph(_t("backend_export", language), title_style),
-        Paragraph(f"{_report_type_label(report_type, language)} - {_t('backend_export_subtitle', language)}", subtitle_style),
+        Paragraph(heading, title_style),
+        Paragraph(subheading, subtitle_style),
     ]
 
-    summary_table = Table(
-        [[_pdf_cell(label, header_style), _pdf_cell(value, cell_style)] for label, value in summary_rows],
-        colWidths=[45 * mm, 120 * mm],
-        repeatRows=0,
-    )
-    summary_table.setStyle(
-        TableStyle(
-            [
-                ("BACKGROUND", (0, 0), (0, -1), colors.HexColor("#0F766E")),
-                ("BACKGROUND", (1, 0), (1, -1), colors.HexColor("#F8FAFC")),
-                ("GRID", (0, 0), (-1, -1), 0.35, colors.HexColor("#D7E3F4")),
-                ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
-                ("LEFTPADDING", (0, 0), (-1, -1), 6),
-                ("RIGHTPADDING", (0, 0), (-1, -1), 6),
-                ("TOPPADDING", (0, 0), (-1, -1), 5),
-                ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
-            ]
+    if summary_rows:
+        summary_table = Table(
+            [[_pdf_cell(label, header_style), _pdf_cell(value, cell_style)] for label, value in summary_rows],
+            colWidths=[45 * mm, 120 * mm],
+            repeatRows=0,
         )
-    )
-    story.extend([summary_table, PageBreak()])
+        summary_table.setStyle(
+            TableStyle(
+                [
+                    ("BACKGROUND", (0, 0), (0, -1), colors.HexColor("#0F766E")),
+                    ("BACKGROUND", (1, 0), (1, -1), colors.HexColor("#F8FAFC")),
+                    ("GRID", (0, 0), (-1, -1), 0.35, colors.HexColor("#D7E3F4")),
+                    ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+                    ("LEFTPADDING", (0, 0), (-1, -1), 6),
+                    ("RIGHTPADDING", (0, 0), (-1, -1), 6),
+                    ("TOPPADDING", (0, 0), (-1, -1), 5),
+                    ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+                ]
+            )
+        )
+        story.extend([summary_table, PageBreak()])
 
     available_width = landscape(A4)[0] - 20 * mm
     for index, sheet in enumerate(sheets, start=1):
-        story.append(Paragraph(sheet["title"], title_style))
-        story.append(Paragraph(sheet["subtitle"], subtitle_style))
+        if sheet.get("title"):
+            story.append(Paragraph(sheet["title"], title_style))
+        if sheet.get("subtitle"):
+            story.append(Paragraph(sheet["subtitle"], subtitle_style))
         table_rows = [[_pdf_cell(header, header_style) for header in sheet["headers"]]]
         if sheet["rows"]:
             for row in sheet["rows"]:
@@ -1153,9 +1207,27 @@ def build_report_payload(payload, language: str, export_format: str):
     workbook_bytes = builder.build()
     return {
         "filename": f"backend-report-{report_type}-{generated_at:%Y%m%d-%H%M}.xlsx",
-        "mime": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "mime": XLSX_MIME,
         "content": workbook_bytes,
         "report_type": report_type,
         "sheet_count": len(sheets) or 1,
         "row_count": total_rows,
     }
+
+
+def build_table_export(title: str, headers: list[str], rows: list[list], export_format: str, filename_base: str, language: str = "en") -> dict:
+    """One plain table (header row + data rows) as XLSX or PDF, rendered like the billing reports."""
+    language = _lang(language)
+    data_rows = [[_text_cell(value) for value in row] for row in rows]
+    if export_format == "PDF":
+        generated = timezone.localtime().strftime("%d.%m.%Y %H:%M")
+        subheading = f"{_t('generated', language)}: {generated} · {_t('rows', language)}: {len(rows)}"
+        sheet = {"headers": headers, "rows": data_rows}
+        return {
+            "filename": f"{filename_base}.pdf",
+            "mime": "application/pdf",
+            "content": _build_pdf(filename_base, title, subheading, [sheet], [], language),
+        }
+    builder = WorkbookReportBuilder()
+    builder.add_sheet(title, title, "", [], headers, data_rows, template="plain", language=language)
+    return {"filename": f"{filename_base}.xlsx", "mime": XLSX_MIME, "content": builder.build()}

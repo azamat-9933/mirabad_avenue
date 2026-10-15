@@ -1,8 +1,6 @@
 import json
 import base64
-import io
 import re
-import zipfile
 from collections import defaultdict
 from urllib.parse import urlencode
 from decimal import Decimal, InvalidOperation
@@ -15,7 +13,7 @@ from django.contrib.auth import logout
 from django.core.paginator import EmptyPage, Paginator
 from django.core.exceptions import ImproperlyConfigured, ValidationError
 from django.db import DatabaseError, OperationalError, connection, transaction
-from django.db.models import Case, Count, F, IntegerField, Max, Prefetch, Q, Sum, Value, When
+from django.db.models import Case, IntegerField, Max, Prefetch, Q, Value, When
 from django.http import JsonResponse
 from django.http.request import RawPostDataException
 from django.shortcuts import redirect, resolve_url
@@ -31,11 +29,10 @@ from drf_spectacular.utils import extend_schema
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 
-from billing.models import BillingPeriod, Expense, HeatingApartmentUsage, HeatingRecord, HotWaterMeterReading
-from main_app.models import DEFAULT_SECTOR_NAME
+from billing.models import BillingPeriod, Expense, HeatingApartmentUsage, HeatingRecord
 from properties.models import Apartment, Building, Complex, Owner
 from payments.models import Transaction
-from payments.services import OPENING_BALANCE_TAG, apply_balance_change, incoming_payment_q, is_incoming_payment
+from payments.services import OPENING_BALANCE_TAG, apply_balance_change, incoming_payment_q
 from portal.models import (
     AuditEvent,
     ChecklistItem,
@@ -48,21 +45,21 @@ from portal.models import (
 )
 
 from .backend_data import (
-    _alert_icon,
-    _date,
-    _date_section,
     _datetime,
-    _health_from_split,
-    _money,
-    _residential_status_to_tone,
-    _risk_from_split,
-    _serialize_profile,
-    _tone_for_priority,
-    _transaction_method_label,
-    _transaction_type,
+    _normalized_telegram_status,
+    _payment_type_labels,
     build_portal_data,
+    hot_water_totals_by_complex,
+    residential_override_maps,
+    serialize_audit_event,
+    serialize_complex,
+    serialize_maintenance_task,
+    serialize_notification,
+    serialize_resident,
+    serialize_transaction,
+    transaction_override_map,
 )
-from .report_exports import ALLOWED_REPORT_TYPES, build_report_payload
+from .report_exports import ALLOWED_REPORT_TYPES, build_report_payload, build_table_export
 
 
 def safe_portal_data(request=None):
@@ -560,129 +557,6 @@ def _apply_related_district_filter(queryset, district, *lookup_paths):
     return queryset.filter(query) if query else queryset
 
 
-def _resident_status_value(owner):
-    balance = _money(owner.balance)
-    return "debtor" if balance < 0 else "paid"
-
-
-def _normalized_telegram_status(value):
-    raw = str(value or "").strip().lower()
-    if raw in {"connected", "active", "verified", "true", "yes", "1", "linked"}:
-        return "connected"
-    return "not_linked"
-
-
-def _telegram_status_value(owner):
-    telegram_status = _normalized_telegram_status(owner.telegram_status)
-    telegram_user = str(owner.telegram_user or "").strip()
-    telegram_id = str(owner.telegram_id or "").strip()
-    telegram_connected = bool(telegram_user or telegram_id or telegram_status == "connected")
-    if telegram_connected:
-        return "connected", True
-    return "not_linked", False
-
-
-def _serialize_resident_row(owner):
-    apartment = owner.apartment
-    building = apartment.building
-    complex_obj = building.complex
-    balance = _money(owner.balance)
-    last_payment_at = getattr(owner, "last_payment_at", None)
-    telegram_user = str(owner.telegram_user or "").strip()
-    telegram_id = str(owner.telegram_id or "").strip()
-    telegram_status, telegram_connected = _telegram_status_value(owner)
-    return {
-        "id": f"owner-{owner.id}",
-        "backendId": owner.id,
-        "ownerBackendId": owner.id,
-        "displayId": owner.id,
-        "complexId": f"complex-{complex_obj.id}",
-        "complexBackendId": complex_obj.id,
-        "buildingId": f"building-{building.id}",
-        "buildingBackendId": building.id,
-        "apartmentId": f"apartment-{apartment.id}",
-        "apartmentBackendId": apartment.id,
-        "adminUrl": reverse("admin:main_app_owner_change", args=[owner.id]),
-        "name": owner.fio,
-        "apartment": str(apartment.number),
-        "apartmentNumber": apartment.number,
-        "section": apartment.section.name if apartment.section_id else "",
-        "building": str(building.number),
-        "buildingNumber": building.number,
-        "complex": complex_obj.title,
-        "complexAddress": complex_obj.address or "",
-        "phone": owner.phone or "",
-        "lastPayment": _date(last_payment_at),
-        "lastPaymentAt": _datetime(last_payment_at),
-        "balance": balance,
-        "status": _resident_status_value(owner),
-        "photo": "",
-        "area": f"{apartment.area:g} m²",
-        "rooms": "Apartment",
-        "charge": "",
-        "contract": "True" if owner.has_contract else "False",
-        "hasContract": bool(owner.has_contract),
-        "contractStatus": "True" if owner.has_contract else "False",
-        "meter": apartment.section.name if apartment.section_id else "",
-        "email": "",
-        "telegramStatus": telegram_status,
-        "telegramUser": telegram_user,
-        "telegramId": telegram_id,
-        "telegramConnected": telegram_connected,
-        "createdAt": _datetime(owner.created_at),
-    }
-
-
-def _transaction_override_map(transaction_ids):
-    if not transaction_ids:
-        return {}
-    return {
-        item.target_id: item.status_value
-        for item in PortalStatusOverride.objects.filter(
-            context=PortalStatusOverride.CONTEXT_TRANSACTIONS,
-            target_type=PortalStatusOverride.TARGET_TRANSACTION,
-            target_id__in=transaction_ids,
-        )
-    }
-
-
-def _serialize_transaction_row(transaction_row, override_map=None):
-    override_map = override_map or {}
-    owner = transaction_row.owner
-    apartment = owner.apartment
-    building = apartment.building
-    complex_obj = building.complex
-    amount = _money(transaction_row.amount)
-    status = "Success" if is_incoming_payment(transaction_row) else "Pending"
-    if transaction_row.id in override_map:
-        status = override_map[transaction_row.id]
-    return {
-        "id": f"trx-{transaction_row.id}",
-        "backendId": transaction_row.id,
-        "ownerBackendId": owner.id,
-        "apartmentBackendId": apartment.id,
-        "buildingBackendId": building.id,
-        "complexBackendId": complex_obj.id,
-        "residentId": f"owner-{owner.id}",
-        "residentName": owner.fio,
-        "apartment": apartment.number,
-        "complexId": f"complex-{complex_obj.id}",
-        "buildingId": f"building-{building.id}",
-        "type": _transaction_type(transaction_row),
-        "method": _transaction_method_label(transaction_row),
-        "paymentType": transaction_row.payment_type,
-        "date": _date(transaction_row.created_at),
-        "createdAt": _datetime(transaction_row.created_at),
-        "amount": abs(amount),
-        "signedAmount": amount,
-        "balanceBefore": _money(transaction_row.balance_before),
-        "balanceAfter": _money(transaction_row.balance_after),
-        "status": status,
-        "description": transaction_row.description or "",
-        "externalId": transaction_row.external_id or "",
-    }
-
-
 def _maintenance_priority_rank():
     return Case(
         When(priority=MaintenanceTask.PRIORITY_HIGH, then=Value(3)),
@@ -703,32 +577,6 @@ def _maintenance_status_rank():
     )
 
 
-def _serialize_maintenance_row(task):
-    scheduled = timezone.localtime(task.scheduled_at) if task.scheduled_at else None
-    return {
-        "id": f"maintenance-{task.id}",
-        "backendId": task.id,
-        "task": task.title,
-        "title": task.title,
-        "location": task.location or task.notes or (task.complex.title if task.complex_id else ""),
-        "priority": task.get_priority_display(),
-        "priorityKey": task.priority,
-        "status": task.get_status_display(),
-        "statusKey": task.status,
-        "date": scheduled.strftime("%d.%m.%Y | %H:%M") if scheduled else "",
-        "day": scheduled.strftime("%d") if scheduled else "",
-        "month": scheduled.strftime("%b").upper() if scheduled else "",
-        "assignedTo": task.assigned_to,
-        "action": task.action_label or "Open checklist",
-        "icon": task.icon or "fact_check",
-        "tone": _tone_for_priority(task.priority),
-        "complexId": f"complex-{task.complex_id}" if task.complex_id else "",
-        "buildingId": f"building-{task.building_id}" if task.building_id else "",
-        "adminUrl": f"/admin/portal/maintenancetask/{task.id}/change/",
-        "scheduledAt": _datetime(task.scheduled_at),
-    }
-
-
 def _notification_severity_rank():
     return Case(
         When(severity=PortalNotification.SEVERITY_CRITICAL, then=Value(3)),
@@ -736,200 +584,6 @@ def _notification_severity_rank():
         default=Value(1),
         output_field=IntegerField(),
     )
-
-
-def _serialize_alert_row(item, alert_backend_id=""):
-    related = item.complex or (item.building.complex if item.building_id else None)
-    action_state = "" if item.action_state == "Created from dashboard" else item.action_state
-    resolved_by = ""
-    if isinstance(action_state, str) and action_state.lower().startswith("resolved by "):
-        resolved_by = action_state[12:].strip()
-    return {
-        "id": f"notification-{item.id}",
-        "backendId": item.id,
-        "alertBackendId": alert_backend_id or "",
-        "severity": item.severity,
-        "title": item.title,
-        "message": item.message,
-        "section": _date_section(item.event_at),
-        "read": item.status == PortalNotification.STATUS_READ,
-        "pinned": item.pinned,
-        "eventAt": _datetime(item.event_at),
-        "actionPrimary": item.action_primary,
-        "actionSecondary": item.action_secondary,
-        "actionState": action_state,
-        "resolvedBy": resolved_by,
-        "complexId": f"complex-{related.id}" if related else "",
-        "buildingId": f"building-{item.building_id}" if item.building_id else "",
-        "ownerId": f"owner-{item.owner_id}" if item.owner_id else "",
-        "status": item.status,
-        "adminUrl": f"/admin/portal/portalnotification/{item.id}/change/",
-    }
-
-
-def _serialize_audit_row(event):
-    complex_obj = event.complex
-    building = event.building
-    apartment = event.apartment
-    owner = event.owner
-    return {
-        "id": f"audit-{event.id}",
-        "backendId": event.id,
-        "type": event.event_type,
-        "label": event.get_event_type_display(),
-        "title": event.title,
-        "message": event.message,
-        "actor": event.actor,
-        "time": _datetime(event.created_at),
-        "complexId": f"complex-{event.complex_id}" if event.complex_id else "",
-        "buildingId": f"building-{event.building_id}" if event.building_id else "",
-        "ownerId": f"owner-{event.owner_id}" if event.owner_id else "",
-        "complexName": complex_obj.title if complex_obj else "",
-        "buildingName": building.number if building else "",
-        "apartmentNumber": apartment.number if apartment else "",
-        "ownerName": owner.fio if owner else "",
-        "adminUrl": f"/admin/portal/auditevent/{event.id}/change/",
-    }
-
-
-def _residential_override_maps():
-    override_map = {
-        (item.target_type, item.target_id): item.status_value
-        for item in PortalStatusOverride.objects.filter(context=PortalStatusOverride.CONTEXT_RESIDENTIAL)
-    }
-    return {
-        "complex": {target_id: value for (target_type, target_id), value in override_map.items() if target_type == PortalStatusOverride.TARGET_COMPLEX},
-        "building": {target_id: value for (target_type, target_id), value in override_map.items() if target_type == PortalStatusOverride.TARGET_BUILDING},
-        "apartment": {target_id: value for (target_type, target_id), value in override_map.items() if target_type == PortalStatusOverride.TARGET_APARTMENT},
-    }
-
-
-def _serialize_complex_row(complex_obj, override_maps=None, hot_water_by_complex=None):
-    override_maps = override_maps or {"complex": {}, "building": {}, "apartment": {}}
-    hot_water_by_complex = hot_water_by_complex or {}
-    building_rows = []
-    debtor_count = 0
-    paid_count = 0
-    debt_total = 0.0
-    collected_total = 0.0
-    unit_total = 0
-    total_area = 0.0
-
-    for building in complex_obj.buildings.all():
-        apartment_rows = []
-        building_debtors = 0
-        building_paid = 0
-        building_debt = 0.0
-        building_collected = 0.0
-        apartments = list(building.apartments.all())
-        unit_total += len(apartments)
-        building_total_area = sum(_money(apartment.area) for apartment in apartments)
-        total_area += building_total_area
-        for apartment in apartments:
-            owner = getattr(apartment, "owner", None)
-            owner_transactions = list(getattr(owner, "prefetched_transactions", [])) if owner else []
-            positive_transactions = [item for item in owner_transactions if is_incoming_payment(item)]
-            latest_payment = positive_transactions[0] if positive_transactions else None
-            balance = _money(owner.balance if owner else 0)
-            is_debtor = balance < 0
-            if is_debtor:
-                debtor_count += 1
-                building_debtors += 1
-                debt_total += abs(balance)
-                building_debt += abs(balance)
-            else:
-                paid_count += 1
-                building_paid += 1
-            owner_collected = sum(_money(item.amount) for item in positive_transactions)
-            collected_total += owner_collected
-            building_collected += owner_collected
-            apartment_status = override_maps["apartment"].get(apartment.id, "Overdue" if is_debtor else "Paid")
-            resident_id = f"owner-{owner.id}" if owner else f"apartment-{apartment.id}"
-            apartment_rows.append(
-                {
-                    "id": resident_id,
-                    "backendId": apartment.id,
-                    "apartmentBackendId": apartment.id,
-                    "ownerBackendId": owner.id if owner else None,
-                    "complexId": f"complex-{complex_obj.id}",
-                    "complexBackendId": complex_obj.id,
-                    "buildingId": f"building-{building.id}",
-                    "buildingBackendId": building.id,
-                    "unit": apartment.number,
-                    "owner": {
-                        "name": owner.fio if owner else "Unassigned owner",
-                        "phone": owner.phone if owner else "",
-                        "email": "",
-                        "photo": "",
-                    },
-                    "balance": balance,
-                    "status": apartment_status,
-                    "rooms": "Apartment",
-                    "area": f"{apartment.area:g} m²",
-                    "charge": "",
-                    "meter": apartment.section.name if apartment.section_id else "",
-                    "contract": f"APT-{apartment.id}",
-                    "visit": "",
-                    "lastPayment": _date(latest_payment.created_at) if latest_payment else "",
-                    "occupancy": "Resident" if owner else "Vacant",
-                    "isOccupied": bool(owner),
-                }
-            )
-        building_risk = _risk_from_split(building_debtors, building_paid, building_debt)
-        building_risk = override_maps["building"].get(building.id, building_risk)
-        building_rows.append(
-            {
-                "id": f"building-{building.id}",
-                "backendId": building.id,
-                "complexBackendId": complex_obj.id,
-                "name": f"House {building.number}",
-                "number": building.number,
-                "address": building.address,
-                "apartments": apartment_rows,
-                "units": len(apartment_rows),
-                "totalArea": round(building_total_area, 2),
-                "debt": building_debt,
-                "collected": building_collected,
-                "debtorResidents": building_debtors,
-                "paidResidents": building_paid,
-                "risk": building_risk,
-                "health": _health_from_split(building_debtors, building_paid),
-                "tone": _residential_status_to_tone(building_risk),
-                "floors": "",
-                "entrance": "",
-            }
-        )
-    risk = _risk_from_split(debtor_count, paid_count, debt_total)
-    risk = override_maps["complex"].get(complex_obj.id, risk)
-    health = _health_from_split(debtor_count, paid_count)
-    water_m3 = hot_water_by_complex.get(complex_obj.id, 0)
-    return {
-        "id": f"complex-{complex_obj.id}",
-        "backendId": complex_obj.id,
-        "name": complex_obj.title,
-        "sector": DEFAULT_SECTOR_NAME,
-        "prefix": complex_obj.title,
-        "buildings": len(building_rows),
-        "units": unit_total,
-        "totalArea": round(total_area, 2),
-        "water": "Optimal",
-        "heating": "Optimal",
-        "health": health,
-        "waterM3": round(water_m3, 2),
-        "heatingM3": 0,
-        "pressurePsi": round(45 + (health / 100) * 15, 1),
-        "extraDebt": debt_total,
-        "baselineCollected": collected_total,
-        "debt": debt_total,
-        "finances": health,
-        "image": "",
-        "icon": "apartment",
-        "risk": risk,
-        "tone": _residential_status_to_tone(risk),
-        "debtorResidents": debtor_count,
-        "paidResidents": paid_count,
-        "buildingItems": building_rows,
-    }
 
 
 @extend_schema(responses=OpenApiTypes.OBJECT)
@@ -1028,7 +682,7 @@ def api_list_residents(request):
         queryset = queryset.filter(apartment_id=apartment_id)
     ordering = _normalize_ordering(ordering_raw, allowed_ordering, "id")
     page_obj = _paginate_queryset(queryset.order_by(*ordering, "id"), page, page_size)
-    results = [_serialize_resident_row(owner) for owner in page_obj.object_list]
+    results = [serialize_resident(owner.apartment, owner, owner.last_payment_at) for owner in page_obj.object_list]
     return _paginated_response(results, page_obj.number, page_size, queryset.count(), ordering_raw)
 
 
@@ -1115,8 +769,9 @@ def api_list_transactions(request):
         queryset = queryset.filter(pk__in=override_ids)
     ordering = _normalize_ordering(ordering_raw, allowed_ordering, "-created_at")
     page_obj = _paginate_queryset(queryset.order_by(*ordering, "-id"), page, page_size)
-    overrides = _transaction_override_map([item.id for item in page_obj.object_list])
-    results = [_serialize_transaction_row(item, overrides) for item in page_obj.object_list]
+    overrides = transaction_override_map([item.id for item in page_obj.object_list])
+    labels = _payment_type_labels()
+    results = [serialize_transaction(item, item.owner, labels, overrides.get(item.id)) for item in page_obj.object_list]
     return _paginated_response(results, page_obj.number, page_size, queryset.count(), ordering_raw)
 
 
@@ -1165,7 +820,7 @@ def api_list_maintenance(request):
     queryset = _apply_period_filter(queryset, "scheduled_at", period_value, period_from, period_to)
     ordering = _normalize_ordering(ordering_raw, allowed_ordering, "priority")
     page_obj = _paginate_queryset(queryset.order_by(*ordering, "id"), page, page_size)
-    results = [_serialize_maintenance_row(item) for item in page_obj.object_list]
+    results = [serialize_maintenance_task(item) for item in page_obj.object_list]
     return _paginated_response(results, page_obj.number, page_size, queryset.count(), ordering_raw)
 
 
@@ -1229,7 +884,7 @@ def api_list_alerts(request):
             notification_id = int((alert.metadata or {}).get("notification_id") or 0)
             if notification_id and notification_id not in alert_map:
                 alert_map[notification_id] = alert.id
-    results = [_serialize_alert_row(item, alert_map.get(item.id, "")) for item in page_items]
+    results = [serialize_notification(item, alert_map.get(item.id, "")) for item in page_items]
     return _paginated_response(results, page_obj.number, page_size, queryset.count(), ordering_raw)
 
 
@@ -1280,7 +935,7 @@ def api_list_audit(request):
         queryset = _apply_related_district_filter(queryset, district_value, "complex__title", "complex__address", "message")
         queryset = _apply_period_filter(queryset, "created_at", period_value, period_from, period_to)
         page_obj = _paginate_queryset(queryset.order_by(*ordering, "-id"), page, page_size)
-        results = [_serialize_audit_row(item) for item in page_obj.object_list]
+        results = [serialize_audit_event(item) for item in page_obj.object_list]
         return _paginated_response(results, page_obj.number, page_size, queryset.count(), ordering_raw)
     except (DatabaseError, OperationalError):
         # Fresh DB can open the portal before portal migrations are applied.
@@ -1339,8 +994,8 @@ def api_export_audit(request):
             ])
     except (DatabaseError, OperationalError):
         rows = []
-    filename = f"audit-log-{timezone.localtime():%Y%m%d-%H%M}.xlsx"
-    download = _build_xlsx_download(filename, title, headers[lang], rows)
+    generated = build_table_export(title, headers[lang], rows, "XLSX", f"audit-log-{timezone.localtime():%Y%m%d-%H%M}", lang)
+    download = _encode_download(generated["filename"], generated["mime"], generated["content"])
     AuditEvent.objects.create(
         event_type=AuditEvent.TYPE_EXPORT,
         title="Audit log exported",
@@ -1374,15 +1029,20 @@ def api_list_complexes(request):
     queryset = Complex.objects.prefetch_related(Prefetch("buildings", queryset=building_queryset))
     if district_value and district_value.lower() != "all":
         queryset = queryset.filter(Q(title__icontains=district_value) | Q(address__icontains=district_value))
-    page_obj = _paginate_queryset(queryset.order_by("title", "id"), page, page_size)
-    override_maps = _residential_override_maps()
-    hot_water_by_complex = {
-        row["apartment__building__complex_id"]: _money(row["total"])
-        for row in HotWaterMeterReading.objects.values("apartment__building__complex_id").annotate(total=Sum("end_reading"))
-    }
+    override_maps = residential_override_maps()
+    hot_water_by_complex = hot_water_totals_by_complex()
     all_results = []
     for complex_obj in queryset:
-        row = _serialize_complex_row(complex_obj, override_maps, hot_water_by_complex)
+        row, _residents = serialize_complex(
+            complex_obj,
+            owner_for=lambda apartment: getattr(apartment, "owner", None),
+            payments_for=lambda owner: getattr(owner, "prefetched_transactions", []),
+            override_maps=override_maps,
+            hot_water_by_complex=hot_water_by_complex,
+        )
+        # List-only aliases kept for API stability (sorting below uses them too).
+        row["debt"] = row["extraDebt"]
+        row["finances"] = row["health"]
         if search:
             search_value = search.lower()
             searchable_parts = [
@@ -1583,147 +1243,6 @@ def _encode_download(filename, mime, content_bytes):
     }
 
 
-def _pdf_escape(value):
-    return str(value).replace("\\", "\\\\").replace("(", "\\(").replace(")", "\\)")
-
-
-def _build_simple_pdf(title, rows):
-    safe_title = _pdf_escape(title)
-    lines = [safe_title, ""]
-    for row in rows:
-        lines.append(" | ".join(_pdf_escape(cell) for cell in row))
-    if not lines:
-        lines = [safe_title]
-    y = 800
-    content_lines = ["BT", "/F1 11 Tf", "40 800 Td"]
-    first = True
-    for line in lines[:45]:
-        if first:
-            content_lines.append(f"({_pdf_escape(line)}) Tj")
-            first = False
-        else:
-            y -= 16
-            content_lines.append(f"0 -16 Td ({_pdf_escape(line)}) Tj")
-    content_lines.append("ET")
-    content = "\n".join(content_lines).encode("latin-1", "replace")
-    objects = []
-    objects.append(b"1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj\n")
-    objects.append(b"2 0 obj << /Type /Pages /Count 1 /Kids [3 0 R] >> endobj\n")
-    objects.append(b"3 0 obj << /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >> endobj\n")
-    objects.append(b"4 0 obj << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> endobj\n")
-    objects.append(f"5 0 obj << /Length {len(content)} >> stream\n".encode("ascii") + content + b"\nendstream endobj\n")
-    pdf = bytearray(b"%PDF-1.4\n")
-    offsets = [0]
-    for obj in objects:
-        offsets.append(len(pdf))
-        pdf.extend(obj)
-    xref_start = len(pdf)
-    pdf.extend(f"xref\n0 {len(offsets)}\n".encode("ascii"))
-    pdf.extend(b"0000000000 65535 f \n")
-    for offset in offsets[1:]:
-        pdf.extend(f"{offset:010d} 00000 n \n".encode("ascii"))
-    pdf.extend(
-        f"trailer << /Size {len(offsets)} /Root 1 0 R >>\nstartxref\n{xref_start}\n%%EOF".encode("ascii")
-    )
-    return bytes(pdf)
-
-
-def _build_xlsx_download(filename, title, header, rows):
-    def xml_escape(value):
-        return (
-            str(value or "")
-            .replace("&", "&amp;")
-            .replace("<", "&lt;")
-            .replace(">", "&gt;")
-            .replace('"', "&quot;")
-        )
-
-    def excel_col(index):
-        result = ""
-        while index:
-            index, remainder = divmod(index - 1, 26)
-            result = chr(65 + remainder) + result
-        return result or "A"
-
-    worksheet_rows = []
-    for row_index, row in enumerate([header, *rows], start=1):
-        cells = []
-        for col_index, cell in enumerate(row, start=1):
-            ref = f"{excel_col(col_index)}{row_index}"
-            cells.append(f'<c r="{ref}" t="inlineStr"><is><t>{xml_escape(cell)}</t></is></c>')
-        worksheet_rows.append(f'<row r="{row_index}">{"".join(cells)}</row>')
-
-    sheet_name = xml_escape((title or "Export")[:31])
-    sheet_xml = (
-        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
-        '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
-        f'<sheetData>{"".join(worksheet_rows)}</sheetData>'
-        "</worksheet>"
-    )
-    workbook_xml = (
-        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
-        '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" '
-        'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'
-        f'<sheets><sheet name="{sheet_name}" sheetId="1" r:id="rId1"/></sheets>'
-        "</workbook>"
-    )
-    workbook_rels = (
-        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
-        '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
-        '<Relationship Id="rId1" '
-        'Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" '
-        'Target="worksheets/sheet1.xml"/>'
-        '<Relationship Id="rId2" '
-        'Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" '
-        'Target="styles.xml"/>'
-        "</Relationships>"
-    )
-    root_rels = (
-        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
-        '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
-        '<Relationship Id="rId1" '
-        'Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" '
-        'Target="xl/workbook.xml"/>'
-        "</Relationships>"
-    )
-    content_types = (
-        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
-        '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
-        '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
-        '<Default Extension="xml" ContentType="application/xml"/>'
-        '<Override PartName="/xl/workbook.xml" '
-        'ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>'
-        '<Override PartName="/xl/worksheets/sheet1.xml" '
-        'ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>'
-        '<Override PartName="/xl/styles.xml" '
-        'ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>'
-        "</Types>"
-    )
-    styles_xml = (
-        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
-        '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
-        '<fonts count="1"><font><sz val="11"/><name val="Calibri"/></font></fonts>'
-        '<fills count="1"><fill><patternFill patternType="none"/></fill></fills>'
-        '<borders count="1"><border/></borders>'
-        '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>'
-        '<cellXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/></cellXfs>'
-        "</styleSheet>"
-    )
-    buffer = io.BytesIO()
-    with zipfile.ZipFile(buffer, "w", compression=zipfile.ZIP_DEFLATED) as workbook:
-        workbook.writestr("[Content_Types].xml", content_types)
-        workbook.writestr("_rels/.rels", root_rels)
-        workbook.writestr("xl/workbook.xml", workbook_xml)
-        workbook.writestr("xl/_rels/workbook.xml.rels", workbook_rels)
-        workbook.writestr("xl/worksheets/sheet1.xml", sheet_xml)
-        workbook.writestr("xl/styles.xml", styles_xml)
-    return _encode_download(
-        filename,
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        buffer.getvalue(),
-    )
-
-
 def _backend_id_set(value):
     return {int(item) for item in _unique_ints(value)}
 
@@ -1857,103 +1376,8 @@ def _render_export_payload(portal_data, context, export_format, source, language
     title = titles.get(context, titles["residential"])[lang]
     filename_base = f"{context or 'export'}-{timezone.localtime():%Y%m%d-%H%M}"
 
-    if export_format == "XLSX":
-        def xml_escape(value):
-            return (
-                str(value)
-                .replace("&", "&amp;")
-                .replace("<", "&lt;")
-                .replace(">", "&gt;")
-                .replace('"', "&quot;")
-            )
-
-        def excel_col(index):
-            result = ""
-            while index:
-                index, remainder = divmod(index - 1, 26)
-                result = chr(65 + remainder) + result
-            return result or "A"
-
-        worksheet_rows = []
-        for row_index, row in enumerate([header, *rows], start=1):
-            cells = []
-            for col_index, cell in enumerate(row, start=1):
-                ref = f"{excel_col(col_index)}{row_index}"
-                cells.append(
-                    f'<c r="{ref}" t="inlineStr"><is><t>{xml_escape(cell)}</t></is></c>'
-                )
-            worksheet_rows.append(f"<row r=\"{row_index}\">{''.join(cells)}</row>")
-        sheet_xml = (
-            '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
-            '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
-            f"<sheetData>{''.join(worksheet_rows)}</sheetData>"
-            "</worksheet>"
-        )
-        workbook_xml = (
-            '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
-            '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" '
-            'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'
-            f'<sheets><sheet name="{xml_escape(title[:31])}" sheetId="1" r:id="rId1"/></sheets>'
-            "</workbook>"
-        )
-        workbook_rels = (
-            '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
-            '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
-            '<Relationship Id="rId1" '
-            'Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" '
-            'Target="worksheets/sheet1.xml"/>'
-            '<Relationship Id="rId2" '
-            'Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" '
-            'Target="styles.xml"/>'
-            "</Relationships>"
-        )
-        root_rels = (
-            '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
-            '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
-            '<Relationship Id="rId1" '
-            'Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" '
-            'Target="xl/workbook.xml"/>'
-            "</Relationships>"
-        )
-        content_types = (
-            '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
-            '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
-            '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
-            '<Default Extension="xml" ContentType="application/xml"/>'
-            '<Override PartName="/xl/workbook.xml" '
-            'ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>'
-            '<Override PartName="/xl/worksheets/sheet1.xml" '
-            'ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>'
-            '<Override PartName="/xl/styles.xml" '
-            'ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>'
-            "</Types>"
-        )
-        styles_xml = (
-            '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
-            '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
-            '<fonts count="1"><font><sz val="11"/><name val="Calibri"/></font></fonts>'
-            '<fills count="1"><fill><patternFill patternType="none"/></fill></fills>'
-            '<borders count="1"><border/></borders>'
-            '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>'
-            '<cellXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/></cellXfs>'
-            "</styleSheet>"
-        )
-        buffer = io.BytesIO()
-        with zipfile.ZipFile(buffer, "w", compression=zipfile.ZIP_DEFLATED) as workbook:
-            workbook.writestr("[Content_Types].xml", content_types)
-            workbook.writestr("_rels/.rels", root_rels)
-            workbook.writestr("xl/workbook.xml", workbook_xml)
-            workbook.writestr("xl/_rels/workbook.xml.rels", workbook_rels)
-            workbook.writestr("xl/worksheets/sheet1.xml", sheet_xml)
-            workbook.writestr("xl/styles.xml", styles_xml)
-        return _encode_download(
-            f"{filename_base}.xlsx",
-            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            buffer.getvalue(),
-        )
-
-    pdf_bytes = _build_simple_pdf(title, [header, *rows])
-    return _encode_download(f"{filename_base}.pdf", "application/pdf", pdf_bytes)
+    generated = build_table_export(title, header, rows, export_format, filename_base, lang)
+    return _encode_download(generated["filename"], generated["mime"], generated["content"])
 
 
 @extend_schema(request=OpenApiTypes.OBJECT, responses=OpenApiTypes.OBJECT)
@@ -2873,20 +2297,8 @@ def api_export_report(request):
     source = str(payload.get("source") or "Current page").strip() or "Current page"
     if report_type in ALLOWED_REPORT_TYPES:
         generated = build_report_payload(payload, language, export_format)
-        if export_format == "PDF":
-            download = _encode_download(
-                generated["filename"],
-                generated["mime"],
-                generated["content"],
-            )
-            row_count = generated.get("row_count", 0)
-        else:
-            download = _encode_download(
-                generated["filename"],
-                generated["mime"],
-                generated["content"],
-            )
-            row_count = generated.get("row_count", 0)
+        download = _encode_download(generated["filename"], generated["mime"], generated["content"])
+        row_count = generated.get("row_count", 0)
         context = report_type
     else:
         portal_data = safe_portal_data(request)

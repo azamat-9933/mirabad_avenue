@@ -390,6 +390,10 @@ Top-level ключи snapshot (`GET /api/portal-data/`):
 
 Источник данных для snapshot: `portal/backend_data.py` (`build_portal_data`).
 
+Строки описываются одними функциями и в snapshot, и в `/api/lists/*` (`portal/backend_data.py`): `serialize_resident`, `serialize_transaction`, `serialize_complex`, `serialize_maintenance_task`, `serialize_notification`, `serialize_audit_event`, плюс `residential_override_maps` / `transaction_override_map` для статусов, назначенных в портале. Новое поле добавляется в одном месте и появляется в обоих источниках; тест `test_snapshot_and_list_endpoints_describe_rows_identically` это проверяет.
+- `telegramStatus` всегда нормализован: `connected` / `not_linked` (как считает и фронтенд).
+- `/api/lists/complexes/` дополнительно отдает `debt` (= `extraDebt`) и `finances` (= `health`) — только для сортировки этого списка.
+
 ### Производительность snapshot
 Snapshot отдается целиком: встраивается в каждую страницу, возвращается каждым POST и запрашивается dashboard/system health каждые 15 с. Его размер растет с историей `Transaction` (≈94% объема).
 
@@ -414,8 +418,14 @@ Snapshot отдается целиком: встраивается в кажду
 ## 11. Экспортный контур
 
 Файлы:
-- `portal/views.py` (общий export endpoint + fallback рендер),
-- `portal/report_exports.py` (advanced backend reports).
+- `portal/views.py` — endpoints `POST /api/export/report/` и `POST /api/audit/export/`: собирают строки и заголовки,
+- `portal/report_exports.py` — единственный генератор файлов: billing-отчеты (`build_report_payload`) и простые таблицы (`build_table_export` — экспорт жилого фонда, транзакций, обслуживания и журнала аудита).
+
+Фронтенд файлы не генерирует: он вызывает эти endpoints и сохраняет `download` (base64) из ответа.
+
+Генератор:
+- XLSX — openpyxl; стили тела таблицы заданы именованными стилями (`NamedStyle`), иначе 57 600 строк собирались ≈30 с (сейчас ≈4 с).
+- PDF — reportlab, альбомный A4, все строки на нужном числе страниц. Шрифт с кириллицей ищется по `REPORT_FONT_CANDIDATES` (Arial на Windows/macOS, DejaVu Sans на Linux); если ни одного нет, используется Helvetica и кириллица в PDF не отобразится — на сервере нужен пакет шрифтов DejaVu.
 
 Поддерживаемые report types (`report_exports.py`):
 - `hot_water`
@@ -454,7 +464,7 @@ Snapshot отдается целиком: встраивается в кажду
 - create/modification modals (`create-building`, `create-apartment`, `add-payment`, `system-alerts-config`, `deploy-maintenance`, `assign-status`, `export-preview`, `billing-notice`, `confirm`).
 
 ## 12.3 JS логика (`static/js/app.js`)
-Крупный монолитный скрипт (~10k строк), включает:
+Крупный монолитный скрипт (~11k строк), включает:
 - i18n словари (en/ru/uz),
 - theme/lang state,
 - таблицы (поиск, пагинация, сортировки, bulk-выбор),

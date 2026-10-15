@@ -261,11 +261,361 @@ def _transaction_method_label(transaction: Transaction, labels: dict[str, str] |
     return labels.get(transaction.payment_type, transaction.payment_type)
 
 
+def _normalized_telegram_status(value) -> str:
+    raw = str(value or "").strip().lower()
+    if raw in {"connected", "active", "verified", "true", "yes", "1", "linked"}:
+        return "connected"
+    return "not_linked"
+
+
+def _telegram_state(owner) -> tuple[str, bool]:
+    """(status, connected): a linked Telegram user/id or a connected-like status counts as connected."""
+    if owner is None:
+        return "not_linked", False
+    connected = bool(
+        str(owner.telegram_user or "").strip()
+        or str(owner.telegram_id or "").strip()
+        or _normalized_telegram_status(owner.telegram_status) == "connected"
+    )
+    return ("connected" if connected else "not_linked"), connected
+
+
+# Row serializers shared by the portal snapshot and the paginated /api/lists/* endpoints,
+# so both always describe a record the same way.
+
+def serialize_resident(apartment, owner, last_payment_at=None) -> dict:
+    """Resident row for one apartment; a vacant apartment (owner=None) gets an "Unassigned owner" row."""
+    building = apartment.building
+    complex_obj = building.complex
+    balance = _money(owner.balance if owner else 0)
+    has_contract = bool(owner and owner.has_contract)
+    section = apartment.section.name if apartment.section_id else ""
+    telegram_status, telegram_connected = _telegram_state(owner)
+    return {
+        "id": _slug("owner", owner.id) if owner else _slug("apartment", apartment.id),
+        "backendId": owner.id if owner else None,
+        "ownerBackendId": owner.id if owner else None,
+        "displayId": owner.id if owner else apartment.id,
+        "complexId": _slug("complex", complex_obj.id),
+        "complexBackendId": complex_obj.id,
+        "buildingId": _slug("building", building.id),
+        "buildingBackendId": building.id,
+        "apartmentId": _slug("apartment", apartment.id),
+        "apartmentBackendId": apartment.id,
+        "adminUrl": reverse("admin:main_app_owner_change", args=[owner.id]) if owner else "",
+        "name": owner.fio if owner else "Unassigned owner",
+        "apartment": str(apartment.number),
+        "apartmentNumber": apartment.number,
+        "section": section,
+        "building": str(building.number),
+        "buildingNumber": building.number,
+        "complex": complex_obj.title,
+        "complexAddress": complex_obj.address or "",
+        "phone": (owner.phone or "") if owner else "",
+        "lastPayment": _date(last_payment_at),
+        "lastPaymentAt": _datetime(last_payment_at),
+        "balance": balance,
+        "status": "debtor" if balance < 0 else "paid",
+        "photo": "",
+        "area": f"{apartment.area:g} m²",
+        "rooms": "Apartment",
+        "charge": "",
+        "contract": "True" if has_contract else "False",
+        "hasContract": has_contract,
+        "contractStatus": "True" if has_contract else "False",
+        "meter": section,
+        "email": "",
+        "telegramStatus": telegram_status,
+        "telegramUser": str(owner.telegram_user or "").strip() if owner else "",
+        "telegramId": str(owner.telegram_id or "").strip() if owner else "",
+        "telegramConnected": telegram_connected,
+        "createdAt": _datetime(owner.created_at if owner else apartment.created_at),
+    }
+
+
+def serialize_transaction(transaction, owner, labels=None, status_override=None, current_tz=None) -> dict:
+    """Ledger row; ``owner`` must come with apartment, building and complex already loaded."""
+    apartment = owner.apartment
+    building = apartment.building
+    complex_obj = building.complex
+    amount = _money(transaction.amount)
+    created_at = timezone.localtime(transaction.created_at, current_tz)
+    return {
+        "id": f"trx-{transaction.id}",
+        "backendId": transaction.id,
+        "ownerBackendId": owner.id,
+        "apartmentBackendId": apartment.id,
+        "buildingBackendId": building.id,
+        "complexBackendId": complex_obj.id,
+        "residentId": _slug("owner", owner.id),
+        "residentName": owner.fio,
+        "apartment": apartment.number,
+        "complexId": _slug("complex", complex_obj.id),
+        "buildingId": _slug("building", building.id),
+        "type": _transaction_type(transaction, labels),
+        "method": _transaction_method_label(transaction, labels),
+        "paymentType": transaction.payment_type,
+        "date": created_at.strftime("%d.%m.%Y"),
+        "createdAt": created_at.strftime("%d.%m.%Y, %H:%M"),
+        "amount": abs(amount),
+        "signedAmount": amount,
+        "balanceBefore": _money(transaction.balance_before),
+        "balanceAfter": _money(transaction.balance_after),
+        "status": status_override or ("Success" if is_incoming_payment(transaction) else "Pending"),
+        "description": transaction.description or "",
+        "externalId": transaction.external_id or "",
+    }
+
+
+def serialize_maintenance_task(task: MaintenanceTask) -> dict:
+    scheduled = timezone.localtime(task.scheduled_at) if task.scheduled_at else None
+    return {
+        "id": _slug("maintenance", task.id),
+        "backendId": task.id,
+        "task": task.title,
+        "title": task.title,
+        "location": task.location or task.notes or (task.complex.title if task.complex_id else ""),
+        "priority": task.get_priority_display(),
+        "priorityKey": task.priority,
+        "status": task.get_status_display(),
+        "statusKey": task.status,
+        "date": scheduled.strftime("%d.%m.%Y | %H:%M") if scheduled else "",
+        "day": scheduled.strftime("%d") if scheduled else "",
+        "month": scheduled.strftime("%b").upper() if scheduled else "",
+        "assignedTo": task.assigned_to,
+        "action": task.action_label or "Open checklist",
+        "icon": task.icon or "fact_check",
+        "tone": _tone_for_priority(task.priority),
+        "complexId": _slug("complex", task.complex_id) if task.complex_id else "",
+        "buildingId": _slug("building", task.building_id) if task.building_id else "",
+        "adminUrl": f"/admin/portal/maintenancetask/{task.id}/change/",
+        "scheduledAt": _datetime(task.scheduled_at),
+    }
+
+
+def serialize_notification(item: PortalNotification, alert_backend_id="") -> dict:
+    related = item.complex or (item.building.complex if item.building_id else None)
+    action_state = "" if item.action_state == "Created from dashboard" else item.action_state
+    resolved_by = ""
+    if isinstance(action_state, str) and action_state.lower().startswith("resolved by "):
+        resolved_by = action_state[12:].strip()
+    return {
+        "id": _slug("notification", item.id),
+        "backendId": item.id,
+        "alertBackendId": alert_backend_id or "",
+        "severity": item.severity,
+        "title": item.title,
+        "message": item.message,
+        "section": _date_section(item.event_at),
+        "read": item.status == PortalNotification.STATUS_READ,
+        "pinned": item.pinned,
+        "eventAt": _datetime(item.event_at),
+        "actionPrimary": item.action_primary,
+        "actionSecondary": item.action_secondary,
+        "actionState": action_state,
+        "resolvedBy": resolved_by,
+        "complexId": _slug("complex", related.id) if related else "",
+        "buildingId": _slug("building", item.building_id) if item.building_id else "",
+        "ownerId": _slug("owner", item.owner_id) if item.owner_id else "",
+        "status": item.status,
+        "adminUrl": f"/admin/portal/portalnotification/{item.id}/change/",
+    }
+
+
+def serialize_audit_event(event: AuditEvent) -> dict:
+    return {
+        "id": _slug("audit", event.id),
+        "backendId": event.id,
+        "type": event.event_type,
+        "label": event.get_event_type_display(),
+        "title": event.title,
+        "message": event.message,
+        "actor": event.actor,
+        "time": _datetime(event.created_at),
+        "complexId": _slug("complex", event.complex_id) if event.complex_id else "",
+        "buildingId": _slug("building", event.building_id) if event.building_id else "",
+        "ownerId": _slug("owner", event.owner_id) if event.owner_id else "",
+        "complexName": event.complex.title if event.complex_id else "",
+        "buildingName": event.building.number if event.building_id else "",
+        "apartmentNumber": event.apartment.number if event.apartment_id else "",
+        "ownerName": event.owner.fio if event.owner_id else "",
+        "adminUrl": f"/admin/portal/auditevent/{event.id}/change/",
+    }
+
+
+def residential_override_maps() -> dict[str, dict[int, str]]:
+    """Portal-assigned statuses for the residential view, keyed by target type, then target id."""
+    maps = {
+        PortalStatusOverride.TARGET_COMPLEX: {},
+        PortalStatusOverride.TARGET_BUILDING: {},
+        PortalStatusOverride.TARGET_APARTMENT: {},
+    }
+    for item in PortalStatusOverride.objects.filter(context=PortalStatusOverride.CONTEXT_RESIDENTIAL):
+        if item.target_type in maps:
+            maps[item.target_type][item.target_id] = item.status_value
+    return maps
+
+
+def transaction_override_map(transaction_ids=None) -> dict[int, str]:
+    """Portal-assigned transaction statuses; all of them when ``transaction_ids`` is None."""
+    queryset = PortalStatusOverride.objects.filter(
+        context=PortalStatusOverride.CONTEXT_TRANSACTIONS,
+        target_type=PortalStatusOverride.TARGET_TRANSACTION,
+    )
+    if transaction_ids is not None:
+        queryset = queryset.filter(target_id__in=list(transaction_ids))
+    return {item.target_id: item.status_value for item in queryset}
+
+
+def serialize_complex(complex_obj, owner_for, payments_for, override_maps, hot_water_by_complex) -> tuple[dict, list[dict]]:
+    """Complex row with nested buildings/apartments, plus one resident row per apartment.
+
+    ``complex_obj`` must have buildings, their apartments and sections prefetched. ``owner_for(apartment)``
+    returns the apartment's owner or None; ``payments_for(owner)`` returns the owner's transactions,
+    newest first. Debt/collected totals and risk are computed here; portal status overrides win over
+    computed risk and apartment status.
+    """
+    complex_overrides = override_maps[PortalStatusOverride.TARGET_COMPLEX]
+    building_overrides = override_maps[PortalStatusOverride.TARGET_BUILDING]
+    apartment_overrides = override_maps[PortalStatusOverride.TARGET_APARTMENT]
+    building_rows = []
+    resident_rows = []
+    debtor_count = 0
+    paid_count = 0
+    debt_total = 0.0
+    collected_total = 0.0
+    unit_total = 0
+    total_area = 0.0
+
+    for building in complex_obj.buildings.all():
+        apartment_rows = []
+        building_debtors = 0
+        building_paid = 0
+        building_debt = 0.0
+        building_collected = 0.0
+        apartments = list(building.apartments.all())
+        unit_total += len(apartments)
+        building_total_area = sum(_money(apartment.area) for apartment in apartments)
+        total_area += building_total_area
+
+        for apartment in apartments:
+            owner = owner_for(apartment)
+            payments = [item for item in payments_for(owner) if is_incoming_payment(item)] if owner else []
+            resident = serialize_resident(apartment, owner, payments[0].created_at if payments else None)
+            balance = resident["balance"]
+            is_debtor = balance < 0
+            if is_debtor:
+                debtor_count += 1
+                building_debtors += 1
+                debt_total += abs(balance)
+                building_debt += abs(balance)
+            else:
+                paid_count += 1
+                building_paid += 1
+            owner_collected = sum(_money(item.amount) for item in payments)
+            collected_total += owner_collected
+            building_collected += owner_collected
+
+            override = apartment_overrides.get(apartment.id)
+            if override:
+                resident["status"] = override
+            resident_rows.append(resident)
+            apartment_rows.append({
+                "id": resident["id"],
+                "backendId": apartment.id,
+                "apartmentBackendId": apartment.id,
+                "ownerBackendId": resident["ownerBackendId"],
+                "complexId": resident["complexId"],
+                "complexBackendId": complex_obj.id,
+                "buildingId": resident["buildingId"],
+                "buildingBackendId": building.id,
+                "unit": apartment.number,
+                "owner": {
+                    "name": resident["name"],
+                    "phone": resident["phone"],
+                    "email": "",
+                    "photo": "",
+                },
+                "balance": balance,
+                "status": override or ("Overdue" if is_debtor else "Paid"),
+                "rooms": "Apartment",
+                "area": resident["area"],
+                "charge": "",
+                "meter": resident["meter"],
+                "contract": resident["contract"],
+                "visit": "",
+                "lastPayment": resident["lastPayment"],
+                "occupancy": "Resident" if owner else "Vacant",
+                "isOccupied": bool(owner),
+            })
+
+        building_risk = _risk_from_split(building_debtors, building_paid, building_debt)
+        building_risk = building_overrides.get(building.id, building_risk)
+        building_rows.append({
+            "id": _slug("building", building.id),
+            "backendId": building.id,
+            "complexBackendId": complex_obj.id,
+            "name": f"House {building.number}",
+            "number": building.number,
+            "address": building.address,
+            "apartments": apartment_rows,
+            "units": len(apartment_rows),
+            "totalArea": round(building_total_area, 2),
+            "debt": building_debt,
+            "collected": building_collected,
+            "debtorResidents": building_debtors,
+            "paidResidents": building_paid,
+            "risk": building_risk,
+            "health": _health_from_split(building_debtors, building_paid),
+            "tone": _residential_status_to_tone(building_risk),
+            "floors": "",
+            "entrance": "",
+        })
+
+    risk = _risk_from_split(debtor_count, paid_count, debt_total)
+    risk = complex_overrides.get(complex_obj.id, risk)
+    health = _health_from_split(debtor_count, paid_count)
+    water_m3 = hot_water_by_complex.get(complex_obj.id, 0)
+    complex_row = {
+        "id": _slug("complex", complex_obj.id),
+        "backendId": complex_obj.id,
+        "name": complex_obj.title,
+        "sector": DEFAULT_SECTOR_NAME,
+        "prefix": complex_obj.title,
+        "buildings": len(building_rows),
+        "units": unit_total,
+        "totalArea": round(total_area, 2),
+        "water": "Optimal",
+        "heating": "Optimal",
+        "health": health,
+        "waterM3": round(water_m3, 2),
+        "heatingM3": 0,
+        "pressurePsi": round(45 + (health / 100) * 15, 1),
+        "extraDebt": debt_total,
+        "baselineCollected": collected_total,
+        "image": "",
+        "icon": "apartment",
+        "risk": risk,
+        "tone": _residential_status_to_tone(risk),
+        "debtorResidents": debtor_count,
+        "paidResidents": paid_count,
+        "buildingItems": building_rows,
+    }
+    return complex_row, resident_rows
+
+
+def hot_water_totals_by_complex() -> dict[int, float]:
+    return {
+        row["apartment__building__complex_id"]: _money(row["total"])
+        for row in HotWaterMeterReading.objects.values("apartment__building__complex_id").annotate(total=Sum("end_reading"))
+    }
+
+
 def _serialize_notifications() -> list[dict]:
-    rows = []
     queryset = list(PortalNotification.objects.select_related(
         "complex",
         "building",
+        "building__complex",
         "apartment",
         "owner",
     ).exclude(status=PortalNotification.STATUS_ARCHIVED).order_by("-pinned", "-event_at")[:80])
@@ -276,27 +626,7 @@ def _serialize_notifications() -> list[dict]:
             notification_id = int((alert.metadata or {}).get("notification_id") or 0)
             if notification_id and notification_id not in alert_map:
                 alert_map[notification_id] = alert.id
-    for item in queryset:
-        related = item.complex or (item.building.complex if item.building_id else None)
-        rows.append({
-            "id": _slug("notification", item.id),
-            "backendId": item.id,
-            "alertBackendId": alert_map.get(item.id, ""),
-            "severity": item.severity,
-            "title": item.title,
-            "message": item.message,
-            "section": _date_section(item.event_at),
-            "read": item.status == PortalNotification.STATUS_READ,
-            "pinned": item.pinned,
-            "eventAt": _datetime(item.event_at),
-            "actionPrimary": item.action_primary,
-            "actionSecondary": item.action_secondary,
-            "actionState": "" if item.action_state == "Created from dashboard" else item.action_state,
-            "complexId": _slug("complex", related.id) if related else "",
-            "buildingId": _slug("building", item.building_id) if item.building_id else "",
-            "ownerId": _slug("owner", item.owner_id) if item.owner_id else "",
-        })
-    return rows
+    return [serialize_notification(item, alert_map.get(item.id, "")) for item in queryset]
 
 
 def _serialize_system_alerts() -> list[dict]:
@@ -334,65 +664,18 @@ def _serialize_system_alerts() -> list[dict]:
 
 
 def _serialize_maintenance_tasks() -> list[dict]:
-    rows = []
     queryset = MaintenanceTask.objects.select_related("complex", "building").order_by("scheduled_at")[:120]
-    for task in queryset:
-        scheduled = timezone.localtime(task.scheduled_at) if task.scheduled_at else None
-        rows.append({
-            "id": _slug("maintenance", task.id),
-            "backendId": task.id,
-            "task": task.title,
-            "title": task.title,
-            "location": task.location or task.notes or (task.complex.title if task.complex_id else ""),
-            "priority": task.get_priority_display(),
-            "priorityKey": task.priority,
-            "status": task.get_status_display(),
-            "statusKey": task.status,
-            "date": scheduled.strftime("%d.%m.%Y | %H:%M") if scheduled else "",
-            "day": scheduled.strftime("%d") if scheduled else "",
-            "month": scheduled.strftime("%b").upper() if scheduled else "",
-            "assignedTo": task.assigned_to,
-            "action": task.action_label or "Open checklist",
-            "icon": task.icon or "fact_check",
-            "tone": _tone_for_priority(task.priority),
-            "complexId": _slug("complex", task.complex_id) if task.complex_id else "",
-            "buildingId": _slug("building", task.building_id) if task.building_id else "",
-            "adminUrl": f"/admin/portal/maintenancetask/{task.id}/change/",
-        })
-    return rows
+    return [serialize_maintenance_task(task) for task in queryset]
 
 
 def _serialize_audit_events() -> list[dict]:
-    rows = []
     queryset = AuditEvent.objects.select_related(
         "complex",
         "building",
         "apartment",
         "owner",
     ).order_by("-created_at")[:120]
-    for event in queryset:
-        complex_obj = event.complex
-        building = event.building
-        apartment = event.apartment
-        owner = event.owner
-        rows.append({
-            "id": _slug("audit", event.id),
-            "backendId": event.id,
-            "type": event.event_type,
-            "label": event.get_event_type_display(),
-            "title": event.title,
-            "message": event.message,
-            "actor": event.actor,
-            "time": _datetime(event.created_at),
-            "complexId": _slug("complex", event.complex_id) if event.complex_id else "",
-            "buildingId": _slug("building", event.building_id) if event.building_id else "",
-            "ownerId": _slug("owner", event.owner_id) if event.owner_id else "",
-            "complexName": complex_obj.title if complex_obj else "",
-            "buildingName": building.number if building else "",
-            "apartmentNumber": apartment.number if apartment else "",
-            "ownerName": owner.fio if owner else "",
-        })
-    return rows
+    return [serialize_audit_event(event) for event in queryset]
 
 
 def _serialize_checklist_items() -> list[dict]:
@@ -545,6 +828,7 @@ def build_portal_data(user=None) -> dict:
             "balance_before",
             "balance_after",
             "description",
+            "external_id",
             "created_at",
         ).order_by("-created_at")
     )
@@ -564,255 +848,33 @@ def build_portal_data(user=None) -> dict:
         Prefetch("buildings", queryset=buildings_qs)
     ).order_by("title")
 
+    override_maps = residential_override_maps()
+    hot_water_by_complex = hot_water_totals_by_complex()
     complex_rows = []
     resident_rows = []
-
-    hot_water_by_complex = {
-        row["apartment__building__complex_id"]: _money(row["total"])
-        for row in HotWaterMeterReading.objects.values("apartment__building__complex_id").annotate(
-            total=Sum("end_reading")
-        )
-    }
-    override_map = {
-        (item.context, item.target_type, item.target_id): item.status_value
-        for item in PortalStatusOverride.objects.all()
-    }
-
     for complex_obj in complexes:
-        building_rows = []
-        debtor_count = 0
-        paid_count = 0
-        debt_total = 0.0
-        collected_total = 0.0
-        unit_total = 0
-        total_area = 0.0
-
-        for building in complex_obj.buildings.all():
-            apartment_rows = []
-            building_debtors = 0
-            building_paid = 0
-            building_debt = 0.0
-            building_collected = 0.0
-
-            apartments = list(building.apartments.all())
-            unit_total += len(apartments)
-            building_total_area = sum(_money(apartment.area) for apartment in apartments)
-            total_area += building_total_area
-
-            for apartment in apartments:
-                owner = owners_by_apartment.get(apartment.id)
-                owner_transactions = transactions_by_owner.get(owner.id, []) if owner else []
-                positive_transactions = [item for item in owner_transactions if is_incoming_payment(item)]
-                latest_payment = positive_transactions[0] if positive_transactions else None
-                balance = _money(owner.balance if owner else 0)
-                is_debtor = balance < 0
-                if is_debtor:
-                    debtor_count += 1
-                    building_debtors += 1
-                    debt_total += abs(balance)
-                    building_debt += abs(balance)
-                else:
-                    paid_count += 1
-                    building_paid += 1
-
-                owner_collected = sum(_money(item.amount) for item in positive_transactions)
-                collected_total += owner_collected
-                building_collected += owner_collected
-
-                resident_id = _slug("owner", owner.id) if owner else _slug("apartment", apartment.id)
-                telegram_status = str(getattr(owner, "telegram_status", "") or "").strip().lower() if owner else ""
-                telegram_user = str(getattr(owner, "telegram_user", "") or "").strip() if owner else ""
-                telegram_id = str(getattr(owner, "telegram_id", "") or "").strip() if owner else ""
-                telegram_connected = bool(
-                    telegram_user
-                    or telegram_id
-                    or telegram_status in {"connected", "active", "verified"}
-                )
-                resident = {
-                    "id": resident_id,
-                    "backendId": owner.id if owner else None,
-                    "ownerBackendId": owner.id if owner else None,
-                    "displayId": owner.id if owner else apartment.id,
-                    "complexId": _slug("complex", complex_obj.id),
-                    "complexBackendId": complex_obj.id,
-                    "buildingId": _slug("building", building.id),
-                    "buildingBackendId": building.id,
-                    "apartmentId": _slug("apartment", apartment.id),
-                    "apartmentBackendId": apartment.id,
-                    "adminUrl": reverse("admin:main_app_owner_change", args=[owner.id]) if owner else "",
-                    "name": owner.fio if owner else "Unassigned owner",
-                    "apartment": str(apartment.number),
-                    "apartmentNumber": apartment.number,
-                    "section": apartment.section.name if apartment.section else "",
-                    "building": str(building.number),
-                    "buildingNumber": building.number,
-                    "complex": complex_obj.title,
-                    "complexAddress": complex_obj.address or "",
-                    "phone": owner.phone if owner else "",
-                    "lastPayment": _date(latest_payment.created_at) if latest_payment else "",
-                    "lastPaymentAt": _datetime(latest_payment.created_at) if latest_payment else "",
-                    "balance": balance,
-                    "status": "debtor" if is_debtor else "paid",
-                    "photo": "",
-                    "area": f"{apartment.area:g} m²",
-                    "rooms": "Apartment",
-                    "charge": "",
-                    "contract": "True" if bool(getattr(owner, "has_contract", False)) else "False",
-                    "hasContract": bool(getattr(owner, "has_contract", False)),
-                    "contractStatus": "True" if bool(getattr(owner, "has_contract", False)) else "False",
-                    "meter": apartment.section.name if apartment.section else "",
-                    "email": "",
-                    "telegramStatus": telegram_status or "not_linked",
-                    "telegramUser": telegram_user,
-                    "telegramId": telegram_id,
-                    "telegramConnected": telegram_connected,
-                    "createdAt": _datetime(owner.created_at) if owner else _datetime(apartment.created_at),
-                }
-                resident_rows.append(resident)
-
-                apartment_rows.append({
-                    "id": resident_id,
-                    "backendId": apartment.id,
-                    "apartmentBackendId": apartment.id,
-                    "ownerBackendId": owner.id if owner else None,
-                    "complexId": _slug("complex", complex_obj.id),
-                    "complexBackendId": complex_obj.id,
-                    "buildingId": _slug("building", building.id),
-                    "buildingBackendId": building.id,
-                    "unit": apartment.number,
-                    "owner": {
-                        "name": resident["name"],
-                        "phone": resident["phone"],
-                        "email": "",
-                        "photo": "",
-                    },
-                    "balance": balance,
-                    "status": "Overdue" if is_debtor else "Paid",
-                    "rooms": "Apartment",
-                    "area": resident["area"],
-                    "charge": "",
-                    "meter": resident["meter"],
-                    "contract": resident["contract"],
-                    "visit": "",
-                    "lastPayment": resident["lastPayment"],
-                    "occupancy": "Resident" if owner else "Vacant",
-                    "isOccupied": bool(owner),
-                })
-
-            building_risk = _risk_from_split(building_debtors, building_paid, building_debt)
-            building_risk = override_map.get(
-                (PortalStatusOverride.CONTEXT_RESIDENTIAL, PortalStatusOverride.TARGET_BUILDING, building.id),
-                building_risk,
-            )
-            building_rows.append({
-                "id": _slug("building", building.id),
-                "backendId": building.id,
-                "complexBackendId": complex_obj.id,
-                "name": f"House {building.number}",
-                "number": building.number,
-                "address": building.address,
-                "apartments": apartment_rows,
-                "units": len(apartment_rows),
-                "totalArea": round(building_total_area, 2),
-                "debt": building_debt,
-                "collected": building_collected,
-                "debtorResidents": building_debtors,
-                "paidResidents": building_paid,
-                "risk": building_risk,
-                "health": _health_from_split(building_debtors, building_paid),
-                "tone": _residential_status_to_tone(building_risk),
-                "floors": "",
-                "entrance": "",
-            })
-
-        risk = _risk_from_split(debtor_count, paid_count, debt_total)
-        risk = override_map.get(
-            (PortalStatusOverride.CONTEXT_RESIDENTIAL, PortalStatusOverride.TARGET_COMPLEX, complex_obj.id),
-            risk,
+        complex_row, complex_residents = serialize_complex(
+            complex_obj,
+            owner_for=lambda apartment: owners_by_apartment.get(apartment.id),
+            payments_for=lambda owner: transactions_by_owner.get(owner.id, []),
+            override_maps=override_maps,
+            hot_water_by_complex=hot_water_by_complex,
         )
-        health = _health_from_split(debtor_count, paid_count)
-        water_m3 = hot_water_by_complex.get(complex_obj.id, 0)
-        complex_rows.append({
-            "id": _slug("complex", complex_obj.id),
-            "backendId": complex_obj.id,
-            "name": complex_obj.title,
-            "sector": DEFAULT_SECTOR_NAME,
-            "prefix": complex_obj.title,
-            "buildings": len(building_rows),
-            "units": unit_total,
-            "totalArea": round(total_area, 2),
-            "water": "Optimal",
-            "heating": "Optimal",
-            "health": health,
-            "waterM3": round(water_m3, 2),
-            "heatingM3": 0,
-            "pressurePsi": round(45 + (health / 100) * 15, 1),
-            "extraDebt": debt_total,
-            "baselineCollected": collected_total,
-            "image": "",
-            "icon": "apartment",
-            "risk": risk,
-            "tone": _residential_status_to_tone(risk),
-            "debtorResidents": debtor_count,
-            "paidResidents": paid_count,
-            "buildingItems": building_rows,
-        })
+        complex_rows.append(complex_row)
+        resident_rows.extend(complex_residents)
 
-    apartment_override_map = {
-        target_id: status
-        for (context, target_type, target_id), status in override_map.items()
-        if context == PortalStatusOverride.CONTEXT_RESIDENTIAL and target_type == PortalStatusOverride.TARGET_APARTMENT
-    }
-    if apartment_override_map:
-        for resident in resident_rows:
-            apartment_id = resident.get("apartmentBackendId")
-            if apartment_id in apartment_override_map:
-                resident["status"] = apartment_override_map[apartment_id]
-        for complex_row in complex_rows:
-            for building_row in complex_row.get("buildingItems", []):
-                for apartment_row in building_row.get("apartments", []):
-                    apartment_id = apartment_row.get("backendId")
-                    if apartment_id in apartment_override_map:
-                        apartment_row["status"] = apartment_override_map[apartment_id]
-
-    transaction_rows = []
+    transaction_overrides = transaction_override_map()
     current_tz = timezone.get_current_timezone()
-    for transaction in transactions:
-        owner = owners_by_id[transaction.owner_id]
-        apartment = owner.apartment
-        building = apartment.building
-        complex_obj = building.complex
-        amount = _money(transaction.amount)
-        created_at = timezone.localtime(transaction.created_at, current_tz)
-        transaction_rows.append({
-            "id": f"trx-{transaction.id}",
-            "backendId": transaction.id,
-            "ownerBackendId": owner.id,
-            "apartmentBackendId": apartment.id,
-            "buildingBackendId": building.id,
-            "complexBackendId": complex_obj.id,
-            "residentId": _slug("owner", owner.id),
-            "residentName": owner.fio,
-            "complexId": _slug("complex", complex_obj.id),
-            "buildingId": _slug("building", building.id),
-            "type": _transaction_type(transaction, payment_type_labels),
-            "method": _transaction_method_label(transaction, payment_type_labels),
-            "date": created_at.strftime("%d.%m.%Y"),
-            "createdAt": created_at.strftime("%d.%m.%Y, %H:%M"),
-            "amount": abs(amount),
-            "signedAmount": amount,
-            "balanceBefore": _money(transaction.balance_before),
-            "balanceAfter": _money(transaction.balance_after),
-            "status": "Success" if is_incoming_payment(transaction) else "Pending",
-            "description": transaction.description,
-        })
-
-    for row in transaction_rows:
-        override = override_map.get(
-            (PortalStatusOverride.CONTEXT_TRANSACTIONS, PortalStatusOverride.TARGET_TRANSACTION, row["backendId"])
+    transaction_rows = [
+        serialize_transaction(
+            transaction,
+            owners_by_id[transaction.owner_id],
+            payment_type_labels,
+            transaction_overrides.get(transaction.id),
+            current_tz,
         )
-        if override:
-            row["status"] = override
+        for transaction in transactions
+    ]
 
     return {
         "source": "mirabad_avenue_backend",

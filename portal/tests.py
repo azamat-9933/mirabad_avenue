@@ -1,4 +1,6 @@
+import base64
 import gzip
+import io
 import json
 import re
 from decimal import Decimal
@@ -6,6 +8,7 @@ from decimal import Decimal
 from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
 from django.urls import reverse
+from openpyxl import load_workbook
 
 from main_app.models import Apartment, Building, Complex, Owner
 from payments.models import Transaction
@@ -241,3 +244,75 @@ class PortalSnapshotTests(TestCase):
                 )
                 self.assertRegex(row["date"], r"^\d{2}\.\d{2}\.\d{4}$")
                 self.assertRegex(row["createdAt"], r"^\d{2}\.\d{2}\.\d{4}, \d{2}:\d{2}$")
+
+
+    def test_snapshot_and_list_endpoints_describe_rows_identically(self):
+        Owner.objects.filter(pk=self.owner.pk).update(telegram_status="linked", has_contract=True)
+        apply_balance_change(self.owner.id, Decimal("1000"), Transaction.TYPE_CASH, description="[portal:cash-credit] x")
+        snapshot = build_portal_data(self.user)
+
+        listed_resident = self.client.get(reverse("portal:api_list_residents"), {"owner_id": self.owner.id}).json()["results"][0]
+        self.assertEqual(listed_resident, snapshot["residents"][0])
+        self.assertEqual(listed_resident["telegramStatus"], "connected")
+
+        listed_transaction = self.client.get(reverse("portal:api_list_transactions")).json()["results"][0]
+        self.assertEqual(listed_transaction, snapshot["transactions"][0])
+
+class PortalExportTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = get_user_model().objects.create_user(username="operator", password="unused-password")
+        complex_obj = Complex.objects.create(title="Mirabad Avenue", address="", author="test")
+        building = Building.objects.create(number="64", complex=complex_obj, author="test")
+        apartment = Apartment.objects.create(number="1", area=Decimal("50.00"), building=building, author="test")
+        cls.owner = Owner.objects.create(fio="Ўринбоев Ғайрат", phone="+998901234567", apartment=apartment)
+        for index in range(120):
+            apply_balance_change(cls.owner.id, Decimal(1000 + index), Transaction.TYPE_CASH)
+
+    def setUp(self):
+        self.client.force_login(self.user)
+
+    def _export(self, url, payload):
+        response = self.client.post(url, payload, content_type="application/json")
+        self.assertEqual(response.status_code, 200)
+        download = response.json()["download"]
+        return download, base64.b64decode(download["content"])
+
+    def test_transactions_xlsx_has_all_rows_and_localized_headers(self):
+        download, content = self._export(
+            reverse("portal:api_export_report"),
+            {"context": "transactions", "format": "XLSX", "language": "ru"},
+        )
+        self.assertTrue(download["filename"].endswith(".xlsx"))
+        sheet = load_workbook(io.BytesIO(content)).active
+        rows = list(sheet.iter_rows(values_only=True))
+        self.assertEqual(rows[0], ("Житель", "Тип", "Метод", "Дата", "Сумма", "Статус"))
+        self.assertEqual(len(rows), 121)
+        self.assertEqual(rows[1][0], "Ўринбоев Ғайрат")
+
+    def test_pdf_export_is_not_truncated(self):
+        download, content = self._export(
+            reverse("portal:api_export_report"),
+            {"context": "transactions", "format": "PDF", "language": "uz"},
+        )
+        self.assertEqual(download["mime"], "application/pdf")
+        self.assertTrue(content.startswith(b"%PDF"))
+        # 120 rows cannot fit on one page; the old writer silently stopped after 45 lines.
+        self.assertGreater(len(re.findall(rb"/Type /Page\b", content)), 1)
+
+    def test_residential_and_maintenance_exports_render(self):
+        for context in ["residential", "maintenance"]:
+            for export_format in ["XLSX", "PDF"]:
+                with self.subTest(context=context, export_format=export_format):
+                    download, content = self._export(
+                        reverse("portal:api_export_report"),
+                        {"context": context, "format": export_format},
+                    )
+                    self.assertTrue(download["filename"].startswith(context))
+                    self.assertTrue(content)
+
+    def test_audit_export_is_xlsx(self):
+        download, content = self._export(reverse("portal:api_export_audit"), {"language": "uz"})
+        self.assertTrue(download["filename"].startswith("audit-log-"))
+        header = next(load_workbook(io.BytesIO(content)).active.iter_rows(values_only=True))
+        self.assertEqual(header[:3], ("Audit ID", "Sana va vaqt", "Hodisa turi"))
