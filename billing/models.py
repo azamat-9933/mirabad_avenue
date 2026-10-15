@@ -50,6 +50,10 @@ SERVICE_CHOICES = [
 ]
 
 
+# Invoice owner name for an apartment that had no owner when the period was billed.
+VACANT_OWNER_LABEL = "Egasi biriktirilmagan"
+
+
 class BillingPeriod(models.Model):
     """
     Compatibility-preserving billing period.
@@ -368,7 +372,7 @@ class BillingPeriod(models.Model):
             apartment_id = charge.apartment_id
             apartment_payload[apartment_id] = {
                 "apartment": charge.apartment,
-                "owner_snapshot": charge.owner.fio,
+                "owner_snapshot": charge.owner.fio if charge.owner_id else VACANT_OWNER_LABEL,
             }
             totals_by_apartment[apartment_id] += _decimal(charge.amount)
             if charge.charge_type == SERVICE_HEATING:
@@ -412,28 +416,26 @@ class BillingPeriod(models.Model):
         self.invoices.exclude(apartment_id__in=keep_ids).delete()
 
     def _post_balance_changes(self, deltas: dict[int, Decimal], description: str, created_by: str = "System"):
-        """Apply per-owner balance deltas through the ledger, linked to this period's invoices."""
+        """Apply per-apartment account deltas through the ledger, linked to this period's invoices."""
         # Imported here: payments.models imports billing.models.
         from payments.models import Transaction
-        from payments.services import apply_balance_change
+        from payments.services import apply_account_change
 
         invoice_ids = dict(
-            Invoice.objects.filter(period=self, apartment__owner__in=list(deltas)).values_list(
-                "apartment__owner", "pk"
-            )
+            Invoice.objects.filter(period=self, apartment_id__in=list(deltas)).values_list("apartment_id", "pk")
         )
-        # A fixed lock order keeps concurrent period closes from deadlocking on owner rows.
-        for owner_id in sorted(deltas):
-            delta = deltas[owner_id]
+        # A fixed lock order keeps concurrent period closes from deadlocking on account rows.
+        for apartment_id in sorted(deltas):
+            delta = deltas[apartment_id]
             if not delta:
                 continue
-            apply_balance_change(
-                owner_id,
+            apply_account_change(
+                apartment_id,
                 delta,
                 Transaction.TYPE_CHARGE,
                 description=description,
                 created_by=created_by,
-                invoice_id=invoice_ids.get(owner_id),
+                invoice_id=invoice_ids.get(apartment_id),
             )
 
     def _build_service_charges(self, service: "BuildingService"):
@@ -446,16 +448,12 @@ class BillingPeriod(models.Model):
             for usage in rows:
                 apartment = usage.apartment
                 owner = getattr(apartment, "owner", None)
-                if owner is None:
-                    raise ValidationError(f"Apartment {apartment} has no owner and cannot be billed.")
                 yield owner, apartment, usage.heated_area, service.tariff, money(usage.heated_area * service.tariff)
         else:
             rows = service.hot_water_readings.select_related("apartment", "apartment__owner")
             for reading in rows:
                 apartment = reading.apartment
                 owner = getattr(apartment, "owner", None)
-                if owner is None:
-                    raise ValidationError(f"Apartment {apartment} has no owner and cannot be billed.")
                 yield owner, apartment, reading.consumption, service.tariff, money(reading.consumption * service.tariff)
 
     def close_period(self):
@@ -472,7 +470,7 @@ class BillingPeriod(models.Model):
             if not services:
                 raise ValidationError("Billing period has no building services to close.")
 
-            owner_totals: dict[int, Decimal] = {}
+            account_totals: dict[int, Decimal] = {}
             charge_rows = []
             for service in services:
                 for owner, apartment, row_volume, row_tariff, row_amount in locked._build_service_charges(service):
@@ -488,13 +486,13 @@ class BillingPeriod(models.Model):
                             volume=row_volume,
                         )
                     )
-                    owner_totals[owner.pk] = owner_totals.get(owner.pk, Decimal("0")) + row_amount
+                    account_totals[apartment.pk] = account_totals.get(apartment.pk, Decimal("0")) + row_amount
 
             Charge.objects.bulk_create(charge_rows)
             locked._sync_invoices_from_active_charges(mark_recalculated=False)
             locked._sync_summaries_from_services()
             locked._post_balance_changes(
-                {owner_id: -total for owner_id, total in owner_totals.items()},
+                {apartment_id: -total for apartment_id, total in account_totals.items()},
                 f"[billing:period-charge] Charges for billing period {locked.title}.",
             )
 
@@ -520,12 +518,10 @@ class BillingPeriod(models.Model):
 
             locked.sync_default_records()
             locked.bootstrap_services_from_legacy()
-            active_charges = list(
-                locked.charges.select_related("owner").filter(is_cancelled=False)
-            )
+            active_charges = list(locked.charges.filter(is_cancelled=False))
             old_totals: dict[int, Decimal] = {}
             for charge in active_charges:
-                old_totals[charge.owner_id] = old_totals.get(charge.owner_id, Decimal("0")) + charge.amount
+                old_totals[charge.apartment_id] = old_totals.get(charge.apartment_id, Decimal("0")) + charge.amount
 
             if active_charges:
                 now = timezone.now()
@@ -551,17 +547,17 @@ class BillingPeriod(models.Model):
                             volume=row_volume,
                         )
                     )
-                    new_totals[owner.pk] = new_totals.get(owner.pk, Decimal("0")) + row_amount
+                    new_totals[apartment.pk] = new_totals.get(apartment.pk, Decimal("0")) + row_amount
 
             Charge.objects.bulk_create(new_charge_rows)
             locked._sync_invoices_from_active_charges(mark_recalculated=True)
             locked._sync_summaries_from_services()
 
-            all_owner_ids = set(old_totals) | set(new_totals)
+            all_apartment_ids = set(old_totals) | set(new_totals)
             locked._post_balance_changes(
                 {
-                    owner_id: old_totals.get(owner_id, Decimal("0")) - new_totals.get(owner_id, Decimal("0"))
-                    for owner_id in all_owner_ids
+                    apartment_id: old_totals.get(apartment_id, Decimal("0")) - new_totals.get(apartment_id, Decimal("0"))
+                    for apartment_id in all_apartment_ids
                 },
                 f"[billing:recalculation] Recalculation of billing period {locked.title}: {reason}",
                 created_by=author.get_username() if getattr(author, "pk", None) else "System",
@@ -744,7 +740,8 @@ class Charge(models.Model):
 
     period = models.ForeignKey(BillingPeriod, on_delete=models.CASCADE, related_name="charges")
     service = models.ForeignKey(BuildingService, on_delete=models.CASCADE, related_name="charges")
-    owner = models.ForeignKey(Owner, on_delete=models.CASCADE, related_name="charges")
+    # Empty when the apartment was vacant: the charge still goes to the apartment account.
+    owner = models.ForeignKey(Owner, on_delete=models.SET_NULL, null=True, blank=True, related_name="charges")
     apartment = models.ForeignKey(Apartment, on_delete=models.CASCADE, related_name="charges")
     charge_type = models.CharField(max_length=20, choices=TYPE_CHOICES)
     amount = models.DecimalField(max_digits=16, decimal_places=2)
@@ -758,7 +755,7 @@ class Charge(models.Model):
         ordering = ["-created_at", "owner_id"]
 
     def __str__(self):
-        return f"{self.owner} | {self.get_charge_type_display()} | {self.amount}"
+        return f"{self.owner or self.apartment} | {self.get_charge_type_display()} | {self.amount}"
 
 
 class Payment(models.Model):

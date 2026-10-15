@@ -17,6 +17,7 @@ class TransactionAdmin(admin.ModelAdmin):
     list_display  = (
         "created_at",
         "owner_link",
+        "apartment",
         "payment_type_badge",
         "amount_display",
         "balance_before_display",
@@ -25,18 +26,19 @@ class TransactionAdmin(admin.ModelAdmin):
     )
     list_filter   = (
         "payment_type",
-        "owner__apartment__building__complex",
-        "owner__apartment__building",
+        "apartment__building__complex",
+        "apartment__building",
     )
     search_fields = (
         "owner__fio",
         "owner__phone",
+        "apartment__number",
         "external_id",
     )
     date_hierarchy = "created_at"
     # Tranzaksiya o'zgartirilmaydi — tarix!
     readonly_fields = (
-        "owner", "invoice",
+        "apartment", "owner", "invoice",
         "payment_type",
         "amount",
         "balance_before", "balance_after",
@@ -48,7 +50,7 @@ class TransactionAdmin(admin.ModelAdmin):
             "To'lov ma'lumoti",
             {
                 "fields": (
-                    "owner", "payment_type", "amount",
+                    "apartment", "owner", "payment_type", "amount",
                     "invoice",
                 )
             },
@@ -81,8 +83,8 @@ class TransactionAdmin(admin.ModelAdmin):
             .get_queryset(request)
             .select_related(
                 "owner",
-                "owner__apartment",
-                "owner__apartment__building",
+                "apartment",
+                "apartment__building",
                 "invoice",
             )
         )
@@ -91,6 +93,9 @@ class TransactionAdmin(admin.ModelAdmin):
 
     @admin.display(description="Ega")
     def owner_link(self, obj):
+        # Charges posted while the apartment was vacant have no owner.
+        if not obj.owner_id:
+            return "—"
         url = f"/admin/main_app/owner/{obj.owner.pk}/change/"
         return format_html(
             '<a href="{}">{}</a>', url, obj.owner.fio

@@ -46,6 +46,7 @@ from .backend_data import (
     _datetime,
     _normalized_telegram_status,
     _payment_type_labels,
+    account_payment_totals,
     build_portal_data,
     hot_water_totals_by_complex,
     residential_override_maps,
@@ -595,7 +596,9 @@ def api_list_residents(request):
         "apartment__building",
         "apartment__building__complex",
     ).annotate(
-        last_payment_at=Max("transactions__created_at", filter=incoming_payment_q("transactions__"))
+        last_payment_at=Max(
+            "apartment__transactions__created_at", filter=incoming_payment_q("apartment__transactions__")
+        )
     )
     if owner_id_value:
         owner_id_digits = re.sub(r"[^\d]", "", owner_id_value)
@@ -672,18 +675,18 @@ def api_list_transactions(request):
     allowed_ordering = {
         "id": "id",
         "created_at": "created_at",
-        "resident": "owner__fio",
+        "resident": "apartment__owner__fio",
         "method": "payment_type",
         "type": "payment_type",
         "amount": "amount",
         "balance": "balance_after",
         "status": "balance_status_rank",
     }
-    queryset = Transaction.objects.select_related(
-        "owner",
-        "owner__apartment",
-        "owner__apartment__building",
-        "owner__apartment__building__complex",
+    queryset = Transaction.objects.filter(apartment__isnull=False).select_related(
+        "apartment",
+        "apartment__owner",
+        "apartment__building",
+        "apartment__building__complex",
     ).annotate(
         status_rank=Case(
             When(amount__gt=0, then=Value(2)),
@@ -698,33 +701,33 @@ def api_list_transactions(request):
     )
     if search:
         queryset = queryset.filter(
-            Q(owner__fio__icontains=search)
-            | Q(owner__phone__icontains=search)
+            Q(apartment__owner__fio__icontains=search)
+            | Q(apartment__owner__phone__icontains=search)
             | Q(description__icontains=search)
             | Q(external_id__icontains=search)
-            | Q(owner__apartment__number__icontains=search)
-            | Q(owner__apartment__building__number__icontains=search)
-            | Q(owner__apartment__building__complex__title__icontains=search)
+            | Q(apartment__number__icontains=search)
+            | Q(apartment__building__number__icontains=search)
+            | Q(apartment__building__complex__title__icontains=search)
         )
     owner_id = _query_int(request, "owner_id", 0)
     complex_id = _query_int(request, "complex_id", 0)
     building_id = _query_int(request, "building_id", 0)
     apartment_id = _query_int(request, "apartment_id", 0)
     if owner_id:
-        queryset = queryset.filter(owner_id=owner_id)
+        queryset = queryset.filter(apartment__owner__id=owner_id)
     if complex_id:
-        queryset = queryset.filter(owner__apartment__building__complex_id=complex_id)
+        queryset = queryset.filter(apartment__building__complex_id=complex_id)
     if building_id:
-        queryset = queryset.filter(owner__apartment__building_id=building_id)
+        queryset = queryset.filter(apartment__building_id=building_id)
     if apartment_id:
-        queryset = queryset.filter(owner__apartment_id=apartment_id)
+        queryset = queryset.filter(apartment_id=apartment_id)
     if payment_type:
         queryset = queryset.filter(payment_type=payment_type)
     queryset = _apply_related_district_filter(
         queryset,
         district_value,
-        "owner__apartment__building__complex__title",
-        "owner__apartment__building__complex__address",
+        "apartment__building__complex__title",
+        "apartment__building__complex__address",
     )
     queryset = _apply_period_filter(queryset, "created_at", period_value, period_from, period_to)
     if status_value in {"success", "paid"}:
@@ -742,7 +745,10 @@ def api_list_transactions(request):
     page_obj = _paginate_queryset(queryset.order_by(*ordering, "-id"), page, page_size)
     overrides = transaction_override_map([item.id for item in page_obj.object_list])
     labels = _payment_type_labels()
-    results = [serialize_transaction(item, item.owner, labels, overrides.get(item.id)) for item in page_obj.object_list]
+    results = [
+        serialize_transaction(item, item.apartment, getattr(item.apartment, "owner", None), labels, overrides.get(item.id))
+        for item in page_obj.object_list
+    ]
     return _paginated_response(results, page_obj.number, page_size, queryset.count(), ordering_raw)
 
 
@@ -936,14 +942,7 @@ def api_list_complexes(request):
     debt_status = _query_param(request, "debt_status", "").lower()
     district_value = _query_param(request, "district", "")
     ordering_raw = _query_param(request, "ordering", "complex")
-    transactions_prefetch = Prefetch(
-        "transactions",
-        queryset=Transaction.objects.order_by("-created_at"),
-        to_attr="prefetched_transactions",
-    )
-    apartment_queryset = Apartment.objects.select_related("section").prefetch_related(
-        Prefetch("owner", queryset=Owner.objects.prefetch_related(transactions_prefetch))
-    ).order_by("number")
+    apartment_queryset = Apartment.objects.select_related("section", "owner").order_by("number")
     building_queryset = Building.objects.prefetch_related(
         Prefetch("apartments", queryset=apartment_queryset),
         "sections",
@@ -953,12 +952,13 @@ def api_list_complexes(request):
         queryset = queryset.filter(Q(title__icontains=district_value) | Q(address__icontains=district_value))
     override_maps = residential_override_maps()
     hot_water_by_complex = hot_water_totals_by_complex()
+    payment_totals = account_payment_totals()
     all_results = []
     for complex_obj in queryset:
         row, _residents = serialize_complex(
             complex_obj,
             owner_for=lambda apartment: getattr(apartment, "owner", None),
-            payments_for=lambda owner: getattr(owner, "prefetched_transactions", []),
+            payment_totals_for=lambda apartment: payment_totals.get(apartment.id, (0.0, None)),
             override_maps=override_maps,
             hot_water_by_complex=hot_water_by_complex,
         )
@@ -1183,6 +1183,41 @@ def _export_row_datetime(value):
     return timezone.make_aware(parsed, timezone.get_current_timezone())
 
 
+def _export_transaction_items(transaction_ids, owner_ids, apartment_ids, building_ids, complex_ids, date_from, date_to):
+    """Serialized ledger rows for a table export, read from the database (the snapshot holds only recent rows).
+
+    The query narrows by ids and a slightly wider date window; the caller still applies the exact
+    minute-level date filter to the serialized rows, as before.
+    """
+    queryset = Transaction.objects.filter(apartment__isnull=False).select_related(
+        "apartment",
+        "apartment__owner",
+        "apartment__building",
+        "apartment__building__complex",
+    )
+    if transaction_ids:
+        queryset = queryset.filter(id__in=transaction_ids)
+    if owner_ids:
+        queryset = queryset.filter(apartment__owner__id__in=owner_ids)
+    if apartment_ids:
+        queryset = queryset.filter(apartment_id__in=apartment_ids)
+    if building_ids:
+        queryset = queryset.filter(apartment__building_id__in=building_ids)
+    if complex_ids:
+        queryset = queryset.filter(apartment__building__complex_id__in=complex_ids)
+    if date_from:
+        queryset = queryset.filter(created_at__gte=date_from - timedelta(minutes=1))
+    if date_to:
+        queryset = queryset.filter(created_at__lt=date_to + timedelta(minutes=1))
+    labels = _payment_type_labels()
+    overrides = transaction_override_map()
+    current_tz = timezone.get_current_timezone()
+    for item in queryset.order_by("-created_at", "-id").iterator(chunk_size=2000):
+        yield serialize_transaction(
+            item, item.apartment, getattr(item.apartment, "owner", None), labels, overrides.get(item.id), current_tz
+        )
+
+
 def _portal_export_rows(portal_data, context, filters=None):
     filters = filters or {}
     complex_ids = _backend_id_set(filters.get("complex_backend_ids"))
@@ -1206,7 +1241,7 @@ def _portal_export_rows(portal_data, context, filters=None):
                 f'{complex_row.get("extraDebt", 0):,.0f} UZS',
             ])
     elif context == "transactions":
-        for item in portal_data.get("transactions", []):
+        for item in _export_transaction_items(transaction_ids, owner_ids, apartment_ids, building_ids, complex_ids, date_from, date_to):
             row_datetime = _export_row_datetime(item.get("createdAt") or item.get("date"))
             if date_from and row_datetime and row_datetime < date_from:
                 continue
@@ -1233,7 +1268,7 @@ def _portal_export_rows(portal_data, context, filters=None):
     return rows
 
 
-def _render_export_payload(portal_data, context, export_format, source, language, filters=None):
+def _render_export_payload(portal_data, context, export_format, source, language, filters=None, rows=None):
     titles = {
         "residential": {"en": "Residential Export", "ru": "Экспорт жилых объектов", "uz": "Turar joylar eksporti"},
         "transactions": {"en": "Transaction Export", "ru": "Экспорт транзакций", "uz": "Tranzaksiyalar eksporti"},
@@ -1251,7 +1286,8 @@ def _render_export_payload(portal_data, context, export_format, source, language
         },
     }
     lang = language if language in {"en", "ru", "uz"} else "en"
-    rows = _portal_export_rows(portal_data, context, filters)
+    if rows is None:
+        rows = _portal_export_rows(portal_data, context, filters)
     header = headers.get(context, headers["residential"])[lang]
     title = titles.get(context, titles["residential"])[lang]
     filename_base = f"{context or 'export'}-{timezone.localtime():%Y%m%d-%H%M}"
@@ -2079,8 +2115,9 @@ def api_export_report(request):
         context = report_type
     else:
         portal_data = safe_portal_data(request)
-        download = _render_export_payload(portal_data, context, export_format, source, language, payload)
-        row_count = len(_portal_export_rows(portal_data, context, payload))
+        rows = _portal_export_rows(portal_data, context, payload)
+        download = _render_export_payload(portal_data, context, export_format, source, language, payload, rows=rows)
+        row_count = len(rows)
 
     AuditEvent.objects.create(
         event_type=AuditEvent.TYPE_EXPORT,

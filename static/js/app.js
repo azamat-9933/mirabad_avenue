@@ -978,6 +978,9 @@
         auditEvents: [],
         checklistItems: [],
         checklistNotes: [],
+        // Full-history payment figures computed by the backend; transactions above are only the
+        // latest rows of each account.
+        paymentSummary: { months: [], monthly: [], channels: {}, currentMonthPayments: 0 },
         profile: {},
     };
 
@@ -991,6 +994,9 @@
         ["notifications", "systemAlerts", "auditEvents", "checklistItems", "checklistNotes"].forEach((key) => {
             billingData[key] = Array.isArray(payload[key]) ? payload[key] : [];
         });
+        billingData.paymentSummary = payload.paymentSummary && typeof payload.paymentSummary === "object"
+            ? payload.paymentSummary
+            : { months: [], monthly: [], channels: {}, currentMonthPayments: 0 };
         billingData.profile = payload.profile && typeof payload.profile === "object" ? payload.profile : {};
         billingData.source = payload.source || "backend";
         billingData.generatedAt = payload.generatedAt || "";
@@ -1170,37 +1176,7 @@
     };
     const formatCompactUzs = (value) => `${compactNumber(value)} UZS`;
     const percentValue = (value) => `${Number(value || 0).toFixed(1).replace(/\.0$/, "")}%`;
-    const getMonthlyTransactionStats = () => {
-        const months = ["Jan", "Feb", "Mar", "Apr"];
-        const map = Object.fromEntries(months.map((month) => [month, { success: 0, pending: 0, total: 0 }]));
-        billingData.transactions.forEach((transaction) => {
-            const [day, month] = transaction.date.split(".").map(Number);
-            const label = months[(month || 1) - 1];
-            if (!map[label]) return;
-            map[label].total += transaction.amount;
-            if (transaction.status === "Success") map[label].success += transaction.amount;
-            else map[label].pending += transaction.amount;
-        });
-        return { labels: months, values: months.map((month) => map[month]) };
-    };
     const getSiteStats = () => {
-        const normalizePaymentChannel = (transaction) => {
-            const paymentType = String(transaction?.paymentType || "").trim().toLowerCase();
-            const method = String(transaction?.method || "").trim().toLowerCase();
-            const description = String(transaction?.description || "").trim().toLowerCase();
-            if (paymentType === "payme" || method === "payme") return "Payme";
-            if (paymentType === "click" || method === "click") return "Click";
-            if (paymentType === "cash" || method === "cash") return "Cash";
-            if (
-                method === "card"
-                || method === "terminal"
-                || description.includes("[portal:card-credit]")
-                || description.includes("[portal:terminal-credit]")
-            ) {
-                return "Card";
-            }
-            return "";
-        };
         const complexes = getComplexStats();
         const totalComplexes = complexes.length;
         const now = new Date();
@@ -1225,21 +1201,9 @@
         const totalCollected = complexes.reduce((total, complex) => total + complex.collected, 0);
         const totalDebt = complexes.reduce((total, complex) => total + complex.debt, 0);
         const detailedDebt = billingData.residents.reduce((total, resident) => total + (resident.balance < 0 ? Math.abs(resident.balance) : 0), 0);
-        const transactionVolume = billingData.transactions.reduce((total, transaction) => total + transaction.amount, 0);
-        const methodTotals = billingData.transactions.reduce((totals, transaction) => {
-            const channel = normalizePaymentChannel(transaction);
-            if (!channel) return totals;
-            if (Number(transaction?.signedAmount ?? transaction?.amount ?? 0) <= 0) return totals;
-            totals[channel] = (totals[channel] || 0) + Number(transaction.amount || 0);
-            return totals;
-        }, { Payme: 0, Click: 0, Cash: 0, Card: 0 });
-        const methodResidents = billingData.transactions.reduce((totals, transaction) => {
-            const channel = normalizePaymentChannel(transaction);
-            if (!channel) return totals;
-            if (Number(transaction?.signedAmount ?? transaction?.amount ?? 0) <= 0) return totals;
-            if (transaction.ownerBackendId) totals[channel].add(String(transaction.ownerBackendId));
-            return totals;
-        }, { Payme: new Set(), Click: new Set(), Cash: new Set(), Card: new Set() });
+        const summaryChannels = billingData.paymentSummary?.channels || {};
+        const methodTotals = Object.fromEntries(["Payme", "Click", "Cash", "Card"].map((channel) => [channel, Number(summaryChannels[channel]?.amount || 0)]));
+        const methodResidentCounts = Object.fromEntries(["Payme", "Click", "Cash", "Card"].map((channel) => [channel, Number(summaryChannels[channel]?.residents || 0)]));
         const totalWaterM3 = billingData.complexes.reduce((total, complex) => total + complex.waterM3, 0);
         const totalHeatingM3 = billingData.complexes.reduce((total, complex) => total + complex.heatingM3, 0);
         const totalUsageM3 = totalWaterM3 + totalHeatingM3;
@@ -1277,11 +1241,8 @@
             totalCollected,
             totalDebt,
             detailedDebt,
-            transactionVolume,
             methodTotals,
-            methodResidentCounts: Object.fromEntries(
-                Object.entries(methodResidents).map(([channel, residents]) => [channel, residents.size])
-            ),
+            methodResidentCounts,
             totalWaterM3,
             totalHeatingM3,
             totalUsageM3,
@@ -1297,8 +1258,6 @@
             detailedResidents,
             detailedPaidResidents,
             detailedDebtors,
-            pendingTransactions: billingData.transactions.filter((transaction) => transaction.status !== "Success").length,
-            successfulTransactions: billingData.transactions.filter((transaction) => transaction.status === "Success").length,
             sectors: 1,
         };
     };
@@ -1331,15 +1290,6 @@
         const chartGridColor = root.dataset.theme === "dark" ? "rgba(148, 166, 188, 0.12)" : "rgba(160, 176, 198, 0.18)";
         const tooltipBg = root.dataset.theme === "dark" ? "#101722" : "#172030";
         const tooltipText = "#F8FBFF";
-        const parsePortalDate = (value) => {
-            if (!value) return null;
-            const direct = new Date(value);
-            if (!Number.isNaN(direct.getTime())) return direct;
-            const match = String(value).trim().match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})/);
-            if (!match) return null;
-            const parsed = new Date(Number(match[3]), Number(match[2]) - 1, Number(match[1]));
-            return Number.isNaN(parsed.getTime()) ? null : parsed;
-        };
         const monthKeyFromDate = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
         const monthLabel = (monthKey) => {
             const [year, month] = String(monthKey).split("-").map(Number);
@@ -1356,21 +1306,6 @@
                 const current = new Date(base.getFullYear(), base.getMonth() - (count - index - 1), 1);
                 return monthKeyFromDate(current);
             });
-        };
-        const normalizePaymentChannel = (transaction) => {
-            const paymentType = String(transaction?.paymentType || "").trim().toLowerCase();
-            const method = String(transaction?.method || "").trim().toLowerCase();
-            const description = String(transaction?.description || "").trim().toLowerCase();
-            if (paymentType === "payme" || method === "payme" || description.includes("[portal:payme-credit]")) return "Payme";
-            if (paymentType === "click" || method === "click" || description.includes("[portal:click-credit]")) return "Click";
-            if (paymentType === "cash" || method === "cash" || description.includes("[portal:cash-credit]")) return "Cash";
-            if (
-                method === "card"
-                || method === "terminal"
-                || description.includes("[portal:card-credit]")
-                || description.includes("[portal:terminal-credit]")
-            ) return "Card";
-            return "";
         };
         const sumBy = (items, mapper) => items.reduce((total, item) => total + Number(mapper(item) || 0), 0);
         const formatSignedUzs = (value) => {
@@ -1398,8 +1333,9 @@
 
         const backendComplexes = Array.isArray(billingData.complexes) ? billingData.complexes : [];
         const backendResidents = Array.isArray(billingData.residents) ? billingData.residents : [];
-        const backendTransactions = Array.isArray(billingData.transactions) ? billingData.transactions : [];
-        const analyticsData = { complexes: backendComplexes, residents: backendResidents, transactions: backendTransactions };
+        // One row per (month, house, channel) of successful payments over the whole history.
+        const paymentRows = Array.isArray(billingData.paymentSummary?.monthly) ? billingData.paymentSummary.monthly : [];
+        const analyticsData = { complexes: backendComplexes, residents: backendResidents };
         const complexes = analyticsData.complexes;
         const buildings = complexes.flatMap((complex) => (complex.buildingItems || []).map((building) => ({
             ...building,
@@ -1411,21 +1347,9 @@
             complexHeatingM3: Number(complex.heatingM3 || 0),
         })));
         const residents = analyticsData.residents;
-        const residentsById = new Map(residents.map((resident) => [String(resident.id || ""), resident]));
-        const residentsByOwner = new Map(residents.map((resident) => [String(resident.ownerBackendId || resident.backendId || ""), resident]));
-        const transactions = analyticsData.transactions
-            .map((transaction) => {
-                const dateObj = parsePortalDate(transaction.createdAt || transaction.date);
-                return {
-                    ...transaction,
-                    _dateObj: dateObj,
-                    _monthKey: dateObj ? monthKeyFromDate(dateObj) : "",
-                };
-            })
-            .filter((transaction) => transaction._dateObj);
-
-        const monthKeys = Array.from(new Set(transactions.map((transaction) => transaction._monthKey)))
+        const monthKeys = (Array.isArray(billingData.paymentSummary?.months) ? billingData.paymentSummary.months : [])
             .filter(Boolean)
+            .slice()
             .sort();
         const fallbackMonth = monthKeys[monthKeys.length - 1] || monthKeyFromDate(new Date());
         if (!monthKeys.includes(analyticsDashboardState.month)) analyticsDashboardState.month = fallbackMonth;
@@ -1474,20 +1398,9 @@
             return selectedBuildingIds.has(String(resident.buildingId || ""))
                 || selectedBuildingBackendIds.has(String(resident.buildingBackendId || ""));
         });
-        const selectedTransactionsAll = transactions.filter((transaction) => {
-            if (!selectedBuilding) return true;
-            if (selectedBuildingIds.has(String(transaction.buildingId || ""))) return true;
-            if (selectedBuildingBackendIds.has(String(transaction.buildingBackendId || ""))) return true;
-            const resident = residentsById.get(String(transaction.residentId || "")) || residentsByOwner.get(String(transaction.ownerBackendId || ""));
-            return resident
-                ? selectedBuildingIds.has(String(resident.buildingId || "")) || selectedBuildingBackendIds.has(String(resident.buildingBackendId || ""))
-                : false;
-        });
-        const selectedMonthTransactions = selectedTransactionsAll.filter((transaction) => transaction._monthKey === analyticsDashboardState.month);
-        const successfulMonthTransactions = selectedMonthTransactions.filter((transaction) => {
-            const signedAmount = Number(transaction.signedAmount ?? transaction.amount ?? 0);
-            return String(transaction.status || "").toLowerCase() === "success" && signedAmount > 0;
-        });
+        const selectedPaymentRows = paymentRows.filter((row) => !selectedBuilding
+            || selectedBuildingBackendIds.has(String(row.buildingBackendId ?? "")));
+        const selectedMonthRows = selectedPaymentRows.filter((row) => row.month === analyticsDashboardState.month);
 
         const debtTotal = sumBy(selectedResidents, (resident) => {
             const balance = Number(resident.balance || 0);
@@ -1497,8 +1410,8 @@
             const balance = Number(resident.balance || 0);
             return balance > 0 ? balance : 0;
         });
-        const monthPaid = sumBy(successfulMonthTransactions, (transaction) => transaction.amount);
-        const monthPaymentCount = successfulMonthTransactions.length;
+        const monthPaid = sumBy(selectedMonthRows, (row) => row.amount);
+        const monthPaymentCount = sumBy(selectedMonthRows, (row) => row.count);
         const debtorsCount = selectedResidents.filter((resident) => Number(resident.balance || 0) < 0).length;
         const withContract = selectedResidents.filter((resident) => Boolean(resident.hasContract)).length;
         const averagePayment = monthPaymentCount ? monthPaid / monthPaymentCount : 0;
@@ -1511,14 +1424,12 @@
         };
         const channelDisplayOrder = ["Cash", "Card", "Click", "Payme"];
         const channelTotals = { Payme: 0, Click: 0, Cash: 0, Card: 0 };
-        const channelResidents = { Payme: new Set(), Click: new Set(), Cash: new Set(), Card: new Set() };
-        successfulMonthTransactions.forEach((transaction) => {
-            const channel = normalizePaymentChannel(transaction);
-            if (!channel) return;
-            channelTotals[channel] += Number(transaction.amount || 0);
-            const resident = residentsById.get(String(transaction.residentId || "")) || residentsByOwner.get(String(transaction.ownerBackendId || ""));
-            const residentKey = String(resident?.backendId || resident?.ownerBackendId || transaction.ownerBackendId || transaction.residentId || "");
-            if (residentKey) channelResidents[channel].add(residentKey);
+        // Accounts are counted per house by the backend; houses never share an account, so they add up.
+        const channelResidentCounts = { Payme: 0, Click: 0, Cash: 0, Card: 0 };
+        selectedMonthRows.forEach((row) => {
+            if (!(row.channel in channelTotals)) return;
+            channelTotals[row.channel] += Number(row.amount || 0);
+            channelResidentCounts[row.channel] += Number(row.residents || 0);
         });
         // Debt by house: current negative balances of each house's residents, largest first.
         const houseDebtRows = selectedBuildings.map((building) => {
@@ -1542,11 +1453,8 @@
         setText('[data-analytics-value="average-balance"]', formatSignedUzs(averageBalance));
 
         const rollingMonthKeys = rollingMonths(analyticsDashboardState.month, 6);
-        const monthlyPaid = rollingMonthKeys.map((monthKey) => sumBy(
-            selectedTransactionsAll.filter((transaction) => transaction._monthKey === monthKey && String(transaction.status || "").toLowerCase() === "success" && Number(transaction.signedAmount ?? transaction.amount ?? 0) > 0),
-            (transaction) => transaction.amount
-        ));
-        const monthlyOps = rollingMonthKeys.map((monthKey) => selectedTransactionsAll.filter((transaction) => transaction._monthKey === monthKey && String(transaction.status || "").toLowerCase() === "success" && Number(transaction.signedAmount ?? transaction.amount ?? 0) > 0).length);
+        const monthlyPaid = rollingMonthKeys.map((monthKey) => sumBy(selectedPaymentRows.filter((row) => row.month === monthKey), (row) => row.amount));
+        const monthlyOps = rollingMonthKeys.map((monthKey) => sumBy(selectedPaymentRows.filter((row) => row.month === monthKey), (row) => row.count));
 
         if (window.Chart) {
             destroyChart("analytics-payments");
@@ -1721,7 +1629,7 @@
             };
             channelList.innerHTML = channelDisplayOrder.map((channel) => {
                 const amount = channelTotals[channel] || 0;
-                const residentsCount = channelResidents[channel]?.size || 0;
+                const residentsCount = channelResidentCounts[channel] || 0;
                 return `
                 <div class="analytics-v2-channel-card" style="--channel-color:${channelPalette[channel]}">
                     <span class="analytics-v2-channel-avatar">${channelIcons[channel] || ""}</span>
@@ -2830,22 +2738,7 @@
                 meter.setAttribute("aria-label", `${label} ${valueText}`);
             }
         };
-        const detailedPaid = billingData.transactions
-            .filter((transaction) => transaction.status === "Success")
-            .reduce((total, transaction) => total + transaction.amount, 0);
-        const detailedCollectionRate = (detailedPaid / Math.max(detailedPaid + stats.detailedDebt, 1)) * 100;
-        const now = new Date();
-        const paymentsThisMonth = billingData.transactions.filter((transaction) => {
-            const rawDate = transaction.createdAt || transaction.date || "";
-            let parsed = new Date(rawDate);
-            if (Number.isNaN(parsed.getTime())) {
-                const match = String(rawDate).trim().match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})/);
-                if (match) parsed = new Date(Number(match[3]), Number(match[2]) - 1, Number(match[1]));
-            }
-            return !Number.isNaN(parsed.getTime())
-                && parsed.getFullYear() === now.getFullYear()
-                && parsed.getMonth() === now.getMonth();
-        }).length;
+        const paymentsThisMonth = Number(billingData.paymentSummary?.currentMonthPayments || 0);
 
         setStat("Total Residents", moneyFormatter.format(stats.detailedResidents), t("Total linked resident profiles"));
         setStat("Paid Residents", moneyFormatter.format(stats.detailedPaidResidents), t("Residents with positive or zero balance"));
@@ -2875,10 +2768,6 @@
             node.textContent = moneyFormatter.format(paymentsThisMonth);
         });
         setStat("Total Complex Usage", `${compactNumber(stats.totalUsageM3)} m³`, `${moneyFormatter.format(stats.totalWaterM3)} water / ${moneyFormatter.format(stats.totalHeatingM3)} heating`);
-
-        const readiness = exactText("Total Transaction Volume")?.closest(".bg-surface-container-low");
-        const readinessValue = readiness?.querySelector(".text-xl.font-black");
-        if (readinessValue) readinessValue.textContent = formatBillingUzs(stats.transactionVolume);
 
         const paymentSystems = Array.from(document.querySelectorAll("h3"))
             .find((heading) => heading.textContent.trim().toLowerCase().includes("payment systems"))
@@ -2983,25 +2872,6 @@
             riskBadge.className = `debtor-risk-badge text-[10px] font-bold uppercase px-2 py-0.5 rounded ${isHighRisk ? "text-error bg-error-container/20" : stats.activeAlerts ? "text-tertiary bg-tertiary-container/20" : "text-secondary bg-secondary-container/20"}`;
         }
 
-        const trendBars = document.querySelectorAll(".debtor-trend-chart .debtor-trend-bar");
-        if (trendBars.length) {
-            const pendingDebt = billingData.transactions
-                .filter((transaction) => transaction.status !== "Success")
-                .reduce((total, transaction) => total + transaction.amount, 0);
-            const factors = [0.78, 0.82, 0.86, 0.91, 0.96, 1];
-            const values = factors.map((factor, index) => Math.max(0, (stats.totalDebt * factor) + (pendingDebt * (index / Math.max(factors.length - 1, 1)) * 0.08)));
-            const maxValue = Math.max(...values, 1);
-            trendBars.forEach((bar, index) => {
-                const value = values[index] || stats.totalDebt;
-                const height = Math.max(24, Math.round((value / maxValue) * 100));
-                bar.style.height = `${height}%`;
-                bar.dataset.value = formatCompactUzs(value);
-                const tooltip = bar.querySelector(".debtor-trend-tooltip");
-                if (tooltip) tooltip.textContent = formatBillingUzs(value);
-                bar.classList.toggle("debtor-trend-bar-risk", index === trendBars.length - 1 && (stats.criticalAlerts > 0 || stats.criticalDebtUnits > 0));
-            });
-        }
-
         const debtorAction = document.querySelector(".debtor-primary-action");
         if (debtorAction) {
             debtorAction.dataset.exportOpen = "";
@@ -3061,16 +2931,6 @@
         });
 
         if (window.Chart?.getChart) {
-            const monthly = getMonthlyTransactionStats();
-            const analyticsChart = window.Chart.getChart(document.getElementById("analytics-balance-chart"));
-            if (analyticsChart) {
-                analyticsChart.data.labels = monthly.labels;
-                analyticsChart.data.datasets[0].data = monthly.values.map((item) => item.pending);
-                analyticsChart.data.datasets[1].data = monthly.values.map((item) => item.success);
-                analyticsChart.data.datasets[2].data = monthly.values.map((item) => item.total);
-                analyticsChart.data.datasets[3].data = monthly.values.map((item) => item.success);
-                analyticsChart.update("none");
-            }
             const consumptionChart = window.Chart.getChart(document.getElementById("consumption-chart"));
             if (consumptionChart) {
                 consumptionChart.data.labels = stats.complexes.map((complex) => complex.name.replace(/\s+(Residential|Gardens|Towers|Metropolitan).*/i, ""));
@@ -4934,54 +4794,81 @@
                 complexId: card.dataset.complexId || "",
             };
         };
+        const historyRowMarkup = (payment) => {
+            const signedAmount = Number(payment.signedAmount ?? payment.amount ?? 0);
+            const amountTone = signedAmount >= 0 ? "is-positive" : "is-negative";
+            const amountPrefix = signedAmount >= 0 ? "+" : "";
+            const transactionId = payment.backendId || payment.id || "--";
+            const paymentTime = payment.createdAt || payment.date || "--";
+            const balanceBefore = Number(payment.balanceBefore || 0);
+            const balanceAfter = Number(payment.balanceAfter || 0);
+            const realMeta = transactionMetaText(payment);
+            return `
+                <div class="resident-transaction-item">
+                    <div class="resident-transaction-cell resident-transaction-cell-id">
+                        <strong>#${escapeHtml(transactionId)}</strong>
+                        <small>${escapeHtml(historyText(payment.type || payment.method || "Transaction"))}</small>
+                    </div>
+                    <div class="resident-transaction-cell resident-transaction-cell-datetime">
+                        <strong>${escapeHtml(paymentTime)}</strong>
+                        <small>${escapeHtml(realMeta || payment.externalId || "")}</small>
+                    </div>
+                    <div class="resident-transaction-cell resident-transaction-cell-amount">
+                        <span class="table-cell-label" data-i18n-key="Total amount">Total amount</span>
+                        <strong class="resident-transaction-amount ${amountTone}">${amountPrefix}${formatBillingUzs(Math.abs(signedAmount))}</strong>
+                    </div>
+                    <div class="resident-transaction-cell resident-transaction-cell-balance">
+                        <span class="table-cell-label" data-i18n-key="Balance before">Balance before</span>
+                        <strong class="${balanceBefore < 0 ? "is-negative" : "is-positive"}">${formatBillingUzs(balanceBefore)}</strong>
+                    </div>
+                    <div class="resident-transaction-cell resident-transaction-cell-balance">
+                        <span class="table-cell-label" data-i18n-key="Balance after">Balance after</span>
+                        <strong class="${balanceAfter < 0 ? "is-negative" : "is-positive"}">${formatBillingUzs(balanceAfter)}</strong>
+                    </div>
+                </div>
+            `;
+        };
+        const renderHistoryRows = (rows) => {
+            if (historyList) historyList.innerHTML = rows.map(historyRowMarkup).join("");
+            historyEmpty?.classList.toggle("hidden", rows.length > 0);
+            window.HydroFlowSyncLocale?.();
+        };
+        // The snapshot keeps only the latest rows of each account; the whole account history is paged in
+        // from the list API (apartment_id: the account, which also covers a vacant apartment).
+        const loadResidentHistoryRows = async (resident) => {
+            const scope = resident.apartmentBackendId
+                ? { apartment_id: resident.apartmentBackendId }
+                : { owner_id: resident.ownerBackendId || resident.backendId };
+            const rows = [];
+            for (let page = 1; page <= 50; page += 1) {
+                const payload = await fetchServerList("/api/lists/transactions/", { ...scope, page, page_size: 100, ordering: "-created_at" });
+                rows.push(...(payload.results || []));
+                if (page >= Number(payload.pages || 1)) break;
+            }
+            return rows;
+        };
+        let historyRequestId = 0;
         const openResidentHistory = (resident) => {
             if (!historyModal || !resident) return;
             activeHistoryResident = resident;
-            const residentTransactions = getResidentTransactions(resident.id)
-                .slice()
-                .sort((a, b) => transactionDateValue(b.createdAt || b.date) - transactionDateValue(a.createdAt || a.date));
+            const requestId = ++historyRequestId;
             if (historyTitle) historyTitle.textContent = resident.name || "Resident transactions";
             if (historySubtitle) {
                 historySubtitle.textContent = [resident.building, resident.apartment].filter(Boolean).join(" · ") || "Live transaction history from database.";
             }
-            if (historyList) {
-                historyList.innerHTML = residentTransactions.map((payment) => {
-                    const signedAmount = Number(payment.signedAmount ?? payment.amount ?? 0);
-                    const amountTone = signedAmount >= 0 ? "is-positive" : "is-negative";
-                    const amountPrefix = signedAmount >= 0 ? "+" : "";
-                    const transactionId = payment.backendId || payment.id || "--";
-                    const paymentTime = payment.createdAt || payment.date || "--";
-                    const balanceBefore = Number(payment.balanceBefore || 0);
-                    const balanceAfter = Number(payment.balanceAfter || 0);
-                    const realMeta = transactionMetaText(payment);
-                    return `
-                        <div class="resident-transaction-item">
-                            <div class="resident-transaction-cell resident-transaction-cell-id">
-                                <strong>#${escapeHtml(transactionId)}</strong>
-                                <small>${escapeHtml(historyText(payment.type || payment.method || "Transaction"))}</small>
-                            </div>
-                            <div class="resident-transaction-cell resident-transaction-cell-datetime">
-                                <strong>${escapeHtml(paymentTime)}</strong>
-                                <small>${escapeHtml(realMeta || payment.externalId || "")}</small>
-                            </div>
-                            <div class="resident-transaction-cell resident-transaction-cell-amount">
-                                <span class="table-cell-label" data-i18n-key="Total amount">Total amount</span>
-                                <strong class="resident-transaction-amount ${amountTone}">${amountPrefix}${formatBillingUzs(Math.abs(signedAmount))}</strong>
-                            </div>
-                            <div class="resident-transaction-cell resident-transaction-cell-balance">
-                                <span class="table-cell-label" data-i18n-key="Balance before">Balance before</span>
-                                <strong class="${balanceBefore < 0 ? "is-negative" : "is-positive"}">${formatBillingUzs(balanceBefore)}</strong>
-                            </div>
-                            <div class="resident-transaction-cell resident-transaction-cell-balance">
-                                <span class="table-cell-label" data-i18n-key="Balance after">Balance after</span>
-                                <strong class="${balanceAfter < 0 ? "is-negative" : "is-positive"}">${formatBillingUzs(balanceAfter)}</strong>
-                            </div>
-                        </div>
-                    `;
-                }).join("");
-            }
-            historyEmpty?.classList.toggle("hidden", residentTransactions.length > 0);
+            // Show the rows the snapshot already has at once, then swap in the full history.
+            renderHistoryRows(getResidentTransactions(resident.id)
+                .slice()
+                .sort((a, b) => transactionDateValue(b.createdAt || b.date) - transactionDateValue(a.createdAt || a.date)));
             openOverlayById("resident-transactions-modal");
+            if (!resident.apartmentBackendId && !resident.ownerBackendId && !resident.backendId) return;
+            loadResidentHistoryRows(resident)
+                .then((rows) => {
+                    if (requestId === historyRequestId) renderHistoryRows(rows);
+                })
+                .catch(() => {
+                    // Keep the snapshot rows if the list request fails.
+                });
         };
         document.addEventListener("hydroflow:language-changed", () => {
             if (historyModal?.classList.contains("is-open") && activeHistoryResident) {

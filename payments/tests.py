@@ -45,6 +45,7 @@ class BalanceLedgerTests(TestCase):
 
     def test_service_reads_current_balance_not_a_stale_copy(self):
         stale = Owner.objects.get(pk=self.owner.pk)
+        Apartment.objects.filter(pk=self.owner.apartment_id).update(balance=Decimal("500"))
         Owner.objects.filter(pk=self.owner.pk).update(balance=Decimal("500"))
 
         row = apply_balance_change(stale.pk, Decimal("100"), Transaction.TYPE_CASH)

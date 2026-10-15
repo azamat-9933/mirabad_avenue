@@ -1,7 +1,7 @@
 from decimal import Decimal
 from django.db import models
 from django.utils.translation import gettext_lazy as _
-from main_app.models import Owner
+from main_app.models import Apartment, Owner
 from billing.models import Invoice
 
 
@@ -30,9 +30,22 @@ class Transaction(models.Model):
         (TYPE_CHARGE, _("Charge")),
     ]
 
+    # The account the entry belongs to. Set on every entry; nullable only for rows older than
+    # apartment accounts that could not be matched to an apartment.
+    apartment = models.ForeignKey(
+        Apartment,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="transactions",
+        verbose_name=_("Apartment"),
+    )
+    # Who held the account at the time; empty for charges posted while the apartment was vacant.
     owner = models.ForeignKey(
         Owner,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
         related_name="transactions",
         verbose_name=_("Owner"),
     )
@@ -91,7 +104,7 @@ class Transaction(models.Model):
     def __str__(self):
         sign = "+" if self.amount > 0 else ""
         return (
-            f"{self.get_payment_type_display()} | {self.owner.fio} | "
+            f"{self.get_payment_type_display()} | {self.owner.fio if self.owner_id else self.apartment} | "
             f"{sign}{self.amount} UZS"
         )
 

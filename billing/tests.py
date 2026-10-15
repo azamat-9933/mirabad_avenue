@@ -48,18 +48,17 @@ class BillingCoreModelTests(TestCase):
             area=Decimal("45.50"),
             building=self.building,
             author="test",
+            balance=Decimal("150000.00"),
         )
         self.owner_1 = Owner.objects.create(
             fio="Sarah Jenkins",
             phone="+998901234567",
             apartment=self.apartment_1,
-            balance=Decimal("0.00"),
         )
         self.owner_2 = Owner.objects.create(
             fio="Marcus Aurelius",
             phone="+998901234568",
             apartment=self.apartment_2,
-            balance=Decimal("150000.00"),
         )
         self.period = BillingPeriod.objects.create(
             name="April 2026",
@@ -299,20 +298,94 @@ class BillingCoreModelTests(TestCase):
             self.assertEqual(row.invoice, Invoice.objects.get(period=self.period, apartment=apartment))
 
     def test_failed_close_period_leaves_no_ledger_rows(self):
-        apartment_without_owner = Apartment.objects.create(
-            number="103", area=Decimal("30.00"), building=self.building, author="test"
-        )
-        service = BuildingService.objects.create(period=self.period, building=self.building, service_type="heating")
-        ServiceExpense.objects.create(service=service, title="Boiler", amount=Decimal("4900.00"))
-        for apartment in [self.apartment_1, self.apartment_2, apartment_without_owner]:
-            HeatingApartmentUsage.objects.create(service=service, apartment=apartment, days_provided=10)
+        heating = BuildingService.objects.create(period=self.period, building=self.building, service_type="heating")
+        ServiceExpense.objects.create(service=heating, title="Boiler", amount=Decimal("4900.00"))
+        for apartment in [self.apartment_1, self.apartment_2]:
+            HeatingApartmentUsage.objects.create(service=heating, apartment=apartment, days_provided=10)
+        # Hot water without any reading has zero volume, so its tariff cannot be computed.
+        hot_water = BuildingService.objects.create(period=self.period, building=self.building, service_type="hot_water")
+        ServiceExpense.objects.create(service=hot_water, title="Pump", amount=Decimal("750.00"))
 
         with self.assertRaises(ValidationError):
             self.period.close_period()
 
         self.assertFalse(Transaction.objects.exists())
+        self.assertFalse(Charge.objects.exists())
         self.owner_2.refresh_from_db()
         self.assertEqual(self.owner_2.balance, Decimal("150000.00"))
+
+    def _assert_account_ledger(self, apartment, opening_balance):
+        apartment.refresh_from_db()
+        rows = list(Transaction.objects.filter(apartment=apartment).order_by("created_at", "id"))
+        self.assertEqual(opening_balance + sum(row.amount for row in rows), apartment.balance)
+        expected_before = opening_balance
+        for row in rows:
+            self.assertEqual(row.balance_before, expected_before)
+            self.assertEqual(row.balance_after, row.balance_before + row.amount)
+            expected_before = row.balance_after
+        return rows
+
+    def _heating_with_vacant_apartment(self):
+        vacant = Apartment.objects.create(number="103", area=Decimal("30.00"), building=self.building, author="test")
+        service = BuildingService.objects.create(period=self.period, building=self.building, service_type="heating")
+        ServiceExpense.objects.create(service=service, title="Boiler", amount=Decimal("4900.00"))
+        for apartment in [self.apartment_1, self.apartment_2, vacant]:
+            HeatingApartmentUsage.objects.create(service=service, apartment=apartment, days_provided=10)
+        return vacant, service
+
+    def test_close_period_bills_vacant_apartment_to_its_account(self):
+        vacant, service = self._heating_with_vacant_apartment()
+
+        self.period.close_period()
+
+        service.refresh_from_db()
+        # The vacant apartment stays in the volume, so occupied apartments pay only their own share.
+        self.assertEqual(service.total_volume, Decimal("80.00") * 10 + Decimal("45.50") * 10 + Decimal("30.00") * 10)
+        charge = Charge.objects.get(apartment=vacant)
+        self.assertIsNone(charge.owner)
+        self.assertEqual(charge.amount, (Decimal("300.0000") * service.tariff).quantize(Decimal("0.01")))
+        rows = self._assert_account_ledger(vacant, Decimal("0.00"))
+        self.assertEqual(len(rows), 1)
+        self.assertIsNone(rows[0].owner)
+        self.assertEqual(rows[0].amount, -charge.amount)
+        self.assertEqual(rows[0].invoice.apartment, vacant)
+        self.assertEqual(Invoice.objects.get(apartment=vacant).owner_snapshot, "Egasi biriktirilmagan")
+        self._assert_ledger_matches_balance(self.owner_2, Decimal("150000.00"))
+
+    def test_new_owner_takes_over_vacant_apartment_account(self):
+        vacant, _service = self._heating_with_vacant_apartment()
+        self.period.close_period()
+        vacant.refresh_from_db()
+        debt = vacant.balance
+        self.assertLess(debt, 0)
+
+        owner = Owner.objects.create(fio="New Resident", phone="+998901234569", apartment=vacant)
+        self.assertEqual(owner.balance, debt)
+
+        payment = Payment.objects.create(owner=owner, amount=Decimal("100.00"), method=Payment.METHOD_CASH)
+        payment.apply()
+        owner.refresh_from_db()
+        vacant.refresh_from_db()
+        self.assertEqual(owner.balance, debt + Decimal("100.00"))
+        self.assertEqual(vacant.balance, owner.balance)
+        rows = self._assert_account_ledger(vacant, Decimal("0.00"))
+        self.assertEqual([row.owner for row in rows], [None, owner])
+
+    def test_recalculate_adjusts_vacant_apartment_account(self):
+        vacant, service = self._heating_with_vacant_apartment()
+        self.period.close_period()
+        ServiceExpense.objects.filter(service=service).update(amount=Decimal("2450.00"))
+        self.period.reopen_period()
+        user = get_user_model().objects.create_user(username="billing-admin-2", password="testpass")
+
+        self.period.recalculate("Expense corrected", user)
+
+        rows = self._assert_account_ledger(vacant, Decimal("0.00"))
+        self.assertEqual(len(rows), 2)
+        self.assertGreater(rows[1].amount, 0)
+        active = Charge.objects.get(apartment=vacant, is_cancelled=False)
+        vacant.refresh_from_db()
+        self.assertEqual(vacant.balance, -active.amount)
 
     def test_recalculate_records_delta_transactions(self):
         service = BuildingService.objects.create(period=self.period, building=self.building, service_type="hot_water")

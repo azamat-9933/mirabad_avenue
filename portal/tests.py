@@ -14,7 +14,7 @@ from openpyxl import load_workbook
 
 from main_app.models import Apartment, Building, Complex, Owner
 from payments.models import Transaction
-from payments.services import OPENING_BALANCE_TAG, apply_balance_change
+from payments.services import OPENING_BALANCE_TAG, apply_account_change, apply_balance_change
 from portal.backend_data import build_portal_data
 
 
@@ -234,7 +234,8 @@ class PortalSnapshotTests(TestCase):
         for payment_type, amount, description, *_ in flavours:
             apply_balance_change(self.owner.id, Decimal(amount), payment_type, description=description)
 
-        rows = {row["backendId"]: row for row in build_portal_data(self.user)["transactions"]}
+        listed = self.client.get(reverse("portal:api_list_transactions"), {"page_size": 100}).json()["results"]
+        rows = {row["backendId"]: row for row in listed}
         ledger = Transaction.objects.filter(owner=self.owner).order_by("id")
         for item, (_, amount, _, expected_type, expected_method, expected_status) in zip(ledger, flavours):
             with self.subTest(description=item.description):
@@ -377,3 +378,81 @@ class PortalRemovedSystemHealthTests(TestCase):
         for key in ["maintenanceTasks", "telemetryNodes", "pressureSeries"]:
             with self.subTest(key=key):
                 self.assertNotIn(key, data)
+
+
+class PortalApartmentAccountTests(TestCase):
+    """Debt billed to a vacant apartment shows up in the portal and passes to its next owner."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = get_user_model().objects.create_user(username="operator", password="unused-password")
+        complex_obj = Complex.objects.create(title="Mirabad Avenue", address="", author="test")
+        building = Building.objects.create(number="66", complex=complex_obj, author="test")
+        cls.apartment = Apartment.objects.create(number="7", area=Decimal("60.00"), building=building, author="test")
+        apply_account_change(
+            cls.apartment.id, Decimal("-500"), Transaction.TYPE_CHARGE, description="[billing:period-charge] x"
+        )
+
+    def setUp(self):
+        self.client.force_login(self.user)
+
+    def test_vacant_apartment_debt_is_in_the_snapshot(self):
+        data = build_portal_data(self.user)
+        resident = next(row for row in data["residents"] if row["apartmentBackendId"] == self.apartment.id)
+        self.assertEqual(resident["name"], "Unassigned owner")
+        self.assertEqual(resident["balance"], -500.0)
+        self.assertEqual(resident["status"], "debtor")
+        self.assertEqual(data["transactions"][0]["residentId"], resident["id"])
+        self.assertIsNone(data["transactions"][0]["ownerBackendId"])
+
+    def test_new_owner_sees_the_apartment_account_history(self):
+        owner = Owner.objects.create(fio="Next Owner", phone="+998901234567", apartment=self.apartment)
+        self.assertEqual(owner.balance, Decimal("-500"))
+
+        data = build_portal_data(self.user)
+        resident = next(row for row in data["residents"] if row["apartmentBackendId"] == self.apartment.id)
+        self.assertEqual((resident["name"], resident["balance"]), ("Next Owner", -500.0))
+        self.assertEqual(data["transactions"][0]["residentId"], resident["id"])
+
+        rows = self.client.get(reverse("portal:api_list_transactions"), {"owner_id": owner.id}).json()["results"]
+        self.assertEqual([row["signedAmount"] for row in rows], [-500.0])
+
+
+class PortalBoundedSnapshotTests(TestCase):
+    """The snapshot keeps a few rows per account; whole-history figures come pre-aggregated."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = get_user_model().objects.create_user(username="operator", password="unused-password")
+        complex_obj = Complex.objects.create(title="Mirabad Avenue", address="", author="test")
+        building = Building.objects.create(number="64", complex=complex_obj, author="test")
+        apartment = Apartment.objects.create(number="1", area=Decimal("50.00"), building=building, author="test")
+        cls.owner = Owner.objects.create(fio="Long History", phone="+998901234567", apartment=apartment)
+        for index in range(12):
+            apply_balance_change(cls.owner.id, Decimal(1000 + index), Transaction.TYPE_PAYME)
+        apply_balance_change(cls.owner.id, Decimal("-300"), Transaction.TYPE_CHARGE, description="[billing:period-charge] x")
+
+    def setUp(self):
+        self.client.force_login(self.user)
+
+    def test_snapshot_keeps_only_the_latest_rows_of_each_account(self):
+        data = build_portal_data(self.user)
+        newest = list(Transaction.objects.order_by("-created_at", "-id").values_list("id", flat=True)[:5])
+        self.assertEqual([row["backendId"] for row in data["transactions"]], newest)
+
+    def test_payment_summary_covers_the_whole_history(self):
+        summary = build_portal_data(self.user)["paymentSummary"]
+        self.assertEqual(summary["channels"]["Payme"], {"amount": float(sum(1000 + i for i in range(12))), "residents": 1})
+        self.assertEqual(sum(row["count"] for row in summary["monthly"]), 12)
+        self.assertEqual({row["channel"] for row in summary["monthly"]}, {"Payme"})
+        self.assertEqual(summary["currentMonthPayments"], 12)
+
+    def test_resident_collected_total_uses_the_whole_history(self):
+        complex_row = build_portal_data(self.user)["complexes"][0]
+        self.assertEqual(complex_row["baselineCollected"], float(sum(1000 + i for i in range(12))))
+
+    def test_list_endpoint_returns_the_whole_account_history(self):
+        response = self.client.get(
+            reverse("portal:api_list_transactions"), {"apartment_id": self.owner.apartment_id, "page_size": 100}
+        )
+        self.assertEqual(response.json()["total"], 13)

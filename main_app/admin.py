@@ -192,7 +192,7 @@ class BuildingAdmin(admin.ModelAdmin):
 class ApartmentAdmin(admin.ModelAdmin):
     list_display  = (
         "number", "building", "area",
-        "owner_link", "created_at",
+        "owner_link", "balance", "created_at",
     )
     list_display_links = ("number",)
     list_filter   = ("building__complex", "building")
@@ -206,11 +206,12 @@ class ApartmentAdmin(admin.ModelAdmin):
     exclude = ("author",)
 
     def get_readonly_fields(self, request, obj=None):
-        return ("created_at",) if obj else ()
+        # The account balance changes only through the Transaction ledger.
+        return ("balance", "created_at") if obj else ()
 
     def get_fields(self, request, obj=None):
         if obj:
-            return ("number", "building", "area", "created_at")
+            return ("number", "building", "area", "balance", "created_at")
         return ("number", "building", "area")
 
     def save_model(self, request, obj, form, change):

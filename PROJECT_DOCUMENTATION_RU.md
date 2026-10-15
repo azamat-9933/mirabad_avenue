@@ -182,11 +182,15 @@ Portal page routes:
 Поля: `building(FK)`, `name`; `unique_together(building, name)`.
 
 ### `Apartment`
-Поля: `number`, `area`, `building(FK)`, `section(FK nullable)`, `created_at`, `author`.
+Поля: `number`, `area`, `building(FK)`, `section(FK nullable)`, `balance`, `created_at`, `author`.
+
+`balance` — лицевой счет квартиры. Счет принадлежит квартире, а не владельцу: начисления идут на него, даже если владельца нет, и долг остается за квартирой.
 
 ### `Owner`
 Поля: `fio`, `phone`, `apartment(OneToOne)`, `balance`, `has_contract`,
 `telegram_id`, `telegram_status`, `telegram_user`, `created_at`.
+
+`Owner.balance` — копия счета его квартиры (обновляется вместе с ним). Новый владелец при создании получает текущий баланс квартиры, то есть долг или переплату, накопленные до него; смена квартиры у владельца тоже переносит его на счет новой квартиры.
 
 Баланс:
 - `> 0` — переплата,
@@ -223,7 +227,7 @@ Proxy-модели (`Complex`, `Building`, `BuildingSection`, `Apartment`, `Owne
 - `reopen_period()` — переводит закрытый период в reopened.
 - `recalculate(reason, author)` — отменяет старые начисления, создает новые, проводит разницу через `Transaction` типа `charge` (тег `[billing:recalculation]`), пишет `RecalculationLog`.
 
-Ограничение: квартира без владельца в доме периода блокирует `close_period()` (`bootstrap_services_from_legacy` создает ей запись потребления, а начислять некому).
+Квартиры без владельца начисляются так же, как остальные: тариф делится на площадь/расход всех квартир дома, `Charge` пустой квартиры создается с `owner = NULL`, сумма списывается со счета квартиры, а в `Invoice.owner_snapshot` пишется «Egasi biriktirilmagan». `recalculate()` корректирует счет пустой квартиры тем же способом.
 
 `BuildingService.calculate()`:
 - полная валидация,
@@ -233,7 +237,7 @@ Proxy-модели (`Complex`, `Building`, `BuildingSection`, `Apartment`, `Owne
 - проставляет `is_calculated`, `calculated_at`.
 
 `Payment.apply()` (billing.Payment):
-- атомарно добавляет сумму к `Owner.balance` через журнал (`Transaction` с типом по методу; `bank` → `manual`),
+- атомарно добавляет сумму к счету квартиры владельца через журнал (`Transaction` с типом по методу; `bank` → `manual`),
 - защищает от повторного применения (`is_applied`).
 
 ## 7.4 `payments`
@@ -244,13 +248,13 @@ Proxy-модели (`Complex`, `Building`, `BuildingSection`, `Apartment`, `Owne
 - `amount` (может быть +/-)
 - `balance_before`, `balance_after`
 - `external_id` (уникальный), `description`, `created_by`, `created_at`
-- `invoice(FK optional)`, `owner(FK)`
+- `apartment(FK)` — счет, к которому относится запись; `owner(FK, nullable)` — кто владел квартирой в момент записи (пусто для начислений пустой квартиры)
+- `invoice(FK optional)`
 
 ### Баланс меняется только через журнал
-`payments.services.apply_balance_change()` — единственный путь изменения `Owner.balance`:
-блокирует строку владельца (`select_for_update`), считает `balance_before/after`, сохраняет баланс и создает `Transaction` в одной транзакции БД.
-Через него проходят: платеж/списание из портала, начальный баланс нового жильца (портал и admin), `close_period`, `recalculate`, `billing.Payment.apply`.
-Инвариант: начальный баланс + сумма `Transaction.amount` = `Owner.balance`, и `balance_before` каждой записи равен `balance_after` предыдущей.
+`payments.services.apply_account_change(apartment_id, ...)` — единственный путь изменения счета: блокирует строку квартиры, затем владельца (`select_for_update`, всегда в этом порядке), считает `balance_before/after`, сохраняет `Apartment.balance` и копию в `Owner.balance` и создает `Transaction` в одной транзакции БД. `apply_balance_change(owner_id, ...)` — то же для счета квартиры владельца.
+Через них проходят: платеж/списание из портала, начальный баланс нового жильца (портал и admin), `close_period`, `recalculate` (по квартирам, включая пустые), `billing.Payment.apply`.
+Инвариант по каждой квартире: начальный баланс + сумма `Transaction.amount` = `Apartment.balance`, и `balance_before` каждой записи равен `balance_after` предыдущей. История счета в портале (журнал жильца, фильтр `owner_id`) — это вся история квартиры, включая записи до текущего владельца.
 
 - В admin поле `balance` редактируется только при создании жильца (ненулевое значение пишется как `manual` с тегом `[opening-balance]`); дальше — только платеж/корректировка в портале.
 - «Платежом» (сумма собранного, последний платеж, статус `Success`) считается только положительная запись, кроме `charge` и `[opening-balance]` (`is_incoming_payment` / `incoming_payment_q`).
@@ -282,11 +286,13 @@ Proxy-модели (`Complex`, `Building`, `BuildingSection`, `Apartment`, `Owne
 ## 8. Миграции и эволюция схемы
 
 Миграции по приложениям:
-- `main_app`: `0001_initial`
-- `billing`: `0001_initial`
-- `payments`: `0001_initial`
+- `main_app`: `0001_initial`, `0002_apartment_accounts`
+- `billing`: `0001_initial`, `0002_apartment_accounts`
+- `payments`: `0001_initial`, `0002_apartment_accounts`
 - `properties`: `0001_initial`
 - `portal`: `0001_initial`, `0002_alter_workspaceprofile_organization_and_more`, `0003_remove_system_health`
+
+`*_apartment_accounts` вводят лицевой счет квартиры: `Apartment.balance` заполняется балансом ее владельца, у существующих `Transaction` проставляется `apartment` по владельцу, `Transaction.owner` и `Charge.owner` становятся необязательными (`SET_NULL`).
 
 Ранние миграции (в т.ч. консолидация в единый сектор и backfill billing-core) были объединены в `0001_initial`, поэтому новая база создается сразу в актуальной схеме. Единый сектор поддерживается кодом: `Complex.save()` и admin-редирект `/admin/main_app/sector/`.
 
@@ -379,7 +385,17 @@ Top-level ключи snapshot (`GET /api/portal-data/`):
 - `complexes`, `residents`, `transactions`,
 - `notifications`, `systemAlerts`,
 - `auditEvents`, `checklistItems`, `checklistNotes`,
-- `supportTickets`, `supportSummary`.
+- `supportTickets`, `supportSummary`,
+- `paymentSummary` — итоги платежей за всю историю (см. ниже).
+
+`transactions` в snapshot — только последние `RECENT_TRANSACTIONS_PER_ACCOUNT` (5) записей каждого счета: их хватает для drawer'ов и «последней активности». Все, что опирается на всю историю, считается на backend:
+- `paymentSummary.monthly` — успешные входящие платежи по (месяц, дом, канал): сумма, число операций, число счетов; из него страница статистики строит KPI месяца, каналы и динамику за 6 месяцев;
+- `paymentSummary.months` — месяцы, в которых есть записи (список месяцев на странице статистики);
+- `paymentSummary.channels` — итоги по каналам за все время (карточки каналов на странице платежей);
+- `paymentSummary.currentMonthPayments` — число успешных платежей за текущий месяц;
+- собранная сумма и дата последнего платежа жильца — `account_payment_totals()` (SQL-агрегат).
+
+Полную историю счета (окно истории жильца, экспорт транзакций) frontend и экспорт берут из `/api/lists/transactions/` и из БД.
 
 Ключевые схемы строк:
 - resident row: идентификаторы backend/slugs, контакты, баланс, telegram, contract.
@@ -393,23 +409,23 @@ Top-level ключи snapshot (`GET /api/portal-data/`):
 - `/api/lists/complexes/` дополнительно отдает `debt` (= `extraDebt`) и `finances` (= `health`) — только для сортировки этого списка.
 
 ### Производительность snapshot
-Snapshot отдается целиком: встраивается в каждую страницу, возвращается каждым POST и запрашивается страницей dashboard каждые 15 с. Его размер растет с историей `Transaction` (≈94% объема).
+Snapshot встраивается в каждую страницу, возвращается каждым POST и запрашивается страницей dashboard каждые 15 с. Раньше он нес всю историю `Transaction` (≈94% объема); теперь его размер зависит от числа квартир, а не от длины истории.
 
 Замеры (SQLite, 1200 жильцов, ≈57 600 транзакций ≈ 2 года истории):
 
-| Путь | До | После |
-|---|---|---|
-| `GET /` (страница) | 52 с, 50 МБ | 1.4 с, 0.97 МБ по сети (30 МБ после распаковки) |
-| `GET /api/portal-data/`, любой POST | 6.5–6.7 с, 30 МБ | 1.4 с, 0.95 МБ по сети |
-| Загрузка страницы в браузере (DOMContentLoaded) | — | ≈2.3 с |
+| Путь | Исходно | Этап 1 (сериализация, gzip) | Этап 2 (5 записей на счет + итоги) |
+|---|---|---|---|
+| `GET /` (страница) | 52 с, 50 МБ | 1.4 с, 0.97 МБ по сети (30 МБ после распаковки) | 0.8 с, 0.23 МБ по сети (5.1 МБ после распаковки) |
+| `GET /api/portal-data/`, любой POST | 6.5–6.7 с, 30 МБ | 1.4 с, 0.95 МБ по сети | 0.75 с, 0.21 МБ по сети |
+| Загрузка страницы в браузере (DOMContentLoaded) | — | ≈2.3 с | — |
 
 Правила, которые держат эти цифры:
 - В шаблон данные вставляются как `<script id="hydroflow-backend-data" type="application/json">` (`_json_for_script_tag`), а не через `escapejs` — тот обрабатывал 30 МБ посимвольно ≈45 с.
 - В `build_portal_data` транзакции грузятся без `select_related` (владелец/квартира/дом берутся из уже загруженных владельцев), подписи `payment_type` вычисляются один раз (`_payment_type_labels`), а не через ленивый перевод на каждую строку.
 - `GZipMiddleware` сжимает ответы (JSON сжимается ≈30×).
-- Выходные данные snapshot при этих оптимизациях не менялись (проверено побайтовым сравнением).
+- Выходные данные snapshot при оптимизациях этапа 1 не менялись (проверено побайтовым сравнением). На этапе 2 строки жильцов и комплексов и все цифры статистики/каналов совпадают с прежними, посчитанными по полной истории (сравнено на той же базе).
 
-Оставшееся ограничение: время и объем по-прежнему растут линейно с историей транзакций; следующий шаг — не отдавать всю историю в snapshot.
+Оставшееся ограничение: snapshot по-прежнему растет с числом квартир (строки жильцов и вложенные квартиры комплексов).
 
 ---
 
@@ -419,7 +435,7 @@ Snapshot отдается целиком: встраивается в кажду
 - `portal/views.py` — endpoints `POST /api/export/report/` и `POST /api/audit/export/`: собирают строки и заголовки,
 - `portal/report_exports.py` — единственный генератор файлов: billing-отчеты (`build_report_payload`) и простые таблицы (`build_table_export` — экспорт жилого фонда, транзакций и журнала аудита).
 
-Фронтенд файлы не генерирует: он вызывает эти endpoints и сохраняет `download` (base64) из ответа.
+Фронтенд файлы не генерирует: он вызывает эти endpoints и сохраняет `download` (base64) из ответа. Экспорт транзакций читает записи из БД (`_export_transaction_items`), а не из snapshot, поэтому выгружает всю историю.
 
 Генератор:
 - XLSX — openpyxl; стили тела таблицы заданы именованными стилями (`NamedStyle`), иначе 57 600 строк собирались ≈30 с (сейчас ≈4 с).
@@ -520,12 +536,12 @@ API пути, используемые frontend:
 
 ## 14. Тесты и качество
 
-Запуск: `python manage.py test` — 65 тестов (нужен `.env` или `DEBUG=True`, см. 5.5).
+Запуск: `python manage.py test` — 74 теста (нужен `.env` или `DEBUG=True`, см. 5.5).
 
 Наличие тестов:
-- `billing/tests.py` (21) — core биллинга: расчеты, `close_period`, `recalculate`, `Payment.apply`, проводки в журнал.
+- `billing/tests.py` (24) — core биллинга: расчеты, `close_period`, `recalculate`, `Payment.apply`, проводки в журнал, начисления пустой квартире и переход ее долга к новому владельцу.
 - `payments/tests.py` (9) — журнал баланса: `apply_balance_change`, платежи и начальный баланс из портала и admin, что считается платежом.
-- `portal/tests.py` (30) — вход/выход и закрытость страниц и API, CSRF, snapshot (`<script>`-встраивание, gzip, совпадение snapshot и `/api/lists/*`), XLSX/PDF-экспорты, отсутствие демо-данных, удаленные страницы System Health.
+- `portal/tests.py` (36) — вход/выход и закрытость страниц и API, CSRF, snapshot (`<script>`-встраивание, gzip, совпадение snapshot и `/api/lists/*`, 5 записей на счет, итоги за всю историю), долг пустой квартиры в портале, XLSX/PDF-экспорты, отсутствие демо-данных, удаленные страницы System Health.
 - `config/tests.py` (5) — безопасные настройки production (секретный ключ, cookies) в отдельных процессах.
 - `main_app/tests.py` — тестов нет.
 

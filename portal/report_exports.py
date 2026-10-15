@@ -51,6 +51,7 @@ REPORT_TEXT = {
         "uz": "Bazadan olingan haqiqiy billing va to'lov qatorlari",
     },
     "generated": {"en": "Generated", "ru": "Сформировано", "uz": "Yaratilgan"},
+    "no_owner": {"en": "No owner assigned", "ru": "Владелец не назначен", "uz": "Egasi biriktirilmagan"},
     "report_type": {"en": "Report type", "ru": "Тип отчёта", "uz": "Hisobot turi"},
     "scope": {"en": "Scope", "ru": "Область", "uz": "Qamrov"},
     "sheets": {"en": "Sheets", "ru": "Листы", "uz": "Varaqlar"},
@@ -806,12 +807,13 @@ def _filter_invoice_queryset(queryset, filters):
 
 
 def _filter_transaction_queryset(queryset, filters):
+    # Ledger rows belong to apartment accounts; a resident filter means that resident's account.
     if filters["building_ids"]:
-        queryset = queryset.filter(owner__apartment__building_id__in=filters["building_ids"])
+        queryset = queryset.filter(apartment__building_id__in=filters["building_ids"])
     if filters["apartment_ids"]:
-        queryset = queryset.filter(owner__apartment_id__in=filters["apartment_ids"])
+        queryset = queryset.filter(apartment_id__in=filters["apartment_ids"])
     if filters["owner_ids"]:
-        queryset = queryset.filter(owner_id__in=filters["owner_ids"])
+        queryset = queryset.filter(apartment__owner__id__in=filters["owner_ids"])
     if filters["date_from"]:
         queryset = queryset.filter(created_at__gte=filters["date_from"])
     if filters["date_to"]:
@@ -1089,19 +1091,21 @@ def _build_heating_report(filters, language):
 def _build_payments_report(filters, language):
     language = _lang(language)
     transaction_qs = _filter_transaction_queryset(
-        Transaction.objects.select_related(
-            "owner__apartment__building__complex",
+        Transaction.objects.filter(apartment__isnull=False).select_related(
+            "owner",
+            "apartment__building__complex",
             "invoice__period",
         ).order_by("-created_at", "-id"),
         filters,
     )
     rows = []
     for item in transaction_qs:
-        apartment = getattr(item.owner, "apartment", None)
+        apartment = item.apartment
         building = apartment.building if apartment and apartment.building_id else None
         rows.append([
             _text_cell(_date_text(item.created_at)),
-            _text_cell(item.owner.fio),
+            # Who held the account when the entry was made; vacant-period charges have nobody.
+            _text_cell(item.owner.fio if item.owner_id else _t("no_owner", language)),
             _text_cell(building.number if building else ""),
             _text_cell(apartment.number if apartment else ""),
             _text_cell(_transaction_type_text(item, language)),

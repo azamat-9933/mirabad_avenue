@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+from collections import defaultdict
 from datetime import timedelta
 from decimal import Decimal
 
 from django.contrib.auth import get_user_model
-from django.db.models import Prefetch, Q, Sum
+from django.db.models import F, Max, Prefetch, Q, Sum, Window
+from django.db.models.functions import RowNumber, TruncMonth
 from django.urls import reverse
 from django.utils import timezone
 
@@ -12,7 +14,7 @@ from billing.models import HotWaterMeterReading
 from main_app.models import DEFAULT_SECTOR_NAME
 from properties.models import Apartment, Building, Complex, Owner
 from payments.models import Transaction
-from payments.services import is_incoming_payment
+from payments.services import OPENING_BALANCE_TAG, incoming_payment_q, is_incoming_payment
 from portal.models import (
     AuditEvent,
     ChecklistItem,
@@ -273,10 +275,13 @@ def _telegram_state(owner) -> tuple[str, bool]:
 # so both always describe a record the same way.
 
 def serialize_resident(apartment, owner, last_payment_at=None) -> dict:
-    """Resident row for one apartment; a vacant apartment (owner=None) gets an "Unassigned owner" row."""
+    """Resident row for one apartment; a vacant apartment (owner=None) gets an "Unassigned owner" row.
+
+    The balance is the apartment account's, so debt billed while the apartment was vacant shows up.
+    """
     building = apartment.building
     complex_obj = building.complex
-    balance = _money(owner.balance if owner else 0)
+    balance = _money(apartment.balance)
     has_contract = bool(owner and owner.has_contract)
     section = apartment.section.name if apartment.section_id else ""
     telegram_status, telegram_connected = _telegram_state(owner)
@@ -322,9 +327,12 @@ def serialize_resident(apartment, owner, last_payment_at=None) -> dict:
     }
 
 
-def serialize_transaction(transaction, owner, labels=None, status_override=None, current_tz=None) -> dict:
-    """Ledger row; ``owner`` must come with apartment, building and complex already loaded."""
-    apartment = owner.apartment
+def serialize_transaction(transaction, apartment, owner, labels=None, status_override=None, current_tz=None) -> dict:
+    """Ledger row of an apartment account; ``apartment`` comes with building and complex loaded.
+
+    ``owner`` is the apartment's current owner (None while vacant): the whole account history is
+    shown under the resident row of the apartment, whose id matches ``serialize_resident``.
+    """
     building = apartment.building
     complex_obj = building.complex
     amount = _money(transaction.amount)
@@ -332,12 +340,12 @@ def serialize_transaction(transaction, owner, labels=None, status_override=None,
     return {
         "id": f"trx-{transaction.id}",
         "backendId": transaction.id,
-        "ownerBackendId": owner.id,
+        "ownerBackendId": owner.id if owner else None,
         "apartmentBackendId": apartment.id,
         "buildingBackendId": building.id,
         "complexBackendId": complex_obj.id,
-        "residentId": _slug("owner", owner.id),
-        "residentName": owner.fio,
+        "residentId": _slug("owner", owner.id) if owner else _slug("apartment", apartment.id),
+        "residentName": owner.fio if owner else "Unassigned owner",
         "apartment": apartment.number,
         "complexId": _slug("complex", complex_obj.id),
         "buildingId": _slug("building", building.id),
@@ -431,12 +439,12 @@ def transaction_override_map(transaction_ids=None) -> dict[int, str]:
     return {item.target_id: item.status_value for item in queryset}
 
 
-def serialize_complex(complex_obj, owner_for, payments_for, override_maps, hot_water_by_complex) -> tuple[dict, list[dict]]:
+def serialize_complex(complex_obj, owner_for, payment_totals_for, override_maps, hot_water_by_complex) -> tuple[dict, list[dict]]:
     """Complex row with nested buildings/apartments, plus one resident row per apartment.
 
     ``complex_obj`` must have buildings, their apartments and sections prefetched. ``owner_for(apartment)``
-    returns the apartment's owner or None; ``payments_for(owner)`` returns the owner's transactions,
-    newest first. Debt/collected totals and risk are computed here; portal status overrides win over
+    returns the apartment's owner or None; ``payment_totals_for(apartment)`` returns the account's
+    ``(collected, last_payment_at)`` over its whole history (see ``account_payment_totals``). Debt/collected totals and risk are computed here; portal status overrides win over
     computed risk and apartment status.
     """
     complex_overrides = override_maps[PortalStatusOverride.TARGET_COMPLEX]
@@ -464,8 +472,8 @@ def serialize_complex(complex_obj, owner_for, payments_for, override_maps, hot_w
 
         for apartment in apartments:
             owner = owner_for(apartment)
-            payments = [item for item in payments_for(owner) if is_incoming_payment(item)] if owner else []
-            resident = serialize_resident(apartment, owner, payments[0].created_at if payments else None)
+            owner_collected, last_payment_at = payment_totals_for(apartment)
+            resident = serialize_resident(apartment, owner, last_payment_at)
             balance = resident["balance"]
             is_debtor = balance < 0
             if is_debtor:
@@ -476,7 +484,6 @@ def serialize_complex(complex_obj, owner_for, payments_for, override_maps, hot_w
             else:
                 paid_count += 1
                 building_paid += 1
-            owner_collected = sum(_money(item.amount) for item in payments)
             collected_total += owner_collected
             building_collected += owner_collected
 
@@ -711,6 +718,127 @@ def _serialize_support_summary() -> dict:
 
 
 
+# The snapshot carries only the latest ledger rows of each account; anything that needs the whole
+# history gets it pre-aggregated (account_payment_totals, payment_summary) or from /api/lists/transactions/.
+RECENT_TRANSACTIONS_PER_ACCOUNT = 5
+PAYMENT_CHANNELS = ("Payme", "Click", "Cash", "Card")
+
+
+def account_payment_totals() -> dict[int, tuple[float, object]]:
+    """``{apartment_id: (collected, last_payment_at)}`` over each account's whole payment history."""
+    rows = (
+        Transaction.objects.filter(incoming_payment_q(), apartment__isnull=False)
+        .values("apartment_id")
+        .annotate(collected=Sum("amount"), last_payment_at=Max("created_at"))
+    )
+    return {row["apartment_id"]: (_money(row["collected"]), row["last_payment_at"]) for row in rows}
+
+
+def _payment_channel(payment_type: str, description: str) -> str:
+    """Payment channel shown in statistics; same rules as the frontend used on raw rows."""
+    description = (description or "").lower()
+    if payment_type == Transaction.TYPE_PAYME or "[portal:payme-credit]" in description:
+        return "Payme"
+    if payment_type == Transaction.TYPE_CLICK or "[portal:click-credit]" in description:
+        return "Click"
+    if payment_type == Transaction.TYPE_CASH or "[portal:cash-credit]" in description:
+        return "Cash"
+    if "[portal:card-credit]" in description or "[portal:terminal-credit]" in description:
+        return "Card"
+    return ""
+
+
+def payment_summary(building_by_apartment: dict[int, int], status_overrides: dict[int, str]) -> dict:
+    """Full-history payment figures for the statistics and payments pages.
+
+    ``monthly`` has one row per (month, building, channel) of successful incoming payments, with the
+    number of distinct accounts that paid; ``channels`` are all-time totals per channel. A row counts as
+    successful the same way ``serialize_transaction`` labels it "Success" (portal overrides win).
+    """
+    current_tz = timezone.get_current_timezone()
+    now = timezone.localtime(timezone.now(), current_tz)
+    current_month = f"{now.year}-{now.month:02d}"
+    months = set()
+    monthly = defaultdict(lambda: [Decimal("0"), 0, set()])
+    channels = {channel: [Decimal("0"), set()] for channel in PAYMENT_CHANNELS}
+    current_month_payments = 0
+    rows = (
+        Transaction.objects.filter(apartment__isnull=False)
+        .annotate(month=TruncMonth("created_at", tzinfo=current_tz))
+        .values_list("id", "apartment_id", "payment_type", "amount", "description", "month")
+    )
+    for transaction_id, apartment_id, payment_type, amount, description, month in rows.iterator(chunk_size=5000):
+        month_key = f"{month.year}-{month.month:02d}"
+        months.add(month_key)
+        if amount <= 0:
+            continue
+        channel = _payment_channel(payment_type, description)
+        if channel:
+            channels[channel][0] += amount
+            channels[channel][1].add(apartment_id)
+        override = status_overrides.get(transaction_id)
+        if override:
+            successful = override.strip().lower() == "success"
+        else:
+            successful = payment_type != Transaction.TYPE_CHARGE and OPENING_BALANCE_TAG not in (description or "")
+        if not successful:
+            continue
+        bucket = monthly[(month_key, building_by_apartment.get(apartment_id), channel)]
+        bucket[0] += amount
+        bucket[1] += 1
+        bucket[2].add(apartment_id)
+        if month_key == current_month:
+            current_month_payments += 1
+    return {
+        "months": sorted(months),
+        "monthly": [
+            {
+                "month": month_key,
+                "buildingBackendId": building_id,
+                "channel": channel,
+                "amount": _money(amount),
+                "count": count,
+                "residents": len(accounts),
+            }
+            for (month_key, building_id, channel), (amount, count, accounts) in sorted(
+                monthly.items(), key=lambda item: (item[0][0], item[0][1] or 0, item[0][2])
+            )
+        ],
+        "channels": {
+            channel: {"amount": _money(amount), "residents": len(accounts)}
+            for channel, (amount, accounts) in channels.items()
+        },
+        "currentMonthPayments": current_month_payments,
+    }
+
+
+def recent_account_transactions(limit: int = RECENT_TRANSACTIONS_PER_ACCOUNT):
+    """The newest ``limit`` ledger rows of every apartment account, newest first."""
+    return list(
+        Transaction.objects.filter(apartment__isnull=False)
+        .annotate(
+            account_rank=Window(
+                RowNumber(),
+                partition_by=[F("apartment_id")],
+                order_by=[F("created_at").desc(), F("id").desc()],
+            )
+        )
+        .filter(account_rank__lte=limit)
+        .only(
+            "id",
+            "apartment_id",
+            "payment_type",
+            "amount",
+            "balance_before",
+            "balance_after",
+            "description",
+            "external_id",
+            "created_at",
+        )
+        .order_by("-created_at", "-id")
+    )
+
+
 def build_portal_data(user=None) -> dict:
     """Return the exact data shape consumed by the current HydroFlow UI.
 
@@ -727,26 +855,15 @@ def build_portal_data(user=None) -> dict:
         )
     )
     owners_by_apartment = {owner.apartment_id: owner for owner in owners}
-    owners_by_id = {owner.id: owner for owner in owners}
-    # Owners above already carry apartment/building/complex; joining them per transaction
-    # would build four model instances for every ledger row.
-    transactions = list(
-        Transaction.objects.only(
-            "id",
-            "owner_id",
-            "payment_type",
-            "amount",
-            "balance_before",
-            "balance_after",
-            "description",
-            "external_id",
-            "created_at",
-        ).order_by("-created_at")
-    )
+    apartments_by_id = {
+        apartment.id: apartment
+        for apartment in Apartment.objects.select_related("building", "building__complex")
+    }
+    # Apartments above already carry building/complex; joining them per transaction
+    # would build several model instances for every ledger row.
+    transactions = recent_account_transactions()
     payment_type_labels = _payment_type_labels()
-    transactions_by_owner: dict[int, list[Transaction]] = {}
-    for transaction in transactions:
-        transactions_by_owner.setdefault(transaction.owner_id, []).append(transaction)
+    payment_totals = account_payment_totals()
 
     buildings_qs = Building.objects.prefetch_related(
         Prefetch(
@@ -767,7 +884,7 @@ def build_portal_data(user=None) -> dict:
         complex_row, complex_residents = serialize_complex(
             complex_obj,
             owner_for=lambda apartment: owners_by_apartment.get(apartment.id),
-            payments_for=lambda owner: transactions_by_owner.get(owner.id, []),
+            payment_totals_for=lambda apartment: payment_totals.get(apartment.id, (0.0, None)),
             override_maps=override_maps,
             hot_water_by_complex=hot_water_by_complex,
         )
@@ -779,7 +896,8 @@ def build_portal_data(user=None) -> dict:
     transaction_rows = [
         serialize_transaction(
             transaction,
-            owners_by_id[transaction.owner_id],
+            apartments_by_id[transaction.apartment_id],
+            owners_by_apartment.get(transaction.apartment_id),
             payment_type_labels,
             transaction_overrides.get(transaction.id),
             current_tz,
@@ -795,6 +913,10 @@ def build_portal_data(user=None) -> dict:
         "complexes": complex_rows,
         "residents": resident_rows,
         "transactions": transaction_rows,
+        "paymentSummary": payment_summary(
+            {apartment_id: apartment.building_id for apartment_id, apartment in apartments_by_id.items()},
+            transaction_overrides,
+        ),
         "notifications": _serialize_notifications(),
         "systemAlerts": _serialize_system_alerts(),
         "auditEvents": _serialize_audit_events(),

@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from django.db import models
 
 
@@ -89,6 +91,14 @@ class Apartment(models.Model):
         related_name="apartments",
         verbose_name="Seksiya",
     )
+    # The billing account belongs to the apartment: charges are posted here even while it has
+    # no owner, and an owner always sees this balance. Changed only through payments.services.
+    balance = models.DecimalField(
+        max_digits=14,
+        decimal_places=2,
+        default=0,
+        verbose_name="Hisob balansi (so'm)",
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     author = models.CharField(max_length=255, verbose_name="Yaratuvchi")
 
@@ -130,6 +140,17 @@ class Owner(models.Model):
 
     def __str__(self):
         return self.fio
+
+    def save(self, *args, **kwargs):
+        # The owner's balance mirrors the apartment account. A new owner takes over whatever the
+        # apartment already owes (or has prepaid); the ledger saves balance-only updates itself.
+        update_fields = kwargs.get("update_fields")
+        if self.apartment_id and (update_fields is None or "apartment" in update_fields):
+            self.balance = (
+                Apartment.objects.filter(pk=self.apartment_id).values_list("balance", flat=True).first()
+                or Decimal("0")
+            )
+        super().save(*args, **kwargs)
 
     class Meta:
         verbose_name = "Resident"
