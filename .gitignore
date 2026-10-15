@@ -12,3 +12,6 @@ __pycache__/
 *.pyo
 *$py.class
 
+
+# Local SQLite database (used when DB_ENGINE is empty)
+db.sqlite3
