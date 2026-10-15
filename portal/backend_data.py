@@ -17,13 +17,10 @@ from portal.models import (
     AuditEvent,
     ChecklistItem,
     ChecklistNote,
-    MaintenanceTask,
     PortalNotification,
     PortalStatusOverride,
     SupportTicket,
     SystemAlert,
-    TelemetryNode,
-    TelemetrySample,
     WorkspaceProfile,
 )
 
@@ -164,14 +161,6 @@ def _date_section(value) -> str:
     if local_value == current - timedelta(days=1):
         return "yesterday"
     return "older"
-
-
-def _tone_for_priority(priority: str) -> str:
-    if priority == MaintenanceTask.PRIORITY_HIGH:
-        return "error"
-    if priority == MaintenanceTask.PRIORITY_MEDIUM:
-        return "tertiary"
-    return "secondary"
 
 
 def _alert_icon(alert: SystemAlert) -> str:
@@ -367,31 +356,6 @@ def serialize_transaction(transaction, owner, labels=None, status_override=None,
     }
 
 
-def serialize_maintenance_task(task: MaintenanceTask) -> dict:
-    scheduled = timezone.localtime(task.scheduled_at) if task.scheduled_at else None
-    return {
-        "id": _slug("maintenance", task.id),
-        "backendId": task.id,
-        "task": task.title,
-        "title": task.title,
-        "location": task.location or task.notes or (task.complex.title if task.complex_id else ""),
-        "priority": task.get_priority_display(),
-        "priorityKey": task.priority,
-        "status": task.get_status_display(),
-        "statusKey": task.status,
-        "date": scheduled.strftime("%d.%m.%Y | %H:%M") if scheduled else "",
-        "day": scheduled.strftime("%d") if scheduled else "",
-        "month": scheduled.strftime("%b").upper() if scheduled else "",
-        "assignedTo": task.assigned_to,
-        "action": task.action_label or "Open checklist",
-        "icon": task.icon or "fact_check",
-        "tone": _tone_for_priority(task.priority),
-        "complexId": _slug("complex", task.complex_id) if task.complex_id else "",
-        "buildingId": _slug("building", task.building_id) if task.building_id else "",
-        "adminUrl": f"/admin/portal/maintenancetask/{task.id}/change/",
-        "scheduledAt": _datetime(task.scheduled_at),
-    }
-
 
 def serialize_notification(item: PortalNotification, alert_backend_id="") -> dict:
     related = item.complex or (item.building.complex if item.building_id else None)
@@ -585,12 +549,9 @@ def serialize_complex(complex_obj, owner_for, payments_for, override_maps, hot_w
         "buildings": len(building_rows),
         "units": unit_total,
         "totalArea": round(total_area, 2),
-        "water": "Optimal",
-        "heating": "Optimal",
         "health": health,
         "waterM3": round(water_m3, 2),
         "heatingM3": 0,
-        "pressurePsi": round(45 + (health / 100) * 15, 1),
         "extraDebt": debt_total,
         "baselineCollected": collected_total,
         "image": "",
@@ -662,10 +623,6 @@ def _serialize_system_alerts() -> list[dict]:
         })
     return rows
 
-
-def _serialize_maintenance_tasks() -> list[dict]:
-    queryset = MaintenanceTask.objects.select_related("complex", "building").order_by("scheduled_at")[:120]
-    return [serialize_maintenance_task(task) for task in queryset]
 
 
 def _serialize_audit_events() -> list[dict]:
@@ -752,52 +709,6 @@ def _serialize_support_summary() -> dict:
     }
 
 
-def _serialize_telemetry_nodes() -> list[dict]:
-    rows = []
-    queryset = TelemetryNode.objects.select_related("complex", "building").order_by("title")
-    for node in queryset:
-        flow = _money(node.flow_liters_day)
-        uptime = _money(node.uptime_percent)
-        pressure = _money(node.pressure_psi)
-        rows.append({
-            "id": _slug("node", node.id),
-            "backendId": node.id,
-            "complexId": _slug("complex", node.complex_id) if node.complex_id else "",
-            "buildingId": _slug("building", node.building_id) if node.building_id else "",
-            "title": node.title,
-            "subtitle": node.subtitle or (node.complex.title if node.complex_id else ""),
-            "status": node.status,
-            "icon": node.icon or "apartment",
-            "x": float(node.map_x),
-            "y": float(node.map_y),
-            "pressurePsi": pressure,
-            "pressure": f"{pressure:g} PSI" if pressure else "No pressure data",
-            "flowLitersDay": flow,
-            "flow": f"{flow:,.0f} L/day" if flow else "No flow data",
-            "latencyMs": node.latency_ms,
-            "latency": f"{node.latency_ms}ms",
-            "uptimePercent": uptime,
-            "uptime": f"{uptime:g}%",
-            "updatedAt": _datetime(node.updated_at),
-        })
-    return rows
-
-
-def _serialize_pressure_series() -> list[dict]:
-    samples = TelemetrySample.objects.select_related("node").order_by("-measured_at")[:48]
-    rows = []
-    for sample in reversed(list(samples)):
-        rows.append({
-            "id": _slug("sample", sample.id),
-            "nodeId": _slug("node", sample.node_id),
-            "node": sample.node.title,
-            "measuredAt": _datetime(sample.measured_at),
-            "pressurePsi": _money(sample.pressure_psi),
-            "flowLitersDay": _money(sample.flow_liters_day),
-            "uptimePercent": _money(sample.uptime_percent),
-            "issue": sample.issue_state,
-        })
-    return rows
 
 
 def build_portal_data(user=None) -> dict:
@@ -886,12 +797,9 @@ def build_portal_data(user=None) -> dict:
         "transactions": transaction_rows,
         "notifications": _serialize_notifications(),
         "systemAlerts": _serialize_system_alerts(),
-        "maintenanceTasks": _serialize_maintenance_tasks(),
         "auditEvents": _serialize_audit_events(),
         "checklistItems": _serialize_checklist_items(),
         "checklistNotes": _serialize_checklist_notes(),
         "supportTickets": _serialize_support_tickets(),
         "supportSummary": _serialize_support_summary(),
-        "telemetryNodes": _serialize_telemetry_nodes(),
-        "pressureSeries": _serialize_pressure_series(),
     }

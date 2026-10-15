@@ -9,7 +9,7 @@
 - учет структуры недвижимости (комплекс → дом → квартира → владелец),
 - биллинг (отопление/ГВС, начисления, перерасчеты),
 - транзакции и баланс жильцов,
-- поддержку эксплуатационных процессов (алерты, maintenance, аудит, чеклисты, support).
+- поддержку эксплуатационных процессов (алерты, аудит, чеклисты, support).
 
 ---
 
@@ -153,7 +153,6 @@ Portal page routes:
 - `/login/` — вход (единственная публичная страница портала)
 - `/` dashboard
 - `/residential/`
-- `/system-health/`
 - `/billing/`
 - `/billing/periods/create`
 - `/analytics/`
@@ -259,17 +258,14 @@ Proxy-модели (`Complex`, `Building`, `BuildingSection`, `Apartment`, `Owne
 - `WorkspaceProfile`
 - `PortalNotification`
 - `SystemAlert`
-- `MaintenanceTask`
 - `ChecklistItem`
 - `ChecklistNote`
 - `AuditEvent`
 - `PortalStatusOverride`
 - `SupportTicket`
-- `TelemetryNode`
-- `TelemetrySample`
 
 Назначение:
-- operational UX (алерты, support, чеклисты, maintenance),
+- operational UX (алерты, support, чеклисты),
 - аудит пользовательских действий,
 - UI-override статусов таблиц без изменения core-моделей.
 
@@ -315,11 +311,6 @@ Proxy-модели (`Complex`, `Building`, `BuildingSection`, `Apartment`, `Owne
 - `search`, `status`, `payment_type`, `district`, `period`, `period_from`, `period_to`,
 `owner_id`, `complex_id`, `building_id`, `apartment_id`, `ordering`.
 
-### `GET /api/lists/maintenance/`
-Фильтры:
-- `search`, `status`, `priority`, `district`, `period`, `period_from`, `period_to`,
-`complex_id`, `building_id`, `ordering`.
-
 ### `GET /api/lists/alerts/`
 Фильтры:
 - `search`, `severity`, `status`, `pinned`, `district`, `period`, `period_from`, `period_to`, `ordering`.
@@ -354,11 +345,10 @@ Proxy-модели (`Complex`, `Building`, `BuildingSection`, `Apartment`, `Owne
   - `reminder_script`
   - `contact_sheet`
 
-### Maintenance / alerts / statuses
-- `POST /api/maintenance/deploy/` — создать `MaintenanceTask`.
+### Alerts / statuses
 - `POST /api/system-alerts/configure/` — create/acknowledge/resolve системных алертов + sync с `PortalNotification`.
-- `POST /api/technicians/assign/` — назначить техника (maintenance/alert/notification/resident fallback).
-- `POST /api/status/assign/` — статусы для residential/transactions/maintenance.
+- `POST /api/technicians/assign/` — назначить техника (alert/notification/resident fallback).
+- `POST /api/status/assign/` — статусы для residential/transactions.
 
 ### Экспорт и напоминания
 - `POST /api/usage-report/export/` — фиксирует событие экспорта usage report.
@@ -377,25 +367,23 @@ Proxy-модели (`Complex`, `Building`, `BuildingSection`, `Apartment`, `Owne
 Top-level ключи snapshot (`GET /api/portal-data/`):
 - `source`, `generatedAt`, `profile`,
 - `complexes`, `residents`, `transactions`,
-- `notifications`, `systemAlerts`, `maintenanceTasks`,
+- `notifications`, `systemAlerts`,
 - `auditEvents`, `checklistItems`, `checklistNotes`,
-- `supportTickets`, `supportSummary`,
-- `telemetryNodes`, `pressureSeries`.
+- `supportTickets`, `supportSummary`.
 
 Ключевые схемы строк:
 - resident row: идентификаторы backend/slugs, контакты, баланс, telegram, contract.
-- complex row: здания, юниты, риск, debt, collected, pressure/water агрегаты.
+- complex row: здания, юниты, риск, debt, collected, объем ГВС (`waterM3`).
 - transaction row: signed amount, payment type/method, before/after balances.
-- maintenance row: priority/status/assigned/scheduled.
 
 Источник данных для snapshot: `portal/backend_data.py` (`build_portal_data`).
 
-Строки описываются одними функциями и в snapshot, и в `/api/lists/*` (`portal/backend_data.py`): `serialize_resident`, `serialize_transaction`, `serialize_complex`, `serialize_maintenance_task`, `serialize_notification`, `serialize_audit_event`, плюс `residential_override_maps` / `transaction_override_map` для статусов, назначенных в портале. Новое поле добавляется в одном месте и появляется в обоих источниках; тест `test_snapshot_and_list_endpoints_describe_rows_identically` это проверяет.
+Строки описываются одними функциями и в snapshot, и в `/api/lists/*` (`portal/backend_data.py`): `serialize_resident`, `serialize_transaction`, `serialize_complex`, `serialize_notification`, `serialize_audit_event`, плюс `residential_override_maps` / `transaction_override_map` для статусов, назначенных в портале. Новое поле добавляется в одном месте и появляется в обоих источниках; тест `test_snapshot_and_list_endpoints_describe_rows_identically` это проверяет.
 - `telegramStatus` всегда нормализован: `connected` / `not_linked` (как считает и фронтенд).
 - `/api/lists/complexes/` дополнительно отдает `debt` (= `extraDebt`) и `finances` (= `health`) — только для сортировки этого списка.
 
 ### Производительность snapshot
-Snapshot отдается целиком: встраивается в каждую страницу, возвращается каждым POST и запрашивается dashboard/system health каждые 15 с. Его размер растет с историей `Transaction` (≈94% объема).
+Snapshot отдается целиком: встраивается в каждую страницу, возвращается каждым POST и запрашивается страницей dashboard каждые 15 с. Его размер растет с историей `Transaction` (≈94% объема).
 
 Замеры (SQLite, 1200 жильцов, ≈57 600 транзакций ≈ 2 года истории):
 
@@ -443,7 +431,6 @@ Snapshot отдается целиком: встраивается в кажду
 - `apartment_backend_ids`
 - `owner_ids`
 - `transaction_backend_ids`
-- `maintenance_backend_ids`
 - `date_from`, `date_to`
 
 ---
@@ -454,14 +441,14 @@ Snapshot отдается целиком: встраивается в кажду
 - `templates/base.html` — основной layout, подключение Tailwind CDN, Chart.js, `app.css`, `app.js`, гидрация `window.HydroFlowBackendData` из `<script id="hydroflow-backend-data" type="application/json">`.
 - `templates/partials/sidebar.html`, `topbar.html`.
 - `templates/partials/app_overlays.html` — модалки/дроверы.
-- Страницы: `dashboard`, `residential`, `billing`, `system_health`, `analytics`, `billing_period_create`.
+- Страницы: `dashboard`, `residential`, `billing`, `analytics`, `billing_period_create`.
 - Body-фрагменты: `templates/portal/bodies/*.html`.
 
 ## 12.2 Оверлеи (54 id)
 Ключевые группы:
 - notifications/audit/support/checklist/profile/settings drawers,
 - details/apartment details drawers,
-- create/modification modals (`create-building`, `create-apartment`, `add-payment`, `system-alerts-config`, `deploy-maintenance`, `assign-status`, `export-preview`, `billing-notice`, `confirm`).
+- create/modification modals (`create-building`, `create-apartment`, `add-payment`, `system-alerts-config`, `assign-status`, `export-preview`, `billing-notice`, `confirm`).
 
 ## 12.3 JS логика (`static/js/app.js`)
 Крупный монолитный скрипт (~11k строк), включает:
@@ -472,23 +459,20 @@ Snapshot отдается целиком: встраивается в кажду
 - API-клиент для `/api/*`,
 - рендер/rehydration из `portalData`,
 - export/reminder/status workflows,
-- maintenance/network map interactivity,
-- telemetry/chart behaviors.
+- chart behaviors.
 
-Демо-данных во фронтенде нет: `billingData` стартует пустым и заполняется только из backend snapshot, аналитика всегда строится по реальным данным (при пустой базе — нули), в drawer'ах нет выдуманных значений (техник берется из назначенных алертов/задач комплекса, история — из `AuditEvent`, поля без источника показывают «Not set»). Тесты `PortalDemoContentTests` следят, чтобы образцы записей не вернулись в шаблоны и `app.js`.
+Демо-данных во фронтенде нет: `billingData` стартует пустым и заполняется только из backend snapshot, аналитика всегда строится по реальным данным (при пустой базе — нули), в drawer'ах нет выдуманных значений (техник берется из назначенных алертов комплекса, история — из `AuditEvent`, поля без источника показывают «Not set»). Тесты `PortalDemoContentTests` следят, чтобы образцы записей не вернулись в шаблоны и `app.js`.
 
 API пути, используемые frontend:
 - `/api/portal-data/`
 - `/api/lists/residents/`
 - `/api/lists/transactions/`
-- `/api/lists/maintenance/`
 - `/api/lists/alerts/`
 - `/api/lists/audit/`
 - `/api/residents/create/`
 - `/api/buildings/create/`
 - `/api/apartments/create/`
 - `/api/payments/create/`
-- `/api/maintenance/deploy/`
 - `/api/system-alerts/configure/`
 - `/api/audit/note/`
 - `/api/checklist/note/`
@@ -500,7 +484,8 @@ API пути, используемые frontend:
 - `/api/logout/`
 
 ## 12.4 CSS
-- `static/css/app.css` (~19k строк): темы, компоненты, анимации, responsive.
+- `static/css/app.css` (~21k строк): темы, компоненты, анимации.
+- `static/css/responsive.css`: адаптивный слой (desktop ≥1280px — полный sidebar, 768–1279px — icon rail, <768px — off-canvas drawer; сетки страниц через container queries), подключается после `app.css`.
 - CSS vars (`:root`): `--hf-primary`, `--hf-surface`, `--hf-panel`, `--hf-border`, и т.д.
 
 ---
@@ -539,16 +524,13 @@ API пути, используемые frontend:
 1. Сильная монолитность frontend:
 - `app.js` и `app.css` очень большие, низкая модульность.
 
-2. System Health показывает симулированную телеметрию:
-- `pressurePsi`, `water`/`heating` = "Optimal", поток и uptime комплекса вычисляются формулами (из «здоровья» по долгам), а не из датчиков; `system_health.html` содержит статические узлы карты («Skyline Res.», «Harbor West»), которые JS перерисовывает. Реальный источник — модели `TelemetryNode`/`TelemetrySample`, пока не заполняемые.
-
-3. Неполное тестовое покрытие:
+2. Неполное тестовое покрытие:
 - только billing покрыт системно.
 
-4. Зависимость от env-конфигурации и внешних пакетов:
+3. Зависимость от env-конфигурации и внешних пакетов:
 - для корректного тест/экспорт контура нужны установленные `openpyxl` и `reportlab`.
 
-5. Схема single-sector:
+4. Схема single-sector:
 - создание новых комплексов отключено на API уровне (`410`), что нужно учитывать в дальнейшем roadmap.
 
 ---
@@ -560,7 +542,7 @@ API пути, используемые frontend:
 
 2. Закрыть тестовые пробелы:
 - API тесты для `portal/views.py` (filters + actions + error cases),
-- smoke tests для critical workflows: create resident/payment/maintenance, export/report.
+- smoke tests для critical workflows: create resident/payment, export/report.
 
 3. Упорядочить контракты API:
 - формализовать request/response схемы для action endpoints (сейчас OpenAPI в основном `additionalProperties`).
@@ -594,6 +576,7 @@ Frontend:
 - `templates/portal/bodies/*.html`
 - `static/js/app.js`
 - `static/css/app.css`
+- `static/css/responsive.css`
 
 Admin UX:
 - `config/jazz_sett.py`

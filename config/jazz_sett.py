@@ -25,11 +25,8 @@ JAZZ_SETTINGS = {
         "main_app.BuildingSection",
         "properties.Complex",
         "properties.BuildingSection",
-        "portal.MaintenanceTask",
         "portal.SupportTicket",
         "portal.SystemAlert",
-        "portal.TelemetryNode",
-        "portal.TelemetrySample",
     ],
 
     # Menyuni o'z tartibida ko'rsatish

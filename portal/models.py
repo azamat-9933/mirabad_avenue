@@ -158,55 +158,6 @@ class SystemAlert(models.Model):
         return f"{self.get_severity_display()} | {self.title}"
 
 
-class MaintenanceTask(models.Model):
-    """Upcoming and historical maintenance work item."""
-
-    PRIORITY_HIGH = "high"
-    PRIORITY_MEDIUM = "medium"
-    PRIORITY_LOW = "low"
-    PRIORITY_CHOICES = [
-        (PRIORITY_HIGH, "High"),
-        (PRIORITY_MEDIUM, "Medium"),
-        (PRIORITY_LOW, "Low"),
-    ]
-
-    STATUS_PLANNED = "planned"
-    STATUS_SCHEDULED = "scheduled"
-    STATUS_IN_PROGRESS = "in_progress"
-    STATUS_COMPLETED = "completed"
-    STATUS_DEFERRED = "deferred"
-    STATUS_CHOICES = [
-        (STATUS_PLANNED, "Planned"),
-        (STATUS_SCHEDULED, "Scheduled"),
-        (STATUS_IN_PROGRESS, "In Progress"),
-        (STATUS_COMPLETED, "Completed"),
-        (STATUS_DEFERRED, "Deferred"),
-    ]
-
-    title = models.CharField(max_length=180)
-    location = models.CharField(max_length=220, blank=True)
-    priority = models.CharField(max_length=20, choices=PRIORITY_CHOICES, default=PRIORITY_LOW)
-    status = models.CharField(max_length=24, choices=STATUS_CHOICES, default=STATUS_PLANNED)
-    scheduled_at = models.DateTimeField(default=timezone.now)
-    completed_at = models.DateTimeField(null=True, blank=True)
-    assigned_to = models.CharField(max_length=120, blank=True)
-    action_label = models.CharField(max_length=80, blank=True, default="Open checklist")
-    icon = models.CharField(max_length=80, blank=True, default="fact_check")
-    complex = models.ForeignKey(Complex, on_delete=models.SET_NULL, null=True, blank=True, related_name="maintenance_tasks")
-    building = models.ForeignKey(Building, on_delete=models.SET_NULL, null=True, blank=True, related_name="maintenance_tasks")
-    notes = models.TextField(blank=True)
-    metadata = models.JSONField(default=dict, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        ordering = ["scheduled_at", "-priority"]
-        verbose_name = "Maintenance task"
-        verbose_name_plural = "Maintenance tasks"
-
-    def __str__(self):
-        return self.title
-
-
 class ChecklistItem(models.Model):
     """Backend-defined checklist item for the operations drawer."""
 
@@ -313,24 +264,20 @@ class PortalStatusOverride(models.Model):
 
     CONTEXT_RESIDENTIAL = "residential"
     CONTEXT_TRANSACTIONS = "transactions"
-    CONTEXT_MAINTENANCE = "maintenance"
     CONTEXT_CHOICES = [
         (CONTEXT_RESIDENTIAL, "Residential"),
         (CONTEXT_TRANSACTIONS, "Transactions"),
-        (CONTEXT_MAINTENANCE, "Maintenance"),
     ]
 
     TARGET_COMPLEX = "complex"
     TARGET_BUILDING = "building"
     TARGET_APARTMENT = "apartment"
     TARGET_TRANSACTION = "transaction"
-    TARGET_MAINTENANCE = "maintenance"
     TARGET_CHOICES = [
         (TARGET_COMPLEX, "Complex"),
         (TARGET_BUILDING, "Building"),
         (TARGET_APARTMENT, "Apartment"),
         (TARGET_TRANSACTION, "Transaction"),
-        (TARGET_MAINTENANCE, "Maintenance"),
     ]
 
     context = models.CharField(max_length=24, choices=CONTEXT_CHOICES)
@@ -417,61 +364,3 @@ class SupportTicket(models.Model):
 
     def __str__(self):
         return self.title
-
-
-class TelemetryNode(models.Model):
-    """Live network node used by the map and telemetry panels."""
-
-    STATUS_ONLINE = "online"
-    STATUS_WARNING = "warning"
-    STATUS_ISSUE = "issue"
-    STATUS_OFFLINE = "offline"
-    STATUS_CHOICES = [
-        (STATUS_ONLINE, "Online"),
-        (STATUS_WARNING, "Warning"),
-        (STATUS_ISSUE, "Issue"),
-        (STATUS_OFFLINE, "Offline"),
-    ]
-
-    title = models.CharField(max_length=180)
-    subtitle = models.CharField(max_length=220, blank=True)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_ONLINE)
-    complex = models.ForeignKey(Complex, on_delete=models.SET_NULL, null=True, blank=True, related_name="telemetry_nodes")
-    building = models.ForeignKey(Building, on_delete=models.SET_NULL, null=True, blank=True, related_name="telemetry_nodes")
-    icon = models.CharField(max_length=80, blank=True, default="apartment")
-    map_x = models.DecimalField(max_digits=5, decimal_places=2, default=20)
-    map_y = models.DecimalField(max_digits=5, decimal_places=2, default=20)
-    pressure_psi = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True)
-    flow_liters_day = models.DecimalField(max_digits=14, decimal_places=2, null=True, blank=True)
-    latency_ms = models.PositiveIntegerField(default=0)
-    uptime_percent = models.DecimalField(max_digits=5, decimal_places=2, default=100)
-    updated_at = models.DateTimeField(default=timezone.now)
-    metadata = models.JSONField(default=dict, blank=True)
-
-    class Meta:
-        ordering = ["title"]
-        verbose_name = "Telemetry node"
-        verbose_name_plural = "Telemetry nodes"
-
-    def __str__(self):
-        return self.title
-
-
-class TelemetrySample(models.Model):
-    """Time-series sample for pressure/flow charts."""
-
-    node = models.ForeignKey(TelemetryNode, on_delete=models.CASCADE, related_name="samples")
-    measured_at = models.DateTimeField(default=timezone.now)
-    pressure_psi = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True)
-    flow_liters_day = models.DecimalField(max_digits=14, decimal_places=2, null=True, blank=True)
-    uptime_percent = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
-    issue_state = models.BooleanField(default=False)
-    metadata = models.JSONField(default=dict, blank=True)
-
-    class Meta:
-        ordering = ["-measured_at"]
-        verbose_name = "Telemetry sample"
-        verbose_name_plural = "Telemetry samples"
-
-    def __str__(self):
-        return f"{self.node} | {timezone.localtime(self.measured_at):%d.%m.%Y %H:%M}"

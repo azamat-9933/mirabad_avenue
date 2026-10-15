@@ -8,7 +8,6 @@ from datetime import datetime, time, timedelta
 
 from django.conf import settings
 from django.contrib import messages
-from django.contrib.auth import get_user_model
 from django.contrib.auth import logout
 from django.core.paginator import EmptyPage, Paginator
 from django.core.exceptions import ImproperlyConfigured, ValidationError
@@ -37,7 +36,6 @@ from portal.models import (
     AuditEvent,
     ChecklistItem,
     ChecklistNote,
-    MaintenanceTask,
     PortalNotification,
     PortalStatusOverride,
     SupportTicket,
@@ -53,7 +51,6 @@ from .backend_data import (
     residential_override_maps,
     serialize_audit_event,
     serialize_complex,
-    serialize_maintenance_task,
     serialize_notification,
     serialize_resident,
     serialize_transaction,
@@ -108,12 +105,6 @@ class ResidentialView(PortalPageView):
     template_name = "portal/residential.html"
     page_title = "Utility Manager | Properties"
     active_page = "residential"
-
-
-class SystemHealthView(PortalPageView):
-    template_name = "portal/system_health.html"
-    page_title = "Utility Manager | System Health"
-    active_page = "system_health"
 
 
 class BillingView(PortalPageView):
@@ -557,26 +548,6 @@ def _apply_related_district_filter(queryset, district, *lookup_paths):
     return queryset.filter(query) if query else queryset
 
 
-def _maintenance_priority_rank():
-    return Case(
-        When(priority=MaintenanceTask.PRIORITY_HIGH, then=Value(3)),
-        When(priority=MaintenanceTask.PRIORITY_MEDIUM, then=Value(2)),
-        default=Value(1),
-        output_field=IntegerField(),
-    )
-
-
-def _maintenance_status_rank():
-    return Case(
-        When(status=MaintenanceTask.STATUS_IN_PROGRESS, then=Value(5)),
-        When(status=MaintenanceTask.STATUS_SCHEDULED, then=Value(4)),
-        When(status=MaintenanceTask.STATUS_PLANNED, then=Value(3)),
-        When(status=MaintenanceTask.STATUS_DEFERRED, then=Value(2)),
-        default=Value(1),
-        output_field=IntegerField(),
-    )
-
-
 def _notification_severity_rank():
     return Case(
         When(severity=PortalNotification.SEVERITY_CRITICAL, then=Value(3)),
@@ -772,55 +743,6 @@ def api_list_transactions(request):
     overrides = transaction_override_map([item.id for item in page_obj.object_list])
     labels = _payment_type_labels()
     results = [serialize_transaction(item, item.owner, labels, overrides.get(item.id)) for item in page_obj.object_list]
-    return _paginated_response(results, page_obj.number, page_size, queryset.count(), ordering_raw)
-
-
-@extend_schema(responses=OpenApiTypes.OBJECT)
-@api_view(["GET"])
-def api_list_maintenance(request):
-    page, page_size = _page_params(request)
-    search = _query_param(request, "search", "")
-    status_value = _query_param(request, "status", "").lower()
-    priority_value = _query_param(request, "priority", "").lower()
-    district_value = _query_param(request, "district", "")
-    period_value = _query_param(request, "period", "all").lower()
-    period_from = _query_param(request, "period_from", "")
-    period_to = _query_param(request, "period_to", "")
-    ordering_raw = _query_param(request, "ordering", "priority,-scheduled_at")
-    allowed_ordering = {
-        "title": "title",
-        "scheduled_at": "scheduled_at",
-        "priority": "priority_rank",
-        "status": "status_rank",
-        "location": "location",
-    }
-    queryset = MaintenanceTask.objects.select_related("complex", "building").annotate(
-        priority_rank=_maintenance_priority_rank(),
-        status_rank=_maintenance_status_rank(),
-    )
-    if search:
-        queryset = queryset.filter(
-            Q(title__icontains=search)
-            | Q(location__icontains=search)
-            | Q(notes__icontains=search)
-            | Q(complex__title__icontains=search)
-            | Q(building__number__icontains=search)
-        )
-    complex_id = _query_int(request, "complex_id", 0)
-    building_id = _query_int(request, "building_id", 0)
-    if complex_id:
-        queryset = queryset.filter(complex_id=complex_id)
-    if building_id:
-        queryset = queryset.filter(building_id=building_id)
-    if status_value:
-        queryset = queryset.filter(status=status_value)
-    if priority_value:
-        queryset = queryset.filter(priority=priority_value)
-    queryset = _apply_related_district_filter(queryset, district_value, "complex__title", "complex__address", "location")
-    queryset = _apply_period_filter(queryset, "scheduled_at", period_value, period_from, period_to)
-    ordering = _normalize_ordering(ordering_raw, allowed_ordering, "priority")
-    page_obj = _paginate_queryset(queryset.order_by(*ordering, "id"), page, page_size)
-    results = [serialize_maintenance_task(item) for item in page_obj.object_list]
     return _paginated_response(results, page_obj.number, page_size, queryset.count(), ordering_raw)
 
 
@@ -1141,14 +1063,6 @@ def _actor(request):
     return "Portal"
 
 
-def _scheduled_datetime(value):
-    parsed = parse_datetime(str(value or "").strip()) if value else None
-    if parsed is None:
-        return timezone.now() + timedelta(hours=2)
-    if timezone.is_naive(parsed):
-        parsed = timezone.make_aware(parsed, timezone.get_current_timezone())
-    return parsed
-
 
 def _optional_instance(model, value):
     if value in (None, "", "null"):
@@ -1201,12 +1115,6 @@ def _portal_payment_description(operation: str, channel: str) -> str:
         return "[portal:cash-credit] Portal credit via cash."
     return "[portal:balance-debit] Portal manual balance subtraction."
 
-
-def _status_choice_value(raw_value, allowed):
-    normalized = str(raw_value or "").strip().lower().replace("-", "_").replace(" ", "_")
-    if normalized in allowed:
-        return normalized
-    return ""
 
 
 def _collect_owner_targets(payload):
@@ -1281,7 +1189,6 @@ def _portal_export_rows(portal_data, context, filters=None):
     building_ids = _backend_id_set(filters.get("building_backend_ids"))
     apartment_ids = _backend_id_set(filters.get("apartment_backend_ids"))
     transaction_ids = _backend_id_set(filters.get("transaction_backend_ids"))
-    maintenance_ids = _backend_id_set(filters.get("maintenance_backend_ids"))
     owner_ids = _backend_id_set(filters.get("owner_ids") or [filters.get("owner_id")])
     date_from = _export_range_start(filters.get("date_from"))
     date_to = _export_range_end(filters.get("date_to"))
@@ -1323,27 +1230,6 @@ def _portal_export_rows(portal_data, context, filters=None):
                 f'{item.get("signedAmount", item.get("amount", 0)):,.0f} UZS',
                 item.get("status", ""),
             ])
-    elif context == "maintenance":
-        for item in portal_data.get("maintenanceTasks", []):
-            row_datetime = _export_row_datetime(item.get("scheduledAt") or item.get("date"))
-            if date_from and row_datetime and row_datetime < date_from:
-                continue
-            if date_to and row_datetime and row_datetime > date_to:
-                continue
-            if maintenance_ids and int(item.get("backendId") or 0) not in maintenance_ids:
-                continue
-            if building_ids and int(item.get("buildingBackendId") or 0) not in building_ids:
-                continue
-            if complex_ids and int(item.get("complexBackendId") or 0) not in complex_ids:
-                continue
-            rows.append([
-                item.get("title", ""),
-                item.get("location", ""),
-                item.get("priority", ""),
-                item.get("date", ""),
-                item.get("status", ""),
-                item.get("assignedTo", ""),
-            ])
     return rows
 
 
@@ -1351,7 +1237,6 @@ def _render_export_payload(portal_data, context, export_format, source, language
     titles = {
         "residential": {"en": "Residential Export", "ru": "Экспорт жилых объектов", "uz": "Turar joylar eksporti"},
         "transactions": {"en": "Transaction Export", "ru": "Экспорт транзакций", "uz": "Tranzaksiyalar eksporti"},
-        "maintenance": {"en": "Maintenance Export", "ru": "Экспорт обслуживания", "uz": "Xizmat eksporti"},
     }
     headers = {
         "residential": {
@@ -1363,11 +1248,6 @@ def _render_export_payload(portal_data, context, export_format, source, language
             "en": ["Resident", "Type", "Method", "Date", "Amount", "Status"],
             "ru": ["Житель", "Тип", "Метод", "Дата", "Сумма", "Статус"],
             "uz": ["Rezident", "Turi", "Usul", "Sana", "Summa", "Holat"],
-        },
-        "maintenance": {
-            "en": ["Task", "Location", "Priority", "Date", "Status", "Assigned to"],
-            "ru": ["Задача", "Локация", "Приоритет", "Дата", "Статус", "Назначено"],
-            "uz": ["Vazifa", "Joy", "Muhimlik", "Sana", "Holat", "Biriktirilgan"],
         },
     }
     lang = language if language in {"en", "ru", "uz"} else "en"
@@ -1970,104 +1850,6 @@ def api_resident_kit_action(request):
 
 @extend_schema(request=OpenApiTypes.OBJECT, responses=OpenApiTypes.OBJECT)
 @api_view(["POST"])
-def api_deploy_maintenance(request):
-    payload = _json_payload(request)
-    complex_id = payload.get("complex_id")
-    building_id = payload.get("building_id")
-
-    complex_obj = None
-    building = None
-    if building_id:
-        try:
-            building = Building.objects.select_related("complex").get(pk=building_id)
-            complex_obj = building.complex
-        except (Building.DoesNotExist, ValueError, TypeError):
-            building = None
-    if not complex_obj and complex_id:
-        try:
-            complex_obj = Complex.objects.get(pk=complex_id)
-        except (Complex.DoesNotExist, ValueError, TypeError):
-            complex_obj = None
-    if not complex_obj:
-        complex_obj = Complex.objects.order_by("title").first()
-    if complex_obj and not building:
-        building = complex_obj.buildings.order_by("number").first()
-
-    if not complex_obj:
-        return JsonResponse(
-            {"ok": False, "error": "Create at least one residential complex before deploying maintenance."},
-            status=400,
-        )
-
-    title = str(payload.get("title") or "Preventive maintenance deployment").strip()
-    location = str(payload.get("location") or "").strip()
-    if not location:
-        location = f"{complex_obj.title}{' / ' + building.number if building else ''}"
-    priority = str(payload.get("priority") or MaintenanceTask.PRIORITY_MEDIUM).strip().lower()
-    valid_priorities = {value for value, _label in MaintenanceTask.PRIORITY_CHOICES}
-    if priority not in valid_priorities:
-        priority = MaintenanceTask.PRIORITY_MEDIUM
-    status = str(payload.get("status") or MaintenanceTask.STATUS_SCHEDULED).strip().lower()
-    valid_statuses = {value for value, _label in MaintenanceTask.STATUS_CHOICES}
-    if status not in valid_statuses:
-        status = MaintenanceTask.STATUS_SCHEDULED
-    assigned_to = str(payload.get("assigned_to") or "").strip()
-    User = get_user_model()
-    admin_usernames = list(
-        User.objects.filter(is_active=True)
-        .filter(Q(is_staff=True) | Q(is_superuser=True))
-        .exclude(username="")
-        .values_list("username", flat=True)
-        .order_by("username", "id")
-    )
-    if admin_usernames and assigned_to not in admin_usernames:
-        assigned_to = admin_usernames[0]
-    elif not assigned_to:
-        assigned_to = _actor(request)
-    action_label = str(payload.get("action_label") or "Open checklist").strip() or "Open checklist"
-    notes = str(payload.get("notes") or "").strip()
-    if not notes:
-        notes = "Created from the portal Deploy Maintenance action."
-
-    task = MaintenanceTask.objects.create(
-        title=title,
-        location=location,
-        priority=priority,
-        status=status,
-        scheduled_at=_scheduled_datetime(payload.get("scheduled_at")),
-        assigned_to=assigned_to,
-        action_label=action_label,
-        icon="build",
-        complex=complex_obj,
-        building=building,
-        notes=notes,
-        metadata={
-            "source": "portal_deploy_maintenance",
-            "requestedFrom": "system_health",
-        },
-    )
-    AuditEvent.objects.create(
-        event_type=AuditEvent.TYPE_SYSTEM,
-        title="Maintenance deployed",
-        message=f"{task.title} was scheduled for {location}.",
-        actor=_actor(request),
-        complex=complex_obj,
-        building=building,
-        metadata={"source": "portal_deploy_maintenance", "taskId": task.id},
-    )
-
-    return JsonResponse(
-        {
-            "ok": True,
-            "taskId": task.id,
-            "adminUrl": f"/admin/portal/maintenancetask/{task.id}/change/",
-            "portalData": safe_portal_data(request),
-        }
-    )
-
-
-@extend_schema(request=OpenApiTypes.OBJECT, responses=OpenApiTypes.OBJECT)
-@api_view(["POST"])
 def api_usage_report_export(request):
     payload = _json_payload(request)
     export_format = str(payload.get("format") or "XLSX").strip().upper()
@@ -2280,14 +2062,9 @@ def api_export_report(request):
     payload = _json_payload(request)
     report_type = str(payload.get("report_type") or "").strip().lower()
     context = str(payload.get("context") or payload.get("source_context") or "residential").strip().lower()
-    if context not in {"residential", "transactions", "maintenance"}:
+    if context not in {"residential", "transactions"}:
         source = str(payload.get("source") or "").lower()
-        if "transaction" in source:
-            context = "transactions"
-        elif "maintenance" in source:
-            context = "maintenance"
-        else:
-            context = "residential"
+        context = "transactions" if "transaction" in source else "residential"
 
     export_format = str(payload.get("format") or "XLSX").strip().upper()
     if export_format not in {"XLSX", "PDF"}:
@@ -2378,25 +2155,6 @@ def api_assign_technician(request):
     payload = _json_payload(request)
     technician = str(payload.get("technician") or "Field Team A").strip() or "Field Team A"
     note = str(payload.get("note") or "").strip()
-
-    maintenance = _optional_instance(MaintenanceTask, payload.get("maintenance_id"))
-    if maintenance:
-        maintenance.assigned_to = technician
-        if maintenance.status in {MaintenanceTask.STATUS_PLANNED, MaintenanceTask.STATUS_SCHEDULED}:
-            maintenance.status = MaintenanceTask.STATUS_IN_PROGRESS
-        if note:
-            maintenance.notes = "\n".join(filter(None, [maintenance.notes, note]))
-        maintenance.save(update_fields=["assigned_to", "status", "notes"])
-        AuditEvent.objects.create(
-            event_type=AuditEvent.TYPE_SYSTEM,
-            title="Technician assigned",
-            message=f"{technician} assigned to maintenance task {maintenance.title}.",
-            actor=_actor(request),
-            complex=maintenance.complex,
-            building=maintenance.building,
-            metadata={"source": "portal_assign_technician", "maintenanceId": maintenance.id},
-        )
-        return JsonResponse({"ok": True, "portalData": safe_portal_data(request)})
 
     alert = _optional_instance(SystemAlert, payload.get("alert_id"))
     if alert:
@@ -2498,7 +2256,6 @@ def api_assign_status(request):
     if context not in {
         PortalStatusOverride.CONTEXT_RESIDENTIAL,
         PortalStatusOverride.CONTEXT_TRANSACTIONS,
-        PortalStatusOverride.CONTEXT_MAINTENANCE,
     }:
         return JsonResponse({"ok": False, "error": "Unknown status context."}, status=400)
     if not status_value or not selected:
@@ -2506,12 +2263,6 @@ def api_assign_status(request):
 
     updated = 0
     user = _current_user_or_none(request)
-    maintenance_status_map = {
-        "scheduled": MaintenanceTask.STATUS_SCHEDULED,
-        "in_progress": MaintenanceTask.STATUS_IN_PROGRESS,
-        "completed": MaintenanceTask.STATUS_COMPLETED,
-        "deferred": MaintenanceTask.STATUS_DEFERRED,
-    }
 
     with transaction.atomic():
         for item in selected:
@@ -2520,16 +2271,6 @@ def api_assign_status(request):
             try:
                 target_id = int(target_id)
             except (TypeError, ValueError):
-                continue
-
-            if context == PortalStatusOverride.CONTEXT_MAINTENANCE:
-                task = _optional_instance(MaintenanceTask, target_id)
-                if not task:
-                    continue
-                normalized = _status_choice_value(status_value, set(maintenance_status_map))
-                task.status = maintenance_status_map.get(normalized, task.status)
-                task.save(update_fields=["status"])
-                updated += 1
                 continue
 
             if context == PortalStatusOverride.CONTEXT_RESIDENTIAL and target_type not in {

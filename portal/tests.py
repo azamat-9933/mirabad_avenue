@@ -21,7 +21,6 @@ from portal.backend_data import build_portal_data
 PORTAL_PAGES = [
     "portal:dashboard",
     "portal:residential",
-    "portal:system_health",
     "portal:billing",
     "portal:billing_period_create",
     "portal:analytics",
@@ -302,16 +301,22 @@ class PortalExportTests(TestCase):
         # 120 rows cannot fit on one page; the old writer silently stopped after 45 lines.
         self.assertGreater(len(re.findall(rb"/Type /Page\b", content)), 1)
 
-    def test_residential_and_maintenance_exports_render(self):
-        for context in ["residential", "maintenance"]:
-            for export_format in ["XLSX", "PDF"]:
-                with self.subTest(context=context, export_format=export_format):
-                    download, content = self._export(
-                        reverse("portal:api_export_report"),
-                        {"context": context, "format": export_format},
-                    )
-                    self.assertTrue(download["filename"].startswith(context))
-                    self.assertTrue(content)
+    def test_residential_exports_render(self):
+        for export_format in ["XLSX", "PDF"]:
+            with self.subTest(export_format=export_format):
+                download, content = self._export(
+                    reverse("portal:api_export_report"),
+                    {"context": "residential", "format": export_format},
+                )
+                self.assertTrue(download["filename"].startswith("residential"))
+                self.assertTrue(content)
+
+    def test_removed_maintenance_context_falls_back_to_residential(self):
+        download, _content = self._export(
+            reverse("portal:api_export_report"),
+            {"context": "maintenance", "format": "XLSX"},
+        )
+        self.assertTrue(download["filename"].startswith("residential"))
 
     def test_audit_export_is_xlsx(self):
         download, content = self._export(reverse("portal:api_export_audit"), {"language": "uz"})
@@ -341,8 +346,7 @@ class PortalDemoContentTests(TestCase):
 
     def test_pages_render_without_sample_records(self):
         self.client.force_login(self.user)
-        # System Health still renders simulated telemetry placeholders; tracked separately.
-        for name in [page for page in PORTAL_PAGES if page != "portal:system_health"]:
+        for name in PORTAL_PAGES:
             html = self.client.get(reverse(name)).content.decode("utf-8")
             for marker in [*DEMO_MARKERS, "Skyline"]:
                 with self.subTest(page=name, marker=marker):
@@ -353,3 +357,23 @@ class PortalDemoContentTests(TestCase):
         for marker in [*DEMO_MARKERS, "buildAnalyticsDemoData", "HydroFlowMockData", "Marcus"]:
             with self.subTest(marker=marker):
                 self.assertFalse(marker in bundle, f"{marker!r} found in app.js")
+
+
+class PortalRemovedSystemHealthTests(TestCase):
+    """The System Health page and its maintenance/telemetry backend were removed and must stay gone."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = get_user_model().objects.create_user(username="operator", password="unused-password")
+
+    def test_system_health_urls_are_gone(self):
+        self.client.force_login(self.user)
+        for path in ["/system-health/", "/api/lists/maintenance/", "/api/maintenance/deploy/"]:
+            with self.subTest(path=path):
+                self.assertEqual(self.client.get(path).status_code, 404)
+
+    def test_snapshot_has_no_maintenance_or_telemetry(self):
+        data = build_portal_data(self.user)
+        for key in ["maintenanceTasks", "telemetryNodes", "pressureSeries"]:
+            with self.subTest(key=key):
+                self.assertNotIn(key, data)

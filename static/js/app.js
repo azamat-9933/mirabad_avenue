@@ -8,7 +8,6 @@
         "Residents": { ru: "Абоненты", uz: "Abonentlar" },
         "Residential Units": { ru: "Жилые объекты", uz: "Turar joy obyektlari" },
         "Properties": { ru: "Дома", uz: "Uylar" },
-        "System Health": { ru: "Состояние систем", uz: "Tizim holati" },
         "Billing & Debt": { ru: "Платежи и долги", uz: "To'lovlar va qarzlar" },
         "Payments": { ru: "Платежи и долги", uz: "To'lovlar va qarzlar" },
         "Billing Period": { ru: "Расчётный период", uz: "Hisob davri" },
@@ -164,7 +163,6 @@
         "Operational": { ru: "Работает", uz: "Ishlamoqda" },
         "Last 90 days": { ru: "Последние 90 дней", uz: "So'nggi 90 kun" },
         "Last 30 days": { ru: "Последние 30 дней", uz: "So'nggi 30 kun" },
-        "Last 30 Days": { ru: "Последние 30 дней", uz: "So'nggi 30 kun" },
         "Current month": { ru: "Текущий месяц", uz: "Joriy oy" },
         "All time": { ru: "Всё время", uz: "Butun davr" },
         "Recent payments": { ru: "Последние платежи", uz: "So'nggi to'lovlar" },
@@ -206,7 +204,6 @@
         "Density updated": { ru: "Плотность обновлена", uz: "Zichlik yangilandi" },
         "Overview": { ru: "Обзор", uz: "Umumiy ko'rinish" },
         "Real-time infrastructure monitoring for North Sector.": { ru: "Мониторинг инфраструктуры Северного сектора в реальном времени.", uz: "Shimoliy sektor infratuzilmasi real vaqt monitoringi." },
-        "All Systems Operational": { ru: "Все системы работают", uz: "Barcha tizimlar ishlamoqda" },
         "Last check: 2m ago": { ru: "Последняя проверка: 2 мин назад", uz: "Oxirgi tekshiruv: 2 daqiqa oldin" },
         "Total Revenue": { ru: "Общая выручка", uz: "Jami tushum" },
         "Total Residents": { ru: "Всего резидентов", uz: "Jami rezidentlar" },
@@ -268,7 +265,6 @@
         "Leak Alert": { ru: "Утечка", uz: "Oqish signali" },
         "Central District": { ru: "Центральный район", uz: "Markaziy tuman" },
         "Maintenance Pending": { ru: "Ожидает обслуживания", uz: "Xizmat kutilmoqda" },
-        "Critical Alert": { ru: "Критичное уведомление", uz: "Jiddiy ogohlantirish" },
         "Quick Actions": { ru: "Быстрые действия", uz: "Tezkor amallar" },
         "Generate Usage Report": { ru: "Сформировать отчёт потребления", uz: "Iste'mol hisobotini yaratish" },
         "Add New Resident Profile": { ru: "Добавить профиль жильца", uz: "Yangi yashovchi profilini qo'shish" },
@@ -463,7 +459,6 @@
         "Receipts": { ru: "Поступления", uz: "Kirimlar" },
         "Payment Systems": { ru: "Платёжные системы", uz: "To'lov tizimlari" },
         "Total Transaction Volume": { ru: "Общий объём транзакций", uz: "Jami tranzaksiya hajmi" },
-        "Water Pressure Status": { ru: "Статус давления воды", uz: "Suv bosimi holati" },
         "Optimal flow across all residential sectors": { ru: "Оптимальный поток по всем жилым секторам", uz: "Barcha turar joy sektorlarida optimal oqim" },
         "System Diagnostics": { ru: "Диагностика системы", uz: "Tizim diagnostikasi" },
         "Recent Transaction Log": { ru: "Последние транзакции", uz: "So'nggi tranzaksiyalar" },
@@ -552,7 +547,6 @@
         "Low Risk": { ru: "Низкий риск", uz: "Past xavf" },
         "Medium Risk": { ru: "Средний риск", uz: "O'rtacha xavf" },
         "District Insights": { ru: "Показатели района", uz: "Hudud ko'rsatkichlari" },
-        "Water Demand": { ru: "Спрос на воду", uz: "Suv talabi" },
         "Avg. Temp Control": { ru: "Средний контроль температуры", uz: "O'rtacha harorat nazorati" },
         "Within Target Range": { ru: "В целевом диапазоне", uz: "Maqsadli diapazonda" },
         "Recent Alerts": { ru: "Последние уведомления", uz: "So'nggi ogohlantirishlar" },
@@ -628,46 +622,16 @@
         "No residents match this filter": { ru: "Нет жильцов по этому фильтру", uz: "Bu filtr bo'yicha yashovchilar yo'q" },
         "Switch to ALL to restore the full resident list.": { ru: "Переключитесь на ВСЕ, чтобы вернуть полный список жильцов.", uz: "To'liq ro'yxatni qaytarish uchun HAMMASI ni tanlang." },
         "Search residents": { ru: "Поиск жильцов", uz: "Yashovchilarni qidirish" },
-        "Infrastructure & System Health": { ru: "Инфраструктура и состояние систем", uz: "Infratuzilma va tizim holati" },
-        "Real-time status of water distribution and thermal cores across all zones.": { ru: "Статус водораспределения и тепловых узлов по всем зонам в реальном времени.", uz: "Barcha zonalar bo'yicha suv taqsimoti va issiqlik yadrolari holati real vaqtda." },
-        "Export Logs": { ru: "Экспорт логов", uz: "Loglarni eksport qilish" },
-        "Deploy Maintenance": { ru: "Запланировать обслуживание", uz: "Texnik xizmatni joylash" },
-        "Overall System Efficiency": { ru: "Общая эффективность системы", uz: "Tizimning umumiy samaradorligi" },
-        "Active Alerts": { ru: "Активные оповещения", uz: "Faol ogohlantirishlar" },
         "Minor": { ru: "Незначительные", uz: "Mayda" },
-        "0 CRITICAL TASKS PENDING": { ru: "0 критических задач ожидает", uz: "0 ta jiddiy vazifa kutilmoqda" },
         "Live": { ru: "Онлайн", uz: "Jonli" },
         "Stable": { ru: "Стабильно", uz: "Barqaror" },
-        "Heating Core Temp": { ru: "Температура теплового ядра", uz: "Issiqlik yadrosi harorati" },
-        "Live network layer": { ru: "Активный сетевой слой", uz: "Jonli tarmoq qatlami" },
-        "Network Health": { ru: "Состояние сети", uz: "Tarmoq holati" },
-        "Operational status across residential nodes": { ru: "Операционный статус жилых узлов", uz: "Turar joy tugunlari bo'yicha operatsion holat" },
         "Online": { ru: "Онлайн", uz: "Onlayn" },
         "Issue": { ru: "Проблема", uz: "Muammo" },
-        "Issue detected": { ru: "Обнаружена проблема", uz: "Muammo aniqlandi" },
-        "Zone Alpha": { ru: "Зона Альфа", uz: "Alfa zonasi" },
-        "Thermal Core": { ru: "Тепловое ядро", uz: "Issiqlik yadrosi" },
-        "Primary distribution hub": { ru: "Основной распределительный узел", uz: "Asosiy taqsimot markazi" },
-        "Pressure drop in Block B": { ru: "Падение давления в блоке B", uz: "B-blokda bosim pasaydi" },
-        "Secondary pressure cluster": { ru: "Вторичный кластер давления", uz: "Ikkilamchi bosim klasteri" },
-        "Main inlet and thermal telemetry": { ru: "Главный ввод и тепловая телеметрия", uz: "Asosiy kirish va issiqlik telemetriyasi" },
-        "Heating core telemetry relay": { ru: "Ретранслятор тепловой телеметрии", uz: "Issiqlik telemetriyasi releysi" },
-        "Updated 09:41": { ru: "Обновлено 09:41", uz: "09:41 da yangilandi" },
         "Pressure": { ru: "Давление", uz: "Bosim" },
         "Flow": { ru: "Поток", uz: "Oqim" },
         "Latency": { ru: "Задержка", uz: "Kechikish" },
         "Uptime": { ru: "Аптайм", uz: "Ish vaqti" },
-        "1.8M l/day": { ru: "1.8M л/день", uz: "1.8M l/kun" },
-        "0.9M l/day": { ru: "0.9M л/день", uz: "0.9M l/kun" },
-        "1.2M l/day": { ru: "1.2M л/день", uz: "1.2M l/kun" },
-        "1.5M l/day": { ru: "1.5M л/день", uz: "1.5M l/kun" },
-        "83% load": { ru: "83% нагрузки", uz: "83% yuklama" },
         "Nominal": { ru: "Номинально", uz: "Nominal" },
-        "Open node details": { ru: "Открыть детали узла", uz: "Tugun tafsilotlarini ochish" },
-        "Network node": { ru: "Сетевой узел", uz: "Tarmoq tuguni" },
-        "Network node detail preview.": { ru: "Предпросмотр деталей сетевого узла.", uz: "Tarmoq tuguni tafsilotlari ko'rinishi." },
-        "Pressure anomaly is active. Assign a technician before SLA breach.": { ru: "Активна аномалия давления. Назначьте техника до нарушения SLA.", uz: "Bosim anomaliyasi faol. SLA buzilishidan oldin texnik tayinlang." },
-        "No active alerts for this node.": { ru: "По этому узлу нет активных оповещений.", uz: "Bu tugun bo'yicha faol ogohlantirishlar yo'q." },
         "No active alerts": { ru: "Нет активных уведомлений", uz: "Faol ogohlantirishlar yo'q" },
         "No recent activity": { ru: "Нет недавних действий", uz: "So'nggi amallar yo'q" },
         "Debt by house": { ru: "Долг по домам", uz: "Uylar bo'yicha qarz" },
@@ -679,38 +643,14 @@
         "Try another search term or reset filters. Backend data will refresh on retry.": { ru: "Попробуйте другой поисковый запрос или сбросьте фильтры. При повторе данные backend обновятся.", uz: "Boshqa qidiruv so'rovini kiriting yoki filtrlarni tiklang. Qayta urinishda backend ma'lumotlari yangilanadi." },
         "Retry": { ru: "Повторить", uz: "Qayta urinish" },
         "New": { ru: "Новое", uz: "Yangi" },
-        "Water Pressure Stability": { ru: "Стабильность давления воды", uz: "Suv bosimi barqarorligi" },
-        "Real-time telemetry from main supply line (last 24h)": { ru: "Телеметрия главной линии подачи в реальном времени (последние 24 часа)", uz: "Asosiy ta'minot liniyasi telemetriyasi real vaqtda (so'nggi 24 soat)" },
-        "ACTUAL PSI": { ru: "ФАКТИЧЕСКИЙ PSI", uz: "AMALDAGI PSI" },
-        "NOMINAL TARGET": { ru: "ЦЕЛЕВОЙ НОМИНАЛ", uz: "NOMINAL MAQSAD" },
         "NOW": { ru: "СЕЙЧАС", uz: "HOZIR" },
-        "CRITICAL ALERTS": { ru: "КРИТИЧЕСКИЕ ОПОВЕЩЕНИЯ", uz: "JIDDIY OGOHLANTIRISHLAR" },
-        "ACT NOW": { ru: "СРОЧНО", uz: "ZUDLIK BILAN" },
-        "Pressure Drop Detected": { ru: "Обнаружено падение давления", uz: "Bosim pasayishi aniqlandi" },
-        "Skyline Residences - Block B": { ru: "Skyline Residences - блок B", uz: "Skyline Residences - B-blok" },
-        "Detected: 12m ago": { ru: "Обнаружено: 12 мин назад", uz: "Aniqlandi: 12 daqiqa oldin" },
-        "Secondary Pump Offline": { ru: "Вторичный насос отключён", uz: "Ikkilamchi nasos oflayn" },
-        "Industrial Sector 4": { ru: "Промышленный сектор 4", uz: "Sanoat sektori 4" },
-        "Backup systems active.": { ru: "Резервные системы активны.", uz: "Zaxira tizimlar faol." },
-        "View All Active Alerts": { ru: "Смотреть все активные оповещения", uz: "Barcha faol ogohlantirishlarni ko'rish" },
-        "UPCOMING MAINTENANCE": { ru: "ПРЕДСТОЯЩЕЕ ОБСЛУЖИВАНИЕ", uz: "KUTILAYOTGAN TEXNIK XIZMAT" },
         "APR": { ru: "АПР", uz: "APR" },
         "MAY": { ru: "МАЙ", uz: "MAY" },
-        "Sensor Calibration": { ru: "Калибровка датчиков", uz: "Sensor kalibrlash" },
-        "Pipe Retrofitting": { ru: "Модернизация трубопровода", uz: "Quvurni modernizatsiya qilish" },
-        "Thermal Core Flush": { ru: "Промывка теплового ядра", uz: "Issiqlik yadrosini yuvish" },
-        "Vista Towers • 09:00": { ru: "Vista Towers • 09:00", uz: "Vista Towers • 09:00" },
-        "Zone Delta • 13:30": { ru: "Зона Дельта • 13:30", uz: "Delta zonasi • 13:30" },
-        "Main Hub • 22:00": { ru: "Главный узел • 22:00", uz: "Asosiy markaz • 22:00" },
         "Scheduled": { ru: "Запланировано", uz: "Rejalashtirilgan" },
         "Planned": { ru: "В плане", uz: "Rejada" },
         "Pending": { ru: "Ожидает", uz: "Kutilmoqda" },
-        "System Maintenance Log": { ru: "Журнал обслуживания системы", uz: "Tizim texnik xizmat jurnali" },
-        "Historical and upcoming maintenance activities": { ru: "История и предстоящие работы по обслуживанию", uz: "Tarixiy va kutilayotgan texnik xizmat ishlari" },
-        "Asset / Task": { ru: "Актив / задача", uz: "Aktiv / vazifa" },
         "Location": { ru: "Локация", uz: "Joylashuv" },
         "Priority": { ru: "Приоритет", uz: "Ustuvorlik" },
-        "Date / Time": { ru: "Дата / время", uz: "Sana / vaqt" },
         "Pump Replacement": { ru: "Замена насоса", uz: "Nasosni almashtirish" },
         "Central Hub - Pump #4": { ru: "Центральный узел - насос #4", uz: "Markaziy uzel - nasos #4" },
         "Vista Towers - Main Inlet": { ru: "Vista Towers - главный ввод", uz: "Vista Towers - asosiy kirish" },
@@ -723,7 +663,6 @@
         "View Report": { ru: "Открыть отчёт", uz: "Hisobotni ochish" },
         "Reschedule": { ru: "Перенести", uz: "Qayta rejalashtirish" },
         "Filter Cleaning": { ru: "Очистка фильтра", uz: "Filtrni tozalash" },
-        "HydroFlow Enterprise v4.2.0 • Operational Authority Secured": { ru: "HydroFlow Enterprise v4.2.0 • Операционный доступ защищён", uz: "HydroFlow Enterprise v4.2.0 • Operatsion kirish himoyalangan" },
         "Home": { ru: "Главная", uz: "Bosh sahifa" },
         "Health": { ru: "Системы", uz: "Holat" },
         "Billing": { ru: "Платежи", uz: "To'lovlar" },
@@ -843,7 +782,6 @@
         "Open alert in admin": { ru: "Открыть alert в admin", uz: "Alertni adminda ochish" },
         "Open maintenance in admin": { ru: "Открыть обслуживание в admin", uz: "Texnik xizmatni adminda ochish" },
         "Critical alert opened": { ru: "Критичный alert открыт", uz: "Jiddiy alert ochildi" },
-        "Maintenance task opened": { ru: "Задача обслуживания открыта", uz: "Texnik xizmat vazifasi ochildi" },
         "Checklist opened": { ru: "Чеклист открыт", uz: "Ro'yxat ochildi" },
         "Complex": { ru: "Дом", uz: "Uy" },
     "Infra": { ru: "Инфра", uz: "Infra" },
@@ -1037,12 +975,9 @@
         transactions: [],
         notifications: [],
         systemAlerts: [],
-        maintenanceTasks: [],
         auditEvents: [],
         checklistItems: [],
         checklistNotes: [],
-        telemetryNodes: [],
-        pressureSeries: [],
         profile: {},
     };
 
@@ -1053,7 +988,7 @@
         billingData.complexes.splice(0, billingData.complexes.length, ...payload.complexes);
         billingData.residents.splice(0, billingData.residents.length, ...payload.residents);
         billingData.transactions.splice(0, billingData.transactions.length, ...payload.transactions);
-        ["notifications", "systemAlerts", "maintenanceTasks", "auditEvents", "checklistItems", "checklistNotes", "telemetryNodes", "pressureSeries"].forEach((key) => {
+        ["notifications", "systemAlerts", "auditEvents", "checklistItems", "checklistNotes"].forEach((key) => {
             billingData[key] = Array.isArray(payload[key]) ? payload[key] : [];
         });
         billingData.profile = payload.profile && typeof payload.profile === "object" ? payload.profile : {};
@@ -1209,12 +1144,9 @@
             count: buildings,
             units,
             totalArea,
-            water: complexes.some((complex) => complex.water !== "Optimal") ? "Review" : "Optimal",
-            heating: complexes.some((complex) => complex.heating !== "Optimal") ? "Review" : "Optimal",
             health: Math.round(weightedHealth * 10) / 10,
             waterM3: complexes.reduce((total, complex) => total + (Number(complex.waterM3) || 0), 0),
             heatingM3: complexes.reduce((total, complex) => total + (Number(complex.heatingM3) || 0), 0),
-            pressurePsi: 0,
             collected,
             debt,
             finances: collected + debt,
@@ -1318,7 +1250,7 @@
         const backendAlerts = Array.isArray(billingData.systemAlerts)
             ? billingData.systemAlerts.filter((alert) => !["resolved", "archived"].includes(String(alert.status || "").toLowerCase()))
             : [];
-        const activeAlerts = backendAlerts.length || billingData.complexes.filter((complex) => complex.water !== "Optimal" || complex.heating !== "Optimal").length;
+        const activeAlerts = backendAlerts.length;
         const criticalAlertCount = backendAlerts.length
             ? backendAlerts.filter((alert) => alert.severity === "critical").length
             : criticalComplexes.length;
@@ -1334,7 +1266,6 @@
             const status = String(resident.status || "").toLowerCase();
             return status === "debtor" || Number(resident.balance || 0) < 0;
         }).length;
-        const avgPressure = billingData.complexes.reduce((total, complex) => total + complex.pressurePsi, 0) / Math.max(totalComplexes, 1);
         return {
             complexes,
             totalComplexes,
@@ -1363,7 +1294,6 @@
             criticalDebtUnits,
             totalDebtorUnits,
             totalPaidUnits: detailedPaidResidents || totalPaidUnits,
-            avgPressure,
             detailedResidents,
             detailedPaidResidents,
             detailedDebtors,
@@ -2343,9 +2273,7 @@
     const activeAlertsForComplex = (complexId) => (Array.isArray(billingData.systemAlerts) ? billingData.systemAlerts : [])
         .filter((alert) => complexId && alert.complexId === complexId && alert.status !== "resolved");
     const assignedTechnicianForComplex = (complexId) => {
-        const tasks = Array.isArray(billingData.maintenanceTasks) ? billingData.maintenanceTasks : [];
-        const assigned = [...activeAlertsForComplex(complexId), ...tasks.filter((task) => task.complexId === complexId && task.statusKey !== "completed")]
-            .find((item) => String(item.assignedTo || "").trim());
+        const assigned = activeAlertsForComplex(complexId).find((item) => String(item.assignedTo || "").trim());
         return assigned ? assigned.assignedTo : "";
     };
     const recentAuditEventsFor = (data) => {
@@ -2365,7 +2293,6 @@
         detailsDrawer.dataset.buildingBackendId = data.buildingBackendId || "";
         detailsDrawer.dataset.complexBackendId = data.complexBackendId || "";
         detailsDrawer.dataset.alertBackendId = data.alertBackendId || "";
-        detailsDrawer.dataset.maintenanceBackendId = data.maintenanceBackendId || "";
         detailsDrawer.dataset.notificationBackendId = data.notificationBackendId || "";
         detailsDrawer.querySelector("#details-title").textContent = data.title;
         detailsDrawer.querySelector("[data-detail-subtitle]").textContent = data.subtitle;
@@ -2941,10 +2868,6 @@
         setStat("Total Subscribers", moneyFormatter.format(stats.occupiedUnits));
         setStat("Total YTD Payments", formatBillingUzs(stats.totalCollected));
         setStat("Total Debt Burden", formatBillingUzs(stats.totalDebt));
-        setStat("Overall System Efficiency", percentValue(stats.weightedHealth), "", stats.weightedHealth);
-        setStat("Active Alerts", `${stats.activeAlerts} Minor`, `${stats.criticalAlerts} critical tasks pending`);
-        setStat("Water Pressure Status", stats.avgPressure < 50 ? "Review" : "Stable");
-        setStat("Heating Core Temp", stats.warningComplexes.some((complex) => complex.heating !== "Optimal") ? "Maintenance" : "Optimal");
         setStat("Active Debtors", moneyFormatter.format(stats.detailedDebtors));
         setStat("Total Outstanding", formatBillingUzs(stats.detailedDebt));
         setStat("Payments this month", moneyFormatter.format(paymentsThisMonth));
@@ -2952,423 +2875,6 @@
             node.textContent = moneyFormatter.format(paymentsThisMonth);
         });
         setStat("Total Complex Usage", `${compactNumber(stats.totalUsageM3)} m³`, `${moneyFormatter.format(stats.totalWaterM3)} water / ${moneyFormatter.format(stats.totalHeatingM3)} heating`);
-
-        const statusBanner = Array.from(document.querySelectorAll("span.text-sm.font-semibold")).find((element) => element.textContent.includes("All Systems"));
-        if (statusBanner) statusBanner.textContent = stats.criticalAlerts ? "System Review Required" : "All Systems Operational";
-
-        document.querySelectorAll(".network-filter").forEach((button) => {
-            const strong = button.querySelector("strong");
-            if (!strong) return;
-            const backendNodes = Array.isArray(billingData.telemetryNodes) ? billingData.telemetryNodes : [];
-            const nodeTotal = backendNodes.length || stats.totalComplexes;
-            const nodeIssues = backendNodes.length ? backendNodes.filter((node) => ["issue", "offline"].includes(node.status)).length : stats.activeAlerts;
-            if (button.dataset.networkFilter === "all") strong.textContent = nodeTotal;
-            if (button.dataset.networkFilter === "online") strong.textContent = Math.max(0, nodeTotal - nodeIssues);
-            if (button.dataset.networkFilter === "issue") strong.textContent = nodeIssues;
-        });
-
-        const backendIssueAlerts = Array.isArray(billingData.systemAlerts)
-            ? billingData.systemAlerts.filter((alert) => !["resolved", "archived"].includes(String(alert.status || "").toLowerCase()))
-            : [];
-        const issueAlerts = backendIssueAlerts.length ? backendIssueAlerts.map((alert) => ({
-            id: alert.id,
-            severity: alert.severity || "warning",
-            icon: alert.icon || "warning",
-            title: alert.title,
-            subtitle: alert.subtitle || alert.message || "",
-            meta: alert.meta || alert.detectedAt || "",
-        })) : stats.complexes.flatMap((complex) => {
-            const alerts = [];
-            if (complex.water !== "Optimal") {
-                alerts.push({
-                    id: `${complex.id}-water`,
-                    severity: "critical",
-                    icon: "leak_add",
-                    title: "Water issue detected",
-                    subtitle: `${complex.name} · ${complex.sector}`,
-                    meta: `${complex.water} · ${moneyFormatter.format(complex.pressurePsi)} PSI`,
-                });
-            }
-            if (complex.heating !== "Optimal") {
-                alerts.push({
-                    id: `${complex.id}-heating`,
-                    severity: complex.heating === "Maintenance" ? "warning" : "critical",
-                    icon: "device_thermostat",
-                    title: "Heating maintenance required",
-                    subtitle: `${complex.name} · ${complex.sector}`,
-                    meta: `${complex.heating} · ${moneyFormatter.format(complex.heatingM3)} m³/day`,
-                });
-            }
-            return alerts;
-        });
-        const derivedMaintenanceTasks = stats.complexes.flatMap((complex, index) => {
-            const tasks = [];
-            if (complex.water !== "Optimal") {
-                tasks.push({
-                    id: `${complex.id}-water-maintenance`,
-                    complexId: complex.id,
-                    task: "Water leak inspection",
-                    location: `${complex.name} · main line`,
-                    priority: "High",
-                    date: "20.04.2026 | 10:30",
-                    status: "Upcoming",
-                    action: "View plan",
-                    icon: "plumbing",
-                    day: "20",
-                    month: "APR",
-                    tone: "error",
-                });
-            }
-            if (complex.heating !== "Optimal") {
-                tasks.push({
-                    id: `${complex.id}-heating-maintenance`,
-                    complexId: complex.id,
-                    task: "Heating loop service",
-                    location: `${complex.name} · heating core`,
-                    priority: "Medium",
-                    date: "24.04.2026 | 09:00",
-                    status: "Scheduled",
-                    action: "Open checklist",
-                    icon: "device_thermostat",
-                    day: "24",
-                    month: "APR",
-                    tone: "tertiary",
-                });
-            }
-            if (index < 2 && complex.water === "Optimal" && complex.heating === "Optimal") {
-                tasks.push({
-                    id: `${complex.id}-audit-maintenance`,
-                    complexId: complex.id,
-                    task: "Preventive system audit",
-                    location: `${complex.name} · ${complex.sector}`,
-                    priority: "Low",
-                    date: `${String(26 + index).padStart(2, "0")}.04.2026 | ${index ? "14:00" : "11:15"}`,
-                    status: "Planned",
-                    action: "View plan",
-                    icon: "fact_check",
-                    day: String(26 + index),
-                    month: "APR",
-                    tone: "secondary",
-                });
-            }
-            return tasks;
-        }).slice(0, 5);
-        const backendMaintenanceTasks = Array.isArray(billingData.maintenanceTasks)
-            ? billingData.maintenanceTasks.filter((task) => task.statusKey !== "completed")
-            : [];
-        const maintenanceTasks = backendMaintenanceTasks.length ? backendMaintenanceTasks : derivedMaintenanceTasks;
-        const badgeClass = (tone) => tone === "error"
-            ? "bg-error-container text-error"
-            : tone === "tertiary"
-            ? "bg-tertiary-fixed text-on-tertiary-fixed"
-            : "bg-secondary-container text-on-secondary-container";
-
-        const systemCriticalSection = Array.from(document.querySelectorAll("section"))
-            .find((section) => section.querySelector("h4")?.textContent.toLowerCase().includes("critical alerts"));
-        if (systemCriticalSection) {
-            const alertBody = systemCriticalSection.querySelector(".divide-y");
-            const actionBadge = systemCriticalSection.querySelector("h4 + *");
-            if (actionBadge) {
-                actionBadge.textContent = issueAlerts.length ? "ACT NOW" : "CLEAR";
-                actionBadge.setAttribute("type", "button");
-                actionBadge.dataset.modalOpen = "system-alerts-config-modal";
-            }
-            if (alertBody) {
-                alertBody.innerHTML = issueAlerts.length
-                    ? issueAlerts.slice(0, 3).map((alert) => {
-                        const tone = alert.severity === "critical" ? "error" : "tertiary";
-                        return `
-                            <button
-                                class="w-full p-4 flex gap-3 text-left transition-colors hover:bg-surface-container-low"
-                                data-system-alert-link
-                                data-system-alert="${escapeHtml(alert.id)}"
-                                data-admin-url="${escapeHtml(alert.adminUrl || `/admin/portal/systemalert/${alert.backendId}/change/`)}"
-                                type="button">
-                                <div class="w-8 h-8 rounded-full bg-${tone}-container flex-shrink-0 flex items-center justify-center text-${tone}">
-                                    <span class="material-symbols-outlined text-base">${escapeHtml(alert.icon)}</span>
-                                </div>
-                                <div>
-                                    <p class="text-xs font-bold text-on-surface">${escapeHtml(alert.title)}</p>
-                                    <p class="text-[10px] text-on-surface-variant">${escapeHtml(alert.subtitle)}</p>
-                                    <p class="text-[10px] text-${tone} font-semibold mt-1">${escapeHtml(alert.meta)}</p>
-                                </div>
-                            </button>
-                        `;
-                    }).join("")
-                    : `
-                        <div class="p-4 flex gap-3">
-                            <div class="w-8 h-8 rounded-full bg-secondary-container flex-shrink-0 flex items-center justify-center text-secondary">
-                                <span class="material-symbols-outlined text-base">check_circle</span>
-                            </div>
-                            <div>
-                                <p class="text-xs font-bold text-on-surface">No critical alerts</p>
-                                <p class="text-[10px] text-on-surface-variant">All complexes are operating inside the current local telemetry range.</p>
-                            </div>
-                        </div>
-                    `;
-            }
-            const viewAlertsButton = systemCriticalSection.querySelector("button");
-            if (viewAlertsButton) {
-                viewAlertsButton.type = "button";
-                viewAlertsButton.dataset.modalOpen = "notifications-drawer";
-            }
-        }
-
-        const maintenancePanel = document.querySelector("[data-card='upcoming-maintenance']");
-        if (maintenancePanel) {
-            const list = maintenancePanel.querySelector(".space-y-6");
-            if (list) {
-                list.innerHTML = maintenanceTasks.slice(0, 3).map((task, index) => `
-                    <button
-                        class="w-full flex gap-4 text-left rounded-xl p-2 -mx-2 transition-colors hover:bg-surface-container-low"
-                        data-maintenance-widget-item
-                        data-maintenance-id="${escapeHtml(task.id || task.backendId || task.task)}"
-                        data-admin-url="${escapeHtml(task.adminUrl || `/admin/portal/maintenancetask/${task.backendId}/change/`)}"
-                        type="button">
-                        <div class="flex flex-col items-center ${index > 0 ? "opacity-70" : ""}">
-                            <span class="text-[10px] font-bold text-on-surface-variant uppercase">${escapeHtml(task.month)}</span>
-                            <span class="text-lg font-black text-primary leading-none">${escapeHtml(task.day)}</span>
-                        </div>
-                        <div class="h-10 w-[2px] bg-primary/${index ? "10" : "20"}"></div>
-                        <div>
-                            <p class="text-xs font-bold text-on-surface">${escapeHtml(task.task)}</p>
-                            <p class="text-[10px] text-on-surface-variant">${escapeHtml(task.location)} · ${escapeHtml(task.date.split("|")[1]?.trim() || "")}</p>
-                            <span class="text-[9px] px-2 py-0.5 ${badgeClass(task.tone)} font-bold rounded mt-1 inline-block uppercase" data-status="${escapeHtml(task.status.toLowerCase())}">${escapeHtml(task.status)}</span>
-                        </div>
-                    </button>
-                `).join("");
-            }
-        }
-
-        const maintenanceBody = document.querySelector("[data-maintenance-body]");
-        if (maintenanceBody) {
-            const priorityKey = (task) => String(task.priorityKey || task.priority || "").toLowerCase();
-            const statusKey = (task) => String(task.statusKey || task.status || "").toLowerCase();
-            const statusClass = (task) => {
-                const key = statusKey(task);
-                if (key.includes("planned") || key.includes("pending")) return "is-warning";
-                if (key.includes("progress") || key.includes("scheduled") || key.includes("upcoming")) return "is-info";
-                if (key.includes("complete") || key.includes("done")) return "is-success";
-                return "is-success";
-            };
-            maintenanceBody.innerHTML = maintenanceTasks.length ? maintenanceTasks.map((task) => `
-                <tr class="maintenance-log-row hover:bg-surface-container-low transition-colors group"
-                    data-maintenance-row
-                    data-maintenance-id="${escapeHtml(task.id || task.backendId || task.task)}"
-                    data-complex-id="${escapeHtml(task.complexId || "")}"
-                    data-building-id="${escapeHtml(task.buildingId || "")}"
-                    data-priority="${escapeHtml(priorityKey(task))}"
-                    data-status-key="${escapeHtml(statusKey(task))}"
-                    data-admin-url="${escapeHtml(task.adminUrl || `/admin/portal/maintenancetask/${task.backendId}/change/`)}"
-                    data-date="${escapeHtml(task.date || "")}">
-                    <td class="px-5 py-4">
-                        <div class="flex items-center gap-3">
-                            <div class="maintenance-task-icon">
-                                <span class="material-symbols-outlined">${escapeHtml(task.icon)}</span>
-                            </div>
-                            <span class="maintenance-task-title">${escapeHtml(task.task)}</span>
-                        </div>
-                    </td>
-                    <td class="px-5 py-4 text-sm text-on-surface-variant">${escapeHtml(task.location)}</td>
-                    <td class="px-5 py-4 whitespace-nowrap"><span class="table-assigned-status ${priorityKey(task) === "high" ? "is-critical" : priorityKey(task) === "medium" ? "is-warning" : "is-success"}">${escapeHtml(task.priority)}</span></td>
-                    <td class="px-5 py-4 text-sm text-on-surface whitespace-nowrap">${escapeHtml(task.date)}</td>
-                    <td class="px-5 py-4 whitespace-nowrap"><span class="table-assigned-status ${statusClass(task)}">${escapeHtml(task.status)}</span></td>
-                    <td class="px-5 py-4 text-right whitespace-nowrap"><button class="maintenance-action-button" data-maintenance-action type="button">${escapeHtml(task.action)}</button></td>
-                </tr>
-            `).join("") : `
-                <tr data-smart-empty="true">
-                    <td class="px-6 py-8 text-sm text-on-surface-variant" colspan="7">No maintenance tasks found.</td>
-                </tr>
-            `;
-            const maintenanceTable = maintenanceBody.closest("table");
-            maintenanceTable?.HydroFlowRefreshTableControls?.();
-        }
-
-        const networkMap = document.querySelector("[data-network-map]");
-        const networkLayer = networkMap?.querySelector("[data-network-layer]");
-        if (networkMap && networkLayer) {
-            const positions = [
-                { x: 20, y: 22 },
-                { x: 47, y: 38 },
-                { x: 13, y: 61 },
-                { x: 68, y: 69 },
-                { x: 88, y: 35 },
-                { x: 35, y: 73 },
-                { x: 78, y: 20 },
-            ];
-            const activeFilter = networkMap.querySelector("[data-network-filter].is-active")?.dataset.networkFilter || "all";
-            const backendNodes = Array.isArray(billingData.telemetryNodes) ? billingData.telemetryNodes : [];
-            const nodeData = backendNodes.length ? backendNodes.map((node, index) => {
-                const status = ["issue", "offline"].includes(node.status) ? "issue" : "online";
-                return {
-                    complex: {
-                        id: node.id,
-                        name: node.title,
-                        sector: node.subtitle,
-                        units: node.units || 0,
-                        icon: node.icon || "apartment",
-                        pressurePsi: Number(node.pressurePsi) || 0,
-                        waterM3: (Number(node.flowLitersDay) || 0) / 1000,
-                        heatingM3: 0,
-                        health: Number(node.uptimePercent) || 100,
-                        nodeTelemetry: node,
-                    },
-                    status,
-                    pos: { x: Number(node.x) || positions[index % positions.length].x, y: Number(node.y) || positions[index % positions.length].y },
-                };
-            }) : stats.complexes.map((complex, index) => {
-                const status = complex.water !== "Optimal" || complex.heating !== "Optimal" ? "issue" : "online";
-                const pos = positions[index % positions.length];
-                return { complex, status, pos };
-            });
-            const pipePath = (a, b) => {
-                const cx = ((a.x + b.x) / 2).toFixed(1);
-                return `M${a.x} ${a.y} C${cx} ${a.y} ${cx} ${b.y} ${b.x} ${b.y}`;
-            };
-            const pipesMarkup = nodeData.slice(1).map((item, index) => {
-                const previous = nodeData[index];
-                const issue = item.status === "issue" || previous.status === "issue";
-                return `<path class="network-pipe ${issue ? "is-issue" : "is-online"}" data-route="${escapeHtml(previous.complex.id)}-${escapeHtml(item.complex.id)}" d="${pipePath(previous.pos, item.pos)}"></path>`;
-            }).join("");
-            networkLayer.innerHTML = `
-                <svg class="network-pipes" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">${pipesMarkup}</svg>
-                ${nodeData.map((item, index) => {
-                    const { complex, status, pos } = item;
-                    const routes = [
-                        index > 0 ? `${nodeData[index - 1].complex.id}-${complex.id}` : "",
-                        index < nodeData.length - 1 ? `${complex.id}-${nodeData[index + 1].complex.id}` : "",
-                    ].filter(Boolean).join(" ");
-                    const telemetry = complex.nodeTelemetry;
-                    const flow = telemetry?.flow || `${compactNumber((complex.waterM3 + complex.heatingM3) * 1000)} l/day`;
-                    const uptime = telemetry?.uptime || percentValue(Math.min(99.99, 94 + complex.health / 20));
-                    const hidden = activeFilter === "issue" ? status !== "issue" : activeFilter === "online" ? status === "issue" : false;
-                    return `
-                        <button class="network-node ${status === "issue" ? "is-issue" : "is-online"} ${index === 0 ? "is-selected" : ""} ${hidden ? "is-hidden" : ""}"
-                            style="--x:${pos.x}%; --y:${pos.y}%;"
-                            data-node="${escapeHtml(complex.id)}"
-                            data-status="${escapeHtml(status)}"
-                            data-route="${escapeHtml(routes)}"
-                            data-title="${escapeHtml(complex.name)}"
-                            data-subtitle="${escapeHtml(telemetry?.subtitle || `${complex.sector} · ${moneyFormatter.format(complex.units)} units`)}"
-                            data-pressure="${escapeHtml(telemetry?.pressure || `${moneyFormatter.format(complex.pressurePsi)} PSI`)}"
-                            data-flow="${escapeHtml(flow)}"
-                            data-latency="${escapeHtml(telemetry?.latency || `${moneyFormatter.format(Math.max(12, Math.round(95 - complex.health)))}ms`)}"
-                            data-uptime="${escapeHtml(uptime)}"
-                            type="button"
-                            aria-label="${escapeHtml(complex.name)} network node">
-                            <span class="network-node-icon material-symbols-outlined">${escapeHtml(complex.icon || "apartment")}</span>
-                            <span class="network-node-label">${escapeHtml(complex.name.replace(/\s+(Residential|Gardens|Towers|Heights|Metropolitan).*/i, ""))}</span>
-                        </button>
-                    `;
-                }).join("")}
-            `;
-            const detail = {
-                status: networkMap.querySelector("[data-network-detail-status]"),
-                time: networkMap.querySelector(".network-detail-time"),
-                title: networkMap.querySelector("[data-network-detail-title]"),
-                subtitle: networkMap.querySelector("[data-network-detail-subtitle]"),
-                pressure: networkMap.querySelector("[data-network-detail-pressure]"),
-                flow: networkMap.querySelector("[data-network-detail-flow]"),
-                latency: networkMap.querySelector("[data-network-detail-latency]"),
-                uptime: networkMap.querySelector("[data-network-detail-uptime]"),
-                uptimeMeter: networkMap.querySelector("[data-network-detail-uptime-meter]"),
-                action: networkMap.querySelector(".network-detail-action"),
-            };
-            const clearNetworkDetail = (title = "No telemetry nodes") => {
-                if (detail.status) {
-                    detail.status.textContent = "No data";
-                    detail.status.classList.remove("is-issue");
-                }
-                if (detail.time) detail.time.textContent = "Backend empty";
-                if (detail.title) detail.title.textContent = title;
-                if (detail.subtitle) detail.subtitle.textContent = "Add telemetry nodes in Django admin to show live network data.";
-                if (detail.pressure) detail.pressure.textContent = "—";
-                if (detail.flow) detail.flow.textContent = "—";
-                if (detail.latency) detail.latency.textContent = "—";
-                if (detail.uptime) detail.uptime.textContent = "—";
-                if (detail.uptimeMeter) {
-                    detail.uptimeMeter.dataset.value = "0%";
-                    detail.uptimeMeter.style.setProperty("--progress", "0%");
-                }
-                if (detail.action) {
-                    detail.action.disabled = true;
-                    detail.action.textContent = "No node selected";
-                }
-            };
-            const selectNetworkNode = (node) => {
-                const nodes = Array.from(networkLayer.querySelectorAll(".network-node"));
-                const pipes = Array.from(networkLayer.querySelectorAll(".network-pipe"));
-                nodes.forEach((item) => item.classList.toggle("is-selected", item === node));
-                const routes = (node.dataset.route || "").split(/\s+/).filter(Boolean);
-                pipes.forEach((pipe) => {
-                    const active = routes.includes(pipe.dataset.route);
-                    pipe.classList.toggle("is-highlighted", active);
-                    pipe.classList.toggle("is-dimmed", !active);
-                });
-                const isIssue = node.dataset.status === "issue";
-                if (detail.status) {
-                    detail.status.textContent = isIssue ? "Issue" : "Online";
-                    detail.status.classList.toggle("is-issue", isIssue);
-                }
-                if (detail.time) detail.time.textContent = "Updated from backend";
-                if (detail.title) detail.title.textContent = node.dataset.title || "";
-                if (detail.subtitle) detail.subtitle.textContent = node.dataset.subtitle || "";
-                if (detail.pressure) detail.pressure.textContent = node.dataset.pressure || "";
-                if (detail.flow) detail.flow.textContent = node.dataset.flow || "";
-                if (detail.latency) detail.latency.textContent = node.dataset.latency || "";
-                if (detail.uptime) detail.uptime.textContent = node.dataset.uptime || "";
-                if (detail.uptimeMeter) {
-                    detail.uptimeMeter.dataset.value = node.dataset.uptime || "0%";
-                    detail.uptimeMeter.style.setProperty("--progress", node.dataset.uptime || "0%");
-                }
-                if (detail.action) {
-                    detail.action.disabled = false;
-                    detail.action.textContent = "Open node details";
-                }
-            };
-            networkLayer.querySelectorAll(".network-node").forEach((node) => {
-                node.addEventListener("click", () => selectNetworkNode(node));
-            });
-            const firstVisibleNode = Array.from(networkLayer.querySelectorAll(".network-node")).find((node) => !node.classList.contains("is-hidden"));
-            if (firstVisibleNode) selectNetworkNode(firstVisibleNode);
-            else clearNetworkDetail();
-            networkMap.querySelectorAll("[data-network-filter]").forEach((button) => {
-                if (button.dataset.dynamicNetworkFilterReady === "true") return;
-                button.dataset.dynamicNetworkFilterReady = "true";
-                button.addEventListener("click", () => {
-                    networkMap.querySelectorAll("[data-network-filter]").forEach((item) => item.classList.toggle("is-active", item === button));
-                    const filter = button.dataset.networkFilter || "all";
-                    networkLayer.querySelectorAll(".network-node").forEach((node) => {
-                        const hidden = filter === "issue" ? node.dataset.status !== "issue" : filter === "online" ? node.dataset.status === "issue" : false;
-                        node.classList.toggle("is-hidden", hidden);
-                    });
-                    const nextNode = Array.from(networkLayer.querySelectorAll(".network-node")).find((node) => !node.classList.contains("is-hidden"));
-                    if (nextNode) selectNetworkNode(nextNode);
-                    else clearNetworkDetail("No matching telemetry nodes");
-                });
-            });
-        }
-
-        const pressureBars = document.querySelector(".pressure-bars");
-        if (pressureBars) {
-            const backendPressure = Array.isArray(billingData.pressureSeries)
-                ? billingData.pressureSeries.map((sample) => Number(sample.pressurePsi)).filter((value) => Number.isFinite(value) && value > 0)
-                : [];
-            const source = backendPressure.length ? backendPressure.slice(-20) : stats.complexes.flatMap((complex) => [
-                complex.pressurePsi,
-                Math.max(35, complex.pressurePsi + (complex.risk === "Critical" ? -8 : 1)),
-                Math.min(62, complex.pressurePsi + (complex.risk === "Low Risk" ? 2 : -1)),
-                complex.pressurePsi,
-            ]).slice(0, 20);
-            const maxPressure = Math.max(...source, 60);
-            pressureBars.querySelectorAll(".flex-1").forEach((bar, index) => {
-                const value = source[index] || stats.avgPressure;
-                const ratio = Math.max(28, Math.round((value / maxPressure) * 100));
-                bar.style.height = `${ratio}%`;
-                bar.className = `flex-1 ${value < 48 ? "bg-error/30" : value >= stats.avgPressure ? "bg-secondary/30" : "bg-tertiary/20"} rounded-t-sm hover:bg-tertiary/40 transition-colors cursor-pointer group relative`;
-                bar.innerHTML = `<div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-on-surface text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">${moneyFormatter.format(value)} PSI</div>`;
-            });
-        }
 
         const readiness = exactText("Total Transaction Volume")?.closest(".bg-surface-container-low");
         const readinessValue = readiness?.querySelector(".text-xl.font-black");
@@ -3508,46 +3014,6 @@
             debtorSecondaryAction.dataset.viewDebtors = "true";
         }
 
-        const districtInsights = document.querySelector("[data-liquid-panel='district-insights']");
-        if (districtInsights) {
-            const insightRows = districtInsights.querySelector(".space-y-6");
-            if (insightRows) {
-                const demandLiters = stats.totalWaterM3 * 1000;
-                const heatingLoad = stats.totalHeatingM3;
-                const pressureState = stats.avgPressure < 50 ? "Needs review" : "Within target range";
-                const pressureClass = stats.avgPressure < 50 ? "text-error" : "text-secondary";
-                const maintenanceZones = stats.warningComplexes.length;
-                insightRows.innerHTML = `
-                    <div class="flex items-start gap-4">
-                        <div class="w-12 h-12 rounded-lg bg-primary-container/40 flex items-center justify-center text-primary shadow-sm border border-outline-variant/10">
-                            <span class="material-symbols-outlined">water_drop</span>
-                        </div>
-                        <div class="flex-1 min-w-0">
-                            <p class="text-xs font-bold text-on-surface-variant uppercase tracking-tight mb-1">Water Demand</p>
-                            <p class="text-lg font-black text-on-surface leading-tight">${compactNumber(demandLiters)} <span class="text-xs font-medium">Ltrs/day</span></p>
-                            <div class="mt-2 flex items-center gap-1 text-[10px] ${pressureClass} font-bold">
-                                <span class="material-symbols-outlined text-[12px]">${stats.avgPressure < 50 ? "warning" : "check_circle"}</span>
-                                <span>${moneyFormatter.format(stats.avgPressure)} PSI avg · ${pressureState}</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="flex items-start gap-4">
-                        <div class="w-12 h-12 rounded-lg bg-tertiary-container/35 flex items-center justify-center text-tertiary shadow-sm border border-outline-variant/10">
-                            <span class="material-symbols-outlined">device_thermostat</span>
-                        </div>
-                        <div class="flex-1 min-w-0">
-                            <p class="text-xs font-bold text-on-surface-variant uppercase tracking-tight mb-1">Heating Load</p>
-                            <p class="text-lg font-black text-on-surface leading-tight">${compactNumber(heatingLoad)} <span class="text-xs font-medium">m³/day</span></p>
-                            <div class="mt-2 flex items-center gap-1 text-[10px] ${maintenanceZones ? "text-tertiary" : "text-secondary"} font-bold">
-                                <span class="material-symbols-outlined text-[12px]">${maintenanceZones ? "build" : "check_circle"}</span>
-                                <span>${maintenanceZones ? `${maintenanceZones} zones need maintenance` : "All heating zones stable"}</span>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }
-        }
-
         const recentAlertsPanel = document.querySelector("[data-liquid-panel='recent-alerts']");
         if (recentAlertsPanel) {
             const backendRecentItems = Array.isArray(billingData.notifications)
@@ -3558,26 +3024,7 @@
                 title: item.title,
                 message: item.message || item.eventAt || "",
                 meta: item.severity === "critical" ? "Priority: High" : item.eventAt || "Backend event",
-            })) : stats.complexes.flatMap((complex) => {
-                const items = [];
-                if (complex.water !== "Optimal") {
-                    items.push({
-                        severity: "critical",
-                        title: "Water issue detected",
-                        message: `${complex.name}: ${complex.water}. ${formatBillingUzs(complex.debt)} outstanding.`,
-                        meta: "Priority: High",
-                    });
-                }
-                if (complex.heating !== "Optimal") {
-                    items.push({
-                        severity: complex.heating === "Maintenance" ? "warning" : "critical",
-                        title: "Heating maintenance required",
-                        message: `${complex.name}: ${complex.heating}. ${complex.debtorResidents} debt units.`,
-                        meta: complex.heating === "Maintenance" ? "Maintenance queue" : "Priority: High",
-                    });
-                }
-                return items;
-            });
+            })) : [];
             const countBadge = recentAlertsPanel.querySelector(".flex.items-center.justify-between span");
             if (countBadge) countBadge.textContent = `${alertItems.length} ${t("New")}`;
             const list = recentAlertsPanel.querySelector(".space-y-4");
@@ -4084,7 +3531,6 @@
     const markServerDrivenHosts = () => {
         document.querySelector("[data-resident-grid]")?.setAttribute("data-server-list", "residents");
         findSectionHeading("Recent Transaction Log")?.closest("[data-billing-transactions-card], .bg-surface-container-lowest, section")?.querySelector("table")?.setAttribute("data-server-list", "transactions");
-        document.querySelector("[data-maintenance-body]")?.closest("table")?.setAttribute("data-server-list", "maintenance");
         document.querySelector("[data-notification-list]")?.setAttribute("data-server-list", "alerts");
         document.querySelector("[data-audit-timeline]")?.setAttribute("data-server-list", "audit");
     };
@@ -4415,65 +3861,6 @@
                 transactionChrome.syncMeta(payload);
             };
             serverListControllers.transactions = { name: "transactions", load: loadTransactions, refresh: () => loadTransactions() };
-        }
-
-        const maintenanceTable = document.querySelector("[data-maintenance-body]")?.closest("table");
-        if (maintenanceTable) {
-            const maintenanceChrome = prepareServerTableChrome(maintenanceTable, {
-                name: "maintenance",
-                sortMap: ["title", "location", "priority", "scheduled_at", "status", null],
-                defaultOrdering: "-priority,-scheduled_at",
-                defaultSortDirection: { title: "asc", location: "asc", priority: "desc", scheduled_at: "desc", status: "desc" },
-                load: () => loadMaintenance(),
-            });
-            const renderMaintenance = (items = []) => {
-                const colspan = maintenanceTable.querySelector("thead tr")?.cells.length || 7;
-                if (!items.length) {
-                    return `<tr data-smart-empty="true"><td class="px-6 py-8 text-sm text-on-surface-variant" colspan="${colspan}">No maintenance tasks found.</td></tr>`;
-                }
-                return items.map((task) => `
-                    <tr class="maintenance-log-row hover:bg-surface-container-low transition-colors group"
-                        data-maintenance-row
-                        data-maintenance-id="${escapeAttr(task.backendId || task.id || "")}"
-                        data-backend-id="${escapeAttr(task.backendId || task.id || "")}"
-                        data-backend-type="maintenance"
-                        data-complex-id="${escapeAttr(task.complexId || "")}"
-                        data-building-id="${escapeAttr(task.buildingId || "")}"
-                        data-priority="${escapeAttr(String(task.priorityKey || "").toLowerCase())}"
-                        data-status-key="${escapeAttr(String(task.statusKey || "").toLowerCase())}"
-                        data-admin-url="${escapeAttr(task.adminUrl || "")}"
-                        data-date="${escapeAttr(task.date || "")}">
-                        <td class="px-4 py-4"><input aria-label="Select row" data-row-select type="checkbox"></td>
-                        <td class="px-5 py-4">
-                            <div class="flex items-center gap-3">
-                                <div class="maintenance-task-icon">
-                                    <span class="material-symbols-outlined">${escapeHtml(task.icon || "fact_check")}</span>
-                                </div>
-                                <span class="maintenance-task-title">${escapeHtml(task.task || task.title)}</span>
-                            </div>
-                        </td>
-                        <td class="px-5 py-4 text-sm text-on-surface-variant">${escapeHtml(task.location || "")}</td>
-                        <td class="px-5 py-4 whitespace-nowrap">${renderTableStatus(task.priority)}</td>
-                        <td class="px-5 py-4 text-sm text-on-surface whitespace-nowrap">${escapeHtml(task.date || "")}</td>
-                        <td class="px-5 py-4 whitespace-nowrap">${renderTableStatus(task.status)}</td>
-                        <td class="px-5 py-4 text-right whitespace-nowrap"><button class="maintenance-action-button" data-maintenance-action type="button">${escapeHtml(task.action || "Open checklist")}</button></td>
-                    </tr>
-                `).join("");
-            };
-            const loadMaintenance = async () => {
-                const state = readListUrlState("maintenance", { page: "1", search: "", ordering: "" });
-                const { params } = currentGlobalListFilters();
-                const payload = await fetchServerList("/api/lists/maintenance/", {
-                    ...params,
-                    page: state.page,
-                    page_size: 6,
-                    search: state.search,
-                    ordering: state.ordering,
-                });
-                maintenanceChrome.body.innerHTML = renderMaintenance(payload.results || []);
-                maintenanceChrome.syncMeta(payload);
-            };
-            serverListControllers.maintenance = { name: "maintenance", load: loadMaintenance, refresh: () => loadMaintenance() };
         }
 
         const notificationList = document.querySelector("[data-notification-list]");
@@ -5276,8 +4663,6 @@
         }
 
         safeSyncSiteStatistics();
-        const maintenanceTable = document.querySelector("[data-maintenance-body]")?.closest("table");
-        repairEnhancedTableControls(maintenanceTable);
         window.HydroFlowSyncLocale?.();
     };
 
@@ -6439,7 +5824,7 @@
         if (String(current?.owner || "") !== liveStatsTabId) return;
         storage.removeItem(liveStatsLockKey);
     };
-    const liveStatsEnabledPages = new Set(["dashboard", "system_health"]);
+    const liveStatsEnabledPages = new Set(["dashboard"]);
     const liveStatsEnabledForCurrentPage = () => liveStatsEnabledPages.has(String(document.body.dataset.activePage || "").trim());
     const refreshBackendData = async () => {
         if (document.body.dataset.backendRefreshRunning === "true") return;
@@ -7004,109 +6389,6 @@
             } catch (error) {
                 setStatus(error.message || "Could not create apartment.", "error");
                 toast("Apartment was not created", error.message || "Check the selected structure.", "warning");
-            } finally {
-                submit.disabled = false;
-            }
-        });
-    };
-
-    const setupMaintenanceDeploy = () => {
-        const form = document.querySelector("[data-deploy-maintenance-form]");
-        if (!form || form.dataset.deployReady === "true") return;
-        form.dataset.deployReady = "true";
-        const complexSelect = form.querySelector("[data-maintenance-complex]");
-        const buildingSelect = form.querySelector("[data-maintenance-building]");
-        const scheduledInput = form.querySelector("[data-maintenance-scheduled]");
-        const submit = form.querySelector("[data-deploy-maintenance-submit]");
-        const status = form.querySelector("[data-deploy-maintenance-status]");
-        const prioritySelect = form.querySelector("select[name='priority']");
-        const titleInput = form.querySelector("input[name='title']");
-
-        const setStatus = (message, type = "info") => {
-            if (!status) return;
-            status.classList.remove("hidden", "is-error", "is-success");
-            status.classList.toggle("is-error", type === "error");
-            status.classList.toggle("is-success", type === "success");
-            const text = status.querySelector("p");
-            if (text) text.textContent = message;
-        };
-        const dateTimeLocalValue = (date) => {
-            const offsetMs = date.getTimezoneOffset() * 60000;
-            return new Date(date.getTime() - offsetMs).toISOString().slice(0, 16);
-        };
-        const allBuildings = () => billingData.complexes.flatMap((complex) => (
-            Array.isArray(complex.buildingItems) ? complex.buildingItems.map((building) => ({ ...building, parentComplex: complex })) : []
-        ));
-        const syncBuildingOptions = () => {
-            if (!buildingSelect) return;
-            const selectedComplexId = complexSelect?.value || "";
-            const buildings = allBuildings().filter((building) => String(building.parentComplex?.backendId || "") === selectedComplexId);
-            buildingSelect.innerHTML = [
-                '<option value="">Whole complex</option>',
-                ...buildings.map((building) => `<option value="${escapeHtml(building.backendId || "")}">${escapeHtml(building.name || building.number || "Building")}</option>`),
-            ].join("");
-        };
-        const syncComplexOptions = () => {
-            if (!complexSelect) return;
-            const previous = complexSelect.value;
-            const complexes = billingData.complexes.filter((complex) => complex.backendId);
-            complexSelect.innerHTML = complexes.map((complex) => (
-                `<option value="${escapeHtml(complex.backendId)}">${escapeHtml(complex.name)}</option>`
-            )).join("");
-            const target = complexes.slice().sort((a, b) => (b.extraDebt || 0) - (a.extraDebt || 0))[0];
-            const nextValue = previous && complexes.some((complex) => String(complex.backendId) === String(previous))
-                ? previous
-                : String(target?.backendId || complexes[0]?.backendId || "");
-            complexSelect.value = nextValue;
-            if (prioritySelect && target && !prioritySelect.dataset.touched) {
-                prioritySelect.value = target.risk === "Critical" ? "high" : target.risk === "Medium Risk" ? "medium" : "low";
-            }
-            syncBuildingOptions();
-        };
-        const prepareForm = () => {
-            syncComplexOptions();
-            if (scheduledInput && !scheduledInput.value) {
-                scheduledInput.value = dateTimeLocalValue(new Date(Date.now() + 2 * 60 * 60 * 1000));
-            }
-            if (titleInput && !titleInput.value.trim()) {
-                titleInput.value = "Preventive maintenance deployment";
-            }
-            setStatus("This task will be saved to Django admin, database and the live maintenance table.");
-        };
-
-        complexSelect?.addEventListener("change", syncBuildingOptions);
-        prioritySelect?.addEventListener("change", () => {
-            prioritySelect.dataset.touched = "true";
-        });
-        document.querySelectorAll("[data-deploy-maintenance-open]").forEach((button) => {
-            button.addEventListener("click", prepareForm);
-        });
-        document.addEventListener("hydroflow:backend-refreshed", syncComplexOptions);
-        prepareForm();
-
-        form.addEventListener("submit", async (event) => {
-            event.preventDefault();
-            const formData = new FormData(form);
-            submit.disabled = true;
-            setStatus("Creating maintenance task in Django admin and database...");
-            try {
-                const payload = await postPortalJson("/api/maintenance/deploy/", {
-                    complex_id: formData.get("complex_id"),
-                    building_id: formData.get("building_id"),
-                    title: formData.get("title"),
-                    priority: formData.get("priority"),
-                    scheduled_at: formData.get("scheduled_at"),
-                    assigned_to: formData.get("assigned_to"),
-                    action_label: formData.get("action_label"),
-                    notes: formData.get("notes"),
-                });
-                rehydrateFromPortalData(payload.portalData);
-                setStatus("Maintenance task created and synced.", "success");
-                toast("Maintenance deployed", "Task was created in Django admin and the system table was refreshed.", "success");
-                window.setTimeout(() => closeOverlayById("deploy-maintenance-modal"), 550);
-            } catch (error) {
-                setStatus(error.message || "Could not deploy maintenance.", "error");
-                toast("Maintenance not deployed", error.message || "Check backend data.", "warning");
             } finally {
                 submit.disabled = false;
             }
@@ -7820,7 +7102,6 @@
     setupBuildingCreateForm();
     setupApartmentCreateForm();
     setupResidentCreateForm();
-    setupMaintenanceDeploy();
     setupSystemAlertsConfig();
 
     const nearestActionPayload = (trigger) => {
@@ -7832,7 +7113,6 @@
                 building_id: detailsHost.dataset.buildingBackendId || "",
                 complex_id: detailsHost.dataset.complexBackendId || "",
                 alert_id: detailsHost.dataset.alertBackendId || "",
-                maintenance_id: detailsHost.dataset.maintenanceBackendId || "",
                 notification_id: detailsHost.dataset.notificationBackendId || "",
                 label: detailsHost.querySelector("#details-title")?.textContent?.trim() || "Details",
             };
@@ -7862,13 +7142,6 @@
             return {
                 notification_id: notificationItem.dataset.notificationBackendId || "",
                 label: notificationItem.querySelector(".text-sm.font-bold")?.textContent?.trim() || "Notification",
-            };
-        }
-        const maintenanceRow = trigger.closest("[data-maintenance-id]");
-        if (maintenanceRow) {
-            return {
-                maintenance_id: maintenanceRow.dataset.maintenanceId || maintenanceRow.dataset.backendId || "",
-                label: maintenanceRow.querySelector("td:nth-child(2)")?.textContent?.trim() || "Maintenance task",
             };
         }
         return {};
@@ -8047,27 +7320,6 @@
         });
     };
 
-    const openMaintenanceTask = (taskId, explicitUrl = "") => {
-        const lang = storage.getItem("hydroflow-lang") || "en";
-        const task = (Array.isArray(billingData.maintenanceTasks) ? billingData.maintenanceTasks : [])
-            .find((item) => String(item.id || item.backendId) === String(taskId));
-        if (!task && explicitUrl) {
-            window.location.assign(explicitUrl);
-            return;
-        }
-        if (!task) {
-            toast("Maintenance task not found", "The selected task is not available in backend data.", "warning");
-            return;
-        }
-        const action = String(task.action || "").toLowerCase();
-        if (action.includes("checklist")) {
-            window.HydroFlowOpenChecklist?.(task.title || task.task || translateValue("Open checklist", lang));
-            toast(translateValue("Maintenance task opened", lang), translateValue("Open checklist", lang), "info");
-            return;
-        }
-        window.location.assign(explicitUrl || task.adminUrl || `/admin/portal/maintenancetask/${task.backendId}/change/`);
-    };
-
     document.addEventListener("click", (event) => {
         const alertQuickOpen = event.target.closest("[data-system-alert-link]");
         if (alertQuickOpen) {
@@ -8080,19 +7332,6 @@
             } else {
                 openOverlayById("system-alerts-config-modal");
             }
-            return;
-        }
-        const maintenanceWidget = event.target.closest("[data-maintenance-widget-item]");
-        if (maintenanceWidget) {
-            event.preventDefault();
-            openMaintenanceTask(maintenanceWidget.dataset.maintenanceId, maintenanceWidget.dataset.adminUrl || "");
-            return;
-        }
-        const maintenanceAction = event.target.closest("[data-maintenance-action]");
-        if (maintenanceAction) {
-            event.preventDefault();
-            const row = maintenanceAction.closest("[data-maintenance-row]");
-            openMaintenanceTask(row?.dataset.maintenanceId, row?.dataset.adminUrl || "");
         }
     });
 
@@ -9679,7 +8918,6 @@
         const forcedScopedContext = Boolean(exportResidentSelect?.value || exportApartmentSelect?.value || exportBuildingSelect?.value);
         if (forcedScopedContext) return "transactions";
         if (["usage-report", "billing", "transactions", "debt-letters"].includes(baseContext)) return "transactions";
-        if (baseContext === "maintenance") return "maintenance";
         if (baseContext === "default") return "residential";
         return baseContext;
     };
@@ -9698,10 +8936,8 @@
         const host = getExportHostFromButton(sourceButton);
         const scope = host === document ? sourceButton?.closest(".bg-surface-container-lowest, section, div") : host.parentElement || host;
         const title = scope?.querySelector("h3,h4")?.textContent?.trim().toLowerCase() || "";
-        if (title.includes("system maintenance log") || title.includes("maintenance log") || title.includes("обслуж") || title.includes("texnik")) return "maintenance";
         if (title.includes("recent transaction log") || title.includes("transaction") || title.includes("транзак") || title.includes("платеж") || title.includes("to'lov")) return "transactions";
         if (title.includes("complex performance") || title.includes("residential") || title.includes("жил") || title.includes("комплекс")) return "residential";
-        if (window.location.pathname.toLowerCase().includes("/system-health")) return "maintenance";
         if (window.location.pathname.toLowerCase().includes("/billing")) return "billing";
         if (window.location.pathname.toLowerCase().includes("/residential")) return "residential";
         return "default";
@@ -9726,15 +8962,12 @@
         lastExportContext = detectExportContext(sourceButton);
         const source = getExportSourceFromButton(sourceButton);
         lastExportSource = source;
-        const isMaintenanceLog = lastExportContext === "maintenance" || source.toLowerCase().includes("maintenance log");
         const isUsageReport = lastExportContext === "usage-report" || source.toLowerCase().includes("usage report");
         resetExportFilters();
         applyExportContextFromButton(sourceButton);
         document.querySelectorAll("[data-export-format] button").forEach((item) => item.classList.toggle("is-active", (item.dataset.format || "XLSX") === selectedExportFormat));
         exportReportTypeButtons.forEach((item) => item.classList.toggle("is-active", (item.dataset.reportType || "all") === selectedExportReportType));
-        exportModal?.querySelector("[data-export-subtitle]")?.replaceChildren(document.createTextNode(isMaintenanceLog
-            ? "Backend maintenance export from Django admin data."
-            : isUsageReport
+        exportModal?.querySelector("[data-export-subtitle]")?.replaceChildren(document.createTextNode(isUsageReport
             ? `Export ${exportReportTypeLabel(selectedExportReportType)} with custom scope and exact date range.`
             : `Source: ${source}. Export ${exportReportTypeLabel(selectedExportReportType)} from real backend rows.`));
         openOverlayById("export-preview-modal");
@@ -9863,7 +9096,6 @@
             building_backend_ids: [],
             apartment_backend_ids: [],
             transaction_backend_ids: [],
-            maintenance_backend_ids: [],
             date_from: exportDateFromInput?.value || "",
             date_to: exportDateToInput?.value || "",
         };
@@ -9876,13 +9108,11 @@
             const apartmentId = Number(detailsHost.dataset.apartmentBackendId || 0);
             const buildingId = Number(detailsHost.dataset.buildingBackendId || 0);
             const complexId = Number(detailsHost.dataset.complexBackendId || 0);
-            const maintenanceId = Number(detailsHost.dataset.maintenanceBackendId || 0);
             const alertId = Number(detailsHost.dataset.alertBackendId || 0);
             if (ownerId && !selection.owner_ids.length) selection.owner_ids = [ownerId];
             if (apartmentId && !selection.apartment_backend_ids.length) selection.apartment_backend_ids = [apartmentId];
             if (buildingId && !selection.building_backend_ids.length) selection.building_backend_ids = [buildingId];
             if (complexId && !selection.complex_backend_ids.length) selection.complex_backend_ids = [complexId];
-            if (maintenanceId) selection.maintenance_backend_ids = [maintenanceId];
             if (context === "transactions" && alertId) selection.source_alert_id = alertId;
             return selection;
         }
@@ -9904,12 +9134,6 @@
                     .map((row) => Number(row.dataset.backendId || 0))
                     .filter(Boolean);
             }
-            return selection;
-        }
-        if (context === "maintenance") {
-            selection.maintenance_backend_ids = Array.from(document.querySelectorAll("[data-maintenance-id]:not(.hidden)"))
-                .map((row) => Number(row.dataset.maintenanceId || row.dataset.backendId || 0))
-                .filter(Boolean);
             return selection;
         }
         if (context === "residential") {
@@ -9960,12 +9184,6 @@
             { value: "Review", tone: "info", icon: "manage_search", label: { en: "Review", ru: "Проверка", uz: "Tekshiruv" }, note: { en: "Needs finance review.", ru: "Нужна проверка финансов.", uz: "Moliya tekshiruvi kerak." } },
             { value: "Failed", tone: "critical", icon: "error", label: { en: "Failed", ru: "Ошибка", uz: "Xato" }, note: { en: "Payment did not complete.", ru: "Платёж не завершён.", uz: "To'lov yakunlanmadi." } },
         ],
-        maintenance: [
-            { value: "Scheduled", tone: "info", icon: "event_available", label: { en: "Scheduled", ru: "Запланировано", uz: "Rejalashtirilgan" }, note: { en: "Task is on the service calendar.", ru: "Задача в календаре обслуживания.", uz: "Vazifa xizmat jadvalida." } },
-            { value: "In Progress", tone: "warning", icon: "engineering", label: { en: "In progress", ru: "В работе", uz: "Jarayonda" }, note: { en: "Technician is handling it.", ru: "Техник уже работает.", uz: "Texnik ishlamoqda." } },
-            { value: "Completed", tone: "success", icon: "task_alt", label: { en: "Completed", ru: "Завершено", uz: "Bajarildi" }, note: { en: "Maintenance task is complete.", ru: "Задача обслуживания завершена.", uz: "Xizmat vazifasi bajarildi." } },
-            { value: "Deferred", tone: "neutral", icon: "event_busy", label: { en: "Deferred", ru: "Отложено", uz: "Kechiktirildi" }, note: { en: "Move to a later window.", ru: "Перенести на позднее окно.", uz: "Keyinroq muddatga o'tkazish." } },
-        ],
         default: [
             { value: "Operational", tone: "success", icon: "verified", label: { en: "Operational", ru: "Работает", uz: "Ishlayapti" }, note: { en: "Normal operating state.", ru: "Нормальное рабочее состояние.", uz: "Normal ish holati." } },
             { value: "Maintenance", tone: "warning", icon: "build", label: { en: "Maintenance", ru: "Обслуживание", uz: "Xizmat" }, note: { en: "Requires service attention.", ru: "Требует обслуживания.", uz: "Xizmat e'tibori kerak." } },
@@ -9999,10 +9217,6 @@
         if (context === "transactions") {
             const targetId = Number(row.dataset.backendId || 0);
             return targetId ? { target_type: "transaction", target_id: targetId } : null;
-        }
-        if (context === "maintenance") {
-            const targetId = Number(row.dataset.maintenanceId || row.dataset.backendId || 0);
-            return targetId ? { target_type: "maintenance", target_id: targetId } : null;
         }
         return null;
     };
@@ -10044,7 +9258,6 @@
         renderAssignStatusOptions(context);
         if (assignStatusSummary) assignStatusSummary.textContent = `${selectedRows.length} selected rows will be updated in backend.`;
         if (assignStatusTarget) assignStatusTarget.textContent = {
-            maintenance: "System Maintenance Log",
             transactions: "Recent Transaction Log",
             residential: "Complex Performance Overview",
             billing: "Billing table",
@@ -10422,8 +9635,8 @@
         const button = event.target.closest("button");
         if (!button) return;
         if (
-            button.matches("[data-resident-kit-action], [data-system-alert-link], [data-maintenance-widget-item], [data-maintenance-action]")
-            || button.closest("[data-resident-kit-action], [data-system-alert-link], [data-maintenance-widget-item], [data-maintenance-action]")
+            button.matches("[data-resident-kit-action], [data-system-alert-link]")
+            || button.closest("[data-resident-kit-action], [data-system-alert-link]")
         ) {
             return;
         }
