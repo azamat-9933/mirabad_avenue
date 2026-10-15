@@ -4,7 +4,9 @@ import io
 import json
 import re
 from decimal import Decimal
+from pathlib import Path
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
 from django.urls import reverse
@@ -316,3 +318,38 @@ class PortalExportTests(TestCase):
         self.assertTrue(download["filename"].startswith("audit-log-"))
         header = next(load_workbook(io.BytesIO(content)).active.iter_rows(values_only=True))
         self.assertEqual(header[:3], ("Audit ID", "Sana va vaqt", "Hodisa turi"))
+
+
+DEMO_MARKERS = [
+    "Harbor View",
+    "Sarah Jenkins",
+    "Marcus Aurelius",
+    "Aziz Karimov",
+    "HF-9284",
+    "images.unsplash.com",
+    "Balance report exported by Admin User",
+    "@hydroflow.local",
+]
+
+
+class PortalDemoContentTests(TestCase):
+    """Pages and the frontend bundle must show only backend data, never invented sample records."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = get_user_model().objects.create_user(username="operator", password="unused-password")
+
+    def test_pages_render_without_sample_records(self):
+        self.client.force_login(self.user)
+        # System Health still renders simulated telemetry placeholders; tracked separately.
+        for name in [page for page in PORTAL_PAGES if page != "portal:system_health"]:
+            html = self.client.get(reverse(name)).content.decode("utf-8")
+            for marker in [*DEMO_MARKERS, "Skyline"]:
+                with self.subTest(page=name, marker=marker):
+                    self.assertFalse(marker in html, f"{marker!r} rendered on {name}")
+
+    def test_frontend_bundle_has_no_sample_dataset(self):
+        bundle = (Path(settings.BASE_DIR) / "static" / "js" / "app.js").read_text(encoding="utf-8")
+        for marker in [*DEMO_MARKERS, "buildAnalyticsDemoData", "HydroFlowMockData", "Marcus"]:
+            with self.subTest(marker=marker):
+                self.assertFalse(marker in bundle, f"{marker!r} found in app.js")

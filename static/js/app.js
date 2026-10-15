@@ -116,15 +116,10 @@
         "Warning": { ru: "Предупреждение", uz: "Ogohlantirish" },
         "Info": { ru: "Информация", uz: "Ma'lumot" },
         "Pressure drop detected": { ru: "Обнаружено падение давления", uz: "Bosim pasayishi aniqlandi" },
-        "Skyline Residences, Block B. Detected 12 minutes ago.": { ru: "Skyline Residences, блок B. Обнаружено 12 минут назад.", uz: "Skyline Residences, B-blok. 12 daqiqa oldin aniqlandi." },
         "Assign technician": { ru: "Назначить техника", uz: "Texnik tayinlash" },
         "Details": { ru: "Детали", uz: "Tafsilotlar" },
-        "Sensor calibration scheduled": { ru: "Запланирована калибровка датчиков", uz: "Sensor kalibrlash rejalashtirilgan" },
-        "Vista Towers, today at 09:00.": { ru: "Vista Towers, сегодня в 09:00.", uz: "Vista Towers, bugun 09:00 da." },
         "Open schedule": { ru: "Открыть график", uz: "Jadvalni ochish" },
         "Mute": { ru: "Отключить", uz: "O'chirish" },
-        "Payment batch imported": { ru: "Пакет платежей импортирован", uz: "To'lovlar paketi import qilindi" },
-        "412 records from Payme and Click are ready for review.": { ru: "412 записей из Payme и Click готовы к проверке.", uz: "Payme va Clickdan 412 yozuv tekshiruvga tayyor." },
         "Review batch": { ru: "Проверить пакет", uz: "Paketni tekshirish" },
         "Archive": { ru: "Архив", uz: "Arxiv" },
         "Pinned": { ru: "Закреплено", uz: "Mahkamlangan" },
@@ -575,14 +570,7 @@
         "Water: Leak Alert": { ru: "Вода: утечка", uz: "Suv: sizib chiqish" },
         "Heating: Maintenance": { ru: "Отопление: обслуживание", uz: "Isitish: xizmat" },
         "Static activity trail for future backend events.": { ru: "Демо-лента для будущих событий backend.", uz: "Kelajak backend hodisalari uchun demo tarix." },
-        "Residential complex detail preview.": { ru: "Демо-детали дома.", uz: "Uy tafsilotlari." },
-        "Heating maintenance window pending": { ru: "Ожидается окно обслуживания отопления", uz: "Isitish xizmati oynasi kutilmoqda" },
-        "Schedule technician assignment before 15 Apr 2026.": { ru: "Назначьте техника до 15 Apr 2026.", uz: "Texnikni 15 Apr 2026 gacha tayinlang." },
-        "Balance report exported by Admin User.": { ru: "Администратор экспортировал отчёт баланса.", uz: "Administrator balans hisobotini eksport qildi." },
-        "Reminder queued for overdue residents.": { ru: "Напоминание для должников поставлено в очередь.", uz: "Qarzdor yashovchilar uchun eslatma navbatga qo'yildi." },
-        "Alert review completed after technician confirmation.": { ru: "Проверка alert завершена после подтверждения техника.", uz: "Texnik tasdig'idan keyin alert tekshiruvi yakunlandi." },
         "Admin User exported billing report for North Sector.": { ru: "Администратор экспортировал биллинговый отчёт Северного сектора.", uz: "Administrator Shimoliy sektor billing hisobotini eksport qildi." },
-        "Debt reminder sent to Harbor View Heights.": { ru: "Напоминание о долге отправлено в Harbor View Heights.", uz: "Harbor View Heights uchun qarz eslatmasi yuborildi." },
         "Pressure alert closed after technician confirmation.": { ru: "Alert давления закрыт после подтверждения техника.", uz: "Bosim alerti texnik tasdig'idan keyin yopildi." },
         "Balance adjustment queued for Residential Unit 402B.": { ru: "Корректировка баланса для объекта 402B поставлена в очередь.", uz: "402B obyekt balansi tuzatishi navbatga qo'yildi." },
         "Open complex details": { ru: "Открыть детали дома", uz: "Uy tafsilotlarini ochish" },
@@ -680,6 +668,7 @@
         "Pressure anomaly is active. Assign a technician before SLA breach.": { ru: "Активна аномалия давления. Назначьте техника до нарушения SLA.", uz: "Bosim anomaliyasi faol. SLA buzilishidan oldin texnik tayinlang." },
         "No active alerts for this node.": { ru: "По этому узлу нет активных оповещений.", uz: "Bu tugun bo'yicha faol ogohlantirishlar yo'q." },
         "No active alerts": { ru: "Нет активных уведомлений", uz: "Faol ogohlantirishlar yo'q" },
+        "No recent activity": { ru: "Нет недавних действий", uz: "So'nggi amallar yo'q" },
         "All residential systems are synced with current local data.": { ru: "Все жилые системы синхронизированы с текущими локальными данными.", uz: "Barcha turar joy tizimlari joriy lokal ma'lumotlar bilan sinxronlangan." },
         "No transactions for selected filters": { ru: "Нет данных по выбранным фильтрам", uz: "Tanlangan filtrlarda ma'lumot topilmadi" },
         "Try another search term or reset filters. Backend data will refresh on retry.": { ru: "Попробуйте другой поисковый запрос или сбросьте фильтры. При повторе данные backend обновятся.", uz: "Boshqa qidiruv so'rovini kiriting yoki filtrlarni tiklang. Qayta urinishda backend ma'lumotlari yangilanadi." },
@@ -1035,113 +1024,9 @@
     };
 
     const billingData = {
-        complexes: [
-            {
-                id: "skyline",
-                name: "Skyline Residential North",
-                sector: "North Sector",
-                prefix: "Skyline Tower",
-                buildings: 12,
-                units: 240,
-                water: "Optimal",
-                heating: "Optimal",
-                health: 96.5,
-                waterM3: 1280,
-                heatingM3: 760,
-                pressurePsi: 57,
-                extraDebt: 15240000,
-                baselineCollected: 25860000,
-                image: "https://lh3.googleusercontent.com/aida-public/AB6AXuC6gjaUwDckqx_ZQBXv9DP5I-DALk4iq9XXR9g1yUccHYL2_mQ4becIAuAmMDHzZVYnEo8ksk07_OkpiWEIRfRUVytNrJOJxvSCaBStzZDNg9hkhHPRwnYaW_4ICj5y0k0n6Wfw6oemblkMTHqV3fnOU69f40EI_72399c5yrvXNNXe4cxUQCgK-Zmy_xv0NLzgdTZKV6jiLWRwVkB2MM8cqFIwJnJtA8Db0_-xM4kMkr4BKiwYEQx7mhWW87oYN3kMVvUz-S16FU0",
-            },
-            {
-                id: "harbor",
-                name: "Harbor View Heights",
-                sector: "Harbor District",
-                prefix: "Harbor Block",
-                buildings: 8,
-                units: 186,
-                water: "Leak Alert",
-                heating: "Optimal",
-                health: 82.1,
-                waterM3: 940,
-                heatingM3: 620,
-                pressurePsi: 42,
-                extraDebt: 11840000,
-                baselineCollected: 21350000,
-                image: "https://lh3.googleusercontent.com/aida-public/AB6AXuDrwKadnPx036rJEpz7_bQyVLATNSXqrYF9ETMoJ-1LTDBE6mNf7OjNVfKirVkPGvhe7xhY6pxjSSu-_W11TJy_fiIEzdoqZdqwtnyyw6Pz8TfTFtjvluCytnPN4LGPLkJD2ucVbcOJjYZoqjoyHfgxaj7JaDtY9MODEnvj0XLzqYOaWNuwY1sxOY4bWpWB1NxjiketHUGitXFcoetNi2_nJjLdscfQPhDE1fJtU8jqpV65TKWRGJEhkHsGou9vh9UFO-bahYxn77I",
-            },
-            {
-                id: "emerald",
-                name: "Emerald Gardens Ph. II",
-                sector: "West Valley",
-                prefix: "Emerald House",
-                buildings: 5,
-                units: 64,
-                water: "Optimal",
-                heating: "Maintenance",
-                health: 91.4,
-                waterM3: 410,
-                heatingM3: 290,
-                pressurePsi: 54,
-                extraDebt: 5140000,
-                baselineCollected: 13250000,
-                icon: "domain",
-            },
-            {
-                id: "riverside",
-                name: "Riverside Towers",
-                sector: "South Ridge",
-                prefix: "Riverside House",
-                buildings: 6,
-                units: 118,
-                water: "Optimal",
-                heating: "Optimal",
-                health: 98.5,
-                waterM3: 690,
-                heatingM3: 430,
-                pressurePsi: 56,
-                extraDebt: 1780000,
-                baselineCollected: 18420000,
-                icon: "apartment",
-            },
-            {
-                id: "metropolitan",
-                name: "The Metropolitan",
-                sector: "Central District",
-                prefix: "Metro House",
-                buildings: 9,
-                units: 210,
-                water: "Optimal",
-                heating: "Optimal",
-                health: 99,
-                waterM3: 1050,
-                heatingM3: 710,
-                pressurePsi: 58,
-                extraDebt: 1240000,
-                baselineCollected: 22600000,
-                icon: "location_city",
-            },
-        ],
-        residents: [
-            { id: "marcus", complexId: "skyline", name: "Marcus Aurelius", apartment: "Apartment 402-A", phone: "+1 415-555-0123", lastPayment: "14.04.2026", balance: -15630000, status: "debtor" },
-            { id: "sarah", complexId: "skyline", name: "Sarah Jenkins", apartment: "Apartment 102-B", phone: "+1 415-555-0988", lastPayment: "01.04.2026", balance: 1890000, status: "paid", photo: "https://lh3.googleusercontent.com/aida-public/AB6AXuAbul21XjuUtavoaA43cE0XfvjTcBr91Gwh0DOpQ60e1VpbG9WiUP8nIyuS6hOZaTI58jcHaeD0beX-E0rBSH1Bv_S808PuRszKqXJEh6Vq0locmQfgLTsjxYlH3ACUil6xGKUShKi_bNquTS3KicvI_tWfakVeCWoTyQLZIRjcGdvB4j6lF2L4-2tb_hyG8XObWSwUPRbiL-GwIoSPCverXsM6GCsCItbszp_mBHsX9WTWR2la-X6X0D28OGRHYwwryqQcTde3S3Q" },
-            { id: "james", complexId: "emerald", name: "James Dalton", apartment: "Apartment 305-C", phone: "+1 415-555-4422", lastPayment: "28.03.2026", balance: 0, status: "paid" },
-            { id: "david", complexId: "harbor", name: "David Miller", apartment: "Apartment 202-A", phone: "+1 415-555-7788", lastPayment: "22.03.2026", balance: -3026000, status: "debtor", photo: "https://lh3.googleusercontent.com/aida-public/AB6AXuAL2arW5TKtxXbLkugrUZ79szIf1un76ckgw1TibiTbry8qMg-hoddJMGDy3IQPtV_WOCrhYpJMQq1N4wNB0zo3b2luwimZLOL4QFzjrDOYbTTjyxkVk-pOF715nUWpa1GET5GfoOLc-VwYDwFA55lG6iot-7vIpOulR9bMmmZqP4ErMYCxsnI2gtM6RJ5gyTZpU_RdcOAU1AO2dI4qZ5TBSrUXoIQCaftTgTZNWR2HWk8drtk7a-DPMttLqYTZ0EtP3H3Q0u019zg" },
-            { id: "nodira", complexId: "emerald", name: "Nodira Karimova", apartment: "Apartment 118-D", phone: "+1 415-555-2211", lastPayment: "12.04.2026", balance: 2640000, status: "paid", photo: "https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?auto=format&fit=crop&w=160&q=80" },
-            { id: "aziz", complexId: "harbor", name: "Aziz Rahmonov", apartment: "Apartment 509-F", phone: "+1 415-555-6619", lastPayment: "05.04.2026", balance: -1482000, status: "debtor", photo: "https://images.unsplash.com/photo-1504593811423-6dd665756598?auto=format&fit=crop&w=160&q=80" },
-            { id: "bekzod", complexId: "skyline", name: "Bekzod Usmanov", apartment: "Apartment 611-C", phone: "+998 90-555-1044", lastPayment: "15.04.2026", balance: 1240000, status: "paid", photo: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=160&q=80" },
-            { id: "kamila", complexId: "harbor", name: "Kamila Akhmedova", apartment: "Apartment 407-B", phone: "+998 90-555-3099", lastPayment: "27.03.2026", balance: -2104000, status: "debtor", photo: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=160&q=80" },
-        ],
-        transactions: [
-            { id: "inv-98234", residentId: "marcus", complexId: "skyline", type: "Utility Payment", method: "Payme", date: "14.04.2026", amount: 4349000, status: "Success" },
-            { id: "inv-98235", residentId: "sarah", complexId: "skyline", type: "Maintenance Fee", method: "Payme", date: "01.04.2026", amount: 1890000, status: "Success" },
-            { id: "inv-98236", residentId: "david", complexId: "harbor", type: "Late Penalty", method: "Click", date: "22.03.2026", amount: 567000, status: "Pending" },
-            { id: "inv-98237", residentId: "nodira", complexId: "emerald", type: "Utility Payment", method: "Payme", date: "12.04.2026", amount: 2640000, status: "Success" },
-            { id: "inv-98238", residentId: "aziz", complexId: "harbor", type: "Late Penalty", method: "Click", date: "05.04.2026", amount: 410000, status: "Pending" },
-            { id: "inv-98239", residentId: "bekzod", complexId: "skyline", type: "Usage Payment", method: "Terminal", date: "15.04.2026", amount: 1240000, status: "Success" },
-            { id: "inv-98240", residentId: "kamila", complexId: "harbor", type: "Late Penalty", method: "Click", date: "27.03.2026", amount: 390000, status: "Pending" },
-            { id: "inv-98241", residentId: "james", complexId: "emerald", type: "Utility Payment", method: "Terminal", date: "28.03.2026", amount: 1120000, status: "Success" },
-        ],
+        complexes: [],
+        residents: [],
+        transactions: [],
         notifications: [],
         systemAlerts: [],
         maintenanceTasks: [],
@@ -1484,107 +1369,6 @@
     window.HydroFlowAnalyticsDashboardState = analyticsDashboardState;
     const analyticsChartRegistry = window.HydroFlowAnalyticsCharts || {};
     window.HydroFlowAnalyticsCharts = analyticsChartRegistry;
-    const buildAnalyticsDemoData = () => {
-        const now = new Date();
-        const demoBuildings = [
-            { id: "demo-house-a", backendId: "demo-house-a", name: "House Skyline A", units: 84, totalArea: 6840 },
-            { id: "demo-house-b", backendId: "demo-house-b", name: "House Emerald II", units: 72, totalArea: 5920 },
-            { id: "demo-house-c", backendId: "demo-house-c", name: "House Harbor Block A", units: 64, totalArea: 5180 },
-            { id: "demo-house-d", backendId: "demo-house-d", name: "House Riverside B", units: 58, totalArea: 4740 },
-        ];
-        const demoResidents = [
-            ["demo-res-1", "demo-house-a", 1840000, true],
-            ["demo-res-2", "demo-house-a", -1240000, true],
-            ["demo-res-3", "demo-house-a", 0, false],
-            ["demo-res-4", "demo-house-b", 920000, true],
-            ["demo-res-5", "demo-house-b", -3100000, false],
-            ["demo-res-6", "demo-house-b", 450000, true],
-            ["demo-res-7", "demo-house-c", -760000, true],
-            ["demo-res-8", "demo-house-c", 1280000, true],
-            ["demo-res-9", "demo-house-d", -2150000, false],
-            ["demo-res-10", "demo-house-d", 640000, true],
-            ["demo-res-11", "demo-house-d", 0, true],
-            ["demo-res-12", "demo-house-c", 530000, false],
-        ].map(([id, buildingId, balance, hasContract], index) => ({
-            id,
-            backendId: id,
-            ownerBackendId: id,
-            fullName: `Demo Resident ${index + 1}`,
-            buildingId,
-            buildingBackendId: buildingId,
-            balance,
-            hasContract,
-            status: Number(balance) < 0 ? "debtor" : "paid",
-        }));
-        const demoTransactions = [];
-        const channels = ["cash", "card", "click", "payme"];
-        const baseAmounts = [620000, 840000, 980000, 1260000, 1480000, 1720000];
-        for (let monthOffset = 5; monthOffset >= 0; monthOffset -= 1) {
-            const monthDate = new Date(now.getFullYear(), now.getMonth() - monthOffset, 12);
-            const monthFactor = 6 - monthOffset;
-            demoResidents.slice(0, 10).forEach((resident, index) => {
-                if ((index + monthFactor) % 4 === 0) return;
-                const building = demoBuildings.find((item) => item.id === resident.buildingId) || demoBuildings[0];
-                const amount = baseAmounts[(index + monthFactor) % baseAmounts.length] + (monthFactor * 85000);
-                const channel = channels[(index + monthFactor) % channels.length];
-                const createdAt = new Date(monthDate.getFullYear(), monthDate.getMonth(), Math.min(26, 5 + index), 10 + (index % 8), 20, 0);
-                demoTransactions.push({
-                    id: `demo-trx-${monthOffset}-${index}`,
-                    residentId: resident.id,
-                    ownerBackendId: resident.ownerBackendId,
-                    buildingId: building.id,
-                    buildingBackendId: building.backendId,
-                    amount,
-                    signedAmount: amount,
-                    status: "Success",
-                    method: channel,
-                    paymentType: channel,
-                    createdAt: createdAt.toISOString(),
-                    date: `${String(createdAt.getDate()).padStart(2, "0")}.${String(createdAt.getMonth() + 1).padStart(2, "0")}.${createdAt.getFullYear()}`,
-                });
-            });
-        }
-        demoTransactions.push(
-            {
-                id: "demo-debt-writeoff-1",
-                residentId: "demo-res-5",
-                ownerBackendId: "demo-res-5",
-                buildingId: "demo-house-b",
-                buildingBackendId: "demo-house-b",
-                amount: 540000,
-                signedAmount: -540000,
-                status: "Success",
-                method: "card",
-                paymentType: "card",
-                createdAt: new Date(now.getFullYear(), now.getMonth(), 18, 12, 10, 0).toISOString(),
-            },
-            {
-                id: "demo-debt-writeoff-2",
-                residentId: "demo-res-9",
-                ownerBackendId: "demo-res-9",
-                buildingId: "demo-house-d",
-                buildingBackendId: "demo-house-d",
-                amount: 320000,
-                signedAmount: -320000,
-                status: "Success",
-                method: "cash",
-                paymentType: "cash",
-                createdAt: new Date(now.getFullYear(), now.getMonth(), 21, 14, 40, 0).toISOString(),
-            }
-        );
-        return {
-            complexes: [{
-                id: "demo-complex",
-                backendId: "demo-complex",
-                name: "Mirabad Avenue Demo",
-                sector: "Mirabad Avenue",
-                buildingItems: demoBuildings,
-            }],
-            residents: demoResidents,
-            transactions: demoTransactions,
-        };
-    };
-
     const syncAnalyticsDashboard = () => {
         const dashboard = document.querySelector("[data-analytics-dashboard]");
         if (!dashboard) return false;
@@ -1677,12 +1461,7 @@
         const backendComplexes = Array.isArray(billingData.complexes) ? billingData.complexes : [];
         const backendResidents = Array.isArray(billingData.residents) ? billingData.residents : [];
         const backendTransactions = Array.isArray(billingData.transactions) ? billingData.transactions : [];
-        const shouldUseDemoAnalytics = backendComplexes.length === 0
-            || backendResidents.length < 4
-            || backendTransactions.length < 8;
-        const analyticsData = shouldUseDemoAnalytics
-            ? buildAnalyticsDemoData()
-            : { complexes: backendComplexes, residents: backendResidents, transactions: backendTransactions };
+        const analyticsData = { complexes: backendComplexes, residents: backendResidents, transactions: backendTransactions };
         const complexes = analyticsData.complexes;
         const buildings = complexes.flatMap((complex) => (complex.buildingItems || []).map((building) => ({
             ...building,
@@ -2321,30 +2100,8 @@
     window.HydroFlowSyncDashboardStatCards = syncDashboardStatCards;
 
     const defaultFilterState = { district: "all", status: "all", period: "all", periodStart: "", periodEnd: "" };
-    const normalizeFilterState = () => ({ ...defaultFilterState });
     const readFilterState = () => ({ ...defaultFilterState });
-    const writeFilterState = () => {};
-    const withinFilterPeriod = () => true;
-    const filterMatchesComplex = () => true;
-    const filterMatchesResident = (resident) => Boolean(resident);
-    const filterMatchesTransaction = () => true;
-
-    const fakeData = {
-        complexes: Object.fromEntries(getComplexStats().map((complex) => [complex.name, {
-            subtitle: `${complex.sector} · ${complex.units} units`,
-            status: complex.risk === "Critical" ? "Critical" : complex.risk === "Medium Risk" ? "Maintenance" : "Operational",
-            debt: formatBillingUzs(complex.debt),
-            lastPayment: (complex.transactions.slice().sort((a, b) => dateValue(b.date) - dateValue(a.date))[0]?.date) || "13.04.2026",
-            health: `${complex.health}%`,
-            alerts: complex.risk === "Critical" ? "Water leak alert" : complex.risk === "Medium Risk" ? "Heating maintenance pending" : "No critical alerts",
-            owner: complex.risk === "Critical" ? "Billing Ops" : "Operations Team",
-            technician: complex.risk === "Critical" ? "Unassigned" : "Aziz Karimov",
-            sla: complex.risk === "Critical" ? "42m" : "2h 15m",
-        }])),
-    };
-
     window.HydroFlowBillingData = billingData;
-    window.HydroFlowMockData = fakeData;
 
     const toastRegion = document.querySelector("[data-toast-region]");
     const activeToasts = new Map();
@@ -2808,6 +2565,25 @@
         return "dot-operational";
     };
 
+    // Drawer context comes only from backend rows: alerts and assignments for the complex,
+    // audit events for the owner/complex. Fields without a data source show "Not set".
+    const activeAlertsForComplex = (complexId) => (Array.isArray(billingData.systemAlerts) ? billingData.systemAlerts : [])
+        .filter((alert) => complexId && alert.complexId === complexId && alert.status !== "resolved");
+    const assignedTechnicianForComplex = (complexId) => {
+        const tasks = Array.isArray(billingData.maintenanceTasks) ? billingData.maintenanceTasks : [];
+        const assigned = [...activeAlertsForComplex(complexId), ...tasks.filter((task) => task.complexId === complexId && task.statusKey !== "completed")]
+            .find((item) => String(item.assignedTo || "").trim());
+        return assigned ? assigned.assignedTo : "";
+    };
+    const recentAuditEventsFor = (data) => {
+        const ownerId = data.ownerBackendId ? `owner-${data.ownerBackendId}` : "";
+        const complexId = !ownerId && data.complexBackendId ? `complex-${data.complexBackendId}` : "";
+        if (!ownerId && !complexId) return [];
+        return (Array.isArray(billingData.auditEvents) ? billingData.auditEvents : [])
+            .filter((event) => (ownerId && event.ownerId === ownerId) || (complexId && event.complexId === complexId))
+            .slice(0, 5);
+    };
+
     const fillDetails = (data) => {
         if (!detailsDrawer || !data) return;
         window.HydroFlowSyncLocale?.();
@@ -2826,9 +2602,16 @@
         detailsDrawer.querySelector("[data-detail-payment]").textContent = data.lastPayment;
         detailsDrawer.querySelector("[data-detail-health]").textContent = data.health;
         detailsDrawer.querySelector("[data-detail-alert]").textContent = data.alerts;
-        detailsDrawer.querySelector("[data-detail-owner]").textContent = data.owner || "Operations Team";
-        detailsDrawer.querySelector("[data-detail-tech]").textContent = data.technician || "Unassigned";
-        detailsDrawer.querySelector("[data-detail-sla]").textContent = data.sla || "2h 15m";
+        detailsDrawer.querySelector("[data-detail-owner]").textContent = data.owner || t("Not set");
+        detailsDrawer.querySelector("[data-detail-tech]").textContent = data.technician || t("Unassigned");
+        detailsDrawer.querySelector("[data-detail-sla]").textContent = data.sla || t("Not set");
+        const activityTarget = detailsDrawer.querySelector("[data-detail-activity]");
+        if (activityTarget) {
+            const events = recentAuditEventsFor(data);
+            activityTarget.innerHTML = events.length
+                ? events.map((event) => `<div><time>${escapeHtml(event.time)}</time><p>${escapeHtml(event.title)}${event.message ? ` — ${escapeHtml(event.message)}` : ""}</p></div>`).join("")
+                : `<div><p>${escapeHtml(t("No recent activity"))}</p></div>`;
+        }
         const paymentsTarget = detailsDrawer.querySelector("[data-detail-payments]");
         if (paymentsTarget && Array.isArray(data.payments)) {
             paymentsTarget.innerHTML = data.payments.map((payment) => `
@@ -2864,8 +2647,6 @@
             health: isDebtor ? "Debt" : "Paid",
             alerts: isDebtor ? "Outstanding balance is active. Send reminder before escalation." : "No active billing alerts.",
             owner: resident.name,
-            technician: "Billing Team",
-            sla: isDebtor ? "24h" : "Closed",
             payments: payments.length ? payments : [{ method: "No payments", amount: "0 UZS", date: "" }],
             ownerBackendId: resident.ownerBackendId || resident.backendId || "",
             apartmentBackendId: resident.apartmentBackendId || "",
@@ -2877,17 +2658,16 @@
     const detailsFromComplex = (complex) => {
         if (!complex) return null;
         const latest = complex.transactions.slice().sort((a, b) => dateValue(b.date) - dateValue(a.date))[0];
+        const alerts = activeAlertsForComplex(complex.id);
         return {
             title: complex.name,
             subtitle: `${complex.sector} · ${complex.units} units`,
             status: complex.risk === "Critical" ? "Critical" : complex.risk === "Medium Risk" ? "Maintenance" : "Operational",
             debt: formatBillingUzs(complex.debt),
-            lastPayment: latest?.date || "13.04.2026",
+            lastPayment: latest?.date || t("Not set"),
             health: `${complex.health}%`,
-            alerts: complex.risk === "Critical" ? "Water leak alert" : complex.risk === "Medium Risk" ? "Heating maintenance pending" : "No critical alerts",
-            owner: "Operations Team",
-            technician: complex.risk === "Critical" ? "Unassigned" : "Aziz Karimov",
-            sla: complex.risk === "Critical" ? "42m" : "2h 15m",
+            alerts: alerts.length ? `${alerts.length} · ${alerts[0].title}` : t("No active alerts"),
+            technician: assignedTechnicianForComplex(complex.id),
             payments: complex.transactions.slice(0, 3).map((payment) => ({
                 method: payment.method,
                 amount: formatBillingUzs(payment.amount),
@@ -2915,8 +2695,6 @@
                     health: resident.status === "debtor" ? "Debt" : "Paid",
                     alerts: transaction.status === "Pending" ? "Payment is waiting for provider settlement." : "Payment is confirmed in local transaction log.",
                     owner: resident.name,
-                    technician: transaction.method,
-                    sla: transaction.status === "Pending" ? "12h" : "Closed",
                     payments: [{ method: transaction.method, amount: formatBillingUzs(transaction.amount), date: transaction.date }],
                     ownerBackendId: resident.ownerBackendId || resident.backendId || "",
                     apartmentBackendId: resident.apartmentBackendId || "",
@@ -2931,8 +2709,7 @@
         const districtId = row?.dataset.districtId || button.closest("[data-complex-id]")?.dataset.complexId;
         const complexDetails = detailsFromComplex(getComplexStats().find((complex) => complex.id === districtId));
         if (complexDetails) return complexDetails;
-        const rowTitle = row?.querySelector("p.font-bold")?.textContent?.trim();
-        return fakeData.complexes[rowTitle] ? { title: rowTitle, ...fakeData.complexes[rowTitle] } : null;
+        return null;
     };
 
     document.addEventListener("click", (event) => {
@@ -6113,13 +5890,6 @@
             cleanupHandlers.push(() => target.removeEventListener(type, handler, options));
         };
 
-        const ownerPool = billingData.residents.map((resident) => ({
-            name: resident.name,
-            phone: resident.phone,
-            email: `${resident.name.toLowerCase().replace(/\s+/g, ".")}@hydroflow.local`,
-            photo: resident.photo || "",
-        }));
-
         const singleSector = getSingleSectorStats();
         const districts = {
             [SINGLE_SECTOR_ID]: {
@@ -6163,20 +5933,13 @@
         `;
         const unitsForBuilding = (district, index) => {
             const realBuilding = district.buildingItems?.[index - 1];
-            if (realBuilding) return realBuilding.apartments?.length || realBuilding.units || 0;
-            const base = Math.floor(district.units / district.count);
-            const remainder = district.units % district.count;
-            return base + (index <= remainder ? 1 : 0);
+            // Rows exist only for real apartments, so apartmentFor() never runs past this count.
+            return realBuilding?.apartments?.length || 0;
         };
         const buildingName = (district, index) => {
             const realBuilding = district.buildingItems?.[index - 1];
-            if (realBuilding) return realBuilding.name || `House ${realBuilding.number || index}`;
-            const suffix = String.fromCharCode(64 + index);
-            return `${district.prefix} ${suffix}`;
+            return realBuilding?.name || `House ${realBuilding?.number || index}`;
         };
-        const ownerFor = (buildingIndex, unitIndex) => ownerPool.length
-            ? ownerPool[(buildingIndex + unitIndex) % ownerPool.length]
-            : { name: "Unassigned owner", phone: "", email: "", photo: "" };
         const apartmentFor = (districtId, buildingIndex, unitIndex) => {
             const district = districts[districtId];
             const realApartment = district?.buildingItems?.[buildingIndex - 1]?.apartments?.[unitIndex - 1];
@@ -6205,30 +5968,7 @@
                     occupancy: realApartment.occupancy || "Resident",
                 };
             }
-            const owner = ownerFor(buildingIndex, unitIndex);
-            const floor = Math.floor((unitIndex - 1) / 4) + 2;
-            const door = ((unitIndex - 1) % 4) + 1;
-            const unit = `${floor}0${door}-${String.fromCharCode(64 + buildingIndex)}`;
-            const isDebtor = districtId === "harbor" ? unitIndex % 4 === 0 : unitIndex % 7 === 0;
-            const balance = isDebtor ? -(680000 + (unitIndex * 123000)) : (unitIndex % 5 === 0 ? 0 : 1240000 + (unitIndex * 35000));
-            return {
-                unit,
-                owner,
-                ownerBackendId: "",
-                apartmentBackendId: "",
-                buildingBackendId: district?.buildingItems?.[buildingIndex - 1]?.backendId || "",
-                complexBackendId: "",
-                balance,
-                status: isDebtor ? "Overdue" : "Paid",
-                rooms: `${2 + (unitIndex % 3)} rooms`,
-                area: `${58 + (unitIndex % 8) * 6} m²`,
-                charge: formatUzs(980000 + (unitIndex % 6) * 110000),
-                meter: `HF-${districtId.slice(0, 3).toUpperCase()}-${buildingIndex}${String(unitIndex).padStart(2, "0")}`,
-                contract: `HF-${9000 + buildingIndex * 100 + unitIndex}`,
-                visit: `${String(8 + (unitIndex % 6)).padStart(2, "0")}.04.2026`,
-                lastPayment: `${String(1 + (unitIndex % 13)).padStart(2, "0")}.04.2026`,
-                occupancy: unitIndex % 9 === 0 ? "Owner away" : "Resident",
-            };
+            return null;
         };
 
         const makeSelectCell = (label) => table.querySelector("[data-select-all]")
@@ -9969,7 +9709,6 @@
     let exportDateView = new Date();
     let exportDateDraft = new Date();
     const exportReportTypeButtons = Array.from(exportModal?.querySelectorAll("[data-export-report-type] button") || []);
-    const getVisibleTableRows = (root = document) => Array.from(root.querySelectorAll("tbody tr")).filter((row) => !row.classList.contains("hidden"));
     const exportText = (key) => translateValue(key, storage.getItem("hydroflow-lang") || "en");
     const exportReportTypeLabel = (reportType) => ({
         all: "GVS + Heating + Payments",
@@ -10457,48 +10196,10 @@
             { value: "Review", tone: "info", icon: "fact_check", label: { en: "Review", ru: "Проверка", uz: "Tekshiruv" }, note: { en: "Needs manual confirmation.", ru: "Нужно ручное подтверждение.", uz: "Qo'lda tasdiqlash kerak." } },
         ],
     };
-    const statusTone = (status, forcedTone = "") => {
-        if (forcedTone) return forcedTone;
-        const value = String(status || "").toLowerCase();
-        if (value.includes("failed") || value.includes("critical") || value.includes("ошибка") || value.includes("крит")) return "critical";
-        if (value.includes("completed") || value.includes("operational") || value.includes("success") || value.includes("low risk") || value.includes("paid")) return "success";
-        if (value.includes("maintenance") || value.includes("pending") || value.includes("medium") || value.includes("progress") || value.includes("scheduled")) return "warning";
-        if (value.includes("review") || value.includes("upcoming")) return "info";
-        return "neutral";
-    };
-    const renderAssignedStatus = (status, tone = "") => {
-        const config = typeof status === "object" ? status : { value: status, tone };
-        const label = config.label ? statusLabel(config.label) : String(config.value || "Pending").trim();
-        const safe = label || String(config.value || "Pending").trim();
-        const finalTone = statusTone(config.value || safe, config.tone || tone);
-        return `<span class="table-assigned-status is-${finalTone}">${safe.toUpperCase()}</span>`;
-    };
     const getRowsForStatusAction = (button) => {
         const workspace = button.closest(".table-tools")?.nextElementSibling;
         if (!workspace) return [];
         return Array.from(workspace.querySelectorAll("tbody tr")).filter((row) => !row.classList.contains("hidden"));
-    };
-    const getStatusRowKey = (row, context) => {
-        if (row.dataset.districtId) return `${context}|district|${row.dataset.districtId}`.toLowerCase();
-        if (row.dataset.buildingId) return `${context}|building|${row.dataset.buildingId}`.toLowerCase();
-        if (row.dataset.parentBuilding) {
-            const unit = row.querySelector("[data-apartment-details]")?.dataset.unit
-                || row.querySelector("[data-apartment-details]")?.dataset.title
-                || "";
-            if (unit) return `${context}|apartment|${row.dataset.parentBuilding}|${unit}`.toLowerCase();
-        }
-        const cells = Array.from(row.querySelectorAll("td")).filter((cell) => !cell.querySelector("[data-row-select]"));
-        const base = cells.slice(0, 3).map((cell) => {
-            const clone = cell.cloneNode(true);
-            clone.querySelectorAll(".risk-badge, .residential-risk-pill, .table-assigned-status, [data-row-select]").forEach((item) => item.remove());
-            return clone.textContent.trim().replace(/\s+/g, " ");
-        }).join("|");
-        return `${context}|${base}`.toLowerCase();
-    };
-    const getLegacyStatusRowKey = (row, context) => {
-        const cells = Array.from(row.querySelectorAll("td")).filter((cell) => !cell.querySelector("[data-row-select]"));
-        const base = cells.slice(0, 3).map((cell) => cell.textContent.trim().replace(/\s+/g, " ")).join("|");
-        return `${context}|${base}`.toLowerCase();
     };
     const getStatusColumnIndex = (button) => {
         const workspace = button.closest(".table-tools")?.nextElementSibling;
@@ -10512,38 +10213,6 @@
         const broad = labels.findIndex((label) => label.includes("status") || label.includes("статус") || label.includes("holat"));
         if (broad >= 0) return broad;
         return Math.max(0, labels.length - 2);
-    };
-    const updateResidentialRiskBadge = (row, statusConfig, statusIndex = -1) => {
-        const cells = Array.from(row.querySelectorAll("td")).filter((cell) => !cell.querySelector("[data-row-select]"));
-        const targetCell = cells[statusIndex]
-            || cells.find((cell) => cell.textContent.includes("UZS"))
-            || cells[cells.length - 2]
-            || cells[0];
-        if (!targetCell) return;
-        targetCell.querySelectorAll(".risk-badge, .residential-risk-pill, .table-assigned-status").forEach((item) => item.remove());
-        const badge = document.createElement("span");
-        badge.className = "residential-risk-pill";
-        if (statusConfig.tone === "critical") badge.classList.add("is-critical");
-        if (statusConfig.tone === "warning") badge.classList.add("is-medium");
-        if (statusConfig.tone === "info") badge.classList.add("is-review");
-        badge.dataset.i18nKey = statusConfig.value;
-        badge.textContent = statusLabel(statusConfig.label);
-        const amount = targetCell.querySelector("p");
-        if (amount) amount.insertAdjacentElement("afterend", badge);
-        else targetCell.appendChild(badge);
-        row.dataset.assignedStatus = statusConfig.value;
-    };
-    const applyStatusToRow = (row, statusConfig, statusIndex = -1, context = "default") => {
-        if (context === "residential") {
-            updateResidentialRiskBadge(row, statusConfig, statusIndex);
-            return;
-        }
-        const cells = Array.from(row.querySelectorAll("td")).filter((cell) => !cell.querySelector("[data-row-select]"));
-        if (!cells.length) return;
-        const fallbackIndex = cells.length >= 2 ? cells.length - 2 : 0;
-        const statusCell = cells[statusIndex] || cells[fallbackIndex] || cells[0];
-        statusCell.innerHTML = renderAssignedStatus(statusConfig);
-        row.dataset.assignedStatus = statusConfig.value;
     };
     const statusSelectionForRow = (row, context) => {
         if (context === "residential") {

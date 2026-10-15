@@ -85,52 +85,7 @@
 <div class="p-6 space-y-4 overflow-y-auto" data-notification-list>
 <div class="notification-group-label hidden" data-notification-group="pinned" data-i18n-key="Pinned">Pinned</div>
 <div class="notification-group-label" data-notification-group="today" data-i18n-key="Today">Today</div>
-<div class="notification-item critical-pulse" data-notification-id="pressure-drop" data-notification-section="today" data-read="false" data-pinned="false" data-severity="critical">
-<div class="notification-card-head">
-<p class="severity-badge severity-critical"><span class="status-dot dot-critical"></span>Critical</p>
-<div class="notification-card-meta">
-<time class="text-[10px] text-on-surface-variant">13 Apr 2026, 09:24</time>
-<button aria-label="Pin" aria-pressed="false" class="notification-pin" data-notification-pin type="button"><span class="material-symbols-outlined">keep</span><span class="notification-pin-label" data-i18n-key="Pin">Pin</span></button>
-</div>
-</div>
-<p class="text-sm font-bold text-on-surface mt-2">Pressure drop detected</p>
-<p class="text-xs text-on-surface-variant mt-1">Skyline Residences, Block B. Detected 12 minutes ago.</p>
-<p class="notification-action-state hidden" data-notification-state></p>
-<div class="mt-3 flex gap-2">
-<button class="drawer-action bg-surface-container text-primary" data-notification-resolve type="button">Resolve</button>
-</div>
-</div>
-<div class="notification-item" data-notification-id="sensor-calibration" data-notification-section="today" data-read="false" data-pinned="false" data-severity="warning">
-<div class="notification-card-head">
-<p class="severity-badge severity-warning"><span class="status-dot dot-warning"></span>Warning</p>
-<div class="notification-card-meta">
-<time class="text-[10px] text-on-surface-variant">13 Apr 2026, 08:10</time>
-<button aria-label="Pin" aria-pressed="false" class="notification-pin" data-notification-pin type="button"><span class="material-symbols-outlined">keep</span><span class="notification-pin-label" data-i18n-key="Pin">Pin</span></button>
-</div>
-</div>
-<p class="text-sm font-bold text-on-surface mt-2">Sensor calibration scheduled</p>
-<p class="text-xs text-on-surface-variant mt-1">Vista Towers, today at 09:00.</p>
-<p class="notification-action-state hidden" data-notification-state></p>
-<div class="mt-3 flex gap-2">
-<button class="drawer-action bg-surface-container text-primary" data-notification-resolve type="button">Resolve</button>
-</div>
-</div>
 <div class="notification-group-label" data-notification-group="yesterday" data-i18n-key="Yesterday">Yesterday</div>
-<div class="notification-item" data-notification-id="payment-batch" data-notification-section="yesterday" data-read="false" data-pinned="false" data-severity="info">
-<div class="notification-card-head">
-<p class="severity-badge severity-info"><span class="status-dot dot-info"></span>Info</p>
-<div class="notification-card-meta">
-<time class="text-[10px] text-on-surface-variant">12 Apr 2026, 18:42</time>
-<button aria-label="Pin" aria-pressed="false" class="notification-pin" data-notification-pin type="button"><span class="material-symbols-outlined">keep</span><span class="notification-pin-label" data-i18n-key="Pin">Pin</span></button>
-</div>
-</div>
-<p class="text-sm font-bold text-on-surface mt-2">Payment batch imported</p>
-<p class="text-xs text-on-surface-variant mt-1">412 records from Payme and Click are ready for review.</p>
-<p class="notification-action-state hidden" data-notification-state></p>
-<div class="mt-3 flex gap-2">
-<button class="drawer-action bg-surface-container text-primary" data-notification-resolve type="button">Resolve</button>
-</div>
-</div>
 <div class="empty-state hidden" data-notification-empty>
 <span class="material-symbols-outlined">notifications_off</span>
 <div>
@@ -149,10 +104,10 @@
 <div>
 <div class="flex items-center gap-2 mb-2">
 <span class="status-dot dot-operational" data-detail-status-dot></span>
-<span class="text-[10px] font-black uppercase tracking-widest text-on-surface-variant" data-detail-status-label>Operational</span>
+<span class="text-[10px] font-black uppercase tracking-widest text-on-surface-variant" data-detail-status-label>—</span>
 </div>
-<h2 class="text-lg font-black text-on-surface" id="details-title">Skyline Residential North</h2>
-<p class="text-xs text-on-surface-variant mt-1" data-detail-subtitle>Residential complex detail preview.</p>
+<h2 class="text-lg font-black text-on-surface" id="details-title">—</h2>
+<p class="text-xs text-on-surface-variant mt-1" data-detail-subtitle></p>
 </div>
 <button aria-label="Close details" class="p-2 rounded-lg hover:bg-surface-container transition-colors" data-close-overlay type="button">
 <span class="material-symbols-outlined">close</span>
@@ -162,43 +117,33 @@
 <div class="detail-hero">
 <div>
 <p class="drawer-label">Outstanding balance</p>
-<strong data-detail-debt>30,812,000 UZS</strong>
-<span>Last payment <b data-detail-payment>13 Apr 2026</b></span>
+<strong data-detail-debt>—</strong>
+<span>Last payment <b data-detail-payment>—</b></span>
 </div>
-<div class="detail-health-ring"><span data-detail-health>96.5%</span><small>health</small></div>
+<div class="detail-health-ring"><span data-detail-health>—</span><small>health</small></div>
 </div>
 <div class="grid grid-cols-2 gap-3">
-<div class="detail-metric"><span>Status</span><strong data-detail-status>Operational</strong></div>
-<div class="detail-metric"><span>Owner</span><strong data-detail-owner>Operations Team</strong></div>
-<div class="detail-metric"><span>Technician</span><strong data-detail-tech>Unassigned</strong></div>
-<div class="detail-metric"><span>SLA</span><strong data-detail-sla>2h 15m</strong></div>
+<div class="detail-metric"><span>Status</span><strong data-detail-status>—</strong></div>
+<div class="detail-metric"><span>Owner</span><strong data-detail-owner>—</strong></div>
+<div class="detail-metric"><span>Technician</span><strong data-detail-tech>—</strong></div>
+<div class="detail-metric"><span>SLA</span><strong data-detail-sla>—</strong></div>
 </div>
 <section class="space-y-3">
 <div class="flex items-center justify-between">
 <h3 class="text-sm font-black text-on-surface">Recent payments</h3>
 <button class="text-xs font-bold text-primary hover:underline" data-export-open data-export-context="transactions" data-export-source="Selected record payments" type="button">Export</button>
 </div>
-<div data-detail-payments>
-<div class="mini-row"><span>Payme</span><strong>4,320,000 UZS</strong><time>13 Apr 2026</time></div>
-<div class="mini-row"><span>Click</span><strong>2,100,000 UZS</strong><time>12 Apr 2026</time></div>
-<div class="mini-row"><span>Terminal</span><strong>980,000 UZS</strong><time>10 Apr 2026</time></div>
-</div>
+<div data-detail-payments></div>
 </section>
 <section class="space-y-3">
 <h3 class="text-sm font-black text-on-surface">System alerts</h3>
-<div class="notification-item" data-severity="warning">
-<p class="severity-badge severity-warning"><span class="status-dot dot-warning"></span>Warning</p>
-<p class="text-sm font-bold mt-2">Heating maintenance window pending</p>
-<p class="text-xs text-on-surface-variant mt-1" data-detail-alert>Schedule technician assignment before 15 Apr 2026.</p>
+<div class="notification-item" data-severity="info">
+<p class="text-xs text-on-surface-variant" data-detail-alert>—</p>
 </div>
 </section>
 <section class="space-y-3">
 <h3 class="text-sm font-black text-on-surface">Activity timeline</h3>
-<div class="activity-timeline">
-<div><time>13 Apr, 10:12</time><p>Balance report exported by Admin User.</p></div>
-<div><time>13 Apr, 09:40</time><p>Reminder queued for overdue residents.</p></div>
-<div><time>12 Apr, 18:05</time><p>Alert review completed after technician confirmation.</p></div>
-</div>
+<div class="activity-timeline" data-detail-activity></div>
 </section>
 </div>
 <div class="p-6 border-t border-surface-container grid grid-cols-2 gap-3">
@@ -215,17 +160,17 @@
 <span class="material-symbols-outlined">close</span>
 </button>
 <div class="apartment-owner-hero">
-<img alt="" data-apartment-owner-photo src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=160&q=80"/>
+<img alt="" data-apartment-owner-photo hidden/>
 <div>
 <span class="apartment-status-pill" data-apartment-status>Paid</span>
-<h2 id="apartment-details-title" data-apartment-title>Apartment 402-A</h2>
-<p data-apartment-subtitle>Skyline Tower A · Skyline Residential North</p>
+<h2 id="apartment-details-title" data-apartment-title>—</h2>
+<p data-apartment-subtitle></p>
 </div>
 </div>
 <div class="apartment-balance-card">
 <span>Current balance</span>
 <strong data-apartment-balance>0 UZS</strong>
-<small data-apartment-payment data-i18n-key="Last payment">Last payment 13.04.2026</small>
+<small data-apartment-payment data-i18n-key="Last payment">Last payment</small>
 </div>
 </div>
 <div class="apartment-details-body">
@@ -235,12 +180,12 @@
 <h3 data-i18n-key="Apartment data">Apartment data</h3>
 </div>
 <div class="apartment-detail-grid">
-<div><span data-i18n-key="Unit">Unit</span><strong data-apartment-unit>402-A</strong></div>
-<div><span data-i18n-key="Rooms">Rooms</span><strong data-apartment-rooms>3 rooms</strong></div>
-<div><span data-i18n-key="Area">Area</span><strong data-apartment-area>84 m²</strong></div>
-<div><span data-i18n-key="Meter">Meter</span><strong data-apartment-meter>HF-402A</strong></div>
-<div><span data-i18n-key="Monthly charge">Monthly charge</span><strong data-apartment-charge>1,240,000 UZS</strong></div>
-<div><span data-i18n-key="Occupancy">Occupancy</span><strong data-apartment-occupancy>Resident</strong></div>
+<div><span data-i18n-key="Unit">Unit</span><strong data-apartment-unit>—</strong></div>
+<div><span data-i18n-key="Rooms">Rooms</span><strong data-apartment-rooms>—</strong></div>
+<div><span data-i18n-key="Area">Area</span><strong data-apartment-area>—</strong></div>
+<div><span data-i18n-key="Meter">Meter</span><strong data-apartment-meter>—</strong></div>
+<div><span data-i18n-key="Monthly charge">Monthly charge</span><strong data-apartment-charge>—</strong></div>
+<div><span data-i18n-key="Occupancy">Occupancy</span><strong data-apartment-occupancy>—</strong></div>
 </div>
 </section>
 <section class="apartment-detail-section">
@@ -249,17 +194,17 @@
 <h3 data-i18n-key="Owner profile">Owner profile</h3>
 </div>
 <div class="owner-profile-card">
-<img alt="" data-apartment-owner-photo-secondary src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=160&q=80"/>
+<img alt="" data-apartment-owner-photo-secondary hidden/>
 <div>
-<strong data-apartment-owner>Sarah Jenkins</strong>
-<span data-apartment-owner-meta>Contract HF-9284 · since 2024</span>
+<strong data-apartment-owner>—</strong>
+<span data-apartment-owner-meta></span>
 </div>
 </div>
 <div class="apartment-detail-grid">
-<div><span data-i18n-key="Phone">Phone</span><strong data-apartment-phone>+998 90 555 0123</strong></div>
-<div><span data-i18n-key="Email">Email</span><strong data-apartment-email>resident@hydroflow.local</strong></div>
-<div><span data-i18n-key="Contract">Contract</span><strong data-apartment-contract>HF-9284</strong></div>
-<div><span data-i18n-key="Last visit">Last visit</span><strong data-apartment-visit>09.04.2026</strong></div>
+<div><span data-i18n-key="Phone">Phone</span><strong data-apartment-phone>—</strong></div>
+<div><span data-i18n-key="Email">Email</span><strong data-apartment-email>—</strong></div>
+<div><span data-i18n-key="Contract">Contract</span><strong data-apartment-contract>—</strong></div>
+<div><span data-i18n-key="Last visit">Last visit</span><strong data-apartment-visit>—</strong></div>
 </div>
 </section>
 <section class="apartment-detail-section">
@@ -267,11 +212,7 @@
 <span class="material-symbols-outlined">timeline</span>
 <h3 data-i18n-key="Recent activity">Recent activity</h3>
 </div>
-<div class="apartment-activity-list">
-<div><time>13 Apr 2026</time><p data-apartment-activity-1>Payment received through Click.</p></div>
-<div><time>10 Apr 2026</time><p data-apartment-activity-2>Meter reading synced locally.</p></div>
-<div><time>08 Apr 2026</time><p data-apartment-activity-3>No open maintenance tickets.</p></div>
-</div>
+<div class="apartment-activity-list"></div>
 </section>
 </div>
 <div class="apartment-details-actions">
@@ -1260,7 +1201,7 @@ This form writes directly to Django admin and database.
 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 <label class="resident-create-field">
 <span data-i18n-key="Full name">Full name</span>
-<input name="fio" required autocomplete="name" placeholder="Sarah Jenkins" type="text"/>
+<input name="fio" required autocomplete="name" placeholder="Resident name" type="text"/>
 </label>
 <label class="resident-create-field">
 <span data-i18n-key="Phone">Phone</span>
