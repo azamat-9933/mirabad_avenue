@@ -1,21 +1,21 @@
 {% load static %}
-<div class="ml-64 min-h-screen pt-16">
+<div class="app-main min-h-screen pt-16">
 <!-- Main Content Area -->
-<main class="p-6 md:p-10 space-y-6 overflow-y-auto">
+<main class="billing-page app-page py-6 md:py-10 space-y-6">
 <div class="flex justify-between items-end">
 <header>
-<h2 class="text-3xl font-extrabold text-on-surface tracking-tight">Residential Complex Management</h2>
+<h2 class="app-page-title text-3xl font-extrabold text-on-surface tracking-tight">Residential Complex Management</h2>
 </header>
 </div>
 
 <!-- Top Row -->
-<div class="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
-<div class="lg:col-span-3 grid gap-8">
+<div class="billing-layout grid gap-6 items-start">
+<div class="billing-main-column grid gap-8">
 <section class="bg-white p-5 rounded-xl border border-outline-variant/30 shadow-sm relative overflow-hidden" data-billing-kpi-card>
 <div class="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
 <span class="material-symbols-outlined text-[120px]">monitoring</span>
 </div>
-<div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+<div class="billing-kpi-grid grid gap-5">
 <div>
 <p class="text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-1">Active Debtors</p>
 <p class="text-3xl font-black text-error tracking-tight">0</p>
@@ -32,10 +32,11 @@
 </section>
 
 <section class="bg-white rounded-xl shadow-sm border border-outline-variant/30 overflow-hidden" data-billing-transactions-card>
-<div class="px-6 py-4 border-b border-surface-container-low flex justify-between items-center">
+<div class="px-6 py-4 border-b border-surface-container-low flex flex-wrap justify-between items-center gap-x-4 gap-y-2">
 <h3 class="font-bold text-on-surface">Recent Transaction Log</h3>
 <button class="text-primary text-xs font-bold uppercase tracking-widest" data-export-open data-export-source="Recent Transaction Log" type="button">Export report</button>
 </div>
+<div class="billing-table-scroll">
 <table class="w-full text-left table-stable billing-transactions-table" data-server-list="transactions" data-skip-base-table-enhance="true">
 <thead class="bg-surface-container-low text-on-surface-variant text-[10px] uppercase font-black tracking-widest">
 <tr>
@@ -92,10 +93,11 @@
 </thead>
 <tbody></tbody>
 </table>
+</div>
 </section>
 </div>
 
-<div class="space-y-8 lg:-mt-2">
+<div class="billing-side-column">
 <!-- Payment Processing Card -->
 <div class="payment-processing-card p-6 rounded-xl shadow-sm border border-transparent bg-white" data-card="payment-processing">
 <div class="space-y-10">

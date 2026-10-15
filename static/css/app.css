@@ -473,26 +473,6 @@ html.dark .theme-toggle::after {
 }
 
 @media (max-width: 767px) {
-    [data-sidebar] {
-        transform: translateX(-100%);
-        transition: transform 0.22s ease;
-    }
-
-    [data-sidebar].is-open {
-        transform: translateX(0);
-    }
-
-    .app-topbar {
-        gap: 0.5rem;
-        padding-left: 0.75rem;
-        padding-right: 0.75rem;
-    }
-
-    .app-topbar form {
-        flex: 1;
-        width: auto !important;
-    }
-
     .filter-chip {
         display: none;
     }
@@ -3683,7 +3663,6 @@ html.dark [data-liquid-alert-card] p[class*="text-error"] {
 }
 
 html.dark .app-topbar,
-html.dark [data-sidebar],
 html.dark .motion-stagger > *:nth-child(-n+4),
 html.dark [data-liquid-panel],
 html.dark [data-liquid-alert-card] {
@@ -3691,7 +3670,6 @@ html.dark [data-liquid-alert-card] {
 }
 
 html.dark .app-topbar:hover,
-html.dark [data-sidebar]:hover,
 html.dark .motion-stagger > *:nth-child(-n+4):hover,
 html.dark [data-liquid-panel]:hover,
 html.dark [data-liquid-alert-card]:hover {
@@ -3913,12 +3891,10 @@ html.dark .recent-alerts-panel [data-liquid-alert-card] {
 }
 
 html.light .app-topbar,
-html.light [data-sidebar],
 html.light .motion-stagger > *:nth-child(-n+4),
 html.light [data-liquid-panel],
 html.light [data-liquid-alert-card],
 html:not(.dark) .app-topbar,
-html:not(.dark) [data-sidebar],
 html:not(.dark) .motion-stagger > *:nth-child(-n+4),
 html:not(.dark) [data-liquid-panel],
 html:not(.dark) [data-liquid-alert-card] {
@@ -3926,12 +3902,10 @@ html:not(.dark) [data-liquid-alert-card] {
 }
 
 html.light .app-topbar:hover,
-html.light [data-sidebar]:hover,
 html.light .motion-stagger > *:nth-child(-n+4):hover,
 html.light [data-liquid-panel]:hover,
 html.light [data-liquid-alert-card]:hover,
 html:not(.dark) .app-topbar:hover,
-html:not(.dark) [data-sidebar]:hover,
 html:not(.dark) .motion-stagger > *:nth-child(-n+4):hover,
 html:not(.dark) [data-liquid-panel]:hover,
 html:not(.dark) [data-liquid-alert-card]:hover {

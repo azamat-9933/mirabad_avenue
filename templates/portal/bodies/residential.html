@@ -1,13 +1,13 @@
 <!-- Main Content Wrapper -->
-<main class="ml-64 min-h-screen pt-16">
+<main class="app-main min-h-screen pt-16">
 <!-- Main Page Content -->
-<div class="p-8">
+<div class="app-page py-8">
 <!-- Header Section -->
 <div class="mb-8">
-<h2 class="text-3xl font-extrabold text-on-surface tracking-tight">Residential Units</h2>
+<h2 class="app-page-title text-3xl font-extrabold text-on-surface tracking-tight">Residential Units</h2>
 </div>
 <!-- Bento Grid Summary Cards -->
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8 motion-stagger">
+<div class="residential-kpi-grid grid gap-6 mb-8 motion-stagger">
 <!-- Total Complexes -->
 <div class="residential-kpi-card bg-surface-container-lowest p-6 rounded-lg shadow-sm border border-transparent hover:border-primary-container/10 transition-all flex flex-col justify-between" data-stat-card="total-complexes">
 <div class="flex justify-between items-start mb-4">
@@ -55,10 +55,10 @@
 </div>
 </div>
 <!-- Main Layout with Sidebar -->
-<div class="grid grid-cols-12 gap-8">
+<div class="residential-layout grid gap-8">
 <!-- Main Table Section -->
-<div class="col-span-12 xl:col-span-9 bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden" data-residential-performance-card>
-<div class="px-6 py-5 flex flex-col gap-4 border-b border-surface-container-low xl:flex-row xl:items-center xl:justify-between">
+<div class="min-w-0 bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden" data-residential-performance-card>
+<div class="px-6 py-5 flex flex-wrap items-center justify-between gap-3 border-b border-surface-container-low">
 <div class="flex flex-col gap-3">
 <h3 class="text-lg font-bold text-primary" data-residential-performance-heading>Complex Performance Overview</h3>
 </div>
@@ -83,7 +83,7 @@
 </div>
 </div>
 <!-- Right Sidebar: Quick Stats & Alerts -->
-<div class="col-span-12 xl:col-span-3">
+<div class="residential-side min-w-0">
 <!-- Recent Alerts -->
 <div class="bg-surface-container-lowest rounded-xl p-6 shadow-sm border border-surface-container-low recent-alerts-panel" data-liquid-panel="recent-alerts">
 <div class="flex items-center justify-between mb-5">

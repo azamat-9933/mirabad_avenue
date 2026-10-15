@@ -1,7 +1,8 @@
 {# Unified sidebar — design from stitch_/system_overview_standardized_nav #}
-<aside class="h-screen w-64 fixed left-0 top-0 bg-[#eff4f8] dark:bg-slate-900 flex flex-col p-4 space-y-2 z-50 overflow-y-auto overflow-x-hidden" data-sidebar>
+<aside class="fixed left-0 top-0 bg-[#eff4f8] dark:bg-slate-900 flex flex-col p-4 space-y-2 z-50" data-sidebar id="app-sidebar">
 <a class="sidebar-brand-block px-2 py-2 mb-2 block" href="{% url 'portal:dashboard' %}">
 <div class="sidebar-brand-main">
+<span class="sidebar-brand-mark sidebar-brand-rail-mark" aria-hidden="true">MA</span>
 <div class="sidebar-brand-copy">
 <h1 class="text-lg font-black text-[#004354] dark:text-cyan-500 tracking-tight">Mirabad Avenue</h1>
 <p class="sidebar-brand-subtitle text-xs text-on-surface-variant font-medium">Utility Management</p>
@@ -50,7 +51,7 @@
 </button>
 </div>
 </div>
-<div class="mx-1 rounded-[24px] border border-white/75 bg-[linear-gradient(180deg,rgba(255,255,255,0.9),rgba(225,241,247,0.8))] px-3 py-2.5 shadow-[0_18px_34px_rgba(0,92,114,0.12)] backdrop-blur-xl ring-1 ring-[rgba(255,255,255,0.55)] dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(23,29,40,0.78),rgba(15,20,29,0.72))] dark:shadow-[0_18px_34px_rgba(0,0,0,0.34)] dark:ring-[rgba(255,255,255,0.06)]">
+<div class="sidebar-quick-actions mx-1 rounded-[24px] border border-white/75 bg-[linear-gradient(180deg,rgba(255,255,255,0.9),rgba(225,241,247,0.8))] px-3 py-2.5 shadow-[0_18px_34px_rgba(0,92,114,0.12)] backdrop-blur-xl ring-1 ring-[rgba(255,255,255,0.55)] dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(23,29,40,0.78),rgba(15,20,29,0.72))] dark:shadow-[0_18px_34px_rgba(0,0,0,0.34)] dark:ring-[rgba(255,255,255,0.06)]">
 <div class="px-1 pb-2">
 <p class="text-[10px] font-black uppercase tracking-[0.16em] text-[#6a7e88] dark:text-slate-400" data-i18n-key="Quick Actions">Quick Actions</p>
 </div>
@@ -78,7 +79,7 @@
 <span class="sidebar-settings-gear-wrap" aria-hidden="true">
 <span class="material-symbols-outlined sidebar-settings-gear" data-icon="settings">settings</span>
 </span>
-<span class="font-medium">Settings</span>
+<span class="font-medium" data-i18n-key="Settings">Settings</span>
 </button>
 </div>
 </aside>

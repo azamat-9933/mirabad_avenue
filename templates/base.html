@@ -17,7 +17,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
 <link href="{% static 'img/favicon.svg' %}" rel="icon" type="image/svg+xml"/>
-<link href="{% static 'css/app.css' %}?v=payment-channels-20261015-3" rel="stylesheet"/>
+<link href="{% static 'css/app.css' %}?v=responsive-20261015-2" rel="stylesheet"/>
+<link href="{% static 'css/responsive.css' %}?v=responsive-20261015-2" rel="stylesheet"/>
 <script id="tailwind-config">
         tailwind.config = {
             darkMode: "class",
@@ -475,25 +476,6 @@
             0%, 100% { box-shadow: 0 0 0 0 rgba(186, 26, 26, 0); }
             50% { box-shadow: 0 0 0 6px rgba(186, 26, 26, 0.10); }
         }
-        @media (max-width: 767px) {
-            aside.h-screen.w-64 {
-                transform: translateX(-100%);
-            }
-            .app-topbar {
-                left: 0;
-            }
-            .app-topbar form {
-                width: min(58vw, 18rem);
-                max-width: none;
-            }
-            .ml-64,
-            .md\:ml-64 {
-                margin-left: 0 !important;
-            }
-            .pl-64 {
-                padding-left: 0 !important;
-            }
-        }
     </style>
 {% block extra_head %}{% endblock %}
 </head>
@@ -916,7 +898,7 @@
 <script>
     window.HydroFlowBackendData = JSON.parse(document.getElementById("hydroflow-backend-data").textContent);
 </script>
-<script src="{% static 'js/app.js' %}?v=payment-channels-20261015-3"></script>
+<script src="{% static 'js/app.js' %}?v=responsive-20261015-2"></script>
 </body>
 </html>
 

@@ -1,13 +1,13 @@
 {% extends "base.html" %}
 {% block title %}{{ page_title }}{% endblock %}
 {% block page_body %}
-<main class="ml-64 min-h-screen pt-16">
-  <div class="px-8 py-8 space-y-6">
+<main class="app-main min-h-screen pt-16">
+  <div class="app-page py-8 space-y-6">
     <section class="rounded-2xl border border-outline-variant/20 bg-surface-container-lowest p-6 shadow-sm">
       <div class="flex flex-wrap items-start justify-between gap-4">
         <div>
           <p class="text-xs font-black uppercase tracking-[0.18em] text-primary">Billing</p>
-          <h1 class="mt-2 text-3xl font-black text-on-surface">House Billing Periods</h1>
+          <h1 class="app-page-title mt-2 text-3xl font-black text-on-surface">House Billing Periods</h1>
           <p class="mt-2 text-sm text-on-surface-variant">
             Manage periods by house, add expenses, update status, and edit heating days per apartment.
           </p>
@@ -55,8 +55,8 @@
               <span>Open details</span>
             </a>
           </header>
-          <div class="overflow-x-auto">
-            <table class="min-w-full text-sm">
+          <div class="overflow-x-auto stack-table-host">
+            <table class="min-w-full text-sm stack-table">
               <thead class="bg-surface-container text-on-surface-variant">
                 <tr>
                   <th class="px-4 py-3 text-left font-bold">Period</th>
@@ -72,12 +72,12 @@
               <tbody>
                 {% for row in item.periods %}
                   <tr class="border-t border-outline-variant/15">
-                    <td class="px-4 py-3 font-semibold text-on-surface">{{ row.name }}</td>
-                    <td class="px-4 py-3 text-on-surface-variant">
+                    <td class="px-4 py-3 font-semibold text-on-surface stack-title" data-label="Period">{{ row.name }}</td>
+                    <td class="px-4 py-3 text-on-surface-variant stack-full" data-label="Dates">
                       {{ row.start_date }} - {{ row.end_date }}<br/>
                       <span class="text-xs">{{ row.total_days }} days</span>
                     </td>
-                    <td class="px-4 py-3">
+                    <td class="px-4 py-3 stack-full" data-label="Status">
                       <form method="post" class="flex items-center gap-2">
                         {% csrf_token %}
                         <input type="hidden" name="action" value="update_status"/>
@@ -91,11 +91,11 @@
                         <button type="submit" class="rounded-lg bg-primary px-2 py-1 text-xs font-bold text-white hover:opacity-90">Save</button>
                       </form>
                     </td>
-                    <td class="px-4 py-3 font-semibold text-on-surface">{{ row.heating_expense }}</td>
-                    <td class="px-4 py-3 font-semibold text-on-surface">{{ row.hot_water_expense }}</td>
-                    <td class="px-4 py-3 text-on-surface">{{ row.charges_count }}</td>
-                    <td class="px-4 py-3 text-on-surface">{{ row.invoices_count }}</td>
-                    <td class="px-4 py-3">
+                    <td class="px-4 py-3 font-semibold text-on-surface" data-label="Heating Expense">{{ row.heating_expense }}</td>
+                    <td class="px-4 py-3 font-semibold text-on-surface" data-label="Hot Water Expense">{{ row.hot_water_expense }}</td>
+                    <td class="px-4 py-3 text-on-surface" data-label="Charges">{{ row.charges_count }}</td>
+                    <td class="px-4 py-3 text-on-surface" data-label="Invoices">{{ row.invoices_count }}</td>
+                    <td class="px-4 py-3 stack-full" data-label="Actions">
                       <div class="flex flex-wrap gap-2">
                         <a href="?building_id={{ item.building.id }}&period_id={{ row.id }}" class="rounded-lg border border-outline-variant/40 px-2 py-1 text-xs font-bold text-on-surface-variant hover:bg-surface-container">Details</a>
                         <a href="/admin/billing/billingperiod/{{ row.id }}/change/" class="rounded-lg border border-outline-variant/40 px-2 py-1 text-xs font-bold text-on-surface-variant hover:bg-surface-container">Admin period</a>
@@ -185,8 +185,8 @@
           </form>
         </div>
 
-        <div class="overflow-x-auto rounded-xl border border-outline-variant/20">
-          <table class="min-w-full text-sm">
+        <div class="overflow-x-auto rounded-xl border border-outline-variant/20 stack-table-host">
+          <table class="min-w-full text-sm stack-table">
             <thead class="bg-surface-container text-on-surface-variant">
               <tr>
                 <th class="px-4 py-3 text-left font-bold">Apartment</th>
@@ -201,12 +201,12 @@
             <tbody>
               {% for row in apartment_rows %}
                 <tr class="border-t border-outline-variant/15">
-                  <td class="px-4 py-3 font-semibold text-on-surface">{{ row.apartment.number }}</td>
-                  <td class="px-4 py-3 text-on-surface-variant">{% if row.owner %}{{ row.owner.fio }}{% else %}-{% endif %}</td>
-                  <td class="px-4 py-3 text-on-surface">{{ row.apartment.area }}</td>
-                  <td class="px-4 py-3 font-semibold text-emerald-700">{{ row.heated_days }}</td>
-                  <td class="px-4 py-3 font-semibold text-red-700">{{ row.not_heated_days }}</td>
-                  <td class="px-4 py-3 min-w-[280px]">
+                  <td class="px-4 py-3 font-semibold text-on-surface" data-label="Apartment">{{ row.apartment.number }}</td>
+                  <td class="px-4 py-3 text-on-surface-variant" data-label="Resident">{% if row.owner %}{{ row.owner.fio }}{% else %}-{% endif %}</td>
+                  <td class="px-4 py-3 text-on-surface" data-label="Area">{{ row.apartment.area }}</td>
+                  <td class="px-4 py-3 font-semibold text-emerald-700" data-label="Heated days">{{ row.heated_days }}</td>
+                  <td class="px-4 py-3 font-semibold text-red-700" data-label="No heating days">{{ row.not_heated_days }}</td>
+                  <td class="px-4 py-3 min-w-[280px] stack-full" data-label="Not heated dates">
                     <form method="post" class="flex items-center gap-2">
                       {% csrf_token %}
                       <input type="hidden" name="action" value="update_heating_record"/>
@@ -217,7 +217,7 @@
                       <button type="submit" class="rounded-lg bg-primary px-3 py-2 text-xs font-bold text-white hover:opacity-90">Save</button>
                     </form>
                   </td>
-                  <td class="px-4 py-3">
+                  <td class="px-4 py-3 stack-full" data-label="Actions">
                     {% if row.record_admin_url %}
                       <a href="{{ row.record_admin_url }}" class="rounded-lg border border-outline-variant/40 px-2 py-1 text-xs font-bold text-on-surface-variant hover:bg-surface-container">Admin</a>
                     {% else %}

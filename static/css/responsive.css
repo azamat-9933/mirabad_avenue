@@ -1,0 +1,1655 @@
+/*
+ * Responsive layer, loaded after app.css.
+ *
+ * Breakpoints (match the Tailwind defaults used in the templates):
+ *   >= 1280px  desktop: full sidebar.
+ *   768-1279   tablet / small laptop: icon rail that expands over the page
+ *              (mouse hover, keyboard focus, or the topbar menu button).
+ *   < 768px    phone: off-canvas drawer opened from the topbar menu button.
+ */
+
+:root {
+    --app-sidebar-full: 256px;
+    --app-sidebar-rail: 88px;
+    --app-sidebar-w: var(--app-sidebar-full);
+    --app-gutter: 32px;
+    --app-topbar-h: 72px;
+}
+
+@media (max-width: 1279.98px) {
+    :root {
+        --app-sidebar-w: var(--app-sidebar-rail);
+        --app-gutter: 24px;
+    }
+}
+
+@media (max-width: 767.98px) {
+    :root {
+        --app-sidebar-w: 0px;
+        --app-gutter: 16px;
+        --app-topbar-h: 64px;
+    }
+}
+
+html,
+body {
+    max-width: 100%;
+}
+
+body {
+    overflow-x: hidden;
+}
+
+html.app-sidebar-open,
+html.app-sidebar-open body {
+    overflow: hidden;
+}
+
+/* iOS Safari zooms into any focused field whose text is under 16px. */
+@media (max-width: 767.98px) and (pointer: coarse) {
+    input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+    select,
+    textarea {
+        font-size: 16px !important;
+    }
+}
+
+/* ---- Page offset ------------------------------------------------------- */
+
+.app-main {
+    min-width: 0;
+    margin-left: var(--app-sidebar-w);
+}
+
+/* Pages whose background should run under the translucent sidebar. */
+.app-main.app-main--under-sidebar {
+    margin-left: 0;
+    padding-left: var(--app-sidebar-w);
+}
+
+/* ---- Sidebar ----------------------------------------------------------- */
+
+aside[data-sidebar] {
+    width: var(--app-sidebar-full);
+    height: 100vh;
+    height: 100dvh;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+}
+
+aside[data-sidebar] .sidebar-brand-rail-mark {
+    display: none;
+}
+
+/* Tablet rail. Labels fade instead of reflowing so icons never move while it expands. */
+@media (min-width: 768px) and (max-width: 1279.98px) {
+    aside[data-sidebar] {
+        width: var(--app-sidebar-rail);
+        scrollbar-width: none;
+        transition: width 0.22s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.22s ease !important;
+    }
+
+    aside[data-sidebar]::-webkit-scrollbar {
+        display: none;
+    }
+
+    aside[data-sidebar].is-open {
+        width: var(--app-sidebar-full);
+        scrollbar-width: thin;
+        box-shadow: 24px 0 60px rgba(15, 23, 42, 0.18) !important;
+    }
+
+    aside[data-sidebar] .sidebar-brand-block {
+        min-height: 67px;
+    }
+
+    aside[data-sidebar] .sidebar-brand-rail-mark {
+        position: absolute;
+        top: 50%;
+        left: 8px;
+        display: inline-flex;
+        transform: translateY(-50%);
+        transition: opacity 0.16s ease;
+    }
+
+    aside[data-sidebar] .sidebar-link,
+    aside[data-sidebar] .sidebar-premium-item {
+        white-space: nowrap;
+    }
+
+    aside[data-sidebar] .sidebar-brand-copy,
+    aside[data-sidebar] .sidebar-brand-accent,
+    aside[data-sidebar] .sidebar-link > span.font-medium,
+    aside[data-sidebar] .sidebar-premium-copy {
+        opacity: 0 !important;
+        transition: opacity 0.12s ease !important;
+    }
+
+    /* Quick actions only appear in the full menu (topbar button); hover expansion keeps positions stable. */
+    aside[data-sidebar] .sidebar-quick-actions {
+        display: none;
+    }
+
+    aside[data-sidebar].is-open .sidebar-quick-actions {
+        display: block;
+    }
+
+    aside[data-sidebar].is-open .sidebar-brand-rail-mark {
+        opacity: 0;
+    }
+
+    aside[data-sidebar].is-open .sidebar-brand-copy,
+    aside[data-sidebar].is-open .sidebar-brand-accent,
+    aside[data-sidebar].is-open .sidebar-link > span.font-medium,
+    aside[data-sidebar].is-open .sidebar-premium-copy {
+        opacity: 1 !important;
+        transition: opacity 0.18s ease 0.08s !important;
+    }
+}
+
+@media (min-width: 768px) and (max-width: 1279.98px) and (hover: hover) and (pointer: fine) {
+    aside[data-sidebar]:hover,
+    aside[data-sidebar]:has(:focus-visible) {
+        width: var(--app-sidebar-full);
+        scrollbar-width: thin;
+        box-shadow: 24px 0 60px rgba(15, 23, 42, 0.16) !important;
+        transition-delay: 0.12s !important;
+    }
+
+    aside[data-sidebar]:hover .sidebar-brand-rail-mark,
+    aside[data-sidebar]:has(:focus-visible) .sidebar-brand-rail-mark {
+        opacity: 0;
+        transition-delay: 0.12s;
+    }
+
+    aside[data-sidebar]:hover .sidebar-brand-copy,
+    aside[data-sidebar]:hover .sidebar-brand-accent,
+    aside[data-sidebar]:hover .sidebar-link > span.font-medium,
+    aside[data-sidebar]:hover .sidebar-premium-copy,
+    aside[data-sidebar]:has(:focus-visible) .sidebar-brand-copy,
+    aside[data-sidebar]:has(:focus-visible) .sidebar-brand-accent,
+    aside[data-sidebar]:has(:focus-visible) .sidebar-link > span.font-medium,
+    aside[data-sidebar]:has(:focus-visible) .sidebar-premium-copy {
+        opacity: 1 !important;
+        transition: opacity 0.18s ease 0.2s !important;
+    }
+}
+
+/* Phone drawer. `translate` is used instead of `transform`, which older rules reset for reduced motion. */
+@media (max-width: 767.98px) {
+    aside[data-sidebar] {
+        width: min(var(--app-sidebar-full), calc(100vw - 48px));
+        translate: -105% 0;
+        visibility: hidden;
+        transition: translate 0.24s cubic-bezier(0.2, 0.8, 0.2, 1), visibility 0s linear 0.24s !important;
+    }
+
+    aside[data-sidebar].is-open {
+        translate: 0 0;
+        visibility: visible;
+        box-shadow: 24px 0 60px rgba(15, 23, 42, 0.22) !important;
+        transition: translate 0.24s cubic-bezier(0.2, 0.8, 0.2, 1), visibility 0s !important;
+    }
+}
+
+/* When the menu floats over the page, the see-through glass made labels hard to read. */
+@media (max-width: 1279.98px) {
+    html aside[data-sidebar].is-open {
+        background: rgba(250, 252, 255, 0.97) !important;
+    }
+
+    html.dark aside[data-sidebar].is-open {
+        background: rgba(19, 21, 28, 0.97) !important;
+    }
+}
+
+@media (min-width: 768px) and (max-width: 1279.98px) and (hover: hover) and (pointer: fine) {
+    html aside[data-sidebar]:hover,
+    html aside[data-sidebar]:has(:focus-visible) {
+        background: rgba(250, 252, 255, 0.97) !important;
+    }
+
+    html.dark aside[data-sidebar]:hover,
+    html.dark aside[data-sidebar]:has(:focus-visible) {
+        background: rgba(19, 21, 28, 0.97) !important;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    aside[data-sidebar],
+    aside[data-sidebar].is-open {
+        transition: none !important;
+    }
+}
+
+/* Short windows (13" laptops, landscape tablets): tighter sidebar so Settings stays reachable without scrolling. */
+@media (max-height: 880px) {
+    html aside[data-sidebar] nav {
+        gap: 4px !important;
+    }
+
+    html body aside[data-sidebar] nav > .nav-item.sidebar-link {
+        height: 40px !important;
+        min-height: 40px !important;
+        margin-top: 0 !important;
+    }
+
+    html aside[data-sidebar] .sidebar-brand-block {
+        margin-bottom: 0;
+    }
+
+    html aside[data-sidebar] .sidebar-quick-actions .space-y-2 > * + * {
+        margin-top: 6px;
+    }
+
+    html aside[data-sidebar] .sidebar-quick-actions .space-y-2 > * {
+        padding-top: 5px;
+        padding-bottom: 5px;
+    }
+
+    html body aside[data-sidebar] .sidebar-settings-button.sidebar-link {
+        height: 42px !important;
+        min-height: 42px !important;
+    }
+}
+
+/* ---- Topbar ------------------------------------------------------------ */
+
+.app-topbar {
+    left: var(--app-sidebar-w) !important;
+    gap: 16px;
+    min-width: 0;
+    padding-left: var(--app-gutter) !important;
+    padding-right: var(--app-gutter) !important;
+}
+
+.app-topbar .app-topbar-search {
+    flex: 0 1 384px;
+    min-width: 0;
+    margin-right: auto;
+}
+
+.app-topbar .app-topbar-search input {
+    min-width: 0;
+    text-overflow: ellipsis;
+}
+
+.app-topbar .app-topbar-actions {
+    flex: 0 0 auto;
+    min-width: 0;
+}
+
+.app-sidebar-toggle {
+    flex: 0 0 auto;
+}
+
+@media (min-width: 1280px) {
+    .app-sidebar-toggle {
+        display: none !important;
+    }
+}
+
+.app-topbar .account-menu {
+    width: min(20rem, calc(100vw - 24px));
+}
+
+@media (max-width: 1023.98px) {
+    .app-topbar .topbar-account-copy {
+        display: none !important;
+    }
+
+    .app-topbar .topbar-account-chip {
+        padding: 0.2rem !important;
+        border-left: 0 !important;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .app-topbar {
+        gap: 8px;
+        padding-top: 0.5rem !important;
+        padding-bottom: 0.5rem !important;
+    }
+
+    .app-topbar .app-topbar-search {
+        flex: 1 1 auto;
+        margin-right: 0;
+    }
+
+    .app-topbar .app-topbar-actions {
+        gap: 8px;
+    }
+
+    .app-topbar .lang-toggle {
+        min-width: 0;
+        padding: 0 0.6rem;
+        gap: 0.3rem;
+    }
+
+    .app-topbar .lang-toggle-chevron {
+        display: none !important;
+    }
+}
+
+@media (max-width: 479.98px) {
+    .app-topbar form[role="search"] {
+        min-height: 40px;
+        padding: 0 12px 0 4px !important;
+        gap: 6px;
+    }
+
+    .app-topbar form[role="search"] > .material-symbols-outlined[data-icon="search"] {
+        width: 30px !important;
+        height: 30px !important;
+        min-width: 30px !important;
+    }
+
+    .app-topbar .lang-toggle > .material-symbols-outlined:first-child {
+        display: none !important;
+    }
+}
+
+/* ---- Page frame -------------------------------------------------------- */
+
+/* Page layouts react to the width left over by the sidebar, not to the viewport. */
+.app-main {
+    container-type: inline-size;
+    container-name: page;
+}
+
+.app-page {
+    padding-left: var(--app-gutter) !important;
+    padding-right: var(--app-gutter) !important;
+}
+
+/* ---- Residents (dashboard) --------------------------------------------- */
+
+.dashboard-kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@container page (min-width: 1100px) {
+    .dashboard-kpi-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+}
+
+@container page (max-width: 560px) {
+    .dashboard-kpi-grid {
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+
+    .dashboard-kpi-grid > [data-stat-card] {
+        padding: 14px;
+    }
+
+    .dashboard-kpi-grid > [data-stat-card] > div:first-child {
+        gap: 8px;
+        margin-bottom: 10px;
+    }
+
+    .dashboard-kpi-grid > [data-stat-card] p.uppercase {
+        font-size: 10px;
+        letter-spacing: 0.08em;
+        line-height: 1.25;
+    }
+
+    .dashboard-kpi-grid > [data-stat-card] .kpi-icon-chip {
+        flex: 0 0 auto;
+        transform: scale(0.85);
+        transform-origin: top right;
+    }
+
+    .dashboard-kpi-grid > [data-stat-card] h2 {
+        font-size: 1.45rem;
+        line-height: 1.15;
+        white-space: nowrap;
+    }
+
+    .dashboard-kpi-grid > [data-stat-card] [data-stat-support] {
+        font-size: 11px;
+        line-height: 1.3;
+    }
+
+    .dashboard-kpi-grid > [data-stat-card] .mt-4 {
+        margin-top: 10px;
+    }
+}
+
+.resident-directory-panel {
+    container-type: inline-size;
+    container-name: residents;
+    min-width: 0;
+}
+
+@container page (max-width: 900px) {
+    .resident-directory-panel {
+        padding: 20px !important;
+    }
+}
+
+@container page (max-width: 560px) {
+    .resident-directory-panel {
+        padding: 12px !important;
+        border-radius: 18px !important;
+    }
+}
+
+/* Wide: a real table row. Balance and actions get their own columns. */
+@container residents (min-width: 1000px) {
+    /* Set on the children: a container query never styles the container itself. */
+    .resident-directory-panel > * {
+        --resident-directory-columns: 64px minmax(190px, 2.2fr) minmax(110px, 1.1fr) 104px 104px minmax(150px, 1.25fr) 172px;
+    }
+
+    .resident-directory-panel .resident-column-sorts,
+    .resident-directory-panel .resident-list-row {
+        grid-template-columns: var(--resident-directory-columns);
+    }
+
+    .resident-directory-panel .resident-sort-balance {
+        grid-column: 6 / -1;
+        padding-left: 0;
+    }
+
+    .resident-directory-panel .resident-balance-filter-shell {
+        margin-left: 0;
+    }
+
+    .resident-directory-panel .resident-balance-filter-shell .resident-filter-button {
+        min-width: 0;
+        padding: 0 11px;
+    }
+
+    .resident-directory-panel .resident-sort-button {
+        gap: 4px;
+        padding: 10px 8px 10px 10px;
+    }
+
+    .resident-directory-panel .resident-sort-button__icon {
+        font-size: 15px !important;
+    }
+
+    .resident-directory-panel .resident-list-balance-panel {
+        display: contents;
+    }
+
+    .resident-directory-panel .resident-list-balance-main {
+        text-align: right;
+    }
+
+    .resident-directory-panel .resident-list-actions {
+        justify-content: flex-end;
+    }
+}
+
+/* Below the wide layout the column headers turn into a row of sort chips. */
+@container residents (max-width: 999.98px) {
+    .resident-directory-panel .resident-column-sorts {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .resident-directory-panel .resident-sort-button {
+        flex: 0 0 auto;
+        width: auto;
+        min-height: 36px;
+        padding: 6px 10px 6px 12px;
+        border-radius: 999px;
+    }
+
+    .resident-directory-panel .resident-sort-button__icon {
+        font-size: 16px !important;
+    }
+
+    .resident-directory-panel .resident-sort-balance {
+        order: -1;
+        flex: 1 1 100%;
+        justify-content: flex-start;
+        padding-left: 0;
+    }
+
+    .resident-directory-panel .resident-balance-filter-shell {
+        flex-wrap: nowrap;
+        width: 100%;
+        min-width: 0;
+        margin-left: 0;
+        border-radius: 999px;
+    }
+
+    .resident-directory-panel .resident-balance-filter-shell .resident-filter-button {
+        flex: 1 1 0;
+        min-width: 0;
+        padding: 0 10px;
+    }
+
+    .resident-directory-panel .resident-list-row {
+        grid-template-columns: 56px repeat(3, minmax(0, 1fr)) minmax(150px, auto);
+        grid-template-areas:
+            "id person person person balance"
+            "id tg contract apt actions";
+        gap: 10px 14px;
+        align-items: start;
+        padding: 14px;
+    }
+
+    .resident-directory-panel .resident-list-row > div:not(:last-child)::after {
+        display: none;
+    }
+
+    .resident-directory-panel .resident-list-balance-panel {
+        display: contents;
+    }
+
+    .resident-directory-panel .resident-list-id {
+        grid-area: id;
+    }
+
+    .resident-directory-panel .resident-list-person {
+        grid-area: person;
+    }
+
+    .resident-directory-panel .resident-list-row > .resident-list-cell:nth-child(3) {
+        grid-area: tg;
+    }
+
+    .resident-directory-panel .resident-list-row > .resident-list-cell:nth-child(4) {
+        grid-area: contract;
+    }
+
+    .resident-directory-panel .resident-list-row > .resident-list-cell:nth-child(5) {
+        grid-area: apt;
+    }
+
+    .resident-directory-panel .resident-list-balance-main {
+        grid-area: balance;
+        text-align: right;
+    }
+
+    .resident-directory-panel .resident-list-actions {
+        grid-area: actions;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        align-self: end;
+        gap: 6px;
+    }
+
+    .resident-directory-panel .resident-list-action {
+        width: auto;
+    }
+
+    .resident-directory-panel .resident-list-balance-main span,
+    .resident-directory-panel .resident-list-balance-main strong {
+        justify-content: flex-end;
+    }
+}
+
+/* Phones: compact card. */
+@container residents (max-width: 559.98px) {
+    .resident-directory-panel .resident-column-sorts {
+        gap: 6px;
+    }
+
+    .resident-directory-panel .resident-sort-button {
+        min-height: 32px;
+        padding: 4px 8px 4px 10px;
+        gap: 4px;
+    }
+
+    .resident-directory-panel .resident-balance-filter-shell {
+        gap: 4px;
+        padding: 4px;
+    }
+
+    .resident-directory-panel .resident-balance-filter-shell .resident-filter-button {
+        height: 32px;
+        padding: 0 6px;
+        font-size: 11px;
+        letter-spacing: 0.04em;
+    }
+
+    .resident-directory-panel .resident-filter-count {
+        height: 28px;
+        padding: 0 8px;
+    }
+
+    .resident-directory-panel .resident-flat-list {
+        border-radius: 14px;
+    }
+
+    .resident-directory-panel .resident-list-row {
+        grid-template-columns: 44px repeat(3, minmax(0, 1fr));
+        grid-template-areas:
+            "id person person person"
+            "tg tg contract apt"
+            "balance balance balance actions";
+        gap: 10px;
+        padding: 12px;
+    }
+
+    /* Icon-only actions; the label stays for screen readers. */
+    .resident-directory-panel .resident-list-actions {
+        flex-wrap: nowrap;
+        gap: 4px;
+    }
+
+    .resident-directory-panel .resident-list-action > span:not(.material-symbols-outlined) {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+        white-space: nowrap;
+    }
+
+    .resident-directory-panel .resident-list-action .material-symbols-outlined {
+        font-size: 16px !important;
+    }
+
+    .resident-directory-panel .resident-list-id > span {
+        display: none;
+    }
+
+    .resident-directory-panel .resident-list-id strong {
+        min-width: 38px;
+        height: 30px;
+        padding: 0 6px;
+    }
+
+    .resident-directory-panel .resident-list-person h4 {
+        font-size: 14px;
+    }
+
+    .resident-directory-panel .resident-list-balance-main {
+        align-self: end;
+        text-align: left;
+    }
+
+    .resident-directory-panel .resident-list-balance-main span,
+    .resident-directory-panel .resident-list-balance-main strong {
+        justify-content: flex-start;
+    }
+
+    .resident-directory-panel .resident-list-balance strong {
+        font-size: 13.5px;
+    }
+
+    .resident-directory-panel .resident-list-action {
+        position: relative;
+        width: 32px;
+        min-width: 32px;
+        height: 32px;
+        padding: 0;
+        gap: 0;
+    }
+}
+
+/* ---- Shared page pieces ------------------------------------------------ */
+
+.app-page-title {
+    font-size: clamp(1.5rem, 1.1rem + 1.6vw, 1.875rem) !important;
+    line-height: 1.15 !important;
+    overflow-wrap: anywhere;
+}
+
+/* Visible only where a table collapses into cards. */
+.table-cell-label {
+    display: none;
+}
+
+/* Card-mode rows set their own display; rows hidden by filters or drilldowns must stay hidden. */
+.billing-transactions-table tbody tr.hidden,
+.residential-performance-table tbody tr.hidden {
+    display: none !important;
+}
+
+/* ---- Payments (billing) ------------------------------------------------ */
+
+.billing-layout {
+    grid-template-columns: minmax(0, 1fr);
+}
+
+.billing-main-column {
+    min-width: 0;
+}
+
+.billing-side-column {
+    display: grid;
+    gap: 24px;
+    align-content: start;
+    min-width: 0;
+}
+
+@container page (min-width: 1180px) {
+    .billing-layout {
+        grid-template-columns: minmax(0, 1fr) 320px;
+    }
+}
+
+/* Stacked: the two side cards sit next to each other under the table. */
+@container page (max-width: 1179.98px) {
+    .billing-side-column {
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+        align-items: start;
+    }
+}
+
+[data-billing-kpi-card] {
+    container-type: inline-size;
+    container-name: billing-kpi;
+}
+
+.billing-kpi-grid {
+    grid-template-columns: minmax(0, 1fr);
+}
+
+.billing-kpi-grid > div {
+    min-width: 0;
+}
+
+.billing-kpi-grid p.text-3xl {
+    font-size: clamp(1.5rem, 3.3cqi, 1.875rem);
+    line-height: 1.15;
+}
+
+@container billing-kpi (min-width: 720px) {
+    .billing-kpi-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+/* Narrow: the two counters share a row, the long money total gets a full row. */
+@container billing-kpi (max-width: 719.98px) {
+    .billing-kpi-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px 14px;
+    }
+
+    .billing-kpi-grid > div:nth-child(2) {
+        grid-column: 1 / -1;
+        order: 3;
+    }
+
+    .billing-kpi-grid p.text-3xl {
+        font-size: clamp(1.35rem, 8cqi, 1.875rem);
+    }
+
+    .billing-kpi-grid p.uppercase {
+        font-size: 10px;
+        letter-spacing: 0.1em;
+    }
+}
+
+.payment-channel .flex.items-center.justify-between {
+    gap: 12px;
+    min-width: 0;
+}
+
+.payment-channel .flex.items-center.gap-4 {
+    min-width: 0;
+}
+
+.payment-channel .flex.items-center.gap-4 > div:last-child {
+    min-width: 0;
+}
+
+.payment-channel [data-payment-channel-amount] {
+    white-space: nowrap;
+}
+
+.revenue-debt-card {
+    container-type: inline-size;
+    container-name: revenue-card;
+    min-width: 0;
+}
+
+.revenue-debt-card .revenue-debt-sector-metrics p {
+    overflow-wrap: anywhere;
+}
+
+@container revenue-card (max-width: 340px) {
+    .revenue-debt-card .revenue-debt-sector-metrics {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+[data-billing-transactions-card] {
+    container-type: inline-size;
+    container-name: billing-tx;
+    min-width: 0;
+}
+
+.billing-table-scroll {
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+}
+
+.billing-transactions-table th,
+.billing-transactions-table td {
+    padding-left: 14px !important;
+    padding-right: 14px !important;
+}
+
+.billing-transactions-table th {
+    white-space: nowrap;
+}
+
+.billing-transactions-table td:nth-child(n + 3) {
+    white-space: nowrap;
+}
+
+.billing-transactions-table td:nth-child(2) {
+    min-width: 150px;
+}
+
+.billing-transactions-table th:first-child,
+.billing-transactions-table td:first-child {
+    width: 5rem !important;
+    min-width: 5rem;
+}
+
+/* The leading filter glyph is decoration; dropping it gives the name column room. */
+@container billing-tx (max-width: 999.98px) {
+    .billing-transactions-table .table-filter-heading-icon {
+        display: none !important;
+    }
+
+    .billing-transactions-table .table-filter-heading-inner {
+        gap: 4px !important;
+        padding: 0 8px !important;
+    }
+
+    .billing-transactions-table .table-filter-heading-text {
+        letter-spacing: 0.06em !important;
+    }
+
+    .billing-transactions-table th:first-child,
+    .billing-transactions-table td:first-child {
+        width: 3.5rem !important;
+        min-width: 3.5rem;
+    }
+}
+
+/* Phones and narrow columns: each transaction becomes a small card. */
+@container billing-tx (max-width: 639.98px) {
+    .billing-transactions-table thead {
+        display: none;
+    }
+
+    .billing-transactions-table,
+    .billing-transactions-table tbody {
+        display: block;
+        width: 100%;
+    }
+
+    .billing-transactions-table tbody tr.billing-transaction-row {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-areas:
+            "id status"
+            "name name"
+            "date method"
+            "amount balance";
+        gap: 10px 16px;
+        padding: 14px 16px;
+    }
+
+    .billing-transactions-table tbody td {
+        display: block;
+        min-width: 0 !important;
+        width: auto !important;
+        padding: 0 !important;
+        white-space: normal;
+    }
+
+    .billing-transactions-table tbody td::after {
+        display: none !important;
+    }
+
+    .billing-transaction-row > td:nth-child(1) {
+        grid-area: id;
+        align-self: center;
+    }
+
+    .billing-transaction-row > td:nth-child(1) p::before {
+        content: "#";
+        opacity: 0.6;
+    }
+
+    .billing-transaction-row > td:nth-child(2) {
+        grid-area: name;
+    }
+
+    .billing-transaction-row > td:nth-child(3) {
+        grid-area: date;
+    }
+
+    .billing-transaction-row > td:nth-child(4) {
+        grid-area: method;
+    }
+
+    .billing-transaction-row > td:nth-child(5) {
+        grid-area: amount;
+    }
+
+    .billing-transaction-row > td:nth-child(6) {
+        grid-area: balance;
+    }
+
+    .billing-transaction-row > td:nth-child(7) {
+        grid-area: status;
+        justify-self: end;
+    }
+
+    .billing-transactions-table .table-cell-label {
+        display: block;
+        margin-bottom: 2px;
+        color: inherit;
+        font-size: 9.5px;
+        font-weight: 850;
+        letter-spacing: 0.12em;
+        line-height: 1.2;
+        text-transform: uppercase;
+        opacity: 0.62;
+    }
+}
+
+/* Tablet widths: one summary line plus one line of four facts. */
+@container billing-tx (min-width: 480px) and (max-width: 639.98px) {
+    .billing-transactions-table tbody tr.billing-transaction-row {
+        grid-template-columns: 56px repeat(4, minmax(0, 1fr));
+        grid-template-areas:
+            "id name name name status"
+            "id date method amount balance";
+        column-gap: 16px;
+    }
+
+    .billing-transaction-row > td:nth-child(1) {
+        align-self: start;
+    }
+}
+
+/* ---- Properties (residential) ------------------------------------------ */
+
+.residential-kpi-grid {
+    grid-template-columns: minmax(0, 1fr);
+}
+
+@container page (min-width: 560px) {
+    .residential-kpi-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@container page (max-width: 900px) {
+    .residential-kpi-grid {
+        gap: 14px;
+    }
+
+    .residential-kpi-grid > .residential-kpi-card {
+        min-height: 0 !important;
+        padding: 16px 18px !important;
+    }
+
+    .residential-kpi-grid > .residential-kpi-card > .mb-4 {
+        gap: 8px;
+        margin-bottom: 10px;
+    }
+
+    .residential-kpi-grid > .residential-kpi-card p.uppercase {
+        font-size: 10px;
+        letter-spacing: 0.1em;
+        line-height: 1.3;
+    }
+}
+
+.residential-layout {
+    grid-template-columns: minmax(0, 1fr);
+}
+
+@container page (min-width: 1180px) {
+    .residential-layout {
+        grid-template-columns: minmax(0, 1fr) 300px;
+    }
+}
+
+/* The tall alerts column only makes sense beside the table. */
+@container page (max-width: 1179.98px) {
+    .residential-layout .recent-alerts-panel {
+        min-height: 0 !important;
+    }
+}
+
+[data-residential-performance-card] {
+    container-type: inline-size;
+    container-name: residential-table;
+}
+
+/* Narrow: each house / apartment row becomes a card. */
+@container residential-table (max-width: 639.98px) {
+    .residential-table-fit,
+    .residential-table-fit.table-workspace {
+        overflow: visible !important;
+    }
+
+    .residential-performance-table {
+        display: block;
+        table-layout: auto;
+    }
+
+    .residential-performance-table thead {
+        display: none;
+    }
+
+    .residential-performance-table tbody {
+        display: block;
+    }
+
+    .residential-performance-table tbody tr {
+        display: grid;
+        grid-template-columns: 28px repeat(2, minmax(0, 1fr));
+        grid-template-areas:
+            "sel name name"
+            ". c3 c4"
+            ". c5 c5"
+            ". c6 c6";
+        gap: 10px 14px;
+        padding: 14px 14px 14px 10px;
+    }
+
+    .residential-performance-table tbody td {
+        display: block;
+        width: auto !important;
+        min-width: 0;
+        padding: 0 !important;
+        overflow: visible;
+        text-align: left;
+    }
+
+    .residential-performance-table tbody td::after {
+        display: none !important;
+    }
+
+    .residential-performance-table tbody tr > td:nth-child(1) {
+        grid-area: sel;
+        align-self: center;
+    }
+
+    .residential-performance-table tbody tr > td:nth-child(2) {
+        grid-area: name;
+    }
+
+    .residential-performance-table tbody tr > td:nth-child(3) {
+        grid-area: c3;
+    }
+
+    .residential-performance-table tbody tr > td:nth-child(4) {
+        grid-area: c4;
+    }
+
+    .residential-performance-table tbody tr > td:nth-child(5) {
+        grid-area: c5;
+    }
+
+    .residential-performance-table tbody tr > td:nth-child(5) > p {
+        display: inline-block;
+        margin-right: 8px;
+    }
+
+    .residential-performance-table tbody tr > td:nth-child(6) {
+        grid-area: c6;
+    }
+
+    .residential-performance-table .residential-action-cell {
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    /* Rows without a selection column (no select-all checkbox) shift one cell left. */
+    .residential-performance-table tbody tr:not(:has(> td > [data-row-select])) {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-areas:
+            "name name"
+            "c3 c4"
+            "c5 c5"
+            "c6 c6";
+        padding-left: 14px;
+    }
+
+    .residential-performance-table tbody tr:not(:has(> td > [data-row-select])) > td:nth-child(1) {
+        grid-area: name;
+    }
+
+    .residential-performance-table tbody tr:not(:has(> td > [data-row-select])) > td:nth-child(2) {
+        grid-area: c3;
+    }
+
+    .residential-performance-table tbody tr:not(:has(> td > [data-row-select])) > td:nth-child(3) {
+        grid-area: c4;
+    }
+
+    .residential-performance-table tbody tr:not(:has(> td > [data-row-select])) > td:nth-child(4) {
+        grid-area: c5;
+    }
+
+    .residential-performance-table tbody tr:not(:has(> td > [data-row-select])) > td:nth-child(5) {
+        grid-area: c6;
+    }
+
+    .residential-performance-table tbody tr[data-smart-empty] {
+        display: block;
+    }
+}
+
+/* Tablet widths: name and actions on top, the three facts on one line below. */
+@container residential-table (min-width: 480px) and (max-width: 639.98px) {
+    .residential-performance-table tbody tr {
+        grid-template-columns: 28px minmax(0, 1.25fr) minmax(0, 1fr) minmax(0, 1.35fr);
+        grid-template-areas:
+            "sel name name c6"
+            ". c3 c4 c5";
+        align-items: center;
+    }
+
+    .residential-performance-table tbody tr > td:nth-child(5) > p {
+        display: block;
+        margin: 0 0 4px;
+    }
+
+    .residential-performance-table .residential-action-cell {
+        justify-content: flex-end;
+    }
+}
+
+/* ---- Statistics (analytics) -------------------------------------------- */
+
+/* Narrow channel panel: the amount moves under the name instead of colliding with it. */
+@container (max-width: 420px) {
+    .analytics-v2-channel-card {
+        grid-template-columns: auto minmax(0, 1fr);
+        grid-template-areas:
+            "avatar copy"
+            "avatar value";
+        row-gap: 4px;
+    }
+
+    .analytics-v2-channel-avatar {
+        grid-area: avatar;
+    }
+
+    .analytics-v2-channel-copy {
+        grid-area: copy;
+        display: flex;
+        align-items: baseline;
+        flex-wrap: wrap;
+        gap: 2px 8px;
+    }
+
+    .analytics-v2-channel-value {
+        grid-area: value;
+        display: flex;
+        align-items: baseline;
+        flex-wrap: wrap;
+        gap: 2px 8px;
+        text-align: left;
+    }
+
+    .analytics-v2-channel-value strong {
+        font-size: 16px;
+    }
+}
+
+@container page (max-width: 560px) {
+    .analytics-v2-kpi {
+        min-height: 0;
+        gap: 6px;
+        padding: 14px 16px 12px;
+    }
+
+    .analytics-v2-kpi__icon {
+        width: 34px;
+        height: 34px;
+        border-radius: 12px;
+    }
+}
+
+/* ---- System health ----------------------------------------------------- */
+
+@container page (max-width: 560px) {
+    .health-kpi-grid {
+        gap: 14px;
+    }
+
+    .health-kpi-grid > div {
+        padding: 16px !important;
+    }
+
+    .health-kpi-grid > div > .mb-4 {
+        margin-bottom: 10px;
+    }
+}
+
+.maintenance-log-panel {
+    container-type: inline-size;
+    container-name: maintenance;
+}
+
+@container maintenance (max-width: 639.98px) {
+    .maintenance-table-fit,
+    .maintenance-table-fit.table-workspace {
+        overflow: visible !important;
+    }
+
+    .maintenance-log-table {
+        display: block;
+        table-layout: auto !important;
+    }
+
+    .maintenance-log-table colgroup,
+    .maintenance-log-table thead {
+        display: none;
+    }
+
+    .maintenance-log-table tbody {
+        display: block;
+    }
+
+    .maintenance-log-table tbody tr.maintenance-log-row {
+        display: grid;
+        grid-template-columns: 28px auto auto minmax(0, 1fr);
+        grid-template-areas:
+            "sel task task task"
+            ". loc loc loc"
+            ". prio status date"
+            ". act act act";
+        align-items: center;
+        gap: 8px 10px;
+        padding: 14px 14px 14px 10px;
+    }
+
+    .maintenance-log-table tbody tr.maintenance-log-row > td {
+        display: block;
+        width: auto !important;
+        min-width: 0;
+        padding: 0 !important;
+        overflow: visible !important;
+        text-align: left;
+    }
+
+    /* Mapped by content: the selection column is present only when the table has a select-all box. */
+    .maintenance-log-row > td:has([data-row-select]) {
+        grid-area: sel;
+    }
+
+    .maintenance-log-row > td:has(.maintenance-task-title) {
+        grid-area: task;
+    }
+
+    .maintenance-log-row > td:has(.maintenance-task-title) + td {
+        grid-area: loc;
+    }
+
+    .maintenance-log-row > td:has(.maintenance-task-title) + td + td {
+        grid-area: prio;
+    }
+
+    .maintenance-log-row > td:has(.maintenance-task-title) + td + td + td {
+        grid-area: date;
+        justify-self: end;
+        font-size: 12px;
+    }
+
+    .maintenance-log-row > td:has(.maintenance-task-title) + td + td + td + td {
+        grid-area: status;
+    }
+
+    .maintenance-log-row > td:has(.maintenance-action-button) {
+        grid-area: act;
+    }
+
+    .maintenance-log-table tbody tr.maintenance-log-row:not(:has([data-row-select])) {
+        grid-template-columns: auto auto minmax(0, 1fr);
+        grid-template-areas:
+            "task task task"
+            "loc loc loc"
+            "prio status date"
+            "act act act";
+        padding-left: 16px;
+    }
+
+    .maintenance-log-table tbody tr.hidden {
+        display: none !important;
+    }
+}
+
+/* ---- Generic stacked table (billing periods) --------------------------- */
+
+.stack-table-host {
+    container-type: inline-size;
+    container-name: stack-table;
+}
+
+@container stack-table (max-width: 639.98px) {
+    .stack-table {
+        display: block;
+        min-width: 0 !important;
+    }
+
+    .stack-table thead {
+        display: none;
+    }
+
+    .stack-table tbody {
+        display: block;
+    }
+
+    .stack-table tbody tr {
+        position: relative;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px 16px;
+        padding: 14px 16px;
+    }
+
+    .stack-table tbody tr.hidden {
+        display: none !important;
+    }
+
+    .stack-table tbody td {
+        display: block;
+        min-width: 0 !important;
+        width: auto !important;
+        padding: 0 !important;
+        overflow-wrap: anywhere;
+    }
+
+    .stack-table tbody td[data-label]::before {
+        content: attr(data-label);
+        display: block;
+        margin-bottom: 3px;
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 0.1em;
+        line-height: 1.2;
+        text-transform: uppercase;
+        opacity: 0.6;
+    }
+
+    .stack-table tbody td.stack-title {
+        grid-column: 1 / -1;
+        padding-right: 36px !important;
+        font-size: 15px;
+    }
+
+    .stack-table tbody td.stack-title::before {
+        display: none;
+    }
+
+    .stack-table tbody td.stack-full,
+    .stack-table tbody td[colspan] {
+        grid-column: 1 / -1;
+    }
+
+    /* The row checkbox added by the shared table helper sits in the card corner. */
+    .stack-table tbody td:has(> [data-row-select]) {
+        position: absolute;
+        top: 14px;
+        right: 16px;
+    }
+}
+
+/* ---- Modals and drawers ------------------------------------------------ */
+
+/*
+ * A modal taller than the window used to be centred with its top cut off.
+ * The overlay scrolls instead, and auto margins keep short panels centred.
+ */
+.app-modal:not(#command-palette) {
+    align-items: flex-start !important;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+.app-modal:not(#command-palette) > .modal-panel,
+.app-modal > .premium-center-panel {
+    flex-shrink: 0;
+    margin-top: auto;
+    margin-bottom: auto;
+}
+
+/* Centre panels (notifications, checklist, house summary) adapt to their own width. */
+.premium-center-panel {
+    container-type: inline-size;
+    container-name: premium-panel;
+}
+
+@container premium-panel (max-width: 719.98px) {
+    .notification-tabs {
+        display: flex;
+        overflow-x: auto;
+        scrollbar-width: none;
+        overscroll-behavior-x: contain;
+    }
+
+    .notification-tabs::-webkit-scrollbar {
+        display: none;
+    }
+
+    .notification-tabs button {
+        flex: 0 0 auto;
+        white-space: nowrap;
+    }
+}
+
+@container premium-panel (max-width: 520px) {
+    .premium-notifications-panel .px-6 {
+        padding-left: 16px;
+        padding-right: 16px;
+    }
+
+    .premium-notifications-panel [data-notification-list] {
+        padding: 16px;
+    }
+}
+
+.app-drawer {
+    max-width: 100vw;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+@media (max-width: 639.98px) {
+    .app-modal:not(#command-palette) {
+        padding: 12px !important;
+    }
+
+    #command-palette {
+        padding: 72px 12px 12px !important;
+    }
+
+    .modal-panel {
+        max-width: 100% !important;
+    }
+
+    .resident-transactions-panel {
+        max-width: calc(100vw - 24px) !important;
+    }
+
+    /* Billing notice header: title first, language switch and close button wrap under it. */
+    #billing-notice-modal .modal-panel > div:first-child {
+        flex-wrap: wrap;
+        padding: 18px 18px 16px;
+    }
+
+    #billing-notice-modal .modal-panel > div:first-child > div:first-child {
+        flex: 1 1 200px;
+        min-width: 0;
+    }
+
+    #billing-notice-modal .modal-panel > div:first-child h2 {
+        font-size: 22px;
+        line-height: 1.15;
+    }
+
+    #billing-notice-modal .modal-panel > div:nth-child(2) {
+        padding-left: 18px;
+        padding-right: 18px;
+    }
+}
+
+/* Resident payment history: table columns on wide panels, small cards on narrow ones. */
+.resident-transactions-panel {
+    container-type: inline-size;
+    container-name: tx-history;
+}
+
+@container tx-history (max-width: 899.98px) {
+    .resident-transactions-columns {
+        display: none;
+    }
+
+    .resident-transactions-body {
+        padding: 12px 14px 16px;
+    }
+
+    .resident-transaction-item {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        grid-template-areas:
+            "id id date"
+            "amount before after";
+        gap: 10px 12px;
+        padding: 14px 16px;
+    }
+
+    .resident-transaction-cell {
+        padding-right: 0;
+    }
+
+    .resident-transaction-cell::after {
+        display: none;
+    }
+
+    .resident-transaction-cell-id {
+        grid-area: id;
+    }
+
+    .resident-transaction-cell-datetime {
+        grid-area: date;
+        text-align: right;
+    }
+
+    .resident-transaction-cell-amount {
+        grid-area: amount;
+    }
+
+    .resident-transaction-cell-balance:nth-child(4) {
+        grid-area: before;
+    }
+
+    .resident-transaction-cell-balance:nth-child(5) {
+        grid-area: after;
+    }
+
+    .resident-transaction-cell strong,
+    .resident-transaction-amount {
+        font-size: 14px;
+    }
+
+    .resident-transaction-item .table-cell-label {
+        display: block;
+        font-size: 9.5px;
+        font-weight: 850;
+        letter-spacing: 0.1em;
+        line-height: 1.2;
+        text-transform: uppercase;
+        opacity: 0.6;
+    }
+}
+
+@container tx-history (max-width: 479.98px) {
+    .resident-transaction-item {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-areas:
+            "id date"
+            "amount amount"
+            "before after";
+    }
+}
+
+/* ---- Smallest phones (320-360px) ---------------------------------------- */
+
+@container page (max-width: 420px) {
+    .analytics-house-debt-row {
+        grid-template-columns: auto minmax(0, 1fr);
+        gap: 10px 12px;
+        padding: 12px 14px;
+    }
+
+    .analytics-house-debt-name {
+        font-size: 17px;
+    }
+
+    .analytics-house-debt-amount {
+        font-size: 16px;
+    }
+
+    .dashboard-kpi-grid > [data-stat-card] h2 {
+        font-size: 1.3rem;
+    }
+}
+
+@container page (max-width: 359.98px) {
+    .dashboard-kpi-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+/* Residents card on a 320px phone: the three facts become a 2 + 1 block. */
+@container residents (max-width: 300px) {
+    .resident-directory-panel .resident-list-row {
+        grid-template-areas:
+            "id person person person"
+            "tg tg contract contract"
+            "apt apt . ."
+            "balance balance balance actions";
+    }
+}
+
+.payment-processing-card {
+    container-type: inline-size;
+    container-name: payment-card;
+}
+
+@container payment-card (max-width: 300px) {
+    .payment-channel {
+        padding: 12px;
+    }
+
+    .payment-channel .flex.items-center.gap-4 {
+        gap: 10px;
+    }
+
+    .payment-channel .payment-brand-avatar {
+        width: 48px;
+        height: 40px;
+        padding: 6px;
+    }
+
+    .payment-channel [data-payment-channel-amount] {
+        font-size: 15px;
+    }
+}
+
+@container page (max-width: 420px) {
+    .payment-processing-card {
+        padding: 18px !important;
+    }
+}

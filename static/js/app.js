@@ -278,6 +278,7 @@
         "Adjust the query to find a resident.": { ru: "Измените запрос, чтобы найти абонента.", uz: "Abonentni topish uchun so'rovni o'zgartiring." },
         "Resident payment profile": { ru: "Платёжный профиль абонента", uz: "Abonentning to'lov profili" },
         "Amount": { ru: "Сумма", uz: "Summa" },
+        "Balance": { ru: "Баланс", uz: "Balans" },
         "Operation": { ru: "Операция", uz: "Amal" },
         "Add funds": { ru: "Зачислить", uz: "Hisobga kiritish" },
         "Credit": { ru: "Зачислить", uz: "Hisobga kiritish" },
@@ -2297,21 +2298,35 @@
     });
 
     const sidebar = document.querySelector("[data-sidebar]");
+    const sidebarToggle = document.querySelector("[data-sidebar-open]");
     const mobileBackdrop = document.querySelector("[data-mobile-sidebar-backdrop]");
     const openSidebar = () => {
         sidebar?.classList.add("is-open");
         mobileBackdrop?.classList.remove("hidden");
+        document.documentElement.classList.add("app-sidebar-open");
+        sidebarToggle?.setAttribute("aria-expanded", "true");
     };
     const closeSidebar = () => {
-        sidebar?.classList.remove("is-open");
+        if (!sidebar?.classList.contains("is-open")) return;
+        sidebar.classList.remove("is-open");
         mobileBackdrop?.classList.add("hidden");
+        document.documentElement.classList.remove("app-sidebar-open");
+        sidebarToggle?.setAttribute("aria-expanded", "false");
     };
 
-    document.querySelector("[data-sidebar-open]")?.addEventListener("click", openSidebar);
+    sidebarToggle?.addEventListener("click", openSidebar);
     mobileBackdrop?.addEventListener("click", closeSidebar);
-    document.querySelectorAll("[data-sidebar] a").forEach((link) => link.addEventListener("click", closeSidebar));
+    // Links navigate and buttons open modals or drawers; the overlay menu should get out of the way either way.
+    // Capture phase: the shared overlay opener stops propagation of clicks on [data-modal-open] buttons.
+    document.addEventListener("click", (event) => {
+        if (sidebar?.contains(event.target) && event.target.closest("a, button")) closeSidebar();
+    }, true);
     document.addEventListener("keydown", (event) => {
         if (event.key === "Escape") closeSidebar();
+    });
+    // The full sidebar is always visible on wide screens, so a menu left open on a narrow window must not linger.
+    window.matchMedia?.("(min-width: 1280px)").addEventListener?.("change", (event) => {
+        if (event.matches) closeSidebar();
     });
 
     const detailsDrawer = document.getElementById("details-drawer");
@@ -4375,10 +4390,10 @@
                             <td class="px-6 py-4">
                                 <p class="font-bold text-primary text-sm">${escapeHtml(item.residentName || "Resident")}</p>
                             </td>
-                            <td class="px-6 py-4 text-xs text-on-surface-variant">${escapeHtml(item.date)}</td>
-                            <td class="px-6 py-4 text-xs font-medium text-on-surface-variant">${escapeHtml(item.method || item.type || "Payment")}</td>
-                            <td class="px-6 py-4 text-sm font-bold ${amountClass}">${escapeHtml(`${amountPrefix}${formatBillingUzs(Math.abs(signedAmount))}`)}</td>
-                            <td class="px-6 py-4 text-sm font-bold ${balanceClass}">${formatBillingUzs(balanceAfter)}</td>
+                            <td class="px-6 py-4 text-xs text-on-surface-variant"><span class="table-cell-label" data-i18n-key="Date">Date</span>${escapeHtml(item.date)}</td>
+                            <td class="px-6 py-4 text-xs font-medium text-on-surface-variant"><span class="table-cell-label" data-i18n-key="Payment method">Payment method</span>${escapeHtml(item.method || item.type || "Payment")}</td>
+                            <td class="px-6 py-4 text-sm font-bold ${amountClass}"><span class="table-cell-label" data-i18n-key="Amount">Amount</span>${escapeHtml(`${amountPrefix}${formatBillingUzs(Math.abs(signedAmount))}`)}</td>
+                            <td class="px-6 py-4 text-sm font-bold ${balanceClass}"><span class="table-cell-label" data-i18n-key="Balance">Balance</span>${formatBillingUzs(balanceAfter)}</td>
                             <td class="px-6 py-4"><span class="table-assigned-status ${balanceStatusKey === "Debt" ? "is-critical" : "is-success"}">${escapeHtml(t(balanceStatusKey))}</span></td>
                         </tr>
                     `;
@@ -5565,12 +5580,15 @@
                                 <small>${escapeHtml(realMeta || payment.externalId || "")}</small>
                             </div>
                             <div class="resident-transaction-cell resident-transaction-cell-amount">
+                                <span class="table-cell-label" data-i18n-key="Total amount">Total amount</span>
                                 <strong class="resident-transaction-amount ${amountTone}">${amountPrefix}${formatBillingUzs(Math.abs(signedAmount))}</strong>
                             </div>
                             <div class="resident-transaction-cell resident-transaction-cell-balance">
+                                <span class="table-cell-label" data-i18n-key="Balance before">Balance before</span>
                                 <strong class="${balanceBefore < 0 ? "is-negative" : "is-positive"}">${formatBillingUzs(balanceBefore)}</strong>
                             </div>
                             <div class="resident-transaction-cell resident-transaction-cell-balance">
+                                <span class="table-cell-label" data-i18n-key="Balance after">Balance after</span>
                                 <strong class="${balanceAfter < 0 ? "is-negative" : "is-positive"}">${formatBillingUzs(balanceAfter)}</strong>
                             </div>
                         </div>

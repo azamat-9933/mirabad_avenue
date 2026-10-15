@@ -1,14 +1,14 @@
 <!-- Main Canvas -->
-<main class="flex-1 md:ml-64 flex flex-col min-h-screen pt-16">
+<main class="app-main flex-1 flex flex-col min-h-screen pt-16">
 <!-- Content Area -->
-<div class="p-6 md:p-8 space-y-8">
+<div class="app-page py-6 md:py-8 space-y-8">
 <!-- Page Title Header -->
 <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
 <div>
-<h2 class="text-3xl font-extrabold text-primary tracking-tight">Infrastructure &amp; System Health</h2>
+<h2 class="app-page-title text-3xl font-extrabold text-primary tracking-tight">Infrastructure &amp; System Health</h2>
 <p class="text-on-surface-variant text-sm mt-1">Real-time status of water distribution and thermal cores across all zones.</p>
 </div>
-<div class="flex items-center gap-3">
+<div class="flex flex-wrap items-center gap-3">
 <button class="flex items-center gap-2 px-4 py-2 bg-surface-container-high hover:bg-surface-container-highest transition-colors rounded-lg text-sm font-semibold" data-export-context="maintenance" data-export-open data-export-source="System Maintenance Log" type="button">
 <span class="material-symbols-outlined text-lg">download</span>
                         Export Logs
@@ -20,7 +20,7 @@
 </div>
 </div>
 <!-- KPI Cards Bento Grid -->
-<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 motion-stagger">
+<div class="health-kpi-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 motion-stagger">
 <!-- Efficiency -->
 <div class="bg-surface-container-lowest p-6 rounded-lg shadow-sm border-b-4 border-primary ring-1 ring-black/5">
 <div class="flex justify-between items-start mb-4">
@@ -286,13 +286,13 @@
 </div>
 </div>
 <!-- Maintenance Log Table -->
-<section class="bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant/10 overflow-hidden">
-<div class="p-6 flex justify-between items-center border-b border-surface-container">
+<section class="maintenance-log-panel bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant/10 overflow-hidden">
+<div class="p-6 flex flex-wrap justify-between items-center gap-3 border-b border-surface-container">
 <div>
 <h4 class="text-lg font-bold text-primary">System Maintenance Log</h4>
 <p class="text-xs text-on-surface-variant">Historical and upcoming maintenance activities</p>
 </div>
-<div class="flex gap-2">
+<div class="flex flex-wrap gap-2">
 <button class="px-3 py-1.5 border border-outline-variant rounded text-xs font-bold hover:bg-surface-container transition-colors">Last 30 Days</button>
 <button class="px-3 py-1.5 border border-outline-variant rounded text-xs font-bold hover:bg-surface-container transition-colors">Filters</button>
 <button class="px-3 py-1.5 border border-primary/35 rounded text-xs font-bold text-primary hover:bg-primary/10 transition-colors" data-export-open data-export-context="maintenance" data-export-source="System Maintenance Log" type="button">Export report</button>
@@ -511,22 +511,3 @@
     selectNode(nodes.find((node) => node.classList.contains("is-selected")) || nodes[0]);
 })();
 </script>
-<!-- BottomNavBar for Mobile (md:hidden) -->
-<nav class="md:hidden fixed bottom-0 left-0 right-0 glass-panel border-t border-surface-container flex justify-around items-center p-3 z-50">
-<a class="flex flex-col items-center gap-1 text-slate-500" href="{% url 'portal:dashboard' %}">
-<span class="material-symbols-outlined">dashboard</span>
-<span class="text-[9px] font-bold uppercase">Home</span>
-</a>
-<a class="flex flex-col items-center gap-1 text-primary" href="{% url 'portal:system_health' %}">
-<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">monitor_heart</span>
-<span class="text-[9px] font-bold uppercase">Health</span>
-</a>
-<a class="flex flex-col items-center gap-1 text-slate-500" href="{% url 'portal:billing' %}">
-<span class="material-symbols-outlined">payments</span>
-<span class="text-[9px] font-bold uppercase">Billing</span>
-</a>
-<a class="flex flex-col items-center gap-1 text-slate-500" href="#">
-<span class="material-symbols-outlined">account_circle</span>
-<span class="text-[9px] font-bold uppercase">Profile</span>
-</a>
-</nav>
