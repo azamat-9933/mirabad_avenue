@@ -390,6 +390,25 @@ Top-level ключи snapshot (`GET /api/portal-data/`):
 
 Источник данных для snapshot: `portal/backend_data.py` (`build_portal_data`).
 
+### Производительность snapshot
+Snapshot отдается целиком: встраивается в каждую страницу, возвращается каждым POST и запрашивается dashboard/system health каждые 15 с. Его размер растет с историей `Transaction` (≈94% объема).
+
+Замеры (SQLite, 1200 жильцов, ≈57 600 транзакций ≈ 2 года истории):
+
+| Путь | До | После |
+|---|---|---|
+| `GET /` (страница) | 52 с, 50 МБ | 1.4 с, 0.97 МБ по сети (30 МБ после распаковки) |
+| `GET /api/portal-data/`, любой POST | 6.5–6.7 с, 30 МБ | 1.4 с, 0.95 МБ по сети |
+| Загрузка страницы в браузере (DOMContentLoaded) | — | ≈2.3 с |
+
+Правила, которые держат эти цифры:
+- В шаблон данные вставляются как `<script id="hydroflow-backend-data" type="application/json">` (`_json_for_script_tag`), а не через `escapejs` — тот обрабатывал 30 МБ посимвольно ≈45 с.
+- В `build_portal_data` транзакции грузятся без `select_related` (владелец/квартира/дом берутся из уже загруженных владельцев), подписи `payment_type` вычисляются один раз (`_payment_type_labels`), а не через ленивый перевод на каждую строку.
+- `GZipMiddleware` сжимает ответы (JSON сжимается ≈30×).
+- Выходные данные snapshot при этих оптимизациях не менялись (проверено побайтовым сравнением).
+
+Оставшееся ограничение: время и объем по-прежнему растут линейно с историей транзакций; следующий шаг — не отдавать всю историю в snapshot.
+
 ---
 
 ## 11. Экспортный контур
@@ -422,7 +441,7 @@ Top-level ключи snapshot (`GET /api/portal-data/`):
 ## 12. Frontend архитектура
 
 ## 12.1 Шаблоны
-- `templates/base.html` — основной layout, подключение Tailwind CDN, Chart.js, `app.css`, `app.js`, гидрация `window.HydroFlowBackendData`.
+- `templates/base.html` — основной layout, подключение Tailwind CDN, Chart.js, `app.css`, `app.js`, гидрация `window.HydroFlowBackendData` из `<script id="hydroflow-backend-data" type="application/json">`.
 - `templates/partials/sidebar.html`, `topbar.html`.
 - `templates/partials/app_overlays.html` — модалки/дроверы.
 - Страницы: `dashboard`, `residential`, `billing`, `system_health`, `analytics`, `billing_period_create`.

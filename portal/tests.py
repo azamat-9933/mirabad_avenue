@@ -1,3 +1,6 @@
+import gzip
+import json
+import re
 from decimal import Decimal
 
 from django.contrib.auth import get_user_model
@@ -6,6 +9,7 @@ from django.urls import reverse
 
 from main_app.models import Apartment, Building, Complex, Owner
 from payments.models import Transaction
+from payments.services import OPENING_BALANCE_TAG, apply_balance_change
 from portal.backend_data import build_portal_data
 
 
@@ -169,3 +173,71 @@ class PortalAuthenticationTests(TestCase):
             f"{reverse('admin:login')}?next={reverse('admin:index')}",
             fetch_redirect_response=False,
         )
+
+
+class PortalSnapshotTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = get_user_model().objects.create_user(username="operator", password="unused-password")
+        complex_obj = Complex.objects.create(title="Mirabad Avenue", address="", author="test")
+        building = Building.objects.create(number="64", complex=complex_obj, author="test")
+        apartment = Apartment.objects.create(number="1", area=Decimal("50.00"), building=building, author="test")
+        cls.owner = Owner.objects.create(
+            fio="Иванов </script><script>alert(1)</script> & <b>",
+            phone="+998901234567",
+            apartment=apartment,
+        )
+
+    def setUp(self):
+        self.client.force_login(self.user)
+
+    def _embedded_data(self, html):
+        match = re.search(r'<script id="hydroflow-backend-data" type="application/json">(.*?)</script>', html, re.S)
+        self.assertIsNotNone(match)
+        return match.group(1)
+
+    def test_page_embeds_snapshot_that_cannot_close_the_script_tag(self):
+        html = self.client.get(reverse("portal:dashboard")).content.decode("utf-8")
+        raw = self._embedded_data(html)
+
+        self.assertNotIn("<", raw)
+        self.assertIn("Иванов", raw)  # non-ASCII stays readable instead of \u-escaped
+        data = json.loads(raw)
+        self.assertEqual(data["residents"][0]["name"], self.owner.fio)
+
+    def test_responses_are_gzipped_when_the_client_accepts_it(self):
+        response = self.client.get(reverse("portal:api_portal_data"), HTTP_ACCEPT_ENCODING="gzip")
+        self.assertEqual(response["Content-Encoding"], "gzip")
+        self.assertEqual(json.loads(gzip.decompress(response.content))["residents"][0]["backendId"], self.owner.id)
+
+    def test_complexes_list_returns_rows(self):
+        apply_balance_change(self.owner.id, Decimal("1000"), Transaction.TYPE_CASH)
+        response = self.client.get(reverse("portal:api_list_complexes"))
+        self.assertEqual(response.status_code, 200)
+        row = response.json()["results"][0]
+        self.assertEqual(row["units"], 1)
+        self.assertEqual(row["baselineCollected"], 1000.0)
+
+    def test_transaction_rows_keep_their_labels(self):
+        flavours = [
+            (Transaction.TYPE_CASH, "1000", "", "Utility Payment", "Cash", "Success"),
+            (Transaction.TYPE_MANUAL, "500", "[portal:card-credit] Portal credit via card.", "Utility Payment", "Card", "Success"),
+            (Transaction.TYPE_MANUAL, "-200", "[portal:balance-debit] x", "Manual Adjustment", "Adjustment", "Pending"),
+            (Transaction.TYPE_MANUAL, "-300", f"{OPENING_BALANCE_TAG} x", "Manual Adjustment", "Manual", "Pending"),
+            (Transaction.TYPE_CHARGE, "-400", "[billing:period-charge] x", "Monthly Charge", "Charge", "Pending"),
+            (Transaction.TYPE_CHARGE, "100", "[billing:recalculation] x", "Recalculation", "Charge", "Pending"),
+        ]
+        for payment_type, amount, description, *_ in flavours:
+            apply_balance_change(self.owner.id, Decimal(amount), payment_type, description=description)
+
+        rows = {row["backendId"]: row for row in build_portal_data(self.user)["transactions"]}
+        ledger = Transaction.objects.filter(owner=self.owner).order_by("id")
+        for item, (_, amount, _, expected_type, expected_method, expected_status) in zip(ledger, flavours):
+            with self.subTest(description=item.description):
+                row = rows[item.id]
+                self.assertEqual(
+                    (row["type"], row["method"], row["status"], row["signedAmount"]),
+                    (expected_type, expected_method, expected_status, float(amount)),
+                )
+                self.assertRegex(row["date"], r"^\d{2}\.\d{2}\.\d{4}$")
+                self.assertRegex(row["createdAt"], r"^\d{2}\.\d{2}\.\d{4}, \d{2}:\d{2}$")

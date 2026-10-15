@@ -223,7 +223,12 @@ def _health_from_split(debtors: int, paid: int) -> float:
     return round(max(40, min(100, (paid / total) * 100)), 1)
 
 
-def _transaction_type(transaction: Transaction) -> str:
+def _payment_type_labels() -> dict[str, str]:
+    """Display labels of Transaction.payment_type, resolved once instead of per row (they are lazy translations)."""
+    return {key: str(label) for key, label in Transaction.TYPE_CHOICES}
+
+
+def _transaction_type(transaction: Transaction, labels: dict[str, str] | None = None) -> str:
     description = str(transaction.description or "").lower()
     if transaction.payment_type == Transaction.TYPE_CHARGE and "[billing:recalculation]" in description:
         return "Recalculation"
@@ -239,17 +244,21 @@ def _transaction_type(transaction: Transaction) -> str:
         Transaction.TYPE_MANUAL: "Manual Adjustment",
         Transaction.TYPE_CHARGE: "Monthly Charge",
     }
-    return mapping.get(transaction.payment_type, transaction.get_payment_type_display())
+    if transaction.payment_type in mapping:
+        return mapping[transaction.payment_type]
+    labels = labels if labels is not None else _payment_type_labels()
+    return labels.get(transaction.payment_type, transaction.payment_type)
 
 
-def _transaction_method_label(transaction: Transaction) -> str:
+def _transaction_method_label(transaction: Transaction, labels: dict[str, str] | None = None) -> str:
     description = str(transaction.description or "").lower()
     if transaction.payment_type == Transaction.TYPE_MANUAL:
         if "[portal:card-credit]" in description or "[portal:terminal-credit]" in description:
             return "Card"
         if "[portal:balance-debit]" in description:
             return "Adjustment"
-    return transaction.get_payment_type_display()
+    labels = labels if labels is not None else _payment_type_labels()
+    return labels.get(transaction.payment_type, transaction.payment_type)
 
 
 def _serialize_notifications() -> list[dict]:
@@ -515,23 +524,31 @@ def build_portal_data(user=None) -> dict:
     project: Complex, Building, Apartment, Owner, Invoice and Transaction.
     No static demo rows are produced here.
     """
-    owners_by_apartment = {
-        owner.apartment_id: owner
-        for owner in Owner.objects.select_related(
+    owners = list(
+        Owner.objects.select_related(
             "apartment",
             "apartment__building",
             "apartment__building__complex",
             "apartment__section",
         )
-    }
+    )
+    owners_by_apartment = {owner.apartment_id: owner for owner in owners}
+    owners_by_id = {owner.id: owner for owner in owners}
+    # Owners above already carry apartment/building/complex; joining them per transaction
+    # would build four model instances for every ledger row.
     transactions = list(
-        Transaction.objects.select_related(
-            "owner",
-            "owner__apartment",
-            "owner__apartment__building",
-            "owner__apartment__building__complex",
+        Transaction.objects.only(
+            "id",
+            "owner_id",
+            "payment_type",
+            "amount",
+            "balance_before",
+            "balance_after",
+            "description",
+            "created_at",
         ).order_by("-created_at")
     )
+    payment_type_labels = _payment_type_labels()
     transactions_by_owner: dict[int, list[Transaction]] = {}
     for transaction in transactions:
         transactions_by_owner.setdefault(transaction.owner_id, []).append(transaction)
@@ -759,12 +776,14 @@ def build_portal_data(user=None) -> dict:
                         apartment_row["status"] = apartment_override_map[apartment_id]
 
     transaction_rows = []
+    current_tz = timezone.get_current_timezone()
     for transaction in transactions:
-        owner = transaction.owner
+        owner = owners_by_id[transaction.owner_id]
         apartment = owner.apartment
         building = apartment.building
         complex_obj = building.complex
         amount = _money(transaction.amount)
+        created_at = timezone.localtime(transaction.created_at, current_tz)
         transaction_rows.append({
             "id": f"trx-{transaction.id}",
             "backendId": transaction.id,
@@ -776,10 +795,10 @@ def build_portal_data(user=None) -> dict:
             "residentName": owner.fio,
             "complexId": _slug("complex", complex_obj.id),
             "buildingId": _slug("building", building.id),
-            "type": _transaction_type(transaction),
-            "method": _transaction_method_label(transaction),
-            "date": _date(transaction.created_at),
-            "createdAt": _datetime(transaction.created_at),
+            "type": _transaction_type(transaction, payment_type_labels),
+            "method": _transaction_method_label(transaction, payment_type_labels),
+            "date": created_at.strftime("%d.%m.%Y"),
+            "createdAt": created_at.strftime("%d.%m.%Y, %H:%M"),
             "amount": abs(amount),
             "signedAmount": amount,
             "balanceBefore": _money(transaction.balance_before),

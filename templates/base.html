@@ -912,8 +912,9 @@
     window.HydroFlowFiltersBootstrapped = true;
 })();
 </script>
+<script id="hydroflow-backend-data" type="application/json">{{ backend_billing_data_json|default:'{}' }}</script>
 <script>
-    window.HydroFlowBackendData = JSON.parse("{{ backend_billing_data_json|default:'{}'|escapejs }}");
+    window.HydroFlowBackendData = JSON.parse(document.getElementById("hydroflow-backend-data").textContent);
 </script>
 <script src="{% static 'js/app.js' %}?v=balance-ledger-20261015-1"></script>
 </body>

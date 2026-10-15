@@ -23,6 +23,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django.utils.dateparse import parse_date, parse_datetime
 from django.utils.decorators import method_decorator
+from django.utils.safestring import mark_safe
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.generic import TemplateView
 from drf_spectacular.types import OpenApiTypes
@@ -77,6 +78,16 @@ def safe_portal_data(request=None):
         }
 
 
+def _json_for_script_tag(value):
+    """JSON safe to place inside <script type="application/json">: nothing in it can close the tag.
+
+    Same escaping as Django's json_script, but keeps non-ASCII (Cyrillic names) unescaped, and uses
+    str.replace, which is ~100x faster than str.translate on a multi-megabyte snapshot.
+    """
+    raw = json.dumps(value, ensure_ascii=False)
+    return mark_safe(raw.replace("<", "\\u003C").replace(">", "\\u003E").replace("&", "\\u0026"))
+
+
 @method_decorator(ensure_csrf_cookie, name="dispatch")
 class PortalPageView(TemplateView):
     page_title = "Utility Manager"
@@ -86,7 +97,7 @@ class PortalPageView(TemplateView):
         ctx = super().get_context_data(**kwargs)
         ctx["page_title"] = self.page_title
         ctx["active_page"] = self.active_page
-        ctx["backend_billing_data_json"] = json.dumps(safe_portal_data(self.request), ensure_ascii=False)
+        ctx["backend_billing_data_json"] = _json_for_script_tag(safe_portal_data(self.request))
         return ctx
 
 
@@ -1349,7 +1360,7 @@ def api_list_complexes(request):
     district_value = _query_param(request, "district", "")
     ordering_raw = _query_param(request, "ordering", "complex")
     transactions_prefetch = Prefetch(
-        "owner__transactions",
+        "transactions",
         queryset=Transaction.objects.order_by("-created_at"),
         to_attr="prefetched_transactions",
     )

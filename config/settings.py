@@ -101,6 +101,9 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    # First, so it compresses the final body; page/API snapshots are large, repetitive JSON.
+    # Includes Django's BREACH mitigation; harmless if a proxy also compresses.
+    'django.middleware.gzip.GZipMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
