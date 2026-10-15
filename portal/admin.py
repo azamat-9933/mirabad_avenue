@@ -88,16 +88,37 @@ class ChecklistNoteAdmin(admin.ModelAdmin):
 
 @admin.register(AuditEvent)
 class AuditEventAdmin(admin.ModelAdmin):
-    list_display = ("created_at", "event_type", "title", "actor", "complex", "building")
-    list_filter = ("event_type", "complex", "building")
-    search_fields = ("title", "message", "actor", "complex__title", "building__number", "owner__fio")
+    """Operator activity log for the head administrator. Append-only: nobody can add, edit or delete rows here."""
+
+    list_display = ("created_at", "operator", "event_type", "title", "ip_address", "owner", "building")
+    list_filter = ("user", "event_type", ("created_at", admin.DateFieldListFilter), "building")
+    search_fields = ("title", "message", "actor", "user__username", "user__first_name", "user__last_name", "owner__fio", "building__number", "apartment__number")
     date_hierarchy = "created_at"
-    autocomplete_fields = ("complex", "building", "apartment", "owner")
+    list_select_related = ("user", "owner", "building")
+    list_per_page = 50
+    readonly_fields = ("created_at", "user", "actor", "ip_address", "event_type", "title", "message", "complex", "building", "apartment", "owner", "metadata")
     fieldsets = (
-        ("Event", {"fields": ("event_type", "title", "message", "actor", "created_at")}),
+        ("Who and when", {"fields": ("created_at", "user", "actor", "ip_address")}),
+        ("Event", {"fields": ("event_type", "title", "message")}),
         ("Relations", {"fields": ("complex", "building", "apartment", "owner")}),
-        ("Metadata", {"fields": ("metadata",), "classes": ("collapse",)}),
+        ("Details", {"fields": ("metadata",)}),
     )
+
+    @admin.display(description="Operator", ordering="actor")
+    def operator(self, obj):
+        if obj.user_id:
+            full_name = obj.user.get_full_name().strip()
+            return f"{full_name} ({obj.user.get_username()})" if full_name else obj.user.get_username()
+        return obj.actor
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
 
 
 @admin.register(PortalStatusOverride)

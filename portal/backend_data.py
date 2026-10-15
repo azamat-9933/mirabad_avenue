@@ -15,6 +15,7 @@ from main_app.models import DEFAULT_SECTOR_NAME
 from properties.models import Apartment, Building, Complex, Owner
 from payments.models import Transaction
 from payments.services import OPENING_BALANCE_TAG, incoming_payment_q, is_incoming_payment
+from portal.audit import can_view_audit
 from portal.models import (
     AuditEvent,
     ChecklistItem,
@@ -403,6 +404,9 @@ def serialize_audit_event(event: AuditEvent) -> dict:
         "title": event.title,
         "message": event.message,
         "actor": event.actor,
+        "actorId": event.user_id,
+        "actorName": _display_name(event.user) if event.user_id else event.actor,
+        "ipAddress": event.ip_address or "",
         "time": _datetime(event.created_at),
         "complexId": _slug("complex", event.complex_id) if event.complex_id else "",
         "buildingId": _slug("building", event.building_id) if event.building_id else "",
@@ -643,12 +647,16 @@ def _serialize_system_alerts() -> list[dict]:
 
 
 
-def _serialize_audit_events() -> list[dict]:
+def _serialize_audit_events(user=None) -> list[dict]:
+    # The activity log is for the head administrator; operators get no audit rows in their snapshot.
+    if not can_view_audit(user):
+        return []
     queryset = AuditEvent.objects.select_related(
         "complex",
         "building",
         "apartment",
         "owner",
+        "user",
     ).order_by("-created_at")[:120]
     return [serialize_audit_event(event) for event in queryset]
 
@@ -930,7 +938,7 @@ def build_portal_data(user=None) -> dict:
         ),
         "notifications": _serialize_notifications(),
         "systemAlerts": _serialize_system_alerts(),
-        "auditEvents": _serialize_audit_events(),
+        "auditEvents": _serialize_audit_events(user),
         "checklistItems": _serialize_checklist_items(),
         "checklistNotes": _serialize_checklist_notes(),
         "supportTickets": _serialize_support_tickets(),

@@ -8,7 +8,7 @@ from datetime import datetime, time, timedelta
 
 from django.conf import settings
 from django.contrib import messages
-from django.contrib.auth import logout
+from django.contrib.auth import get_user_model, logout
 from django.core.paginator import EmptyPage, Paginator
 from django.core.exceptions import ImproperlyConfigured, ValidationError
 from django.db import DatabaseError, OperationalError, connection, transaction
@@ -58,6 +58,7 @@ from .backend_data import (
     serialize_transaction,
     transaction_override_map,
 )
+from .audit import can_view_audit, record_event
 from .report_exports import ALLOWED_REPORT_TYPES, build_report_payload, build_table_export
 
 
@@ -84,6 +85,22 @@ def _json_for_script_tag(value):
     return mark_safe(raw.replace("<", "\\u003C").replace(">", "\\u003E").replace("&", "\\u0026"))
 
 
+def _audit_operator_choices():
+    """Accounts for the activity-log operator filter: active users plus anyone who already has entries."""
+    users = (
+        get_user_model()
+        .objects.filter(Q(is_active=True) | Q(audit_events__isnull=False))
+        .distinct()
+        .order_by("username")
+    )
+    choices = []
+    for user in users:
+        full_name = user.get_full_name().strip()
+        username = user.get_username()
+        choices.append({"id": user.pk, "label": f"{full_name} ({username})" if full_name else username})
+    return choices
+
+
 @method_decorator(ensure_csrf_cookie, name="dispatch")
 class PortalPageView(TemplateView):
     page_title = "Utility Manager"
@@ -94,6 +111,7 @@ class PortalPageView(TemplateView):
         ctx["page_title"] = self.page_title
         ctx["active_page"] = self.active_page
         ctx["backend_billing_data_json"] = _json_for_script_tag(safe_portal_data(self.request))
+        ctx["audit_operators"] = _audit_operator_choices() if can_view_audit(self.request.user) else []
         return ctx
 
 
@@ -185,17 +203,34 @@ class BillingPeriodCreateView(PortalPageView):
         values.sort()
         return values
 
+    def _audit(self, request, period, title, message, building=None, apartment=None, **metadata):
+        apartment_owner = getattr(apartment, "owner", None) if apartment else None
+        building = building or (apartment.building if apartment else None)
+        record_event(
+            request,
+            event_type=AuditEvent.TYPE_BILLING,
+            title=title,
+            message=message,
+            complex=building.complex if building else None,
+            building=building,
+            apartment=apartment,
+            owner=apartment_owner,
+            metadata={"source": "portal_billing_period", "periodId": period.id, "periodTitle": period.title, **metadata},
+        )
+
     def post(self, request, *args, **kwargs):
         action = str(request.POST.get("action") or "").strip()
         try:
-            if action == "add_expense":
-                self._handle_add_expense(request)
-            elif action == "update_status":
-                self._handle_update_status(request)
-            elif action == "update_heating_record":
-                self._handle_update_heating_record(request)
-            else:
-                messages.error(request, "Noma'lum amal.")
+            # The change and its activity-log entry commit together or not at all.
+            with transaction.atomic():
+                if action == "add_expense":
+                    self._handle_add_expense(request)
+                elif action == "update_status":
+                    self._handle_update_status(request)
+                elif action == "update_heating_record":
+                    self._handle_update_heating_record(request)
+                else:
+                    messages.error(request, "Noma'lum amal.")
         except ValidationError as exc:
             messages.error(request, str(exc))
         except (DatabaseError, OperationalError) as exc:
@@ -227,8 +262,8 @@ class BillingPeriodCreateView(PortalPageView):
 
         period = BillingPeriod.objects.get(pk=period_id)
         self._ensure_editable(period)
-        building = Building.objects.get(pk=building_id)
-        Expense.objects.create(
+        building = Building.objects.select_related("complex").get(pk=building_id)
+        expense = Expense.objects.create(
             period=period,
             building=building,
             service_type=service_type,
@@ -236,6 +271,16 @@ class BillingPeriodCreateView(PortalPageView):
             amount=amount,
         )
         period.buildings.add(building)
+        self._audit(
+            request,
+            period,
+            "Expense added",
+            f"Expense \"{name}\" ({service_type}) of {amount} UZS added to house {building.number}, period {period.title}.",
+            building=building,
+            expenseId=expense.id,
+            serviceType=service_type,
+            amount=str(amount),
+        )
         messages.success(request, "Xarajat qo'shildi.")
 
     def _handle_update_status(self, request):
@@ -256,9 +301,24 @@ class BillingPeriodCreateView(PortalPageView):
                     f"Yo'q jadvallar: {', '.join(missing_tables)}."
                 )
             was_reopened = period.status == BillingPeriod.STATUS_REOPENED
-            period.close_or_recalculate(
-                author=request.user,
-                reason=str(request.POST.get("reason") or "").strip(),
+            reason = str(request.POST.get("reason") or "").strip()
+            charges = period.close_or_recalculate(author=request.user, reason=reason)
+            total = sum((charge.amount for charge in charges), Decimal("0"))
+            self._audit(
+                request,
+                period,
+                "Billing period recalculated" if was_reopened else "Billing period closed",
+                (
+                    f"Period {period.title} was recalculated and closed: {len(charges)} charges, {total} UZS."
+                    + (f" Reason: {reason}" if reason else "")
+                    if was_reopened
+                    else f"Period {period.title} was closed: {len(charges)} charges, {total} UZS posted to accounts."
+                ),
+                fromStatus=BillingPeriod.STATUS_REOPENED if was_reopened else BillingPeriod.STATUS_DRAFT,
+                toStatus=BillingPeriod.STATUS_CLOSED,
+                chargeCount=len(charges),
+                chargeTotal=str(total),
+                reason=reason,
             )
             if was_reopened:
                 messages.success(request, "Davr qayta hisoblandi va yopildi, balanslar farq bo'yicha tuzatildi.")
@@ -272,6 +332,14 @@ class BillingPeriodCreateView(PortalPageView):
                     f"Yo'q jadvallar: {', '.join(missing_tables)}."
                 )
             period.reopen_period()
+            self._audit(
+                request,
+                period,
+                "Billing period reopened",
+                f"Period {period.title} was reopened for corrections.",
+                fromStatus=BillingPeriod.STATUS_CLOSED,
+                toStatus=BillingPeriod.STATUS_REOPENED,
+            )
             messages.warning(request, "Davr qayta ochildi.")
             return
         if status == BillingPeriod.STATUS_DRAFT:
@@ -280,9 +348,18 @@ class BillingPeriodCreateView(PortalPageView):
                 raise ValidationError(
                     "Hisoblar qo'yilgan davrni draft ga qaytarib bo'lmaydi. Qayta oching va qayta yoping."
                 )
+            previous_status = period.status
             period.status = BillingPeriod.STATUS_DRAFT
             period.closed_at = None
             period.save(update_fields=["status", "closed_at"])
+            self._audit(
+                request,
+                period,
+                "Billing period set to draft",
+                f"Period {period.title} was set back to draft.",
+                fromStatus=previous_status,
+                toStatus=BillingPeriod.STATUS_DRAFT,
+            )
             messages.success(request, "Davr holati draft ga o'zgartirildi.")
             return
         raise ValidationError("Noto'g'ri status.")
@@ -295,12 +372,25 @@ class BillingPeriodCreateView(PortalPageView):
 
         period = BillingPeriod.objects.get(pk=period_id)
         self._ensure_editable(period)
-        apartment = Apartment.objects.select_related("building").get(pk=apartment_id)
+        apartment = Apartment.objects.select_related("building", "building__complex", "owner").get(pk=apartment_id)
         excluded_dates = self._parse_excluded_dates(request.POST.get("excluded_dates", ""), period)
 
         record, _ = HeatingRecord.objects.get_or_create(period=period, apartment=apartment)
+        previous_dates = list(record.excluded_dates or [])
         record.excluded_dates = excluded_dates
         record.save(update_fields=["excluded_dates"])
+        self._audit(
+            request,
+            period,
+            "Heating days updated",
+            f"Apt {apartment.number}, house {apartment.building.number}: not-heated dates "
+            f"{', '.join(previous_dates) or 'none'} -> {', '.join(excluded_dates) or 'none'} "
+            f"({record.heated_days} heated days).",
+            apartment=apartment,
+            previousExcludedDates=previous_dates,
+            excludedDates=excluded_dates,
+            heatedDays=record.heated_days,
+        )
 
         for usage in HeatingApartmentUsage.objects.filter(
             service__period=period,
@@ -849,6 +939,8 @@ def api_list_alerts(request):
 @extend_schema(responses=OpenApiTypes.OBJECT)
 @api_view(["GET"])
 def api_list_audit(request):
+    if not can_view_audit(request.user):
+        return JsonResponse({"ok": False, "error": "The activity log is available to the head administrator only."}, status=403)
     page, page_size = _page_params(request)
     search = _query_param(request, "search", "")
     event_type = _query_param(request, "type", "").lower()
@@ -871,6 +963,7 @@ def api_list_audit(request):
             "building",
             "apartment",
             "owner",
+            "user",
         )
         if search:
             queryset = queryset.filter(
@@ -886,10 +979,13 @@ def api_list_audit(request):
             queryset = queryset.filter(actor__icontains=actor)
         complex_id = _query_int(request, "complex_id", 0)
         owner_id = _query_int(request, "owner_id", 0)
+        user_id = _query_int(request, "user_id", 0)
         if complex_id:
             queryset = queryset.filter(complex_id=complex_id)
         if owner_id:
             queryset = queryset.filter(owner_id=owner_id)
+        if user_id:
+            queryset = queryset.filter(user_id=user_id)
         queryset = _apply_related_district_filter(queryset, district_value, "complex__title", "complex__address", "message")
         queryset = _apply_period_filter(queryset, "created_at", period_value, period_from, period_to)
         page_obj = _paginate_queryset(queryset.order_by(*ordering, "-id"), page, page_size)
@@ -904,13 +1000,15 @@ def api_list_audit(request):
 @extend_schema(request=OpenApiTypes.OBJECT, responses=OpenApiTypes.OBJECT)
 @api_view(["POST"])
 def api_export_audit(request):
+    if not can_view_audit(request.user):
+        return JsonResponse({"ok": False, "error": "The activity log is available to the head administrator only."}, status=403)
     payload = _json_payload(request)
     language = str(payload.get("language") or "en").strip().lower()
     lang = language if language in {"en", "ru", "uz"} else "en"
     headers = {
-        "en": ["Audit ID", "Date and time", "Event type", "Title", "Message", "Actor", "Sector", "House", "Apartment", "Resident", "Admin link"],
-        "ru": ["ID аудита", "Дата и время", "Тип события", "Заголовок", "Сообщение", "Исполнитель", "Сектор", "Дом", "Квартира", "Абонент", "Ссылка admin"],
-        "uz": ["Audit ID", "Sana va vaqt", "Hodisa turi", "Sarlavha", "Xabar", "Ijrochi", "Sektor", "Uy", "Xonadon", "Abonent", "Admin havolasi"],
+        "en": ["Audit ID", "Date and time", "Event type", "Title", "Message", "Actor", "IP address", "Sector", "House", "Apartment", "Resident", "Admin link"],
+        "ru": ["ID аудита", "Дата и время", "Тип события", "Заголовок", "Сообщение", "Исполнитель", "IP-адрес", "Сектор", "Дом", "Квартира", "Абонент", "Ссылка admin"],
+        "uz": ["Audit ID", "Sana va vaqt", "Hodisa turi", "Sarlavha", "Xabar", "Ijrochi", "IP manzil", "Sektor", "Uy", "Xonadon", "Abonent", "Admin havolasi"],
     }
     title = {"en": "Audit Log", "ru": "Журнал аудита", "uz": "Audit jurnali"}[lang]
     search = str(payload.get("search") or "").strip()
@@ -933,6 +1031,9 @@ def api_export_audit(request):
             )
         if event_type:
             queryset = queryset.filter(event_type=event_type)
+        user_id = _int_or_zero(payload.get("user_id"))
+        if user_id:
+            queryset = queryset.filter(user_id=user_id)
         queryset = _apply_related_district_filter(queryset, district_value, "complex__title", "complex__address", "message")
         queryset = _apply_period_filter(queryset, "created_at", period_value, period_from, period_to)
         rows = []
@@ -944,6 +1045,7 @@ def api_export_audit(request):
                 event.title,
                 event.message,
                 event.actor,
+                event.ip_address or "",
                 event.complex.title if event.complex_id and event.complex else "",
                 event.building.number if event.building_id and event.building else "",
                 event.apartment.number if event.apartment_id and event.apartment else "",
@@ -954,11 +1056,11 @@ def api_export_audit(request):
         rows = []
     generated = build_table_export(title, headers[lang], rows, "XLSX", f"audit-log-{timezone.localtime():%Y%m%d-%H%M}", lang)
     download = _encode_download(generated["filename"], generated["mime"], generated["content"])
-    AuditEvent.objects.create(
+    record_event(
+        request,
         event_type=AuditEvent.TYPE_EXPORT,
         title="Audit log exported",
         message=f"XLSX audit log exported with {len(rows)} rows.",
-        actor=_actor(request),
         metadata={"source": "portal_audit_export", "format": "XLSX", "rowCount": len(rows), "language": lang},
     )
     return JsonResponse({"ok": True, "download": download, "portalData": safe_portal_data(request)})
@@ -1368,11 +1470,11 @@ def api_audit_note(request):
     if building and not complex_obj:
         complex_obj = building.complex
 
-    event = AuditEvent.objects.create(
+    event = record_event(
+        request,
         event_type=AuditEvent.TYPE_NOTE,
         title=title,
         message=message,
-        actor=_actor(request),
         complex=complex_obj,
         building=building,
         apartment=apartment,
@@ -1406,11 +1508,11 @@ def api_checklist_note(request):
             done=False,
             created_by=_current_user_or_none(request),
         )
-        AuditEvent.objects.create(
+        record_event(
+            request,
             event_type=AuditEvent.TYPE_NOTE,
             title="Checklist note added",
             message=text,
-            actor=_actor(request),
             metadata={"source": "portal_checklist_note", "noteId": note.id},
         )
         return JsonResponse({"ok": True, "noteId": note.id, "portalData": safe_portal_data(request)})
@@ -1426,11 +1528,11 @@ def api_checklist_note(request):
     if mode == "delete":
         note_id = note.id
         note.delete()
-        AuditEvent.objects.create(
+        record_event(
+            request,
             event_type=AuditEvent.TYPE_NOTE,
             title="Checklist note removed",
             message=f"Checklist note #{note_id} was deleted.",
-            actor=_actor(request),
             metadata={"source": "portal_checklist_note", "noteId": note_id},
         )
         return JsonResponse({"ok": True, "noteId": note_id, "portalData": safe_portal_data(request)})
@@ -1450,11 +1552,11 @@ def api_checklist_item(request):
             return JsonResponse({"ok": False, "error": "Checklist item was not found."}, status=404)
         item.done = not item.done
         item.save(update_fields=["done"])
-        AuditEvent.objects.create(
+        record_event(
+            request,
             event_type=AuditEvent.TYPE_NOTE,
             title="Checklist item updated",
             message=f"{item.title}: {'done' if item.done else 'open'}",
-            actor=_actor(request),
             metadata={"source": "portal_checklist_item", "itemId": item.id, "done": item.done},
         )
         return JsonResponse({"ok": True, "itemId": item.id, "done": item.done, "portalData": safe_portal_data(request)})
@@ -1464,11 +1566,11 @@ def api_checklist_item(request):
         backend_ids = [int(str(item_id)) for item_id in raw_ids if str(item_id).isdigit()]
         if backend_ids:
             ChecklistItem.objects.filter(id__in=backend_ids).update(done=True)
-            AuditEvent.objects.create(
+            record_event(
+                request,
                 event_type=AuditEvent.TYPE_NOTE,
                 title="Checklist items completed",
                 message=f"{len(backend_ids)} checklist items marked complete.",
-                actor=_actor(request),
                 metadata={"source": "portal_checklist_item", "itemIds": backend_ids, "mode": mode},
             )
         return JsonResponse({"ok": True, "count": len(backend_ids), "portalData": safe_portal_data(request)})
@@ -1476,11 +1578,11 @@ def api_checklist_item(request):
     if mode == "reset_all":
         ChecklistItem.objects.update(done=False)
         ChecklistNote.objects.update(done=False)
-        AuditEvent.objects.create(
+        record_event(
+            request,
             event_type=AuditEvent.TYPE_NOTE,
             title="Checklist reset",
             message="Checklist items and notes were reset from the portal.",
-            actor=_actor(request),
             metadata={"source": "portal_checklist_item", "mode": mode},
         )
         return JsonResponse({"ok": True, "portalData": safe_portal_data(request)})
@@ -1488,11 +1590,11 @@ def api_checklist_item(request):
     if mode == "mark_reviewed":
         item_count = ChecklistItem.objects.filter(is_active=True, done=False).update(done=True)
         note_count = ChecklistNote.objects.filter(done=False).update(done=True)
-        AuditEvent.objects.create(
+        record_event(
+            request,
             event_type=AuditEvent.TYPE_NOTE,
             title="Checklist reviewed",
             message=f"Checklist reviewed: {item_count} tasks and {note_count} notes marked complete.",
-            actor=_actor(request),
             metadata={
                 "source": "portal_checklist_item",
                 "mode": mode,
@@ -1555,11 +1657,11 @@ def api_support_ticket(request):
         apartment=apartment,
         owner=owner,
     )
-    AuditEvent.objects.create(
+    record_event(
+        request,
         event_type=AuditEvent.TYPE_SYSTEM,
         title="Support ticket created",
         message=f"{ticket.title} was created from the portal support drawer.",
-        actor=_actor(request),
         complex=complex_obj,
         building=building,
         apartment=apartment,
@@ -1628,11 +1730,11 @@ def api_create_building(request):
         address=address,
         author=_actor(request),
     )
-    AuditEvent.objects.create(
+    record_event(
+        request,
         event_type=AuditEvent.TYPE_SYSTEM,
         title="Building created",
         message=f"House {building.number} was added to {complex_obj.title} from the portal.",
-        actor=_actor(request),
         complex=complex_obj,
         building=building,
         metadata={"source": "portal_building_form"},
@@ -1690,11 +1792,11 @@ def api_create_apartment(request):
         area=area,
         author=_actor(request),
     )
-    AuditEvent.objects.create(
+    record_event(
+        request,
         event_type=AuditEvent.TYPE_SYSTEM,
         title="Apartment created",
         message=f"Apartment {apartment.number} was added to house {building.number}.",
-        actor=_actor(request),
         complex=building.complex,
         building=building,
         apartment=apartment,
@@ -1766,11 +1868,11 @@ def api_create_resident(request):
                 description=f"{OPENING_BALANCE_TAG} Opening balance set when the resident was created in the portal.",
                 created_by=_actor(request),
             )
-        AuditEvent.objects.create(
+        record_event(
+            request,
             event_type=AuditEvent.TYPE_SYSTEM,
             title="Resident created",
             message=f"{owner.fio} was added to apartment {apartment.number} from the portal.",
-            actor=_actor(request),
             complex=apartment.building.complex,
             building=apartment.building,
             apartment=apartment,
@@ -1846,14 +1948,14 @@ def api_create_payment(request):
             description=description,
             created_by=actor,
         )
-        AuditEvent.objects.create(
+        record_event(
+            request,
             event_type=AuditEvent.TYPE_BALANCE,
             title="Resident balance updated",
             message=(
                 f"{owner.fio}: {'credit' if operation == 'credit' else 'debit'} "
                 f"{amount} UZS via {channel if operation == 'credit' else 'adjustment'}."
             ),
-            actor=actor,
             complex=complex_obj,
             building=building,
             apartment=apartment,
@@ -1914,11 +2016,11 @@ def api_resident_kit_action(request):
     else:
         return JsonResponse({"ok": False, "error": "Unknown resident kit action."}, status=400)
 
-    AuditEvent.objects.create(
+    record_event(
+        request,
         event_type=event_type,
         title=title,
         message=message,
-        actor=_actor(request),
         complex=complex_obj,
         building=building,
         apartment=apartment,
@@ -1951,11 +2053,11 @@ def api_usage_report_export(request):
     row_count = _int_or_zero(payload.get("row_count"))
     total_usage = _decimal_or_zero(payload.get("total_usage"))
 
-    AuditEvent.objects.create(
+    record_event(
+        request,
         event_type=AuditEvent.TYPE_EXPORT,
         title="Usage report generated",
         message=f"{export_format} usage report exported from {source}.",
-        actor=_actor(request),
         metadata={
             "source": "portal_usage_report",
             "format": export_format,
@@ -2012,11 +2114,11 @@ def api_system_alerts_configure(request):
             notification.save(update_fields=["status", "action_state"])
 
         if alert:
-            AuditEvent.objects.create(
+            record_event(
+                request,
                 event_type=AuditEvent.TYPE_ALERT,
                 title="System alert updated",
                 message=f"{alert.title} was {mode}d from the portal.",
-                actor=actor_name,
                 complex=alert.complex,
                 building=alert.building,
                 apartment=alert.apartment,
@@ -2030,11 +2132,11 @@ def api_system_alerts_configure(request):
                 }
             )
 
-        AuditEvent.objects.create(
+        record_event(
+            request,
             event_type=AuditEvent.TYPE_ALERT,
             title="Notification updated",
             message=f"{notification.title} was {mode}d from the portal.",
-            actor=actor_name,
             complex=notification.complex,
             building=notification.building,
             apartment=notification.apartment,
@@ -2128,11 +2230,11 @@ def api_system_alerts_configure(request):
             "notification_id": notification.id,
         }
         alert.save(update_fields=["metadata"])
-        AuditEvent.objects.create(
+        record_event(
+            request,
             event_type=AuditEvent.TYPE_ALERT,
             title="System alert created",
             message=f"{alert.title} was created from the portal.",
-            actor=_actor(request),
             complex=complex_obj,
             building=building,
             apartment=apartment,
@@ -2176,11 +2278,11 @@ def api_export_report(request):
         download = _render_export_payload(portal_data, context, export_format, source, language, payload, rows=rows)
         row_count = len(rows)
 
-    AuditEvent.objects.create(
+    record_event(
+        request,
         event_type=AuditEvent.TYPE_EXPORT,
         title="Portal export generated",
         message=f"{export_format} export generated from {source}.",
-        actor=_actor(request),
         metadata={
             "source": "portal_export_report",
             "context": context,
@@ -2193,7 +2295,7 @@ def api_export_report(request):
         portal_data = safe_portal_data(request)
     else:
         # Reuse the snapshot built for the rows; only the audit feed changed since.
-        portal_data["auditEvents"] = _serialize_audit_events()
+        portal_data["auditEvents"] = _serialize_audit_events(request.user)
     return JsonResponse({"ok": True, "download": download, "portalData": portal_data})
 
 
@@ -2234,11 +2336,11 @@ def api_send_reminder(request):
     apartment = first_owner.apartment if first_owner.apartment_id else None
     building = apartment.building if apartment and apartment.building_id else None
     complex_obj = building.complex if building and building.complex_id else None
-    AuditEvent.objects.create(
+    record_event(
+        request,
         event_type=AuditEvent.TYPE_REMINDER,
         title="Reminder queued",
         message=f"{created} reminder(s) were created from the portal.",
-        actor=_actor(request),
         complex=complex_obj,
         building=building,
         apartment=apartment,
@@ -2263,11 +2365,11 @@ def api_assign_technician(request):
         if note:
             alert.message = "\n".join(filter(None, [alert.message, note]))
         alert.save(update_fields=["assigned_to", "status", "message"])
-        AuditEvent.objects.create(
+        record_event(
+            request,
             event_type=AuditEvent.TYPE_ALERT,
             title="Technician assigned",
             message=f"{technician} assigned to alert {alert.title}.",
-            actor=_actor(request),
             complex=alert.complex,
             building=alert.building,
             apartment=alert.apartment,
@@ -2281,11 +2383,11 @@ def api_assign_technician(request):
         notification.action_state = f"Assigned to {technician}"
         notification.status = PortalNotification.STATUS_READ
         notification.save(update_fields=["action_state", "status"])
-        AuditEvent.objects.create(
+        record_event(
+            request,
             event_type=AuditEvent.TYPE_ALERT,
             title="Notification assigned",
             message=f"{technician} assigned through notification center.",
-            actor=_actor(request),
             complex=notification.complex,
             building=notification.building,
             apartment=notification.apartment,
@@ -2329,11 +2431,11 @@ def api_assign_technician(request):
             owner=primary,
             created_by=_current_user_or_none(request),
         )
-        AuditEvent.objects.create(
+        record_event(
+            request,
             event_type=AuditEvent.TYPE_SYSTEM,
             title="Technician assigned",
             message=f"{technician} assigned for resident {primary.fio}.",
-            actor=_actor(request),
             complex=complex_obj,
             building=building,
             apartment=apartment,
@@ -2395,11 +2497,11 @@ def api_assign_status(request):
             )
             updated += 1
 
-    AuditEvent.objects.create(
+    record_event(
+        request,
         event_type=AuditEvent.TYPE_STATUS,
         title="Status assigned",
         message=f"{status_value} applied to {updated} row(s) in {context}.",
-        actor=_actor(request),
         metadata={"source": "portal_assign_status", "context": context, "updated": updated},
     )
     return JsonResponse({"ok": True, "updated": updated, "portalData": safe_portal_data(request)})

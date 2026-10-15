@@ -18080,6 +18080,44 @@ html.dark .resident-kit-textarea,
     box-shadow: 0 0 0 4px rgba(79, 142, 247, 0.11);
 }
 
+.audit-operator-shell {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 42px;
+    border-radius: 14px;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    background: rgba(15, 23, 42, 0.035);
+    padding: 0 12px;
+}
+
+.audit-operator-shell .material-symbols-outlined {
+    color: #4F8EF7;
+    font-size: 18px;
+}
+
+.audit-operator-shell select {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font-size: 13px;
+    font-weight: 650;
+}
+
+.audit-operator-shell select:focus {
+    outline: none;
+}
+
+.audit-event .audit-event-actor {
+    display: block;
+    margin-top: 0.2rem;
+    color: var(--hf-primary-strong);
+    font-size: 0.72rem;
+    font-weight: 800;
+}
+
 .audit-filter-row,
 .audit-action-row {
     display: flex;

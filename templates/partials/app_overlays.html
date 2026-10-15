@@ -222,12 +222,13 @@
 </div>
 </aside>
 
+{% if perms.portal.view_auditevent %}
 <aside aria-labelledby="audit-title" aria-hidden="true" class="app-drawer audit-drawer fixed top-0 right-0 z-[70] h-screen w-full max-w-xl bg-white shadow-2xl border-l border-outline-variant/20 translate-x-full" id="audit-drawer" role="dialog">
 <div class="h-full flex flex-col">
 <div class="px-6 py-5 border-b border-surface-container flex items-center justify-between">
 <div>
 <h2 class="text-lg font-black text-on-surface" id="audit-title" data-i18n-key="Audit log">Audit log</h2>
-<p class="text-xs text-on-surface-variant mt-1" data-i18n-key="Live backend activity trail synced from Django admin and portal actions.">Live backend activity trail synced from Django admin and portal actions.</p>
+<p class="text-xs text-on-surface-variant mt-1" data-i18n-key="Who did what: every operator action in the portal and Django admin, sign-ins included.">Who did what: every operator action in the portal and Django admin, sign-ins included.</p>
 </div>
 <button aria-label="Close audit log" class="p-2 rounded-lg hover:bg-surface-container transition-colors" data-close-overlay type="button">
 <span class="material-symbols-outlined">close</span>
@@ -243,12 +244,22 @@
 <span class="material-symbols-outlined" aria-hidden="true">search</span>
 <input aria-label="Search audit log" data-audit-search data-i18n-placeholder="Search audit events..." placeholder="Search audit events..." type="search"/>
 </label>
+<label class="audit-operator-shell">
+<span class="material-symbols-outlined" aria-hidden="true">badge</span>
+<select aria-label="Operator" data-audit-user>
+<option value="" data-i18n-key="All operators">All operators</option>
+{% for operator in audit_operators %}<option value="{{ operator.id }}">{{ operator.label }}</option>
+{% endfor %}</select>
+</label>
 <div class="audit-filter-row" data-audit-filters>
 <button class="is-active" data-audit-filter="all" data-i18n-key="All" type="button">All</button>
 <button data-audit-filter="export" data-i18n-key="Export" type="button">Export</button>
 <button data-audit-filter="reminder" data-i18n-key="Reminder" type="button">Reminder</button>
 <button data-audit-filter="alert" data-i18n-key="Alert" type="button">Alert</button>
 <button data-audit-filter="balance" data-i18n-key="Balance" type="button">Balance</button>
+<button data-audit-filter="billing" data-i18n-key="Billing" type="button">Billing</button>
+<button data-audit-filter="admin" data-i18n-key="Admin change" type="button">Admin change</button>
+<button data-audit-filter="auth" data-i18n-key="Sign-in" type="button">Sign-in</button>
 </div>
 <div class="audit-action-row">
 <button data-audit-action="add-note" type="button"><span class="material-symbols-outlined">note_add</span><span data-i18n-key="Add audit note">Add audit note</span></button>
@@ -265,6 +276,7 @@
 </div>
 </div>
 </aside>
+{% endif %}
 
 <aside aria-labelledby="support-title" aria-hidden="true" class="app-drawer support-drawer fixed top-0 right-0 z-[70] h-screen w-full max-w-md bg-white shadow-2xl border-l border-outline-variant/20 translate-x-full" id="support-drawer" role="dialog">
 <div class="h-full flex flex-col">
@@ -291,7 +303,7 @@
 <button data-support-action="copy-summary" type="button"><span class="material-symbols-outlined">content_copy</span><strong>Copy system summary</strong><small data-support-summary-caption>Live backend status</small></button>
 <button data-support-action="open-checklist" type="button"><span class="material-symbols-outlined">fact_check</span><strong>Open checklist</strong><small>Operations readiness flow</small></button>
 <button data-support-action="report-ui" type="button"><span class="material-symbols-outlined">bug_report</span><strong>Report UI issue</strong><small>Create backend support ticket</small></button>
-<button data-drawer-open="audit-drawer" type="button"><span class="material-symbols-outlined">history</span><strong>View audit trail</strong><small>Recent backend events</small></button>
+{% if perms.portal.view_auditevent %}<button data-drawer-open="audit-drawer" type="button"><span class="material-symbols-outlined">history</span><strong>View audit trail</strong><small>Recent backend events</small></button>{% endif %}
 </div>
 <div class="support-status-list">
 <div><span>Helpdesk</span><strong data-support-helpdesk>Status pending</strong></div>
@@ -369,7 +381,7 @@
 </div>
 </div>
 <div class="checklist-footer">
-<button data-checklist-action="open-audit" type="button"><span class="material-symbols-outlined">history</span><span data-i18n-key="Open audit log">Open audit log</span></button>
+{% if perms.portal.view_auditevent %}<button data-checklist-action="open-audit" type="button"><span class="material-symbols-outlined">history</span><span data-i18n-key="Open audit log">Open audit log</span></button>{% endif %}
 <button data-checklist-action="mark-reviewed" type="button"><span class="material-symbols-outlined">task_alt</span><span data-i18n-key="Mark reviewed">Mark reviewed</span></button>
 </div>
 </div>
@@ -471,10 +483,12 @@
 <span class="material-symbols-outlined">tune</span>
 <span>Preferences</span>
 </button>
+{% if perms.portal.view_auditevent %}
 <button class="profile-action-secondary" data-drawer-open="audit-drawer" type="button">
 <span class="material-symbols-outlined">history</span>
 <span>Audit log</span>
 </button>
+{% endif %}
 </div>
 </div>
 </div>

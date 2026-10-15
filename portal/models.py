@@ -220,7 +220,12 @@ class ChecklistNote(models.Model):
 
 
 class AuditEvent(models.Model):
-    """Backend audit timeline entry for admin and portal actions."""
+    """Operator activity log: who did what, when and from where, across the portal and Django admin.
+
+    Rows are append-only. They are written through ``portal.audit.record_event`` (and the signals
+    in ``portal.signals``) and are read-only in admin; only users with ``portal.view_auditevent``
+    (superusers have it) can read them.
+    """
 
     TYPE_EXPORT = "export"
     TYPE_REMINDER = "reminder"
@@ -229,6 +234,9 @@ class AuditEvent(models.Model):
     TYPE_NOTE = "note"
     TYPE_STATUS = "status"
     TYPE_SYSTEM = "system"
+    TYPE_BILLING = "billing"
+    TYPE_ADMIN = "admin"
+    TYPE_AUTH = "auth"
     TYPE_CHOICES = [
         (TYPE_EXPORT, "Export"),
         (TYPE_REMINDER, "Reminder"),
@@ -237,12 +245,26 @@ class AuditEvent(models.Model):
         (TYPE_NOTE, "Note"),
         (TYPE_STATUS, "Status"),
         (TYPE_SYSTEM, "System"),
+        (TYPE_BILLING, "Billing"),
+        (TYPE_ADMIN, "Admin change"),
+        (TYPE_AUTH, "Sign-in"),
     ]
 
     event_type = models.CharField(max_length=24, choices=TYPE_CHOICES, default=TYPE_SYSTEM)
     title = models.CharField(max_length=180)
     message = models.TextField()
+    # The operator account. Kept as SET_NULL so deleting a user never deletes their history;
+    # ``actor`` keeps the username as it was at the time.
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="audit_events",
+        verbose_name="Operator",
+    )
     actor = models.CharField(max_length=120, blank=True, default="System")
+    ip_address = models.GenericIPAddressField(null=True, blank=True, verbose_name="IP address")
     complex = models.ForeignKey(Complex, on_delete=models.SET_NULL, null=True, blank=True, related_name="audit_events")
     building = models.ForeignKey(Building, on_delete=models.SET_NULL, null=True, blank=True, related_name="audit_events")
     apartment = models.ForeignKey(Apartment, on_delete=models.SET_NULL, null=True, blank=True, related_name="audit_events")
@@ -252,6 +274,10 @@ class AuditEvent(models.Model):
 
     class Meta:
         ordering = ["-created_at"]
+        indexes = [
+            models.Index(fields=["-created_at"], name="audit_created_idx"),
+            models.Index(fields=["user", "-created_at"], name="audit_user_created_idx"),
+        ]
         verbose_name = "Audit event"
         verbose_name_plural = "Audit events"
 

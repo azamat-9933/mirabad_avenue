@@ -275,6 +275,11 @@
         "Resident payment profile": { ru: "Платёжный профиль абонента", uz: "Abonentning to'lov profili" },
         "Amount": { ru: "Сумма", uz: "Summa" },
         "Balance": { ru: "Баланс", uz: "Balans" },
+        "Billing": { ru: "Биллинг", uz: "Billing" },
+        "Admin change": { ru: "Изменение в admin", uz: "Admin o'zgarishi" },
+        "Sign-in": { ru: "Вход", uz: "Kirish" },
+        "All operators": { ru: "Все операторы", uz: "Barcha operatorlar" },
+        "Who did what: every operator action in the portal and Django admin, sign-ins included.": { ru: "Кто что сделал: все действия операторов в портале и Django admin, включая входы.", uz: "Kim nima qildi: portal va Django admin'dagi barcha operator amallari, kirishlar ham." },
         "Operation": { ru: "Операция", uz: "Amal" },
         "Add funds": { ru: "Зачислить", uz: "Hisobga kiritish" },
         "Credit": { ru: "Зачислить", uz: "Hisobga kiritish" },
@@ -3376,12 +3381,16 @@
             note: "edit_note",
             status: "sell",
             system: "settings_suggest",
+            billing: "receipt_long",
+            admin: "admin_panel_settings",
+            auth: "login",
         }[type] || "history");
         return items.map((event) => `
             <div class="audit-event" data-audit-event data-type="${escapeAttr(event.type || "system")}" data-audit-backend-id="${escapeAttr(event.backendId || "")}" data-audit-time="${escapeAttr(event.time || "")}" data-audit-label="${escapeAttr(event.label || event.type || "")}" data-audit-title="${escapeAttr(event.title || "")}" data-audit-message="${escapeAttr(event.message || event.title || "")}" data-audit-actor="${escapeAttr(event.actor || "")}" data-audit-complex="${escapeAttr(event.complexName || "")}" data-audit-building="${escapeAttr(event.buildingName || "")}" data-audit-apartment="${escapeAttr(event.apartmentNumber || "")}" data-audit-owner="${escapeAttr(event.ownerName || "")}" data-audit-admin-url="${escapeAttr(event.adminUrl || "")}">
                 <span class="audit-event-icon material-symbols-outlined">${escapeHtml(iconForType(event.type))}</span>
                 <div>
                     <time>${escapeHtml(event.time || "")}</time>
+                    <strong class="audit-event-actor">${escapeHtml(event.actorName || event.actor || "System")}${event.ipAddress ? ` · ${escapeHtml(event.ipAddress)}` : ""}</strong>
                     <p>${escapeHtml(event.message || event.title || "")}</p>
                     <span>${escapeHtml(event.label || event.type || "System")}</span>
                 </div>
@@ -3912,6 +3921,7 @@
             const drawer = auditTimeline.closest("#audit-drawer");
             const pager = ensureDrawerPagination(auditTimeline.parentElement || drawer, "audit");
             const search = drawer?.querySelector("[data-audit-search]");
+            const operatorSelect = drawer?.querySelector("[data-audit-user]");
             const filterButtons = Array.from(drawer?.querySelectorAll("[data-audit-filter]") || []);
             const loadAudit = async () => {
                 const activeType = filterButtons.find((button) => button.classList.contains("is-active"))?.dataset.auditFilter || "all";
@@ -3924,6 +3934,7 @@
                     search: state.search,
                     ordering: state.ordering,
                     type: activeType === "all" ? "" : activeType,
+                    user_id: operatorSelect?.value || "",
                 });
                 auditTimeline.innerHTML = renderAuditMarkup(payload.results || []);
                 if (search) search.value = state.search || "";
@@ -3949,6 +3960,10 @@
                 writeListUrlState("audit", { page: 1 });
                 loadAudit();
             }));
+            operatorSelect?.addEventListener("change", () => {
+                writeListUrlState("audit", { page: 1 });
+                loadAudit();
+            });
             pager?.querySelector("[data-prev-page]")?.addEventListener("click", () => {
                 const state = readListUrlState("audit", { page: "1" });
                 writeListUrlState("audit", { page: Math.max(1, Number(state.page || 1) - 1) });
@@ -9331,12 +9346,16 @@
             note: "edit_note",
             status: "sell",
             system: "settings_suggest",
+            billing: "receipt_long",
+            admin: "admin_panel_settings",
+            auth: "login",
         }[type] || "history");
         timeline.innerHTML = events.map((event) => `
             <div class="audit-event" data-audit-event data-type="${escapeAttr(event.type || "system")}" data-audit-backend-id="${escapeAttr(event.backendId || "")}" data-audit-time="${escapeAttr(event.time || "")}" data-audit-label="${escapeAttr(event.label || event.type || "")}" data-audit-title="${escapeAttr(event.title || "")}" data-audit-message="${escapeAttr(event.message || event.title || "")}" data-audit-actor="${escapeAttr(event.actor || "")}" data-audit-complex="${escapeAttr(event.complexName || "")}" data-audit-building="${escapeAttr(event.buildingName || "")}" data-audit-apartment="${escapeAttr(event.apartmentNumber || "")}" data-audit-owner="${escapeAttr(event.ownerName || "")}" data-audit-admin-url="${escapeAttr(event.adminUrl || "")}">
                 <span class="audit-event-icon material-symbols-outlined">${escapeHtml(iconForType(event.type))}</span>
                 <div>
                     <time>${escapeHtml(event.time || "")}</time>
+                    <strong class="audit-event-actor">${escapeHtml(event.actorName || event.actor || "System")}${event.ipAddress ? ` · ${escapeHtml(event.ipAddress)}` : ""}</strong>
                     <p>${escapeHtml(event.message || event.title || "")}</p>
                     <span>${escapeHtml(event.label || event.type || "System")}</span>
                 </div>
@@ -9447,6 +9466,7 @@
                     ...params,
                     search: search?.value.trim() || "",
                     type: activeFilter === "all" ? "" : activeFilter,
+                    user_id: drawer.querySelector("[data-audit-user]")?.value || "",
                     language: storage.getItem("hydroflow-lang") || "en",
                 });
                 triggerDownloadPayload(payload.download);

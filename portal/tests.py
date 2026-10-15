@@ -18,6 +18,7 @@ from main_app.models import Apartment, Building, Complex, Owner
 from payments.models import Transaction
 from payments.services import OPENING_BALANCE_TAG, apply_account_change, apply_balance_change
 from portal.backend_data import build_portal_data
+from portal.models import AuditEvent
 
 
 PORTAL_PAGES = [
@@ -322,6 +323,7 @@ class PortalExportTests(TestCase):
         self.assertTrue(download["filename"].startswith("residential"))
 
     def test_audit_export_is_xlsx(self):
+        self.client.force_login(get_user_model().objects.create_superuser(username="head-admin", password="unused"))
         download, content = self._export(reverse("portal:api_export_audit"), {"language": "uz"})
         self.assertTrue(download["filename"].startswith("audit-log-"))
         header = next(load_workbook(io.BytesIO(content)).active.iter_rows(values_only=True))
@@ -581,3 +583,133 @@ class PortalInputValidationTests(TestCase):
         )
         complex_row = build_portal_data(self.user)["complexes"][0]
         self.assertEqual(complex_row["waterM3"], 5.5)
+
+
+class OperatorActivityLogTests(TestCase):
+    """Every operator action is attributed to their user account and visible only to the head administrator."""
+
+    password = "operator-test-password"
+
+    @classmethod
+    def setUpTestData(cls):
+        User = get_user_model()
+        cls.operator = User.objects.create_user(username="kassir1", password=cls.password, first_name="Ali", last_name="Valiyev")
+        cls.other_operator = User.objects.create_user(username="kassir2", password=cls.password)
+        cls.head_admin = User.objects.create_superuser(username="boss", password=cls.password)
+        complex_obj = Complex.objects.create(title="Mirabad Avenue", address="", author="test")
+        cls.building = Building.objects.create(number="64", complex=complex_obj, author="test")
+        cls.apartment = Apartment.objects.create(number="5", area=Decimal("50.00"), building=cls.building, author="test")
+        cls.owner = Owner.objects.create(fio="Mijoz", phone="+998901234567", apartment=cls.apartment)
+
+    def _post_json(self, name, payload, **extra):
+        return self.client.post(reverse(name), json.dumps(payload), content_type="application/json", **extra)
+
+    def test_cash_payment_is_logged_with_the_operator_account_and_ip(self):
+        self.client.force_login(self.operator)
+        response = self._post_json(
+            "portal:api_create_payment",
+            {"owner_id": self.owner.id, "amount": "250000", "operation": "credit", "channel": "cash"},
+            REMOTE_ADDR="10.0.0.7",
+        )
+        self.assertEqual(response.status_code, 200)
+        event = AuditEvent.objects.get(event_type=AuditEvent.TYPE_BALANCE)
+        self.assertEqual((event.user, event.actor, event.ip_address), (self.operator, "kassir1", "10.0.0.7"))
+        self.assertEqual(event.owner_id, self.owner.id)
+        self.assertEqual(event.metadata["transaction_id"], Transaction.objects.get().id)
+        self.assertEqual(Transaction.objects.get().created_by, "kassir1")
+
+    def test_sign_in_sign_out_and_failed_attempts_are_logged(self):
+        self.client.post(reverse("portal:login"), {"username": "kassir1", "password": "wrong"})
+        self.client.post(reverse("portal:login"), {"username": "kassir1", "password": self.password})
+        self.client.post(reverse("portal:api_logout"))
+        titles = list(AuditEvent.objects.filter(event_type=AuditEvent.TYPE_AUTH).order_by("id").values_list("title", "user__username"))
+        self.assertEqual(titles, [("Failed sign-in", None), ("Signed in", "kassir1"), ("Signed out", "kassir1")])
+        self.assertNotIn("wrong", json.dumps(list(AuditEvent.objects.values_list("message", "metadata"))))
+
+    def test_admin_edits_are_logged_with_the_changed_fields(self):
+        staff = get_user_model().objects.create_superuser(username="admin-operator", password=self.password)
+        self.client.force_login(staff)
+        url = reverse("admin:main_app_owner_change", args=[self.owner.id])
+        form = self.client.get(url).context["adminform"].form
+        data = {key: value for key, value in form.initial.items() if value is not None and key in form.fields}
+        data.update({"fio": "Mijoz Yangi", "phone": "+998900000000", "apartment": self.apartment.id})
+        data = {key: ("on" if value is True else value) for key, value in data.items() if value is not False}
+        response = self.client.post(url, data)
+        self.assertEqual(response.status_code, 302, getattr(response, "context", None) and response.context["adminform"].form.errors)
+
+        event = AuditEvent.objects.get(event_type=AuditEvent.TYPE_ADMIN)
+        self.assertEqual(event.user, staff)
+        self.assertEqual(event.owner_id, self.owner.id)
+        self.assertIn("Mijoz Yangi", event.message)
+        self.assertEqual(event.metadata["action"], "changed")
+
+    def test_billing_period_actions_are_logged(self):
+        from billing.models import BillingPeriod
+
+        self.client.force_login(self.operator)
+        period = BillingPeriod.objects.create(name="Aprel", start_date=date(2026, 4, 1), end_date=date(2026, 4, 30))
+        url = reverse("portal:billing_period_create")
+        base = {"period_id": period.id, "building_id": self.building.id}
+        self.client.post(url, {**base, "action": "add_expense", "service_type": "heating", "name": "Qozonxona", "amount": "1500"})
+        self.client.post(url, {**base, "action": "update_heating_record", "apartment_id": self.apartment.id, "excluded_dates": "2026-04-02"})
+        self.client.post(url, {**base, "action": "update_status", "status": "closed"})
+        self.client.post(url, {**base, "action": "update_status", "status": "reopened"})
+
+        events = AuditEvent.objects.filter(event_type=AuditEvent.TYPE_BILLING).order_by("id")
+        self.assertEqual(
+            [event.title for event in events],
+            ["Expense added", "Heating days updated", "Billing period closed", "Billing period reopened"],
+        )
+        self.assertTrue(all(event.user == self.operator for event in events))
+        self.assertEqual(events[1].owner_id, self.owner.id)
+
+    def test_failed_billing_action_leaves_no_log_entry(self):
+        from billing.models import BillingPeriod
+
+        self.client.force_login(self.operator)
+        period = BillingPeriod.objects.create(name="Bo'sh", start_date=date(2026, 4, 1), end_date=date(2026, 4, 30))
+        # No buildings/services: closing fails, so nothing happened and nothing is logged.
+        self.client.post(reverse("portal:billing_period_create"), {"period_id": period.id, "action": "update_status", "status": "closed"})
+        self.assertFalse(AuditEvent.objects.filter(event_type=AuditEvent.TYPE_BILLING).exists())
+
+    def test_operators_cannot_read_the_log(self):
+        self.client.force_login(self.operator)
+        self.assertEqual(self.client.get(reverse("portal:api_list_audit")).status_code, 403)
+        self.assertEqual(self._post_json("portal:api_export_audit", {}).status_code, 403)
+        self.assertEqual(build_portal_data(self.operator)["auditEvents"], [])
+        page = self.client.get(reverse("portal:dashboard")).content.decode()
+        self.assertNotIn('id="audit-drawer"', page)
+        self.assertEqual(self.client.get("/admin/portal/auditevent/").status_code, 302)
+
+    def test_head_admin_filters_the_log_by_operator(self):
+        self.client.force_login(self.operator)
+        self._post_json("portal:api_create_payment", {"owner_id": self.owner.id, "amount": "100", "operation": "credit"})
+        self.client.force_login(self.other_operator)
+        self._post_json("portal:api_create_payment", {"owner_id": self.owner.id, "amount": "200", "operation": "credit"})
+
+        self.client.force_login(self.head_admin)
+        page = self.client.get(reverse("portal:dashboard")).content.decode()
+        self.assertIn('id="audit-drawer"', page)
+        self.assertIn("Ali Valiyev (kassir1)", page)
+        rows = self.client.get(reverse("portal:api_list_audit"), {"user_id": self.operator.id, "type": "balance"}).json()["results"]
+        self.assertEqual([(row["actor"], row["actorName"]) for row in rows], [("kassir1", "Ali Valiyev")])
+        self.assertIn("100", rows[0]["message"])
+
+    def test_log_is_read_only_in_admin_even_for_the_head_admin(self):
+        self.client.force_login(self.operator)
+        self._post_json("portal:api_audit_note", {"message": "test"})
+        event = AuditEvent.objects.get(event_type=AuditEvent.TYPE_NOTE)
+        self.client.force_login(self.head_admin)
+        self.assertEqual(self.client.get("/admin/portal/auditevent/").status_code, 200)
+        self.assertEqual(self.client.get("/admin/portal/auditevent/add/").status_code, 403)
+        self.client.post(f"/admin/portal/auditevent/{event.id}/change/", {"title": "edited"})
+        self.client.post(f"/admin/portal/auditevent/{event.id}/delete/", {"post": "yes"})
+        event.refresh_from_db()
+        self.assertEqual(event.title, "Audit note")
+
+    def test_deleting_an_operator_keeps_their_history(self):
+        self.client.force_login(self.other_operator)
+        self._post_json("portal:api_audit_note", {"message": "keep me"})
+        self.other_operator.delete()
+        event = AuditEvent.objects.get(message="keep me")
+        self.assertEqual((event.user_id, event.actor), (None, "kassir2"))

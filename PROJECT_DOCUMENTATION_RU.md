@@ -92,6 +92,7 @@ OpenAPI-схема в репозитории не хранится: она ге�
 - `DB_ENGINE`, `DB_NAME`, `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`
 - `CORS_ALLOW_ALL_ORIGINS`, `CORS_ALLOWED_ORIGINS`, `CORS_ALLOW_CREDENTIALS`
 - HTTPS (необязательные): `SECURE_COOKIES`, `CSRF_TRUSTED_ORIGINS`, `USE_X_FORWARDED_PROTO`, `SECURE_SSL_REDIRECT`, `SECURE_HSTS_SECONDS`
+- `TRUST_X_FORWARDED_FOR` (по умолчанию `False`): включать только за прокси (nginx), который дописывает `X-Forwarded-For`, — тогда журнал действий записывает IP клиента, а не прокси.
 
 Безопасные значения по умолчанию (если переменная не задана или пустая):
 - `DEBUG=False`. Для локальной разработки нужно явно `DEBUG=True` в `.env`.
@@ -281,6 +282,20 @@ Proxy-модели (`Complex`, `Building`, `BuildingSection`, `Apartment`, `Owne
 - аудит пользовательских действий,
 - UI-override статусов таблиц без изменения core-моделей.
 
+### Журнал действий операторов (`AuditEvent`)
+Операторы — обычные пользователи Django (`auth.User`, свой `AUTH_USER_MODEL` не задан). Главный администратор — суперпользователь (или пользователь с правом `portal.view_auditevent`).
+
+- Каждая запись привязана к пользователю: `user` (FK на `auth.User`, `SET_NULL` — при удалении оператора история остаётся), `actor` (username на момент действия), `ip_address`, `created_at`, связи с сектором/домом/квартирой/жильцом и `metadata` (детали: id транзакции, суммы, статусы «было → стало», изменённые поля).
+- Запись создаётся только через `portal.audit.record_event()`; пользователь и IP берутся из запроса (`portal.audit.AuditRequestMiddleware` даёт запрос и сигналам).
+- Что пишется:
+  - все POST-действия портала (платежи и списания, создание домов/квартир/жильцов, экспорт, напоминания, алерты, статусы, заметки);
+  - billing-период (тип `billing`): добавление расхода, изменение дней отопления (было → стало), закрытие, перерасчёт, повторное открытие, возврат в draft — из портала и из admin actions; действие и запись коммитятся в одной транзакции;
+  - любое добавление/изменение/удаление в Django admin (тип `admin`, сигнал на `LogEntry`, с перечнем изменённых полей);
+  - вход, выход и неудачные попытки входа (тип `auth`; сохраняется только введённый username, пароль никогда).
+- Чтение: только главный администратор. `GET /api/lists/audit/` и `POST /api/audit/export/` отвечают 403 остальным, `auditEvents` в snapshot для них пуст, кнопки и дровер журнала в портале не рендерятся.
+- Журнал неизменяемый: в admin нельзя добавить, изменить или удалить запись (даже суперпользователю). Список в admin фильтруется по оператору, типу и дате.
+- Миграция `portal.0004_audit_operator` привязывает старые записи к пользователям по username.
+
 ---
 
 ## 8. Миграции и эволюция схемы
@@ -331,8 +346,9 @@ Proxy-модели (`Complex`, `Building`, `BuildingSection`, `Apartment`, `Owne
 
 ### `GET /api/lists/audit/`
 Фильтры:
-- `search`, `type`, `actor`, `district`, `period`, `period_from`, `period_to`,
+- `search`, `type`, `actor`, `user_id` (оператор), `district`, `period`, `period_from`, `period_to`,
 `complex_id`, `owner_id`, `ordering`.
+- Только для главного администратора (иначе 403). Строка содержит `actor`, `actorId`, `actorName`, `ipAddress`.
 
 ### `GET /api/lists/complexes/`
 Фильтры:
@@ -342,7 +358,7 @@ Proxy-модели (`Complex`, `Building`, `BuildingSection`, `Apartment`, `Owne
 
 ### Audit/checklist/support/session
 - `POST /api/audit/note/` — добавить `AuditEvent`.
-- `POST /api/audit/export/` — выгрузка журнала аудита в XLSX.
+- `POST /api/audit/export/` — выгрузка журнала аудита в XLSX (только главный администратор; фильтр `user_id`, колонка IP).
 - `POST /api/checklist/note/` — create/toggle checklist note.
 - `POST /api/checklist/item/` — отметить/сбросить пункты чеклиста.
 - `POST /api/support/ticket/` — создать `SupportTicket` + `AuditEvent`.
@@ -531,12 +547,14 @@ API пути, используемые frontend:
 Особые правила admin-домена:
 - единый сектор (`Mirabad Avenue`) enforced через `Complex.save()` и admin redirect.
 - часть сущностей в admin read-only по бизнес-смыслу (например, transaction history/invoices, баланс жильца после создания).
+- статус billing-периода в admin только для чтения: меняется действиями «закрыть» (для reopened — перерасчёт) и «открыть».
+- журнал действий (`AuditEvent`) в admin только для чтения, без удаления.
 
 ---
 
 ## 14. Тесты и качество
 
-Запуск: `python manage.py test` — 74 теста (нужен `.env` или `DEBUG=True`, см. 5.5).
+Запуск: `python manage.py test` — 95 тестов (нужен `.env` или `DEBUG=True`, см. 5.5).
 
 Наличие тестов:
 - `billing/tests.py` (24) — core биллинга: расчеты, `close_period`, `recalculate`, `Payment.apply`, проводки в журнал, начисления пустой квартире и переход ее долга к новому владельцу.
