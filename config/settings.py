@@ -2,6 +2,7 @@ import os
 import socket
 from pathlib import Path
 
+from django.core.exceptions import ImproperlyConfigured
 from dotenv import load_dotenv
 
 from .jazz_sett import JAZZ_SETTINGS, JAZZ_UI_TWEAKS
@@ -9,15 +10,14 @@ from .jazz_sett import JAZZ_SETTINGS, JAZZ_UI_TWEAKS
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# The project's own .env is the only file source; real environment variables win over it.
 load_dotenv(BASE_DIR / ".env", override=False)
-source_backend_env = BASE_DIR.parent / "Mirabad_Avenue" / "mirabad_avenue" / ".env"
-if not os.getenv("DB_ENGINE") and source_backend_env.exists():
-    load_dotenv(source_backend_env, override=False)
 
 
 def env_bool(name, default=False):
     value = os.getenv(name)
-    if value is None:
+    # An empty value (e.g. "DEBUG=" in .env) means "not set", not False.
+    if value is None or not value.strip():
         return default
     return value.strip().lower() in {"1", "true", "yes", "on"}
 
@@ -48,16 +48,36 @@ def build_allowed_hosts():
     return sorted(hosts)
 
 
-# Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv("SECRET_KEY", "django-insecure-local-hydroflow-prototype")
+# Production is the default: local development opts in with DEBUG=True in .env.
+DEBUG = env_bool("DEBUG", False)
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = env_bool("DEBUG", True)
+DEV_SECRET_KEY = "django-insecure-local-hydroflow-prototype"
+# Keys that are public (committed or documented) and must never sign production sessions.
+KNOWN_INSECURE_SECRET_KEYS = {"", DEV_SECRET_KEY, "replace-with-a-long-random-secret-key"}
+
+SECRET_KEY = os.getenv("SECRET_KEY", "").strip()
+if SECRET_KEY in KNOWN_INSECURE_SECRET_KEYS:
+    if not DEBUG:
+        raise ImproperlyConfigured(
+            "SECRET_KEY is missing or uses a public placeholder. Set a long random SECRET_KEY "
+            "in .env (see .env.example), or set DEBUG=True for local development."
+        )
+    SECRET_KEY = DEV_SECRET_KEY
 
 ALLOWED_HOSTS = build_allowed_hosts()
+
+# HTTPS hardening. Cookies are HTTPS-only outside DEBUG; set SECURE_COOKIES=False only for a plain-HTTP deployment.
+SESSION_COOKIE_SECURE = env_bool("SECURE_COOKIES", not DEBUG)
+CSRF_COOKIE_SECURE = SESSION_COOKIE_SECURE
+# Full origins (https://host) allowed to send POSTs, needed when TLS ends at a proxy in front of Django.
+CSRF_TRUSTED_ORIGINS = env_list("CSRF_TRUSTED_ORIGINS", [])
+if env_bool("USE_X_FORWARDED_PROTO", False):
+    # Only behind a proxy that overwrites X-Forwarded-Proto; otherwise clients could spoof HTTPS.
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+SECURE_SSL_REDIRECT = env_bool("SECURE_SSL_REDIRECT", False)
+SECURE_HSTS_SECONDS = int(os.getenv("SECURE_HSTS_SECONDS", "0") or 0)
 
 
 # Application definition
@@ -181,9 +201,10 @@ LOGIN_URL = 'portal:login'
 LOGIN_REDIRECT_URL = 'portal:dashboard'
 LOGOUT_REDIRECT_URL = 'portal:login'
 
+# The portal is same-origin; CORS is opt-in for a separate frontend only.
 CORS_ALLOW_ALL_ORIGINS = env_bool("CORS_ALLOW_ALL_ORIGINS", False)
-CORS_ALLOWED_ORIGINS = env_list("CORS_ALLOWED_ORIGINS", ["http://localhost:3000"])
-CORS_ALLOW_CREDENTIALS = env_bool("CORS_ALLOW_CREDENTIALS", True)
+CORS_ALLOWED_ORIGINS = env_list("CORS_ALLOWED_ORIGINS", [])
+CORS_ALLOW_CREDENTIALS = env_bool("CORS_ALLOW_CREDENTIALS", False)
 
 JAZZMIN_SETTINGS = JAZZ_SETTINGS
 JAZZMIN_UI_TWEAKS = JAZZ_UI_TWEAKS

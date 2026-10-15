@@ -87,14 +87,21 @@ flowchart LR
 - `ALLOWED_HOSTS`
 - `DB_ENGINE`, `DB_NAME`, `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`
 - `CORS_ALLOW_ALL_ORIGINS`, `CORS_ALLOWED_ORIGINS`, `CORS_ALLOW_CREDENTIALS`
+- HTTPS (необязательные): `SECURE_COOKIES`, `CSRF_TRUSTED_ORIGINS`, `USE_X_FORWARDED_PROTO`, `SECURE_SSL_REDIRECT`, `SECURE_HSTS_SECONDS`
+
+Безопасные значения по умолчанию (если переменная не задана или пустая):
+- `DEBUG=False`. Для локальной разработки нужно явно `DEBUG=True` в `.env`.
+- Без `DEBUG` проект не запускается, если `SECRET_KEY` пустой или равен публичному значению (`replace-with-a-long-random-secret-key`, dev-ключ) — `ImproperlyConfigured`. При `DEBUG=True` подставляется dev-ключ.
+- Cookies сессии и CSRF — только по HTTPS, пока не `DEBUG`. Для деплоя по чистому HTTP: `SECURE_COOKIES=False`.
+- Если TLS завершается на прокси (nginx): `CSRF_TRUSTED_ORIGINS=https://<домен>` и/или `USE_X_FORWARDED_PROTO=True` (только если прокси сам выставляет `X-Forwarded-Proto`). Иначе POST-запросы по HTTPS получат ошибку CSRF «Origin checking failed».
+- `SECURE_SSL_REDIRECT` и `SECURE_HSTS_SECONDS` выключены: включать, когда весь сайт работает по HTTPS (HSTS необратим для браузеров на срок действия). `manage.py check --deploy` напоминает о них предупреждениями `security.W004/W008`.
+- CORS выключен (`CORS_ALLOWED_ORIGINS` пуст, без credentials): портал работает с того же origin.
 
 Важно:
-- в текущем рабочем `.env` есть реальные секреты/пароли — их нельзя публиковать.
+- в рабочем `.env` хранятся реальные секреты/пароли — их нельзя публиковать.
 
 ### 5.2 Загрузка env
-`config/settings.py`:
-- сначала грузит `BASE_DIR/.env`,
-- если `DB_ENGINE` не задан, пытается подхватить внешний `.env` из соседнего проекта (`Mirabad_Avenue/mirabad_avenue/.env`).
+`config/settings.py` грузит только `BASE_DIR/.env`; переменные окружения процесса имеют приоритет над файлом. Других источников (соседних проектов и т.п.) нет.
 
 ### 5.3 База данных
 - Если `DB_ENGINE` truthy: используется внешняя БД (обычно PostgreSQL).
@@ -111,10 +118,13 @@ flowchart LR
 1. `python -m venv venv`
 2. `venv\Scripts\activate`
 3. `pip install -r requirements.txt`
-4. `python manage.py migrate`
-5. `python manage.py createsuperuser`
-6. `python manage.py runserver`
-7. Открыть `/login/` и войти созданным пользователем.
+4. `copy .env.example .env` и оставить `DEBUG=True` (для SQLite очистить `DB_ENGINE`)
+5. `python manage.py migrate`
+6. `python manage.py createsuperuser`
+7. `python manage.py runserver`
+8. Открыть `/login/` и войти созданным пользователем.
+
+Тесты: `python manage.py test` (нужен `.env` из шага 4 либо `DEBUG=True` или `SECRET_KEY` в окружении).
 
 ### 5.6 Аутентификация
 Портал и API закрыты: без сессии работают только `/login/`, `/admin/login/` и `/api/health/`.
