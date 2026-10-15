@@ -1,0 +1,255 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Mirabad Avenue | Sign in</title>
+<link href="{% static 'img/favicon.svg' %}" rel="icon" type="image/svg+xml"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<script>
+    (() => {
+        // Same keys as app.js, so the login page follows the portal's theme and language.
+        try {
+            if (localStorage.getItem("hydroflow-theme") === "dark") document.documentElement.classList.add("dark");
+        } catch (error) {}
+    })();
+</script>
+<style>
+    :root {
+        --login-bg: #eff4f8;
+        --login-bg-glow: rgba(141, 208, 233, 0.45);
+        --login-panel: #ffffff;
+        --login-text: #171c1f;
+        --login-muted: #3f484c;
+        --login-border: rgba(112, 120, 125, 0.24);
+        --login-input: #f5fafe;
+        --login-primary: #004354;
+        --login-primary-strong: #005c72;
+        --login-on-primary: #ffffff;
+        --login-focus: rgba(0, 92, 114, 0.22);
+        --login-error-bg: #fdecea;
+        --login-error-text: #93000a;
+        --login-error-border: rgba(186, 26, 26, 0.28);
+        color-scheme: light;
+    }
+    html.dark {
+        --login-bg: #0f1517;
+        --login-bg-glow: rgba(24, 102, 125, 0.32);
+        --login-panel: #182124;
+        --login-text: #ecf1f5;
+        --login-muted: #bfc8cc;
+        --login-border: rgba(191, 200, 204, 0.2);
+        --login-input: #1f2a2e;
+        --login-primary: #6db9c8;
+        --login-primary-strong: #8bcfdd;
+        --login-on-primary: #00262f;
+        --login-focus: rgba(109, 185, 200, 0.3);
+        --login-error-bg: rgba(147, 0, 10, 0.24);
+        --login-error-text: #ffb4ab;
+        --login-error-border: rgba(255, 180, 171, 0.3);
+        color-scheme: dark;
+    }
+    * { box-sizing: border-box; }
+    body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        padding: 24px 16px;
+        font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+        color: var(--login-text);
+        background:
+            radial-gradient(circle at 15% 10%, var(--login-bg-glow), transparent 45%),
+            radial-gradient(circle at 85% 90%, var(--login-bg-glow), transparent 40%),
+            var(--login-bg);
+    }
+    .login-card {
+        width: 100%;
+        max-width: 400px;
+        padding: 32px;
+        border: 1px solid var(--login-border);
+        border-radius: 24px;
+        background: var(--login-panel);
+        box-shadow: 0 24px 48px rgba(0, 67, 84, 0.12);
+    }
+    html.dark .login-card { box-shadow: 0 24px 48px rgba(0, 0, 0, 0.4); }
+    .login-brand { display: flex; align-items: center; gap: 12px; margin-bottom: 28px; }
+    .login-brand img { width: 44px; height: 44px; border-radius: 12px; }
+    .login-brand h1 { margin: 0; font-size: 18px; font-weight: 900; letter-spacing: -0.01em; color: var(--login-primary); }
+    .login-brand p { margin: 2px 0 0; font-size: 12px; font-weight: 500; color: var(--login-muted); }
+    .login-title { margin: 0 0 20px; font-size: 22px; font-weight: 800; letter-spacing: -0.01em; }
+    .login-error {
+        margin: 0 0 16px;
+        padding: 10px 12px;
+        border: 1px solid var(--login-error-border);
+        border-radius: 12px;
+        background: var(--login-error-bg);
+        color: var(--login-error-text);
+        font-size: 13px;
+        font-weight: 600;
+    }
+    .login-field { display: grid; gap: 6px; margin-bottom: 16px; }
+    .login-field label { font-size: 13px; font-weight: 700; color: var(--login-muted); }
+    .login-field input {
+        width: 100%;
+        padding: 11px 14px;
+        border: 1px solid var(--login-border);
+        border-radius: 12px;
+        background: var(--login-input);
+        color: var(--login-text);
+        font: inherit;
+        font-size: 15px;
+        transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    .login-field input:focus {
+        outline: none;
+        border-color: var(--login-primary-strong);
+        box-shadow: 0 0 0 4px var(--login-focus);
+    }
+    .login-submit {
+        width: 100%;
+        margin-top: 8px;
+        padding: 12px 16px;
+        border: 0;
+        border-radius: 12px;
+        background: linear-gradient(135deg, var(--login-primary), var(--login-primary-strong));
+        color: var(--login-on-primary);
+        font: inherit;
+        font-size: 15px;
+        font-weight: 800;
+        cursor: pointer;
+        transition: opacity 0.15s ease, transform 0.15s ease;
+    }
+    .login-submit:hover { opacity: 0.92; }
+    .login-submit:active { transform: translateY(1px); }
+    .login-submit:focus-visible { outline: none; box-shadow: 0 0 0 4px var(--login-focus); }
+    .login-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-top: 24px;
+        padding-top: 16px;
+        border-top: 1px solid var(--login-border);
+        font-size: 12px;
+        color: var(--login-muted);
+    }
+    .login-langs { display: flex; gap: 4px; flex-shrink: 0; }
+    .login-langs button {
+        padding: 4px 8px;
+        border: 1px solid transparent;
+        border-radius: 8px;
+        background: none;
+        color: var(--login-muted);
+        font: inherit;
+        font-size: 12px;
+        font-weight: 700;
+        cursor: pointer;
+    }
+    .login-langs button[aria-pressed="true"] { border-color: var(--login-border); color: var(--login-primary); }
+    .login-langs button:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--login-focus); }
+    @media (max-width: 420px) {
+        .login-card { padding: 24px 20px; }
+        .login-footer { flex-direction: column; align-items: flex-start; }
+    }
+</style>
+</head>
+<body>
+<main class="login-card">
+    <div class="login-brand">
+        <img alt="" src="{% static 'img/favicon.svg' %}"/>
+        <div>
+            <h1>Mirabad Avenue</h1>
+            <p data-i18n="subtitle">Utility Management</p>
+        </div>
+    </div>
+    <h2 class="login-title" data-i18n="title">Sign in to continue</h2>
+    {% if form.errors %}
+    <p class="login-error" data-i18n="invalid" role="alert">Incorrect username or password.</p>
+    {% endif %}
+    <form action="{% url 'portal:login' %}" method="post">
+        {% csrf_token %}
+        <input name="next" type="hidden" value="{{ next }}"/>
+        <div class="login-field">
+            <label data-i18n="username" for="id_username">Username</label>
+            <input autocapitalize="none" autocomplete="username" autofocus id="id_username" maxlength="150" name="username" required type="text" value="{{ form.username.value|default:'' }}"/>
+        </div>
+        <div class="login-field">
+            <label data-i18n="password" for="id_password">Password</label>
+            <input autocomplete="current-password" id="id_password" name="password" required type="password"/>
+        </div>
+        <button class="login-submit" data-i18n="submit" type="submit">Sign in</button>
+    </form>
+    <div class="login-footer">
+        <span data-i18n="hint">Accounts are issued by the administrator.</span>
+        <div aria-label="Language" class="login-langs" role="group">
+            <button data-lang="en" type="button">EN</button>
+            <button data-lang="ru" type="button">RU</button>
+            <button data-lang="uz" type="button">UZ</button>
+        </div>
+    </div>
+</main>
+<script>
+    (() => {
+        const messages = {
+            en: {
+                pageTitle: "Sign in",
+                subtitle: "Utility Management",
+                title: "Sign in to continue",
+                invalid: "Incorrect username or password.",
+                username: "Username",
+                password: "Password",
+                submit: "Sign in",
+                hint: "Accounts are issued by the administrator.",
+            },
+            ru: {
+                pageTitle: "Вход",
+                subtitle: "Коммунальные услуги",
+                title: "Войдите, чтобы продолжить",
+                invalid: "Неверный логин или пароль.",
+                username: "Логин",
+                password: "Пароль",
+                submit: "Войти",
+                hint: "Учётные записи выдаёт администратор.",
+            },
+            uz: {
+                pageTitle: "Kirish",
+                subtitle: "Kommunal boshqaruv",
+                title: "Davom etish uchun tizimga kiring",
+                invalid: "Login yoki parol noto'g'ri.",
+                username: "Login",
+                password: "Parol",
+                submit: "Kirish",
+                hint: "Hisoblarni administrator beradi.",
+            },
+        };
+        const readLang = () => {
+            try {
+                return localStorage.getItem("hydroflow-lang") || "en";
+            } catch (error) {
+                return "en";
+            }
+        };
+        const applyLang = (lang) => {
+            const dict = messages[lang] || messages.en;
+            document.documentElement.lang = messages[lang] ? lang : "en";
+            document.title = `Mirabad Avenue | ${dict.pageTitle}`;
+            document.querySelectorAll("[data-i18n]").forEach((node) => {
+                node.textContent = dict[node.dataset.i18n] || node.textContent;
+            });
+            document.querySelectorAll("[data-lang]").forEach((button) => {
+                button.setAttribute("aria-pressed", String(button.dataset.lang === lang));
+            });
+        };
+        document.querySelectorAll("[data-lang]").forEach((button) => button.addEventListener("click", () => {
+            try {
+                localStorage.setItem("hydroflow-lang", button.dataset.lang);
+            } catch (error) {}
+            applyLang(button.dataset.lang);
+        }));
+        applyLang(readLang());
+    })();
+</script>
+</body>
+</html>

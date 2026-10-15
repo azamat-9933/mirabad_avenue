@@ -87,6 +87,8 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    # Every non-DRF view requires a session unless marked with @login_not_required.
+    'django.contrib.auth.middleware.LoginRequiredMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -175,6 +177,10 @@ STATIC_ROOT = BASE_DIR / 'static_collected'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
+LOGIN_URL = 'portal:login'
+LOGIN_REDIRECT_URL = 'portal:dashboard'
+LOGOUT_REDIRECT_URL = 'portal:login'
+
 CORS_ALLOW_ALL_ORIGINS = env_bool("CORS_ALLOW_ALL_ORIGINS", False)
 CORS_ALLOWED_ORIGINS = env_list("CORS_ALLOWED_ORIGINS", ["http://localhost:3000"])
 CORS_ALLOW_CREDENTIALS = env_bool("CORS_ALLOW_CREDENTIALS", True)
@@ -184,6 +190,9 @@ JAZZMIN_UI_TWEAKS = JAZZ_UI_TWEAKS
 
 REST_FRAMEWORK = {
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    # DRF views are exempt from LoginRequiredMiddleware, so the API enforces auth itself.
+    'DEFAULT_AUTHENTICATION_CLASSES': ['portal.authentication.PortalSessionAuthentication'],
+    'DEFAULT_PERMISSION_CLASSES': ['rest_framework.permissions.IsAuthenticated'],
 }
 
 SPECTACULAR_SETTINGS = {
@@ -191,6 +200,7 @@ SPECTACULAR_SETTINGS = {
     'DESCRIPTION': 'Operational data API backed by the Mirabad Avenue billing database.',
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
+    'SERVE_PERMISSIONS': ['rest_framework.permissions.IsAuthenticated'],
     'SWAGGER_UI_SETTINGS': {
         'deepLinking': True,
         'displayOperationId': False,

@@ -8,6 +8,7 @@ from urllib.parse import urlencode
 from decimal import Decimal, InvalidOperation
 from datetime import datetime, time, timedelta
 
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth import logout
@@ -17,7 +18,7 @@ from django.db import DatabaseError, OperationalError, connection, transaction
 from django.db.models import Case, Count, F, IntegerField, Max, Prefetch, Q, Sum, Value, When
 from django.http import JsonResponse
 from django.http.request import RawPostDataException
-from django.shortcuts import redirect
+from django.shortcuts import redirect, resolve_url
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.dateparse import parse_date, parse_datetime
@@ -26,7 +27,8 @@ from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.generic import TemplateView
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny
 
 from billing.models import BillingPeriod, Expense, HeatingApartmentUsage, HeatingRecord, HotWaterMeterReading
 from main_app.models import DEFAULT_SECTOR_NAME
@@ -414,6 +416,7 @@ class AnalyticsView(PortalPageView):
 
 @extend_schema(responses=OpenApiTypes.OBJECT)
 @api_view(["GET"])
+@permission_classes([AllowAny])
 def api_health(request):
     return JsonResponse({"status": "ok"})
 
@@ -2173,12 +2176,12 @@ def api_support_ticket(request):
 
 
 @extend_schema(request=OpenApiTypes.OBJECT, responses=OpenApiTypes.OBJECT)
-@api_view(["POST", "GET"])
+@api_view(["POST"])
+@permission_classes([AllowAny])
 def api_logout(request):
+    # Public so an already-expired session still gets the redirect target.
     logout(request)
-    if request.method == "GET":
-        return redirect(request.GET.get("next") or "/")
-    return JsonResponse({"ok": True, "redirectUrl": "/"})
+    return JsonResponse({"ok": True, "redirectUrl": resolve_url(settings.LOGOUT_REDIRECT_URL)})
 
 
 @extend_schema(request=OpenApiTypes.OBJECT, responses=OpenApiTypes.OBJECT)

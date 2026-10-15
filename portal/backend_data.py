@@ -83,14 +83,8 @@ def _role_for_user(user, profile: WorkspaceProfile | None) -> str:
 
 
 def _serialize_profile(user=None) -> dict:
-    User = get_user_model()
+    # Only the signed-in user is described; never fall back to another account.
     selected_user = user if getattr(user, "is_authenticated", False) else None
-    if selected_user is None:
-        selected_user = (
-            User.objects.filter(is_superuser=True, is_active=True).order_by("id").first()
-            or User.objects.filter(is_staff=True, is_active=True).order_by("id").first()
-            or User.objects.filter(is_active=True).order_by("id").first()
-        )
 
     profile = None
     if selected_user:

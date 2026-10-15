@@ -16,7 +16,7 @@
 ## 2. Технологический стек
 
 ### 2.1 Backend
-- Python + Django `>=5,<6`
+- Python + Django `>=5.1,<6` (нужен `LoginRequiredMiddleware`)
 - Django REST Framework `3.17.1`
 - `drf-spectacular` (OpenAPI schema + Swagger UI)
 - `django-jazzmin` (оформление admin)
@@ -114,14 +114,24 @@ flowchart LR
 4. `python manage.py migrate`
 5. `python manage.py createsuperuser`
 6. `python manage.py runserver`
+7. Открыть `/login/` и войти созданным пользователем.
+
+### 5.6 Аутентификация
+Портал и API закрыты: без сессии работают только `/login/`, `/admin/login/` и `/api/health/`.
+- Страницы портала (не-DRF views): `LoginRequiredMiddleware` перенаправляет на `/login/?next=...`. Чтобы открыть view публично — декоратор `@login_not_required`.
+- API (`@api_view`): DRF views исключены из middleware, поэтому в `REST_FRAMEWORK` заданы `IsAuthenticated` и `portal.authentication.PortalSessionAuthentication`. Без сессии ответ — `401` (а не `403`), и `app.js` по `401` отправляет пользователя на `/login/?next=<текущая страница>`. Публичный endpoint — через `@permission_classes([AllowAny])` (сейчас `api_health`, `api_logout`).
+- POST-запросы от авторизованного пользователя проверяются на CSRF (заголовок `X-CSRFToken`, его отправляет `postPortalJson`).
+- `/api/schema/` и `/api/docs/` тоже требуют входа.
+- Вход — `django.contrib.auth.views.LoginView` с шаблоном `templates/portal/login.html` (en/ru/uz, тема и язык берутся из localStorage портала). Выход — `POST /api/logout/`, возвращает `redirectUrl` на `/login/`.
+- Учётные записи создаёт администратор в Django admin; доступ к порталу есть у любого активного пользователя, к admin — только у `is_staff`.
 
 ---
 
 ## 6. URL-карта проекта
 
 Root (`config/urls.py`):
-- `/api/schema/` — OpenAPI schema.
-- `/api/docs/` — Swagger UI.
+- `/api/schema/` — OpenAPI schema (требует входа).
+- `/api/docs/` — Swagger UI (требует входа).
 - `/admin/main_app/sector/` — редирект на единый сектор.
 - `/admin/` — Django admin.
 - `/main-app/` — подключен, но в `main_app/urls.py` маршрутов нет.
@@ -130,6 +140,7 @@ Root (`config/urls.py`):
 - `/` — `portal.urls` (основной пользовательский интерфейс + API).
 
 Portal page routes:
+- `/login/` — вход (единственная публичная страница портала)
 - `/` dashboard
 - `/residential/`
 - `/system-health/`
@@ -259,6 +270,7 @@ Proxy-модели (`Complex`, `Building`, `BuildingSection`, `Apartment`, `Owne
 ## 9. API портала
 
 Все backend API маршруты находятся в `portal/urls.py`.
+Все endpoints, кроме `GET /api/health/` и `POST /api/logout/`, требуют сессию; без неё — `401` (см. 5.6).
 
 ## 9.1 Сервисные GET endpoints
 - `GET /api/` — root API links.
@@ -304,7 +316,7 @@ Proxy-модели (`Complex`, `Building`, `BuildingSection`, `Apartment`, `Owne
 - `POST /api/audit/note/` — добавить `AuditEvent`.
 - `POST /api/checklist/note/` — create/toggle checklist note.
 - `POST /api/support/ticket/` — создать `SupportTicket` + `AuditEvent`.
-- `POST /api/logout/` — logout + `redirectUrl`.
+- `POST /api/logout/` — logout + `redirectUrl` (`/login/`). GET больше не поддерживается.
 
 ### CRUD из портала
 - `POST /api/complexes/create/` — **disabled** (возвращает 410, single-sector политика).

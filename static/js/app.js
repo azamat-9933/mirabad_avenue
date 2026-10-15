@@ -1025,6 +1025,13 @@
         "'": "&#039;",
     }[char]));
     const initialsFor = (name) => String(name || "HF").split(/\s+/).map((part) => part[0] || "").join("").slice(0, 2).toUpperCase();
+    // The API answers 401 when the session is missing or expired: send the user to the login page.
+    const redirectToLoginIfUnauthorized = (response) => {
+        if (response?.status !== 401) return false;
+        const next = `${window.location.pathname}${window.location.search}`;
+        window.location.assign(`/login/?next=${encodeURIComponent(next)}`);
+        return true;
+    };
 
     const billingData = {
         complexes: [
@@ -4117,6 +4124,7 @@
             credentials: "same-origin",
             headers: { Accept: "application/json" },
         });
+        if (redirectToLoginIfUnauthorized(response)) throw new Error("Authentication required");
         if (!response.ok) throw new Error(`List request failed: ${response.status}`);
         return response.json();
     };
@@ -6925,6 +6933,7 @@
                 credentials: "same-origin",
                 headers: { Accept: "application/json" },
             });
+            if (redirectToLoginIfUnauthorized(response)) return;
             if (!response.ok) return;
             const payload = await response.json();
             if (!applyBackendBillingData(payload)) return;
@@ -7147,6 +7156,7 @@
             },
             body: JSON.stringify(payload),
         });
+        if (redirectToLoginIfUnauthorized(response)) throw new Error("Authentication required");
         const raw = await response.text();
         let data = {};
         try {
@@ -7172,6 +7182,7 @@
             cache: "no-store",
             headers: { Accept: "application/json" },
         });
+        if (redirectToLoginIfUnauthorized(response)) return false;
         if (!response.ok) return false;
         const portalData = await response.json().catch(() => null);
         return portalData ? rehydrateFromPortalData(portalData) : false;
@@ -7997,6 +8008,7 @@
                     credentials: "same-origin",
                     headers: { Accept: "application/json" },
                 });
+                if (redirectToLoginIfUnauthorized(response)) return null;
                 if (!response.ok) throw new Error(`Request failed (${response.status})`);
                 const payload = await response.json();
                 applyBackendBillingData(payload);
@@ -9176,6 +9188,7 @@
             credentials: "same-origin",
             headers: { Accept: "application/json" },
         });
+        if (redirectToLoginIfUnauthorized(response)) return [];
         if (!response.ok || requestId !== commandSearchRequestId) return [];
         const payload = await response.json();
         return (payload.results || []).map((resident) => ({
@@ -11939,10 +11952,10 @@ ${sheets}
             event.preventDefault();
             postPortalJson("/api/logout/", {})
                 .then((payload) => {
-                    window.location.assign(payload.redirectUrl || "/");
+                    window.location.assign(payload.redirectUrl || "/login/");
                 })
                 .catch(() => {
-                    window.location.assign("/api/logout/?next=/");
+                    toast(translateValue("Logout request failed.", lang), "", "danger");
                 });
             return;
         }

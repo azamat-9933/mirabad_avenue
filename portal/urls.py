@@ -1,3 +1,4 @@
+from django.contrib.auth import views as auth_views
 from django.urls import path
 from django.views.generic.base import RedirectView
 
@@ -6,6 +7,11 @@ from . import views
 app_name = "portal"
 
 urlpatterns = [
+    path(
+        "login/",
+        auth_views.LoginView.as_view(template_name="portal/login.html", redirect_authenticated_user=True),
+        name="login",
+    ),
     path("", views.DashboardView.as_view(), name="dashboard"),
     path("residential/", views.ResidentialView.as_view(), name="residential"),
     path("system-health/", views.SystemHealthView.as_view(), name="system_health"),
