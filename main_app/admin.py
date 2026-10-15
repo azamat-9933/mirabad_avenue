@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from django import forms
 from django.contrib import admin
 from django.contrib.admin.options import IS_POPUP_VAR
@@ -5,6 +7,9 @@ from django.db.models import Count, Q, Sum
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.utils.html import format_html
+
+from payments.models import Transaction
+from payments.services import OPENING_BALANCE_TAG, apply_balance_change
 
 from .models import DEFAULT_SECTOR_NAME, Apartment, Building, Complex, Owner
 
@@ -419,7 +424,23 @@ class OwnerAdmin(admin.ModelAdmin):
     )
 
     def get_readonly_fields(self, request, obj=None):
-        return ("created_at", "balance_display") if obj else ("created_at_note", "balance_display")
+        # After creation the balance changes only through the Transaction ledger.
+        return ("created_at", "balance", "balance_display") if obj else ("created_at_note", "balance_display")
+
+    def save_model(self, request, obj, form, change):
+        opening_balance = Decimal("0")
+        if not change:
+            opening_balance, obj.balance = obj.balance or Decimal("0"), Decimal("0")
+        super().save_model(request, obj, form, change)
+        if opening_balance:
+            apply_balance_change(
+                obj.pk,
+                opening_balance,
+                Transaction.TYPE_MANUAL,
+                description=f"{OPENING_BALANCE_TAG} Opening balance set when the resident was created in admin.",
+                created_by=actor_username(request),
+            )
+            obj.refresh_from_db(fields=["balance"])
 
     def get_fieldsets(self, request, obj=None):
         fieldsets = [
@@ -440,10 +461,13 @@ class OwnerAdmin(admin.ModelAdmin):
             (
                 "Balance",
                 {
-                    "fields": ("balance", "balance_display"),
+                    "fields": ("balance_display",) if obj else ("balance", "balance_display"),
                     "description": (
-                        "Positive balance means credit. "
-                        "Negative balance means debt."
+                        "Positive balance means credit. Negative balance means debt. "
+                        "To change the balance, add a payment or adjustment in the portal (Add payment)."
+                        if obj
+                        else "Positive balance means credit. Negative balance means debt. "
+                        "A non-zero opening balance is recorded as a manual transaction."
                     ),
                 },
             ),

@@ -34,6 +34,7 @@ from billing.models import BillingPeriod, Expense, HeatingApartmentUsage, Heatin
 from main_app.models import DEFAULT_SECTOR_NAME
 from properties.models import Apartment, Building, Complex, Owner
 from payments.models import Transaction
+from payments.services import OPENING_BALANCE_TAG, apply_balance_change, incoming_payment_q, is_incoming_payment
 from portal.models import (
     AuditEvent,
     ChecklistItem,
@@ -641,7 +642,7 @@ def _serialize_transaction_row(transaction_row, override_map=None):
     building = apartment.building
     complex_obj = building.complex
     amount = _money(transaction_row.amount)
-    status = "Success" if amount > 0 else "Pending"
+    status = "Success" if is_incoming_payment(transaction_row) else "Pending"
     if transaction_row.id in override_map:
         status = override_map[transaction_row.id]
     return {
@@ -816,7 +817,7 @@ def _serialize_complex_row(complex_obj, override_maps=None, hot_water_by_complex
         for apartment in apartments:
             owner = getattr(apartment, "owner", None)
             owner_transactions = list(getattr(owner, "prefetched_transactions", [])) if owner else []
-            positive_transactions = [item for item in owner_transactions if item.amount > 0]
+            positive_transactions = [item for item in owner_transactions if is_incoming_payment(item)]
             latest_payment = positive_transactions[0] if positive_transactions else None
             balance = _money(owner.balance if owner else 0)
             is_debtor = balance < 0
@@ -958,7 +959,7 @@ def api_list_residents(request):
         "apartment__building",
         "apartment__building__complex",
     ).annotate(
-        last_payment_at=Max("transactions__created_at", filter=Q(transactions__amount__gt=0))
+        last_payment_at=Max("transactions__created_at", filter=incoming_payment_q("transactions__"))
     )
     if owner_id_value:
         owner_id_digits = re.sub(r"[^\d]", "", owner_id_value)
@@ -2341,17 +2342,25 @@ def api_create_resident(request):
     if telegram_id or telegram_user:
         telegram_status = "connected"
 
+    opening_balance = _decimal_or_zero(payload.get("balance"))
     with transaction.atomic():
         owner = Owner.objects.create(
             fio=fio,
             phone=phone[:20],
             apartment=apartment,
-            balance=_decimal_or_zero(payload.get("balance")),
             has_contract=_to_bool(payload.get("has_contract")),
             telegram_id=telegram_id,
             telegram_user=telegram_user,
             telegram_status=telegram_status,
         )
+        if opening_balance:
+            apply_balance_change(
+                owner.id,
+                opening_balance,
+                Transaction.TYPE_MANUAL,
+                description=f"{OPENING_BALANCE_TAG} Opening balance set when the resident was created in the portal.",
+                created_by=_actor(request),
+            )
         AuditEvent.objects.create(
             event_type=AuditEvent.TYPE_SYSTEM,
             title="Resident created",
@@ -2405,9 +2414,7 @@ def api_create_payment(request):
     apartment = owner.apartment
     building = apartment.building if apartment else None
     complex_obj = building.complex if building else None
-    balance_before = Decimal(owner.balance or 0)
     signed_amount = amount if operation == "credit" else -amount
-    balance_after = balance_before + signed_amount
 
     if operation == "credit":
         if channel == "cash":
@@ -2425,14 +2432,10 @@ def api_create_payment(request):
     actor = _actor(request)
 
     with transaction.atomic():
-        owner.balance = balance_after
-        owner.save(update_fields=["balance"])
-        transaction_row = Transaction.objects.create(
-            owner=owner,
-            payment_type=payment_type,
-            amount=signed_amount,
-            balance_before=balance_before,
-            balance_after=balance_after,
+        transaction_row = apply_balance_change(
+            owner.id,
+            signed_amount,
+            payment_type,
             description=description,
             created_by=actor,
         )
@@ -2454,8 +2457,8 @@ def api_create_payment(request):
                 "operation": operation,
                 "channel": channel if operation == "credit" else "adjustment",
                 "amount": str(amount),
-                "balance_before": str(balance_before),
-                "balance_after": str(balance_after),
+                "balance_before": str(transaction_row.balance_before),
+                "balance_after": str(transaction_row.balance_after),
             },
         )
 
@@ -2464,7 +2467,7 @@ def api_create_payment(request):
             "ok": True,
             "transactionId": transaction_row.id,
             "ownerId": owner.id,
-            "balance": float(balance_after),
+            "balance": float(transaction_row.balance_after),
             "portalData": safe_portal_data(request),
         }
     )

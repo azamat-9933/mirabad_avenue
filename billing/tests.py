@@ -20,6 +20,7 @@ from billing.models import (
     RecalculationLog,
     ServiceExpense,
 )
+from payments.models import Transaction
 from properties.models import Apartment, Building, Complex, Owner
 
 
@@ -269,6 +270,87 @@ class BillingCoreModelTests(TestCase):
         self.assertIsNotNone(payment.applied_at)
         with self.assertRaises(ValidationError):
             payment.apply()
+
+    def _assert_ledger_matches_balance(self, owner, opening_balance):
+        owner.refresh_from_db()
+        rows = list(Transaction.objects.filter(owner=owner).order_by("created_at", "id"))
+        self.assertEqual(opening_balance + sum(row.amount for row in rows), owner.balance)
+        expected_before = opening_balance
+        for row in rows:
+            self.assertEqual(row.balance_before, expected_before)
+            self.assertEqual(row.balance_after, row.balance_before + row.amount)
+            expected_before = row.balance_after
+        return rows
+
+    def test_close_period_records_charge_transactions_linked_to_invoices(self):
+        service = BuildingService.objects.create(period=self.period, building=self.building, service_type="heating")
+        ServiceExpense.objects.create(service=service, title="Boiler", amount=Decimal("4900.00"))
+        HeatingApartmentUsage.objects.create(service=service, apartment=self.apartment_1, days_provided=10)
+        HeatingApartmentUsage.objects.create(service=service, apartment=self.apartment_2, days_provided=10)
+
+        self.period.close_period()
+
+        rows_1 = self._assert_ledger_matches_balance(self.owner_1, Decimal("0.00"))
+        rows_2 = self._assert_ledger_matches_balance(self.owner_2, Decimal("150000.00"))
+        self.assertEqual([row.amount for row in rows_1], [Decimal("-3123.52")])
+        self.assertEqual([row.amount for row in rows_2], [Decimal("-1776.50")])
+        for row, apartment in [(rows_1[0], self.apartment_1), (rows_2[0], self.apartment_2)]:
+            self.assertEqual(row.payment_type, Transaction.TYPE_CHARGE)
+            self.assertEqual(row.invoice, Invoice.objects.get(period=self.period, apartment=apartment))
+
+    def test_failed_close_period_leaves_no_ledger_rows(self):
+        apartment_without_owner = Apartment.objects.create(
+            number="103", area=Decimal("30.00"), building=self.building, author="test"
+        )
+        service = BuildingService.objects.create(period=self.period, building=self.building, service_type="heating")
+        ServiceExpense.objects.create(service=service, title="Boiler", amount=Decimal("4900.00"))
+        for apartment in [self.apartment_1, self.apartment_2, apartment_without_owner]:
+            HeatingApartmentUsage.objects.create(service=service, apartment=apartment, days_provided=10)
+
+        with self.assertRaises(ValidationError):
+            self.period.close_period()
+
+        self.assertFalse(Transaction.objects.exists())
+        self.owner_2.refresh_from_db()
+        self.assertEqual(self.owner_2.balance, Decimal("150000.00"))
+
+    def test_recalculate_records_delta_transactions(self):
+        service = BuildingService.objects.create(period=self.period, building=self.building, service_type="hot_water")
+        ServiceExpense.objects.create(service=service, title="Pump", amount=Decimal("750.00"))
+        HotWaterReading.objects.create(service=service, apartment=self.apartment_1, start_value=0, end_value=5)
+        HotWaterReading.objects.create(service=service, apartment=self.apartment_2, start_value=0, end_value=5)
+        self.period.close_period()
+        ServiceExpense.objects.filter(service=service).update(amount=Decimal("500.00"))
+        self.period.reopen_period()
+        user = get_user_model().objects.create_user(username="billing-admin", password="testpass")
+
+        self.period.recalculate(reason="Adjusted source expense", author=user)
+
+        rows = self._assert_ledger_matches_balance(self.owner_1, Decimal("0.00"))
+        self.assertEqual([row.amount for row in rows], [Decimal("-375.00"), Decimal("125.00")])
+        self.assertIn("[billing:recalculation]", rows[1].description)
+        self.assertEqual(rows[1].created_by, "billing-admin")
+        self._assert_ledger_matches_balance(self.owner_2, Decimal("150000.00"))
+
+    def test_payment_apply_records_transaction(self):
+        payment = Payment.objects.create(
+            owner=self.owner_1,
+            amount=Decimal("250.00"),
+            method=Payment.METHOD_CLICK,
+            external_id="click-42",
+        )
+        payment.apply()
+
+        rows = self._assert_ledger_matches_balance(self.owner_1, Decimal("0.00"))
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0].payment_type, Transaction.TYPE_CLICK)
+        self.assertEqual(rows[0].external_id, "click-42")
+
+        bank_payment = Payment.objects.create(owner=self.owner_1, amount=Decimal("100.00"), method=Payment.METHOD_BANK)
+        bank_payment.apply()
+        rows = self._assert_ledger_matches_balance(self.owner_1, Decimal("0.00"))
+        self.assertEqual(rows[-1].payment_type, Transaction.TYPE_MANUAL)
+        self.assertIsNone(rows[-1].external_id)
 
     def test_payment_requires_positive_amount(self):
         payment = Payment(owner=self.owner_1, amount=Decimal("0.00"))

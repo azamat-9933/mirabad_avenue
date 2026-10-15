@@ -202,9 +202,11 @@ Proxy-модели (`Complex`, `Building`, `BuildingSection`, `Apartment`, `Owne
 
 ### Логика ядра
 `BillingPeriod` содержит методы:
-- `close_period()` — рассчитывает тарифы, формирует `Charge`, уменьшает баланс жильцов.
+- `close_period()` — рассчитывает тарифы, формирует `Charge`, списывает сумму с баланса жильцов (по одной `Transaction` типа `charge` на жильца, со ссылкой на `Invoice` периода).
 - `reopen_period()` — переводит закрытый период в reopened.
-- `recalculate(reason, author)` — отменяет старые начисления, создает новые, применяет delta к балансам, пишет `RecalculationLog`.
+- `recalculate(reason, author)` — отменяет старые начисления, создает новые, проводит разницу через `Transaction` типа `charge` (тег `[billing:recalculation]`), пишет `RecalculationLog`.
+
+Ограничение: квартира без владельца в доме периода блокирует `close_period()` (`bootstrap_services_from_legacy` создает ей запись потребления, а начислять некому).
 
 `BuildingService.calculate()`:
 - полная валидация,
@@ -214,7 +216,7 @@ Proxy-модели (`Complex`, `Building`, `BuildingSection`, `Apartment`, `Owne
 - проставляет `is_calculated`, `calculated_at`.
 
 `Payment.apply()` (billing.Payment):
-- атомарно добавляет сумму к `Owner.balance`,
+- атомарно добавляет сумму к `Owner.balance` через журнал (`Transaction` с типом по методу; `bank` → `manual`),
 - защищает от повторного применения (`is_applied`).
 
 ## 7.4 `payments`
@@ -226,6 +228,17 @@ Proxy-модели (`Complex`, `Building`, `BuildingSection`, `Apartment`, `Owne
 - `balance_before`, `balance_after`
 - `external_id` (уникальный)
 - `invoice(FK optional)`, `owner(FK)`
+
+### Баланс меняется только через журнал
+`payments.services.apply_balance_change()` — единственный путь изменения `Owner.balance`:
+блокирует строку владельца (`select_for_update`), считает `balance_before/after`, сохраняет баланс и создает `Transaction` в одной транзакции БД.
+Через него проходят: платеж/списание из портала, начальный баланс нового жильца (портал и admin), `close_period`, `recalculate`, `billing.Payment.apply`.
+Инвариант: начальный баланс + сумма `Transaction.amount` = `Owner.balance`, и `balance_before` каждой записи равен `balance_after` предыдущей.
+
+- В admin поле `balance` редактируется только при создании жильца (ненулевое значение пишется как `manual` с тегом `[opening-balance]`); дальше — только платеж/корректировка в портале.
+- «Платежом» (сумма собранного, последний платеж, статус `Success`) считается только положительная запись, кроме `charge` и `[opening-balance]` (`is_incoming_payment` / `incoming_payment_q`).
+- Блокировка строки реально работает на PostgreSQL; на SQLite `select_for_update` игнорируется (запись сериализуется самой БД).
+- Записи, созданные до этого изменения, журналом не восстанавливаются — старая история может не объяснять баланс полностью.
 
 ### `PaymeTransaction`
 Хранение callback/технических данных Payme.
@@ -460,7 +473,7 @@ API пути, используемые frontend:
 
 Особые правила admin-домена:
 - единый сектор (`Mirabad Avenue`) enforced через model/save, admin redirect и миграцию.
-- часть сущностей в admin read-only по бизнес-смыслу (например, transaction history/invoices).
+- часть сущностей в admin read-only по бизнес-смыслу (например, transaction history/invoices, баланс жильца после создания).
 
 ---
 

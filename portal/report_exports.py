@@ -93,6 +93,7 @@ REPORT_TEXT = {
     "payment_terminal": {"en": "Terminal", "ru": "Терминал", "uz": "Terminal"},
     "payment_manual": {"en": "Manual adjustment", "ru": "Ручная корректировка", "uz": "Qo'lda tuzatish"},
     "payment_charge": {"en": "Monthly charge", "ru": "Начисление за месяц", "uz": "Oylik hisoblash"},
+    "payment_recalculation": {"en": "Recalculation", "ru": "Перерасчёт", "uz": "Qayta hisoblash"},
     "payment_balance_debit": {"en": "Balance subtraction", "ru": "Вычитание баланса", "uz": "Balansdan ayirish"},
     "payment_utility": {"en": "Utility payment", "ru": "Коммунальный платёж", "uz": "Kommunal to'lov"},
     "payment_late_penalty": {"en": "Late penalty", "ru": "Пеня за просрочку", "uz": "Kechikish jarimasi"},
@@ -170,6 +171,8 @@ def _transaction_channel_key(transaction: Transaction) -> str:
         return "payment_card"
     if "[portal:balance-debit]" in description:
         return "payment_balance_debit"
+    if "[billing:recalculation]" in description:
+        return "payment_recalculation"
     if transaction.payment_type == Transaction.TYPE_CHARGE:
         return "payment_charge"
     if transaction.payment_type == Transaction.TYPE_MANUAL:

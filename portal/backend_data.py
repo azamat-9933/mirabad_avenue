@@ -12,6 +12,7 @@ from billing.models import HotWaterMeterReading
 from main_app.models import DEFAULT_SECTOR_NAME
 from properties.models import Apartment, Building, Complex, Owner
 from payments.models import Transaction
+from payments.services import is_incoming_payment
 from portal.models import (
     AuditEvent,
     ChecklistItem,
@@ -224,6 +225,8 @@ def _health_from_split(debtors: int, paid: int) -> float:
 
 def _transaction_type(transaction: Transaction) -> str:
     description = str(transaction.description or "").lower()
+    if transaction.payment_type == Transaction.TYPE_CHARGE and "[billing:recalculation]" in description:
+        return "Recalculation"
     if transaction.payment_type == Transaction.TYPE_MANUAL:
         if "[portal:card-credit]" in description or "[portal:terminal-credit]" in description:
             return "Utility Payment"
@@ -582,7 +585,7 @@ def build_portal_data(user=None) -> dict:
             for apartment in apartments:
                 owner = owners_by_apartment.get(apartment.id)
                 owner_transactions = transactions_by_owner.get(owner.id, []) if owner else []
-                positive_transactions = [item for item in owner_transactions if item.amount > 0]
+                positive_transactions = [item for item in owner_transactions if is_incoming_payment(item)]
                 latest_payment = positive_transactions[0] if positive_transactions else None
                 balance = _money(owner.balance if owner else 0)
                 is_debtor = balance < 0
@@ -781,7 +784,7 @@ def build_portal_data(user=None) -> dict:
             "signedAmount": amount,
             "balanceBefore": _money(transaction.balance_before),
             "balanceAfter": _money(transaction.balance_after),
-            "status": "Success" if amount > 0 else "Pending",
+            "status": "Success" if is_incoming_payment(transaction) else "Pending",
             "description": transaction.description,
         })
 

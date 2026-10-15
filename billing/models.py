@@ -411,6 +411,31 @@ class BillingPeriod(models.Model):
 
         self.invoices.exclude(apartment_id__in=keep_ids).delete()
 
+    def _post_balance_changes(self, deltas: dict[int, Decimal], description: str, created_by: str = "System"):
+        """Apply per-owner balance deltas through the ledger, linked to this period's invoices."""
+        # Imported here: payments.models imports billing.models.
+        from payments.models import Transaction
+        from payments.services import apply_balance_change
+
+        invoice_ids = dict(
+            Invoice.objects.filter(period=self, apartment__owner__in=list(deltas)).values_list(
+                "apartment__owner", "pk"
+            )
+        )
+        # A fixed lock order keeps concurrent period closes from deadlocking on owner rows.
+        for owner_id in sorted(deltas):
+            delta = deltas[owner_id]
+            if not delta:
+                continue
+            apply_balance_change(
+                owner_id,
+                delta,
+                Transaction.TYPE_CHARGE,
+                description=description,
+                created_by=created_by,
+                invoice_id=invoice_ids.get(owner_id),
+            )
+
     def _build_service_charges(self, service: "BuildingService"):
         service.calculate()
         if service.total_volume <= 0:
@@ -466,11 +491,12 @@ class BillingPeriod(models.Model):
                     owner_totals[owner.pk] = owner_totals.get(owner.pk, Decimal("0")) + row_amount
 
             Charge.objects.bulk_create(charge_rows)
-            for owner_id, total in owner_totals.items():
-                Owner.objects.filter(pk=owner_id).update(balance=models.F("balance") - total)
-
             locked._sync_invoices_from_active_charges(mark_recalculated=False)
             locked._sync_summaries_from_services()
+            locked._post_balance_changes(
+                {owner_id: -total for owner_id, total in owner_totals.items()},
+                f"[billing:period-charge] Charges for billing period {locked.title}.",
+            )
 
             locked.status = self.STATUS_CLOSED
             locked.closed_at = timezone.now()
@@ -528,15 +554,18 @@ class BillingPeriod(models.Model):
                     new_totals[owner.pk] = new_totals.get(owner.pk, Decimal("0")) + row_amount
 
             Charge.objects.bulk_create(new_charge_rows)
-
-            all_owner_ids = set(old_totals) | set(new_totals)
-            for owner_id in all_owner_ids:
-                delta = old_totals.get(owner_id, Decimal("0")) - new_totals.get(owner_id, Decimal("0"))
-                if delta:
-                    Owner.objects.filter(pk=owner_id).update(balance=models.F("balance") + delta)
-
             locked._sync_invoices_from_active_charges(mark_recalculated=True)
             locked._sync_summaries_from_services()
+
+            all_owner_ids = set(old_totals) | set(new_totals)
+            locked._post_balance_changes(
+                {
+                    owner_id: old_totals.get(owner_id, Decimal("0")) - new_totals.get(owner_id, Decimal("0"))
+                    for owner_id in all_owner_ids
+                },
+                f"[billing:recalculation] Recalculation of billing period {locked.title}: {reason}",
+                created_by=author.get_username() if getattr(author, "pk", None) else "System",
+            )
 
             RecalculationLog.objects.create(
                 period=locked,
@@ -767,11 +796,27 @@ class Payment(models.Model):
             raise ValidationError({"amount": "Payment amount must be greater than zero."})
 
     def apply(self):
+        # Imported here: payments.models imports billing.models.
+        from payments.models import Transaction
+        from payments.services import apply_balance_change
+
         with transaction.atomic():
             locked = Payment.objects.select_for_update().get(pk=self.pk)
             if locked.is_applied:
                 raise ValidationError("Payment was already applied.")
-            Owner.objects.filter(pk=locked.owner_id).update(balance=models.F("balance") + locked.amount)
+            # Cash/Payme/Click share their codes with Transaction types; bank and manual are manual entries.
+            direct_types = {self.METHOD_CASH, self.METHOD_PAYME, self.METHOD_CLICK}
+            description = f"[billing:payment] Billing payment #{locked.pk}"
+            if locked.comment:
+                description = f"{description}: {locked.comment}"
+            apply_balance_change(
+                locked.owner_id,
+                locked.amount,
+                locked.method if locked.method in direct_types else Transaction.TYPE_MANUAL,
+                description=description,
+                created_by="System",
+                external_id=locked.external_id,
+            )
             locked.is_applied = True
             locked.applied_at = timezone.now()
             locked.save(update_fields=["is_applied", "applied_at"])

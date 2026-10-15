@@ -536,6 +536,7 @@
         "Late Penalty": { ru: "Пеня за просрочку", uz: "Kechikish jarimasi" },
         "Monthly utility payment": { ru: "Ежемесячный коммунальный платёж", uz: "Oylik kommunal to'lov" },
         "Monthly Charge": { ru: "Ежемесячное начисление", uz: "Oylik hisob" },
+        "Recalculation": { ru: "Перерасчёт", uz: "Qayta hisoblash" },
         "Adjustment": { ru: "Корректировка", uz: "Tuzatish" },
         "Resident": { ru: "Жилец", uz: "Yashovchi" },
         "Type": { ru: "Тип", uz: "Turi" },
