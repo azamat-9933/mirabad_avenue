@@ -442,7 +442,8 @@ aside[data-sidebar] .sidebar-brand-rail-mark {
 @container residents (min-width: 1000px) {
     /* Set on the children: a container query never styles the container itself. */
     .resident-directory-panel > * {
-        --resident-directory-columns: 64px minmax(190px, 2.2fr) minmax(110px, 1.1fr) 104px 104px minmax(150px, 1.25fr) 172px;
+        /* The last column fits its buttons ("Add payment", "History") in every language. */
+        --resident-directory-columns: 64px minmax(190px, 2.2fr) minmax(110px, 1.1fr) 104px 104px minmax(150px, 1.25fr) max-content;
     }
 
     .resident-directory-panel .resident-column-sorts,

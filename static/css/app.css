@@ -7372,6 +7372,8 @@ html.dark .resident-balance-filter-shell,
     font-weight: 850;
     text-decoration: none;
     white-space: nowrap;
+    /* Never narrower than its label: a tight row wraps the buttons instead of clipping them. */
+    flex-shrink: 0;
     transition: transform 0.16s ease, opacity 0.16s ease, background 0.16s ease;
 }
 
