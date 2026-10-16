@@ -9,7 +9,7 @@ from django.urls import reverse
 from django.utils.html import format_html
 
 from payments.models import Transaction
-from payments.services import OPENING_BALANCE_TAG, apply_balance_change
+from payments.services import OPENING_BALANCE_TAG, apply_account_change, apply_balance_change
 
 from .models import DEFAULT_SECTOR_NAME, Apartment, Building, Complex, Owner
 
@@ -33,21 +33,137 @@ def get_or_create_default_complex(request):
     )
 
 
+def save_apartment(apartment):
+    """Save an apartment edited in admin without writing its balance.
+
+    The account changes only through the ledger; writing back the copy loaded with the form
+    would overwrite a payment posted while the admin form was being saved.
+    """
+    if apartment._state.adding:
+        apartment.save()
+        return
+    apartment.save(
+        update_fields=[
+            field.name
+            for field in Apartment._meta.concrete_fields
+            if not field.primary_key and field.name != "balance"
+        ]
+    )
+
+
 # ══════════════════════════════════════════════════════
 #  INLINES
 # ══════════════════════════════════════════════════════
 
-class ApartmentInline(admin.StackedInline):
-    """Uy ichidagi kvartiralar — qisqacha ko'rinish"""
+class ApartmentInlineForm(forms.ModelForm):
+    """One apartment row of the house page, together with the apartment's owner.
+
+    Filling the owner columns creates the resident (or updates the existing one), so a new house
+    can be set up from one page. Owner columns left empty keep the apartment vacant; its account is
+    still billed. The balance column takes an opening balance for a new apartment and shows the
+    current balance (read-only) for an existing one.
+    """
+
+    owner_fio = forms.CharField(
+        label="Owner full name",
+        max_length=Owner._meta.get_field("fio").max_length,
+        required=False,
+        widget=forms.TextInput(attrs={"class": "vTextField", "placeholder": "Empty if vacant"}),
+    )
+    owner_phone = forms.CharField(
+        label="Phone",
+        max_length=Owner._meta.get_field("phone").max_length,
+        required=False,
+        widget=forms.TextInput(attrs={"class": "vTextField", "placeholder": "+998"}),
+    )
+    owner_has_contract = forms.BooleanField(label="Has contract", required=False)
+    opening_balance = forms.DecimalField(
+        label="Balans (so'm)",
+        max_digits=14,
+        decimal_places=2,
+        required=False,
+        help_text=(
+            "New apartment: opening balance, a debt is negative; it is recorded as a manual transaction. "
+            "Existing apartment: changes only through payments in the portal."
+        ),
+    )
+
+    class Meta:
+        model = Apartment
+        fields = ("number", "area")
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.is_new_apartment = self.instance._state.adding
+        self.owner = None if self.is_new_apartment else getattr(self.instance, "owner", None)
+        if self.owner:
+            self.fields["owner_fio"].initial = self.owner.fio
+            self.fields["owner_phone"].initial = self.owner.phone
+            self.fields["owner_has_contract"].initial = self.owner.has_contract
+        if not self.is_new_apartment:
+            self.fields["opening_balance"].disabled = True
+            self.fields["opening_balance"].initial = self.instance.balance
+
+    def clean(self):
+        cleaned = super().clean()
+        fio = (cleaned.get("owner_fio") or "").strip()
+        phone = (cleaned.get("owner_phone") or "").strip()
+        cleaned["owner_fio"], cleaned["owner_phone"] = fio, phone
+        if self.owner and not (fio and phone):
+            # Emptying the columns must not silently delete a resident with their Telegram link.
+            raise forms.ValidationError("The owner can't be removed here. To remove them, open the resident's page.")
+        if fio or phone or cleaned.get("owner_has_contract"):
+            if not fio:
+                self.add_error("owner_fio", "Enter the owner's full name.")
+            if not phone:
+                self.add_error("owner_phone", "Enter the owner's phone.")
+        return cleaned
+
+    def save_owner(self, actor):
+        """Create or update the owner from the row and post the opening balance; the apartment is saved."""
+        apartment = self.instance
+        fio = self.cleaned_data["owner_fio"]
+        values = {
+            "fio": fio,
+            "phone": self.cleaned_data["owner_phone"],
+            "has_contract": self.cleaned_data.get("owner_has_contract", False),
+        }
+        if self.owner:
+            changed = [name for name, value in values.items() if getattr(self.owner, name) != value]
+            for name in changed:
+                setattr(self.owner, name, values[name])
+            if changed:
+                self.owner.save(update_fields=changed)
+        elif fio:
+            # A new owner takes over the apartment account as it is (Owner.save copies the balance).
+            self.owner = Owner.objects.create(apartment=apartment, **values)
+
+        opening_balance = self.cleaned_data.get("opening_balance")
+        if self.is_new_apartment and opening_balance:
+            apply_account_change(
+                apartment.pk,
+                opening_balance,
+                Transaction.TYPE_MANUAL,
+                description=f"{OPENING_BALANCE_TAG} Opening balance set when the apartment was created in admin.",
+                created_by=actor,
+            )
+
+
+class ApartmentInline(admin.TabularInline):
+    """Uy ichidagi kvartiralar va ularning egalari — bitta jadvalda"""
     model = Apartment
-    extra = 0
-    fields = ("number", "area")
+    form = ApartmentInlineForm
+    fields = ("number", "area", "owner_fio", "owner_phone", "owner_has_contract", "opening_balance")
     show_change_link = True
     verbose_name = "Kvartira"
     verbose_name_plural = "Kvartiralar"
 
+    def get_extra(self, request, obj=None, **kwargs):
+        # A new house starts with one empty row ready to fill in.
+        return 0 if obj else 1
+
     def get_queryset(self, request):
-        return super().get_queryset(request)
+        return super().get_queryset(request).select_related("owner").order_by("pk")
 
 
 class BuildingInline(admin.TabularInline):
@@ -149,14 +265,23 @@ class BuildingAdmin(admin.ModelAdmin):
         super().save_model(request, obj, form, change)
 
     def save_formset(self, request, form, formset, change):
+        actor = actor_username(request)
         instances = formset.save(commit=False)
         for instance in instances:
-            if isinstance(instance, Apartment) and not instance.author:
-                instance.author = actor_username(request)
-            instance.save()
+            if isinstance(instance, Apartment):
+                if not instance.author:
+                    instance.author = actor
+                save_apartment(instance)
+            else:
+                instance.save()
         formset.save_m2m()
         for instance in formset.deleted_objects:
             instance.delete()
+        # Owners need the saved apartments; admin runs the whole save in one database transaction.
+        deleted = formset.deleted_forms
+        for row in formset.forms:
+            if isinstance(row, ApartmentInlineForm) and row.instance.pk and row.has_changed() and row not in deleted:
+                row.save_owner(actor)
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
@@ -217,7 +342,7 @@ class ApartmentAdmin(admin.ModelAdmin):
     def save_model(self, request, obj, form, change):
         if not obj.author:
             obj.author = actor_username(request)
-        super().save_model(request, obj, form, change)
+        save_apartment(obj)
 
     def get_queryset(self, request):
         return (
