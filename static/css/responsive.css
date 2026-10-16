@@ -442,13 +442,20 @@ aside[data-sidebar] .sidebar-brand-rail-mark {
 @container residents (min-width: 1000px) {
     /* Set on the children: a container query never styles the container itself. */
     .resident-directory-panel > * {
-        /* The last column fits its buttons ("Add payment", "History") in every language. */
-        --resident-directory-columns: 64px minmax(190px, 2.2fr) minmax(110px, 1.1fr) 104px 104px minmax(150px, 1.25fr) max-content;
+        /* Header and rows are separate grids, so every column needs a size that does not depend on
+           its content: the last one is fixed and fits "Payment" + "History" in all three languages. */
+        --resident-directory-columns: 64px minmax(190px, 2.2fr) minmax(110px, 1.1fr) 104px minmax(104px, 0.6fr) minmax(150px, 1.25fr) 212px;
     }
 
     .resident-directory-panel .resident-column-sorts,
     .resident-directory-panel .resident-list-row {
         grid-template-columns: var(--resident-directory-columns);
+    }
+
+    /* Rows sit inside the list's 1px border with 14px padding; the header gets the same inset so
+       each column header stands right above its column. */
+    .resident-directory-panel .resident-column-sorts {
+        padding-inline: 15px;
     }
 
     .resident-directory-panel .resident-sort-balance {
@@ -896,8 +903,9 @@ aside[data-sidebar] .sidebar-brand-rail-mark {
         grid-template-areas:
             "id status"
             "name name"
-            "date method"
-            "amount balance";
+            "date operator"
+            "method amount"
+            "balance balance";
         gap: 10px 16px;
         padding: 14px 16px;
     }
@@ -933,18 +941,22 @@ aside[data-sidebar] .sidebar-brand-rail-mark {
     }
 
     .billing-transaction-row > td:nth-child(4) {
-        grid-area: method;
+        grid-area: operator;
     }
 
     .billing-transaction-row > td:nth-child(5) {
-        grid-area: amount;
+        grid-area: method;
     }
 
     .billing-transaction-row > td:nth-child(6) {
-        grid-area: balance;
+        grid-area: amount;
     }
 
     .billing-transaction-row > td:nth-child(7) {
+        grid-area: balance;
+    }
+
+    .billing-transaction-row > td:nth-child(8) {
         grid-area: status;
         justify-self: end;
     }
@@ -965,10 +977,10 @@ aside[data-sidebar] .sidebar-brand-rail-mark {
 /* Tablet widths: one summary line plus one line of four facts. */
 @container billing-tx (min-width: 480px) and (max-width: 639.98px) {
     .billing-transactions-table tbody tr.billing-transaction-row {
-        grid-template-columns: 56px repeat(4, minmax(0, 1fr));
+        grid-template-columns: 56px repeat(5, minmax(0, 1fr));
         grid-template-areas:
-            "id name name name status"
-            "id date method amount balance";
+            "id name name name name status"
+            "id date operator method amount balance";
         column-gap: 16px;
     }
 
@@ -1415,7 +1427,8 @@ aside[data-sidebar] .sidebar-brand-rail-mark {
     .resident-transaction-item {
         grid-template-columns: repeat(3, minmax(0, 1fr));
         grid-template-areas:
-            "id id date"
+            "id date date"
+            "operator type type"
             "amount before after";
         gap: 10px 12px;
         padding: 14px 16px;
@@ -1438,15 +1451,24 @@ aside[data-sidebar] .sidebar-brand-rail-mark {
         text-align: right;
     }
 
+    .resident-transaction-cell-operator {
+        grid-area: operator;
+    }
+
+    .resident-transaction-cell-type {
+        grid-area: type;
+        text-align: right;
+    }
+
     .resident-transaction-cell-amount {
         grid-area: amount;
     }
 
-    .resident-transaction-cell-balance:nth-child(4) {
+    .resident-transaction-cell-before {
         grid-area: before;
     }
 
-    .resident-transaction-cell-balance:nth-child(5) {
+    .resident-transaction-cell-after {
         grid-area: after;
     }
 
@@ -1471,6 +1493,7 @@ aside[data-sidebar] .sidebar-brand-rail-mark {
         grid-template-columns: repeat(2, minmax(0, 1fr));
         grid-template-areas:
             "id date"
+            "operator type"
             "amount amount"
             "before after";
     }

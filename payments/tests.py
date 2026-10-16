@@ -9,7 +9,7 @@ from django.urls import reverse
 from billing.models import BillingPeriod, BuildingService, HeatingApartmentUsage, ServiceExpense
 from main_app.models import Apartment, Building, Complex, Owner
 from payments.models import Transaction
-from payments.services import OPENING_BALANCE_TAG, apply_balance_change
+from payments.services import OPENING_BALANCE_TAG, apply_account_change, apply_balance_change
 from portal.backend_data import build_portal_data
 
 
@@ -82,7 +82,8 @@ class BalanceLedgerTests(TestCase):
         ])
         self.assertEqual(rows[1].balance_before, rows[0].balance_after)
 
-    def test_portal_resident_opening_balance_is_recorded(self):
+    def test_portal_new_resident_ignores_a_posted_balance(self):
+        # A resident takes over the apartment account; balances change only through transactions.
         response = self.client.post(
             reverse("portal:api_create_resident"),
             {"fio": "New Resident", "phone": "+998900000000", "apartment_id": self.free_apartment.id, "balance": "-50000"},
@@ -91,11 +92,8 @@ class BalanceLedgerTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         owner = Owner.objects.get(pk=response.json()["ownerId"])
-        self.assertEqual(owner.balance, Decimal("-50000"))
-        rows = self._ledger(owner)
-        self.assertEqual(len(rows), 1)
-        self.assertEqual(rows[0].amount, Decimal("-50000"))
-        self.assertIn(OPENING_BALANCE_TAG, rows[0].description)
+        self.assertEqual(owner.balance, Decimal("0"))
+        self.assertEqual(self._ledger(owner), [])
 
     def test_portal_resident_without_opening_balance_has_empty_ledger(self):
         response = self.client.post(
@@ -107,27 +105,26 @@ class BalanceLedgerTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertFalse(Transaction.objects.filter(owner_id=response.json()["ownerId"]).exists())
 
-    def test_admin_balance_is_read_only_after_creation(self):
+    def test_admin_resident_form_has_no_balance_input(self):
         owner_admin = admin.site._registry[Owner]
         request = RequestFactory().get("/")
         request.user = self.user
 
         self.assertNotIn("balance", owner_admin.get_form(request, self.owner).base_fields)
-        self.assertIn("balance", owner_admin.get_form(request, None).base_fields)
+        self.assertNotIn("balance", owner_admin.get_form(request, None).base_fields)
 
-    def test_admin_opening_balance_is_recorded(self):
+    def test_admin_new_resident_takes_over_the_apartment_account(self):
+        apply_account_change(self.free_apartment.pk, Decimal("-25000"), Transaction.TYPE_MANUAL)
         owner_admin = admin.site._registry[Owner]
         request = RequestFactory().post("/")
         request.user = self.user
-        owner = Owner(fio="Admin Resident", phone="+998", apartment=self.free_apartment, balance=Decimal("25000"))
+        owner = Owner(fio="Admin Resident", phone="+998", apartment=self.free_apartment, balance=Decimal("999"))
 
         owner_admin.save_model(request, owner, form=None, change=False)
 
         owner.refresh_from_db()
-        self.assertEqual(owner.balance, Decimal("25000"))
-        rows = self._ledger(owner)
-        self.assertEqual([row.amount for row in rows], [Decimal("25000")])
-        self.assertEqual(rows[0].created_by, "cashier")
+        self.assertEqual(owner.balance, Decimal("-25000"))
+        self.assertEqual(Transaction.objects.filter(apartment=self.free_apartment).count(), 1)
 
     def test_charges_and_opening_balances_are_not_counted_as_payments(self):
         # A building without vacant apartments: close_period cannot bill an apartment with no owner.

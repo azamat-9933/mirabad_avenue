@@ -7250,9 +7250,19 @@ html.dark .resident-balance-filter-shell,
     color: #0f9f6e;
 }
 
-.resident-list-telegram.is-telegram-empty,
 .resident-status-pill.is-telegram-empty {
     color: #c53030;
+}
+
+/* "Not linked" / "Not found" is information, not an error: muted, not red. */
+.resident-list-telegram.is-telegram-empty {
+    color: #64748b;
+    font-weight: 700;
+}
+
+html.dark .resident-list-telegram.is-telegram-empty,
+[data-theme="dark"] .resident-list-telegram.is-telegram-empty {
+    color: #94a3b8;
 }
 
 .resident-list-row .resident-status-pill {
@@ -7403,12 +7413,22 @@ html.dark .resident-balance-filter-shell,
     max-width: min(1120px, calc(100vw - 48px));
 }
 
+/* Header and rows share the columns. The header's side padding equals the list's
+   (body padding 24px + list border 1px + row padding 24px), and both reserve the same
+   scrollbar gutter, so every header label sits right above its column. */
+.resident-transactions-columns,
+.resident-transaction-item {
+    --resident-transaction-columns: 56px minmax(132px, 1.15fr) minmax(96px, 0.9fr) minmax(110px, 1fr) minmax(128px, 1fr) minmax(128px, 1fr) minmax(128px, 1fr);
+}
+
 .resident-transactions-columns {
     display: grid;
-    grid-template-columns: 112px minmax(200px, 1.4fr) minmax(160px, 0.9fr) minmax(160px, 0.9fr) minmax(160px, 0.9fr);
+    grid-template-columns: var(--resident-transaction-columns);
     gap: 16px;
     align-items: center;
-    padding: 18px 24px 16px;
+    padding: 18px 49px 16px;
+    overflow: hidden;
+    scrollbar-gutter: stable both-edges;
     border-bottom: 1px solid rgba(112, 120, 125, 0.12);
     background: linear-gradient(180deg, rgba(245, 249, 255, 0.82), rgba(255, 255, 255, 0.94));
 }
@@ -7437,6 +7457,7 @@ html.dark .resident-balance-filter-shell,
 .resident-transactions-body {
     max-height: min(58vh, 560px);
     overflow-y: auto;
+    scrollbar-gutter: stable both-edges;
     padding: 14px 24px 24px;
 }
 
@@ -7452,7 +7473,7 @@ html.dark .resident-balance-filter-shell,
 
 .resident-transaction-item {
     display: grid;
-    grid-template-columns: 112px minmax(200px, 1.4fr) minmax(160px, 0.9fr) minmax(160px, 0.9fr) minmax(160px, 0.9fr);
+    grid-template-columns: var(--resident-transaction-columns);
     align-items: center;
     gap: 16px;
     min-width: 0;
@@ -7512,7 +7533,15 @@ html.dark .resident-balance-filter-shell,
 
 .resident-transaction-cell-amount strong,
 .resident-transaction-cell-balance strong {
-    font-size: 16px;
+    font-size: 15px;
+    white-space: nowrap;
+}
+
+.resident-transaction-cell-operator strong,
+.resident-transaction-cell-type strong {
+    font-size: 13px;
+    font-weight: 750;
+    overflow-wrap: anywhere;
 }
 
 .resident-transaction-amount.is-positive {

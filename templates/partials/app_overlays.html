@@ -392,7 +392,9 @@
 <div class="resident-transactions-columns" data-resident-transactions-columns>
 <span data-i18n-key="ID">ID</span>
 <span data-i18n-key="Date time">Date time</span>
-<span data-i18n-key="Total amount">Total amount</span>
+<span data-i18n-key="Operator">Operator</span>
+<span data-i18n-key="Payment type">Payment type</span>
+<span data-i18n-key="Amount">Amount</span>
 <span data-i18n-key="Balance before">Balance before</span>
 <span data-i18n-key="Balance after">Balance after</span>
 </div>
@@ -1147,10 +1149,6 @@ This form writes directly to Django admin and database.
 <label class="resident-create-field">
 <span data-i18n-key="Apartment">Apartment</span>
 <select name="apartment_id" required data-resident-create-apartment></select>
-</label>
-<label class="resident-create-field">
-<span data-i18n-key="Balance">Balance</span>
-<input name="balance" inputmode="decimal" placeholder="0" type="number" step="0.01"/>
 </label>
 <label class="resident-create-field">
 <span data-i18n-key="Contract status">Contract status</span>

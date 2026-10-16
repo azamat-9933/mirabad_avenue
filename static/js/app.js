@@ -284,6 +284,12 @@
         "Terminal": { ru: "Терминал", uz: "Terminal" },
         "Card": { ru: "Карта", uz: "Karta" },
         "Card (terminal)": { ru: "Карта (терминал)", uz: "Karta (terminal)" },
+        "Payment type": { ru: "Тип оплаты", uz: "To'lov turi" },
+        "Username not found": { ru: "Не найден", uz: "Topilmadi" },
+        "Pay": { ru: "Оплата", uz: "To'lov" },
+        "House / apartment": { ru: "Дом / кв.", uz: "Uy / xonadon" },
+        "System": { ru: "Система", uz: "Tizim" },
+        "Charge": { ru: "Начисление", uz: "Hisoblash" },
         "Card transfer": { ru: "Перевод на карту", uz: "Kartaga o'tkazma" },
         "Card transfer payment synced with backend.": { ru: "Платёж переводом на карту синхронизирован с backend.", uz: "Kartaga o'tkazma to'lovi backend bilan sinxronlandi." },
         "Save payment": { ru: "Сохранить платёж", uz: "To'lovni saqlash" },
@@ -960,6 +966,20 @@
         if (!raw) return "";
         return raw.startsWith("@") ? raw : `@${raw}`;
     };
+    // What to show where a Telegram username goes: the @handle; "Not found" for a resident who
+    // registered in the bot from an account without a username (the phone links them anyway);
+    // "Not linked" while they have not registered.
+    const telegramHandleText = (resident) => formatTelegramHandle(resident?.telegramUser)
+        || t(resident?.telegramConnected ? "Username not found" : "Not linked");
+    const telegramHandleMarkup = (resident, className) => {
+        const handle = formatTelegramHandle(resident?.telegramUser);
+        if (handle) return `<strong class="${className} is-telegram-connected">${escapeHtml(handle)}</strong>`;
+        const key = resident?.telegramConnected ? "Username not found" : "Not linked";
+        return `<strong class="${className} is-telegram-empty" data-i18n-key="${key}">${escapeHtml(t(key))}</strong>`;
+    };
+    const houseApartmentLabel = (resident) => [resident?.building, resident?.apartmentNumber || resident?.apartment]
+        .filter(Boolean)
+        .join(" · ") || "-";
     const escapeHtml = (value) => String(value ?? "").replace(/[&<>"']/g, (char) => ({
         "&": "&amp;",
         "<": "&lt;",
@@ -1736,9 +1756,18 @@
         return audioContext;
     };
 
-    const tone = ({ frequency = 520, endFrequency = null, duration = 0.055, delay = 0, volume = 0.035, type = "sine" } = {}) => {
+    const tone = (options = {}) => {
         const context = getAudioContext();
         if (!context) return;
+        // A suspended context has a frozen clock: tones scheduled on it would start late and clipped.
+        if (context.state === "suspended") {
+            context.resume?.().then(() => scheduleTone(context, options)).catch(() => {});
+            return;
+        }
+        scheduleTone(context, options);
+    };
+
+    const scheduleTone = (context, { frequency = 520, endFrequency = null, duration = 0.055, delay = 0, volume = 0.035, type = "sine" } = {}) => {
         const start = context.currentTime + delay;
         const oscillator = context.createOscillator();
         const gain = context.createGain();
@@ -2052,7 +2081,10 @@
         }, 120);
     }));
 
-    const applyLanguage = (lang) => {
+    // announce: tell listeners the language changed. A sync after rendering new content keeps the
+    // language, so it must not announce: listeners re-render (some reopen their window) and take
+    // hundreds of milliseconds, which made windows jump and their sound play twice.
+    const applyLanguage = (lang, { announce = true } = {}) => {
         const safeLang = languageOrder.includes(lang) ? lang : "en";
         root.lang = safeLang;
         document.querySelectorAll("[data-lang-label]").forEach((label) => label.replaceChildren(document.createTextNode(safeLang.toUpperCase())));
@@ -2064,11 +2096,11 @@
         applyTranslations(safeLang);
         storage.setItem("hydroflow-lang", safeLang);
         updateSoundControls();
-        document.dispatchEvent(new CustomEvent("hydroflow:language-changed", { detail: { lang: safeLang } }));
+        if (announce) document.dispatchEvent(new CustomEvent("hydroflow:language-changed", { detail: { lang: safeLang } }));
     };
 
     window.HydroFlowApplyLanguage = applyLanguage;
-    window.HydroFlowSyncLocale = () => applyLanguage(storage.getItem("hydroflow-lang") || "en");
+    window.HydroFlowSyncLocale = () => applyLanguage(storage.getItem("hydroflow-lang") || "en", { announce: false });
 
     applyLanguage(storage.getItem("hydroflow-lang") || "en");
 
@@ -3010,8 +3042,6 @@
         const isPositiveBalance = Number(resident.balance || 0) >= 0;
         const balanceClass = isPositiveBalance ? "is-positive" : "is-negative";
         const balanceIcon = isPositiveBalance ? "verified" : "error";
-        const telegramUser = formatTelegramHandle(resident.telegramUser);
-        const telegramClass = telegramUser ? "is-telegram-connected" : "is-telegram-empty";
         const contractTranslationKey = resident.hasContract ? "True" : "False";
         const contractValue = t(contractTranslationKey);
         const contractClass = resident.hasContract ? "is-contract-true" : "is-contract-false";
@@ -3042,20 +3072,20 @@
                     <div class="resident-list-person">
                         <div>
                             <h4>${escapeHtml(resident.name || "Resident")}</h4>
-                            <p>${escapeHtml([resident.complex || "-", resident.building || ""].filter(Boolean).join(" · "))}</p>
+                            <p>${escapeHtml(resident.complex || "-")}</p>
                         </div>
                     </div>
                     <div class="resident-list-cell">
                         <span data-i18n-key="TG user">TG user</span>
-                        <strong class="resident-list-telegram ${telegramClass}">${escapeHtml(telegramUser || "-")}</strong>
+                        ${telegramHandleMarkup(resident, "resident-list-telegram")}
                     </div>
                     <div class="resident-list-cell">
                         <span data-i18n-key="Contract">Contract</span>
                         <strong class="resident-list-pill-wrap"><span class="resident-status-pill ${contractClass}"><span class="resident-status-pill__label" data-i18n-key="${escapeAttr(contractTranslationKey)}">${escapeHtml(contractValue)}</span></span></strong>
                     </div>
                     <div class="resident-list-cell">
-                        <span data-i18n-key="Apartment">Apartment</span>
-                        <strong>${escapeHtml(resident.apartmentNumber || resident.apartment || "-")}</strong>
+                        <span data-i18n-key="House / apartment">House / apartment</span>
+                        <strong>${escapeHtml(houseApartmentLabel(resident))}</strong>
                     </div>
                     <div class="resident-list-balance resident-list-balance-panel">
                         <div class="resident-list-balance-main">
@@ -3065,7 +3095,7 @@
                         <div class="resident-list-actions">
                             ${resident.ownerBackendId ? `<button aria-label="${escapeAttr(t("Add payment"))}" class="resident-list-action is-payment" data-resident-add-payment title="${escapeAttr(t("Add payment"))}" type="button">
                                 <span class="material-symbols-outlined" aria-hidden="true">add_card</span>
-                                <span data-i18n-key="Add payment">Add payment</span>
+                                <span data-i18n-key="Pay">Pay</span>
                             </button>` : ""}
                             <button class="resident-list-action is-history" data-resident-billing-history type="button">
                                 <span class="material-symbols-outlined" aria-hidden="true">history</span>
@@ -3658,7 +3688,6 @@
                     fallback?.id
                 );
                 if (!ownerBackendId) return;
-                playSound("soft-click");
                 openResidentProfileByOwner({ ownerBackendId, fallback, closePalette: false });
             });
             document.addEventListener("hydroflow:language-changed", () => {
@@ -3672,9 +3701,9 @@
         if (transactionTable) {
             const transactionChrome = prepareServerTableChrome(transactionTable, {
                 name: "transactions",
-                sortMap: ["id", "resident", "created_at", "method", "amount", "balance", "status"],
+                sortMap: ["id", "resident", "created_at", "operator", "method", "amount", "balance", "status"],
                 defaultOrdering: "-created_at",
-                defaultSortDirection: { id: "desc", resident: "asc", created_at: "desc", method: "asc", amount: "desc", balance: "desc", status: "desc" },
+                defaultSortDirection: { id: "desc", resident: "asc", created_at: "desc", operator: "asc", method: "asc", amount: "desc", balance: "desc", status: "desc" },
                 load: () => loadTransactions(),
             });
             const renderTransactions = (items = []) => {
@@ -3706,7 +3735,8 @@
                             <td class="px-6 py-4">
                                 <p class="font-bold text-primary text-sm">${escapeHtml(item.residentName || "Resident")}</p>
                             </td>
-                            <td class="px-6 py-4 text-xs text-on-surface-variant"><span class="table-cell-label" data-i18n-key="Date">Date</span>${escapeHtml(item.date)}</td>
+                            <td class="px-6 py-4 text-xs text-on-surface-variant"><span class="table-cell-label" data-i18n-key="Date time">Date time</span>${escapeHtml(item.createdAt || item.date)}</td>
+                            <td class="px-6 py-4 text-xs font-medium text-on-surface-variant"><span class="table-cell-label" data-i18n-key="Operator">Operator</span>${escapeHtml(item.createdBy || t("System"))}</td>
                             <td class="px-6 py-4 text-xs font-medium text-on-surface-variant"><span class="table-cell-label" data-i18n-key="Payment method">Payment method</span>${escapeHtml(item.method || item.type || "Payment")}</td>
                             <td class="px-6 py-4 text-sm font-bold ${amountClass}"><span class="table-cell-label" data-i18n-key="Amount">Amount</span>${escapeHtml(`${amountPrefix}${formatBillingUzs(Math.abs(signedAmount))}`)}</td>
                             <td class="px-6 py-4 text-sm font-bold ${balanceClass}"><span class="table-cell-label" data-i18n-key="Balance">Balance</span>${formatBillingUzs(balanceAfter)}</td>
@@ -4725,7 +4755,7 @@
             count.textContent = countLabel(visibleCount);
             search?.closest(".resident-search-shell")?.classList.toggle("has-value", Boolean(query));
             empty?.classList.toggle("hidden", visibleCount > 0);
-            window.HydroFlowApplyLanguage?.(storage.getItem("hydroflow-lang") || "en");
+            window.HydroFlowSyncLocale?.();
         };
 
         openButton.addEventListener("click", renderResidents);
@@ -4770,10 +4800,6 @@
         const historyTitle = historyModal?.querySelector("#resident-transactions-title");
         let activeHistoryResident = null;
         const historyText = (value) => translateValue(String(value || ""), storage.getItem("hydroflow-lang") || "en");
-        const transactionMetaText = (payment) => [payment.method, payment.description]
-            .filter(Boolean)
-            .map((item) => historyText(item))
-            .join(" · ");
 
         const parseResident = (card) => {
             const resident = getResidentById(card.dataset.residentId);
@@ -4812,33 +4838,45 @@
             const paymentTime = payment.createdAt || payment.date || "--";
             const balanceBefore = Number(payment.balanceBefore || 0);
             const balanceAfter = Number(payment.balanceAfter || 0);
-            const realMeta = transactionMetaText(payment);
+            // Ledger rows written by the system (billing, imports) have no operator.
+            const operator = payment.createdBy || historyText("System");
+            const paymentType = historyText(payment.method || payment.type || "Transaction");
             return `
                 <div class="resident-transaction-item">
                     <div class="resident-transaction-cell resident-transaction-cell-id">
-                        <strong>#${escapeHtml(transactionId)}</strong>
-                        <small>${escapeHtml(historyText(payment.type || payment.method || "Transaction"))}</small>
+                        <span class="table-cell-label" data-i18n-key="ID">ID</span>
+                        <strong>${escapeHtml(transactionId)}</strong>
                     </div>
                     <div class="resident-transaction-cell resident-transaction-cell-datetime">
+                        <span class="table-cell-label" data-i18n-key="Date time">Date time</span>
                         <strong>${escapeHtml(paymentTime)}</strong>
-                        <small>${escapeHtml(realMeta || payment.externalId || "")}</small>
+                    </div>
+                    <div class="resident-transaction-cell resident-transaction-cell-operator">
+                        <span class="table-cell-label" data-i18n-key="Operator">Operator</span>
+                        <strong>${escapeHtml(operator)}</strong>
+                    </div>
+                    <div class="resident-transaction-cell resident-transaction-cell-type">
+                        <span class="table-cell-label" data-i18n-key="Payment type">Payment type</span>
+                        <strong>${escapeHtml(paymentType)}</strong>
                     </div>
                     <div class="resident-transaction-cell resident-transaction-cell-amount">
-                        <span class="table-cell-label" data-i18n-key="Total amount">Total amount</span>
+                        <span class="table-cell-label" data-i18n-key="Amount">Amount</span>
                         <strong class="resident-transaction-amount ${amountTone}">${amountPrefix}${formatBillingUzs(Math.abs(signedAmount))}</strong>
                     </div>
-                    <div class="resident-transaction-cell resident-transaction-cell-balance">
+                    <div class="resident-transaction-cell resident-transaction-cell-balance resident-transaction-cell-before">
                         <span class="table-cell-label" data-i18n-key="Balance before">Balance before</span>
                         <strong class="${balanceBefore < 0 ? "is-negative" : "is-positive"}">${formatBillingUzs(balanceBefore)}</strong>
                     </div>
-                    <div class="resident-transaction-cell resident-transaction-cell-balance">
+                    <div class="resident-transaction-cell resident-transaction-cell-balance resident-transaction-cell-after">
                         <span class="table-cell-label" data-i18n-key="Balance after">Balance after</span>
                         <strong class="${balanceAfter < 0 ? "is-negative" : "is-positive"}">${formatBillingUzs(balanceAfter)}</strong>
                     </div>
                 </div>
             `;
         };
+        let shownHistoryRows = [];
         const renderHistoryRows = (rows) => {
+            shownHistoryRows = rows;
             if (historyList) historyList.innerHTML = rows.map(historyRowMarkup).join("");
             historyEmpty?.classList.toggle("hidden", rows.length > 0);
             window.HydroFlowSyncLocale?.();
@@ -4880,10 +4918,9 @@
                     // Keep the snapshot rows if the list request fails.
                 });
         };
+        // A language switch re-renders the rows already shown; it must not reopen the window.
         document.addEventListener("hydroflow:language-changed", () => {
-            if (historyModal?.classList.contains("is-open") && activeHistoryResident) {
-                openResidentHistory(activeHistoryResident);
-            }
+            if (historyModal?.classList.contains("is-open")) renderHistoryRows(shownHistoryRows);
         });
         const pickResidentByOwnerId = (value) => {
             const ownerId = String(value || "").replace(/[^\d]/g, "");
@@ -5723,6 +5760,25 @@
     };
     const liveStatsEnabledPages = new Set(["dashboard"]);
     const liveStatsEnabledForCurrentPage = () => liveStatsEnabledPages.has(String(document.body.dataset.activePage || "").trim());
+    // The residents and transactions tables are paged from the server, so a snapshot refresh alone
+    // updated the cards above them but not the rows (a resident added in admin appeared only after
+    // reloading the page). A short fingerprint of what those tables show tells when to reload them,
+    // without re-rendering them on every tick.
+    const serverListFingerprint = (data) => {
+        const residents = Array.isArray(data?.residents) ? data.residents : [];
+        const transactions = Array.isArray(data?.transactions) ? data.transactions : [];
+        const text = [
+            residents.map((resident) => [
+                resident.id, resident.name, resident.phone, resident.balance, resident.hasContract,
+                resident.telegramStatus, resident.telegramUser, resident.building, resident.apartmentNumber,
+            ].join("|")).join(";"),
+            transactions.reduce((latest, item) => Math.max(latest, Number(item.backendId || 0)), 0),
+        ].join("#");
+        let hash = 5381;
+        for (let index = 0; index < text.length; index += 1) hash = ((hash * 33) ^ text.charCodeAt(index)) >>> 0;
+        return `${residents.length}:${hash}`;
+    };
+    let lastServerListFingerprint = serverListFingerprint(billingData);
     const refreshBackendData = async () => {
         if (document.body.dataset.backendRefreshRunning === "true") return;
         document.body.dataset.backendRefreshRunning = "true";
@@ -5749,6 +5805,11 @@
             safeSyncSiteStatistics();
             setupResidentialHierarchy();
             window.HydroFlowApplyFilters?.(readFilterState(), { resetPage: false });
+            const fingerprint = serverListFingerprint(payload);
+            if (fingerprint !== lastServerListFingerprint) {
+                lastServerListFingerprint = fingerprint;
+                window.HydroFlowServerLists?.refreshAll?.();
+            }
             document.dispatchEvent(new CustomEvent("hydroflow:backend-refreshed"));
         } catch {
             // The UI keeps the last successful payload when the local backend is temporarily unavailable.
@@ -5835,10 +5896,17 @@
         }, 90);
     };
 
-    const openOverlayById = (id) => {
+    // One sound per opening: callers pass their own instead of playing a second one on top,
+    // overlapping tones were heard as a stutter.
+    const openOverlayById = (id, { sound = "modal-open" } = {}) => {
         const overlay = document.getElementById(id);
         if (!overlay) return;
-        playSound("modal-open");
+        // Already open (or opening): a second call must not close and reopen it, which made the
+        // window jump and its opening sound play twice.
+        if (overlay.getAttribute("aria-hidden") === "false" && overlay.dataset.closing !== "true" && !overlay.classList.contains("hidden")) {
+            return;
+        }
+        playSound(sound);
         document.querySelectorAll(".app-drawer.is-open").forEach((drawer) => {
             finalizeOverlayClose(drawer);
         });
@@ -6123,7 +6191,6 @@
                     fio: formData.get("fio"),
                     phone: formData.get("phone"),
                     apartment_id: formData.get("apartment_id"),
-                    balance: formData.get("balance"),
                     has_contract: formData.get("has_contract"),
                 });
                 rehydrateFromPortalData(payload.portalData);
@@ -6926,16 +6993,8 @@
         };
         window.HydroFlowOpenBillingNotice = () => openNoticeModal();
 
-        document.querySelectorAll("[data-billing-notice-open]").forEach((button) => {
-            if (button.dataset.billingNoticeReady === "true") return;
-            button.dataset.billingNoticeReady = "true";
-            button.addEventListener("click", (event) => {
-                event.preventDefault();
-                event.stopPropagation();
-                openNoticeModal();
-            });
-        });
-
+        // One delegated listener opens the notice for every trigger; a per-button listener on top of
+        // it opened the window twice per click.
         if (document.body.dataset.billingNoticeDelegated !== "true") {
             document.body.dataset.billingNoticeDelegated = "true";
             document.addEventListener("click", (event) => {
@@ -7067,7 +7126,6 @@
         event.preventDefault();
         const payload = nearestActionPayload(reminderButton);
         if (payload.owner_id && window.HydroFlowOpenBillingNoticeForResident) {
-            playSound("soft-click");
             window.HydroFlowOpenBillingNoticeForResident(payload.owner_id);
             return;
         }
@@ -8004,7 +8062,7 @@
         residentProfileNodes.balanceWrap.classList.toggle("is-positive", isPositiveBalance);
         residentProfileNodes.balanceWrap.classList.toggle("is-negative", !isPositiveBalance);
 
-        residentProfileNodes.tgUser.textContent = telegramUser || t("Not linked");
+        residentProfileNodes.tgUser.textContent = telegramHandleText(resident);
         residentProfileNodes.tgUser.classList.toggle("is-connected", Boolean(telegramUser));
         residentProfileNodes.tgUser.classList.toggle("is-missing", !telegramUser);
 
@@ -8051,8 +8109,7 @@
             return;
         }
         renderResidentCommandProfileSkeleton(fallback);
-        openOverlayById("resident-command-profile-modal");
-        playSound("profile-open");
+        openOverlayById("resident-command-profile-modal", { sound: "profile-open" });
         let resident = null;
         try {
             resident = await fetchResidentForCommand(ownerBackendId);
@@ -8263,7 +8320,7 @@
         addPaymentNodes.balanceWrap.classList.toggle("is-positive", isPositiveBalance);
         addPaymentNodes.balanceWrap.classList.toggle("is-negative", !isPositiveBalance);
 
-        addPaymentNodes.tgUser.textContent = telegramUser || t("Not linked");
+        addPaymentNodes.tgUser.textContent = telegramHandleText(resident);
         addPaymentNodes.tgUser.classList.toggle("is-connected", Boolean(telegramUser));
         addPaymentNodes.tgUser.classList.toggle("is-missing", !telegramUser);
 
@@ -8317,7 +8374,7 @@
                     </div>
                     <div class="add-payment-result-meta">${escapeHtml([
                         resident.phone || "--",
-                        resident.telegramUser || t("Not linked"),
+                        telegramHandleText(resident),
                         resident.building || resident.complex || "--",
                         resident.apartmentNumber || resident.apartment || "--",
                     ].join(" · "))}</div>
@@ -8473,7 +8530,6 @@
             if (!ownerId) return;
             event.preventDefault();
             event.stopPropagation();
-            playSound("soft-click");
             window.HydroFlowOpenAddPaymentForResident(ownerId);
         });
         syncAddPaymentResidents();

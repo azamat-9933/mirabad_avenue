@@ -251,7 +251,6 @@
         "Delete?": { en: "Delete?", ru: "Удалить?", uz: "O'chirilsinmi?" },
         "Owner full name": { en: "Owner full name", ru: "ФИО владельца", uz: "Ega FIO" },
         "Empty if vacant": { en: "Empty if vacant", ru: "Пусто — нет владельца", uz: "Bo'sh — egasi yo'q" },
-        "New apartment: opening balance, a debt is negative; it is recorded as a manual transaction. Existing apartment: changes only through payments in the portal.": { en: "New apartment: opening balance, a debt is negative; it is recorded as a manual transaction. Existing apartment: changes only through payments in the portal.", ru: "Новая квартира: начальный баланс, долг — со знаком минус; записывается как ручная транзакция. Существующая квартира: меняется только платежами в портале.", uz: "Yangi kvartira: boshlang'ich balans, qarz minus bilan; qo'lda kiritilgan tranzaksiya sifatida yoziladi. Mavjud kvartira: faqat portaldagi to'lovlar orqali o'zgaradi." },
         "The owner can't be removed here. To remove them, open the resident's page.": { en: "The owner can't be removed here. To remove them, open the resident's page.", ru: "Здесь владельца убрать нельзя. Для этого откройте страницу резидента.", uz: "Egani bu yerda olib tashlab bo'lmaydi. Buning uchun rezident sahifasini oching." },
         "Enter the owner's full name.": { en: "Enter the owner's full name.", ru: "Укажите ФИО владельца.", uz: "Ega FIO sini kiriting." },
         "Enter the owner's phone.": { en: "Enter the owner's phone.", ru: "Укажите телефон владельца.", uz: "Ega telefonini kiriting." },

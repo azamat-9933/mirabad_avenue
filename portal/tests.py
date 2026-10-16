@@ -324,9 +324,12 @@ class PortalExportTests(TestCase):
         self.assertTrue(download["filename"].endswith(".xlsx"))
         sheet = load_workbook(io.BytesIO(content)).active
         rows = list(sheet.iter_rows(values_only=True))
-        self.assertEqual(rows[0], ("Житель", "Тип", "Метод", "Дата", "Сумма", "Статус"))
+        self.assertEqual(
+            rows[0],
+            ("ID", "Дата и время", "Житель", "Оператор", "Тип оплаты", "Сумма", "Баланс до", "Баланс после", "Статус"),
+        )
         self.assertEqual(len(rows), 121)
-        self.assertEqual(rows[1][0], "Ўринбоев Ғайрат")
+        self.assertEqual(rows[1][2], "Ўринбоев Ғайрат")
 
     def test_pdf_export_is_not_truncated(self):
         download, content = self._export(

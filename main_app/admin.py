@@ -1,5 +1,3 @@
-from decimal import Decimal
-
 from django import forms
 from django.contrib import admin
 from django.contrib.admin.options import IS_POPUP_VAR
@@ -7,9 +5,6 @@ from django.db.models import Count, Q, Sum
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.utils.html import format_html
-
-from payments.models import Transaction
-from payments.services import OPENING_BALANCE_TAG, apply_account_change, apply_balance_change
 
 from .models import DEFAULT_SECTOR_NAME, Apartment, Building, Complex, Owner
 
@@ -60,8 +55,7 @@ class ApartmentInlineForm(forms.ModelForm):
 
     Filling the owner columns creates the resident (or updates the existing one), so a new house
     can be set up from one page. Owner columns left empty keep the apartment vacant; its account is
-    still billed. The balance column takes an opening balance for a new apartment and shows the
-    current balance (read-only) for an existing one.
+    still billed. The balance is shown read-only: it changes only through ledger transactions.
     """
 
     owner_fio = forms.CharField(
@@ -77,16 +71,6 @@ class ApartmentInlineForm(forms.ModelForm):
         widget=forms.TextInput(attrs={"class": "vTextField", "placeholder": "+998"}),
     )
     owner_has_contract = forms.BooleanField(label="Has contract", required=False)
-    opening_balance = forms.DecimalField(
-        label="Balans (so'm)",
-        max_digits=14,
-        decimal_places=2,
-        required=False,
-        help_text=(
-            "New apartment: opening balance, a debt is negative; it is recorded as a manual transaction. "
-            "Existing apartment: changes only through payments in the portal."
-        ),
-    )
 
     class Meta:
         model = Apartment
@@ -100,9 +84,6 @@ class ApartmentInlineForm(forms.ModelForm):
             self.fields["owner_fio"].initial = self.owner.fio
             self.fields["owner_phone"].initial = self.owner.phone
             self.fields["owner_has_contract"].initial = self.owner.has_contract
-        if not self.is_new_apartment:
-            self.fields["opening_balance"].disabled = True
-            self.fields["opening_balance"].initial = self.instance.balance
 
     def clean(self):
         cleaned = super().clean()
@@ -119,8 +100,8 @@ class ApartmentInlineForm(forms.ModelForm):
                 self.add_error("owner_phone", "Enter the owner's phone.")
         return cleaned
 
-    def save_owner(self, actor):
-        """Create or update the owner from the row and post the opening balance; the apartment is saved."""
+    def save_owner(self):
+        """Create or update the owner from the row; the apartment is already saved."""
         apartment = self.instance
         fio = self.cleaned_data["owner_fio"]
         values = {
@@ -138,22 +119,17 @@ class ApartmentInlineForm(forms.ModelForm):
             # A new owner takes over the apartment account as it is (Owner.save copies the balance).
             self.owner = Owner.objects.create(apartment=apartment, **values)
 
-        opening_balance = self.cleaned_data.get("opening_balance")
-        if self.is_new_apartment and opening_balance:
-            apply_account_change(
-                apartment.pk,
-                opening_balance,
-                Transaction.TYPE_MANUAL,
-                description=f"{OPENING_BALANCE_TAG} Opening balance set when the apartment was created in admin.",
-                created_by=actor,
-            )
+
+def balance_text(balance):
+    return f"{admin_number(balance)} UZS"
 
 
 class ApartmentInline(admin.TabularInline):
     """Uy ichidagi kvartiralar va ularning egalari — bitta jadvalda"""
     model = Apartment
     form = ApartmentInlineForm
-    fields = ("number", "area", "owner_fio", "owner_phone", "owner_has_contract", "opening_balance")
+    fields = ("number", "area", "owner_fio", "owner_phone", "owner_has_contract", "account_balance")
+    readonly_fields = ("account_balance",)
     show_change_link = True
     verbose_name = "Kvartira"
     verbose_name_plural = "Kvartiralar"
@@ -164,6 +140,27 @@ class ApartmentInline(admin.TabularInline):
 
     def get_queryset(self, request):
         return super().get_queryset(request).select_related("owner").order_by("pk")
+
+    @admin.display(description="Balans (so'm)")
+    def account_balance(self, obj):
+        # Read-only: the account changes only through ledger transactions (payments, billing).
+        return balance_text(obj.balance) if obj and obj.pk else "—"
+
+
+class OwnerInline(admin.TabularInline):
+    """The apartment's resident, added together with the apartment on its admin page."""
+    model = Owner
+    fields = ("fio", "phone", "has_contract", "telegram_status")
+    readonly_fields = ("telegram_status",)
+    # Removing a resident (and their Telegram link) is done on the resident's own page.
+    can_delete = False
+    max_num = 1
+    verbose_name = "Resident"
+    verbose_name_plural = "Resident"
+
+    def get_extra(self, request, obj=None, **kwargs):
+        # One empty row for a new or vacant apartment; none when it already has a resident.
+        return 0 if obj is not None and Owner.objects.filter(apartment=obj).exists() else 1
 
 
 class BuildingInline(admin.TabularInline):
@@ -281,7 +278,7 @@ class BuildingAdmin(admin.ModelAdmin):
         deleted = formset.deleted_forms
         for row in formset.forms:
             if isinstance(row, ApartmentInlineForm) and row.instance.pk and row.has_changed() and row not in deleted:
-                row.save_owner(actor)
+                row.save_owner()
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
@@ -329,6 +326,8 @@ class ApartmentAdmin(admin.ModelAdmin):
     )
     readonly_fields = ("created_at",)
     exclude = ("author",)
+    # The resident is entered right on the apartment page, as on the house page.
+    inlines = [OwnerInline]
 
     def get_readonly_fields(self, request, obj=None):
         # The account balance changes only through the Transaction ledger.
@@ -554,22 +553,9 @@ class OwnerAdmin(admin.ModelAdmin):
         )
         self.message_user(request, "Telegram was disconnected for the selected residents.")
 
-    def save_model(self, request, obj, form, change):
-        opening_balance = Decimal("0")
-        if not change:
-            opening_balance, obj.balance = obj.balance or Decimal("0"), Decimal("0")
-        super().save_model(request, obj, form, change)
-        if opening_balance:
-            apply_balance_change(
-                obj.pk,
-                opening_balance,
-                Transaction.TYPE_MANUAL,
-                description=f"{OPENING_BALANCE_TAG} Opening balance set when the resident was created in admin.",
-                created_by=actor_username(request),
-            )
-            obj.refresh_from_db(fields=["balance"])
-
     def get_fieldsets(self, request, obj=None):
+        # No balance input, not even when adding: the resident takes over their apartment's account,
+        # which changes only through ledger transactions (payments and adjustments in the portal).
         fieldsets = [
             (
                 "Personal data",
@@ -588,13 +574,10 @@ class OwnerAdmin(admin.ModelAdmin):
             (
                 "Balance",
                 {
-                    "fields": ("balance_display",) if obj else ("balance", "balance_display"),
+                    "fields": ("balance_display",),
                     "description": (
                         "Positive balance means credit. Negative balance means debt. "
                         "To change the balance, add a payment or adjustment in the portal (Add payment)."
-                        if obj
-                        else "Positive balance means credit. Negative balance means debt. "
-                        "A non-zero opening balance is recorded as a manual transaction."
                     ),
                 },
             ),

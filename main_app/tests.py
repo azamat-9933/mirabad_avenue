@@ -7,7 +7,7 @@ from django.test import TestCase
 from django.urls import reverse
 
 from payments.models import Transaction
-from payments.services import OPENING_BALANCE_TAG, apply_account_change
+from payments.services import apply_account_change
 
 from .admin import save_apartment
 from .models import Apartment, Building, Complex, Owner
@@ -60,10 +60,12 @@ class BuildingApartmentOwnerInlineTests(TestCase):
         response = self.client.get(reverse("admin:main_app_building_add"))
 
         self.assertEqual(response.status_code, 200)
-        for name in ("number", "area", "owner_fio", "owner_phone", "owner_has_contract", "opening_balance"):
+        for name in ("number", "area", "owner_fio", "owner_phone", "owner_has_contract"):
             self.assertContains(response, f'name="apartments-0-{name}"')
+        # The balance is shown, never typed in: it changes only through ledger transactions.
+        self.assertNotContains(response, 'name="apartments-0-opening_balance"')
 
-    def test_new_house_creates_apartments_owners_and_opening_balances(self):
+    def test_new_house_creates_apartments_and_owners_without_touching_balances(self):
         response = self._post_house(
             reverse("admin:main_app_building_add"),
             [
@@ -73,9 +75,10 @@ class BuildingApartmentOwnerInlineTests(TestCase):
                     "owner_fio": "  Aziz Karimov ",
                     "owner_phone": "+998901112233",
                     "owner_has_contract": "on",
+                    # Posted by an old form: ignored.
                     "opening_balance": "-150000",
                 },
-                {"number": "2", "area": "40", "opening_balance": "-20000"},
+                {"number": "2", "area": "40"},
             ],
         )
 
@@ -84,18 +87,57 @@ class BuildingApartmentOwnerInlineTests(TestCase):
         occupied = building.apartments.get(number="1")
         owner = Owner.objects.get(apartment=occupied)
         self.assertEqual((owner.fio, owner.phone, owner.has_contract), ("Aziz Karimov", "+998901112233", True))
-        self.assertEqual(occupied.balance, Decimal("-150000"))
-        self.assertEqual(owner.balance, Decimal("-150000"))
-        opening = Transaction.objects.get(apartment=occupied)
-        self.assertEqual(opening.payment_type, Transaction.TYPE_MANUAL)
-        self.assertEqual(opening.owner, owner)
-        self.assertIn(OPENING_BALANCE_TAG, opening.description)
-        self.assertEqual(opening.created_by, "house-admin")
+        self.assertEqual((occupied.balance, owner.balance), (Decimal("0"), Decimal("0")))
 
         vacant = building.apartments.get(number="2")
         self.assertFalse(Owner.objects.filter(apartment=vacant).exists())
-        self.assertEqual(vacant.balance, Decimal("-20000"))
-        self.assertIsNone(Transaction.objects.get(apartment=vacant).owner)
+        self.assertFalse(Transaction.objects.exists())
+
+    def test_apartment_page_adds_the_resident_with_the_apartment(self):
+        building = Building.objects.create(number="64", complex=self.complex, author="test")
+
+        response = self.client.post(
+            reverse("admin:main_app_apartment_add"),
+            {
+                "number": "7",
+                "building": str(building.pk),
+                "area": "48.5",
+                "owner-TOTAL_FORMS": "1",
+                "owner-INITIAL_FORMS": "0",
+                "owner-MIN_NUM_FORMS": "0",
+                "owner-MAX_NUM_FORMS": "1",
+                "owner-0-fio": "Aziz Karimov",
+                "owner-0-phone": "+998901112233",
+                "owner-0-has_contract": "on",
+                "_continue": "Save",
+            },
+        )
+
+        self.assertEqual(response.status_code, 302)
+        apartment = Apartment.objects.get(number="7", building=building)
+        owner = Owner.objects.get(apartment=apartment)
+        self.assertEqual((owner.fio, owner.phone, owner.has_contract), ("Aziz Karimov", "+998901112233", True))
+        self.assertEqual(owner.telegram_status, Owner.TELEGRAM_NOT_CONNECTED)
+
+    def test_apartment_page_can_stay_vacant(self):
+        building = Building.objects.create(number="64", complex=self.complex, author="test")
+
+        response = self.client.post(
+            reverse("admin:main_app_apartment_add"),
+            {
+                "number": "8",
+                "building": str(building.pk),
+                "area": "40",
+                "owner-TOTAL_FORMS": "1",
+                "owner-INITIAL_FORMS": "0",
+                "owner-MIN_NUM_FORMS": "0",
+                "owner-MAX_NUM_FORMS": "1",
+                "_continue": "Save",
+            },
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(Owner.objects.filter(apartment__number="8").exists())
 
     def test_owner_added_later_takes_over_the_apartment_debt(self):
         building, apartment = self._house_with_apartment(balance=Decimal("-30000"))

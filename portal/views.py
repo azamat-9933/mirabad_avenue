@@ -31,7 +31,7 @@ from rest_framework.permissions import AllowAny
 from billing.models import BillingPeriod, Expense, HeatingApartmentUsage, HeatingRecord
 from properties.models import Apartment, Building, Complex, Owner
 from payments.models import Transaction
-from payments.services import OPENING_BALANCE_TAG, apply_balance_change, incoming_payment_q
+from payments.services import apply_balance_change, incoming_payment_q
 from telegram_bot.notifications import NoticeNotSent, send_debt_notice
 from portal.models import (
     AuditEvent,
@@ -486,7 +486,9 @@ def _normalize_ordering(ordering, allowed, default):
         mapped = allowed.get(key)
         if not mapped:
             continue
-        normalized.append(f"-{mapped}" if descending else mapped)
+        # A key may sort by several fields, e.g. house then apartment.
+        for field in mapped if isinstance(mapped, tuple) else (mapped,):
+            normalized.append(f"-{field}" if descending else field)
     return normalized or [allowed.get(default.lstrip("-"), default)]
 
 
@@ -587,7 +589,7 @@ def api_list_residents(request):
         "balance": "balance",
         "created_at": "created_at",
         "last_payment": "last_payment_at",
-        "apartment": "apartment__number",
+        "apartment": ("apartment__building__number", "apartment__number"),
         "complex": "apartment__building__complex__title",
     }
     queryset = Owner.objects.select_related(
@@ -668,6 +670,7 @@ def api_list_transactions(request):
         "id": "id",
         "created_at": "created_at",
         "resident": "apartment__owner__fio",
+        "operator": "created_by",
         "method": "payment_type",
         "type": "payment_type",
         "amount": "amount",
@@ -1247,12 +1250,16 @@ def _portal_export_rows(portal_data, context, filters=None):
                 continue
             if complex_ids and int(item.get("complexBackendId") or 0) not in complex_ids:
                 continue
+            # Same columns as the resident history window, plus the resident and the status.
             rows.append([
+                item.get("backendId", ""),
+                item.get("createdAt") or item.get("date", ""),
                 item.get("residentName", item.get("residentId", "")),
-                item.get("type", ""),
-                item.get("method", ""),
-                item.get("date", ""),
+                item.get("createdBy") or "System",
+                item.get("method") or item.get("type", ""),
                 f'{item.get("signedAmount", item.get("amount", 0)):,.0f} UZS',
+                f'{item.get("balanceBefore", 0):,.0f} UZS',
+                f'{item.get("balanceAfter", 0):,.0f} UZS',
                 item.get("status", ""),
             ])
     return rows
@@ -1270,9 +1277,9 @@ def _render_export_payload(portal_data, context, export_format, source, language
             "uz": ["Majmua", "Tuman", "Uylar", "Xonadonlar", "Holat", "Qarz"],
         },
         "transactions": {
-            "en": ["Resident", "Type", "Method", "Date", "Amount", "Status"],
-            "ru": ["Житель", "Тип", "Метод", "Дата", "Сумма", "Статус"],
-            "uz": ["Rezident", "Turi", "Usul", "Sana", "Summa", "Holat"],
+            "en": ["ID", "Date time", "Resident", "Operator", "Payment type", "Amount", "Balance before", "Balance after", "Status"],
+            "ru": ["ID", "Дата и время", "Житель", "Оператор", "Тип оплаты", "Сумма", "Баланс до", "Баланс после", "Статус"],
+            "uz": ["ID", "Sana va vaqt", "Rezident", "Operator", "To'lov turi", "Summa", "Balans oldin", "Balans keyin", "Holat"],
         },
     }
     lang = language if language in {"en", "ru", "uz"} else "en"
@@ -1677,23 +1684,16 @@ def api_create_resident(request):
             status=409,
         )
 
-    opening_balance = _decimal_or_zero(payload.get("balance"))
     with transaction.atomic():
         # Telegram starts as not connected; the bot connects the resident when they register there.
+        # No opening balance: the resident takes over the apartment account, which changes only
+        # through ledger transactions (Add payment).
         owner = Owner.objects.create(
             fio=fio,
             phone=phone[:20],
             apartment=apartment,
             has_contract=_to_bool(payload.get("has_contract")),
         )
-        if opening_balance:
-            apply_balance_change(
-                owner.id,
-                opening_balance,
-                Transaction.TYPE_MANUAL,
-                description=f"{OPENING_BALANCE_TAG} Opening balance set when the resident was created in the portal.",
-                created_by=_actor(request),
-            )
         AuditEvent.objects.create(
             event_type=AuditEvent.TYPE_SYSTEM,
             title="Resident created",

@@ -349,6 +349,7 @@ def serialize_transaction(transaction, apartment, owner, labels=None, status_ove
         "balanceAfter": _money(transaction.balance_after),
         "status": status_override or ("Success" if is_incoming_payment(transaction) else "Pending"),
         "description": transaction.description or "",
+        "createdBy": transaction.created_by or "",
         "externalId": transaction.external_id or "",
     }
 

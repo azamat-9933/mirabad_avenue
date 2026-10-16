@@ -259,7 +259,7 @@ textarea,
 #apartments-group th.column-owner_fio { width: 21%; }
 #apartments-group th.column-owner_phone { width: 18%; }
 #apartments-group th.column-owner_has_contract { width: 10%; }
-#apartments-group th.column-opening_balance { width: 15%; }
+#apartments-group th.column-account_balance { width: 15%; }
 #apartments-group th:last-child:not([class]) { width: 4.5rem; }
 
 #apartments-group td input:not([type="checkbox"]) {
@@ -281,9 +281,40 @@ textarea,
     margin: 0;
 }
 
-#apartments-group td.field-opening_balance input:disabled {
-    opacity: 0.75;
-    cursor: not-allowed;
+/* Apartment page: the resident row, sized like the house page table. */
+#owner-group .tabular {
+    overflow-x: auto;
+}
+
+#owner-group table {
+    table-layout: fixed;
+    min-width: 520px;
+}
+
+#owner-group th,
+#owner-group td {
+    padding: 0.5rem 0.4rem;
+    white-space: normal !important;
+    vertical-align: middle;
+}
+
+#owner-group th { font-size: 0.8rem; line-height: 1.25; }
+#owner-group th.original { width: 2rem; }
+#owner-group th.column-fio { width: 38%; }
+#owner-group th.column-phone { width: 24%; }
+#owner-group th.column-has_contract { width: 14%; text-align: center; }
+#owner-group td.field-has_contract { text-align: center; }
+
+#owner-group td input:not([type="checkbox"]) {
+    width: 100%;
+    min-width: 0;
+}
+
+/* Read-only account balance (it changes only through ledger transactions). */
+#apartments-group td.field-account_balance p {
+    margin: 0;
+    font-weight: 700;
+    white-space: nowrap;
 }
 
 #apartments-group td.field-owner_has_contract,
