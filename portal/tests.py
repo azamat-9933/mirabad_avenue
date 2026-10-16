@@ -150,6 +150,23 @@ class PortalAuthenticationTests(TestCase):
         self.owner.refresh_from_db()
         self.assertEqual(self.owner.balance, Decimal("1000"))
 
+    def test_operators_take_cash_or_card_only(self):
+        # Payme and Click payments come from those services' integrations, not from the portal form.
+        self.client.force_login(self.user)
+        url = reverse("portal:api_create_payment")
+        for channel in ("payme", "click"):
+            with self.subTest(channel=channel):
+                response = self.client.post(
+                    url, {**self._payment_payload(), "channel": channel}, content_type="application/json"
+                )
+                self.assertEqual(response.status_code, 400)
+        self.assertFalse(Transaction.objects.exists())
+
+        response = self.client.post(url, {**self._payment_payload(), "channel": "card"}, content_type="application/json")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("[portal:card-credit]", Transaction.objects.get().description)
+
     def test_logout_ends_session_and_points_to_login(self):
         self.client.force_login(self.user)
         response = self.client.post(reverse("portal:api_logout"), {}, content_type="application/json")

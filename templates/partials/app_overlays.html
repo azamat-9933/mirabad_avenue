@@ -989,7 +989,7 @@
 {% csrf_token %}
 <label class="add-payment-amount-field">
 <span data-i18n-key="Amount">Amount</span>
-<input data-add-payment-amount inputmode="decimal" min="0" placeholder="0" step="0.01" type="number"/>
+<input autocomplete="off" data-add-payment-amount inputmode="decimal" placeholder="0" type="text"/>
 </label>
 <div class="add-payment-mode-grid">
 <div class="add-payment-toggle-group" data-add-payment-operation-group>
@@ -1004,8 +1004,6 @@
 <div class="add-payment-toggle-row">
 <button class="is-active" data-add-payment-channel="cash" type="button"><span class="material-symbols-outlined" aria-hidden="true">payments</span><span data-i18n-key="Cash">Cash</span></button>
 <button data-add-payment-channel="card" type="button"><span class="material-symbols-outlined" aria-hidden="true">credit_card</span><span data-i18n-key="Card">Card</span></button>
-<button data-add-payment-channel="payme" type="button"><span class="material-symbols-outlined" aria-hidden="true">account_balance_wallet</span><span>Payme</span></button>
-<button data-add-payment-channel="click" type="button"><span class="material-symbols-outlined" aria-hidden="true">touch_app</span><span>Click</span></button>
 </div>
 </div>
 </div>

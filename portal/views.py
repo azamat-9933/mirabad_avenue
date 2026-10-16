@@ -1099,10 +1099,6 @@ def _current_user_or_none(request):
 def _portal_payment_description(operation: str, channel: str) -> str:
     if operation == "credit" and channel in {"card", "terminal"}:
         return "[portal:card-credit] Portal credit via card."
-    if operation == "credit" and channel == "payme":
-        return "[portal:payme-credit] Portal credit via Payme."
-    if operation == "credit" and channel == "click":
-        return "[portal:click-credit] Portal credit via Click."
     if operation == "credit":
         return "[portal:cash-credit] Portal credit via cash."
     return "[portal:balance-debit] Portal manual balance subtraction."
@@ -1771,8 +1767,10 @@ def api_create_payment(request):
         return JsonResponse({"ok": False, "error": "Amount must be greater than zero."}, status=400)
     if operation not in {"credit", "debit"}:
         return JsonResponse({"ok": False, "error": "Unknown payment operation."}, status=400)
-    if operation == "credit" and channel not in {"cash", "card", "terminal", "payme", "click"}:
-        return JsonResponse({"ok": False, "error": "Payment channel must be cash, card, payme or click."}, status=400)
+    # Operators take cash or a card via the terminal; Payme and Click payments arrive from those
+    # services' own integrations, never typed in by hand.
+    if operation == "credit" and channel not in {"cash", "card", "terminal"}:
+        return JsonResponse({"ok": False, "error": "Payment channel must be cash or card."}, status=400)
 
     try:
         owner = Owner.objects.select_related(
@@ -1788,17 +1786,7 @@ def api_create_payment(request):
     complex_obj = building.complex if building else None
     signed_amount = amount if operation == "credit" else -amount
 
-    if operation == "credit":
-        if channel == "cash":
-            payment_type = Transaction.TYPE_CASH
-        elif channel == "payme":
-            payment_type = Transaction.TYPE_PAYME
-        elif channel == "click":
-            payment_type = Transaction.TYPE_CLICK
-        else:
-            payment_type = Transaction.TYPE_MANUAL
-    else:
-        payment_type = Transaction.TYPE_MANUAL
+    payment_type = Transaction.TYPE_CASH if operation == "credit" and channel == "cash" else Transaction.TYPE_MANUAL
 
     description = _portal_payment_description(operation, channel)
     actor = _actor(request)

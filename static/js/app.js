@@ -293,15 +293,11 @@
         "Resident ID could not be resolved.": { ru: "Не удалось определить ID абонента.", uz: "Abonent ID aniqlanmadi." },
         "Amount must be greater than zero.": { ru: "Сумма должна быть больше нуля.", uz: "Summa noldan katta bo'lishi kerak." },
         "Balance subtraction will be saved and totals will refresh from backend data.": { ru: "Списание будет сохранено, после чего суммы обновятся из backend-данных.", uz: "Ayirma saqlanadi va keyin summalar backend ma'lumotlaridan yangilanadi." },
-        "Payment saved in backend.": { ru: "Платёж сохранён в backend.", uz: "To'lov backend'da saqlandi." },
-        "Balance subtraction saved in backend.": { ru: "Списание баланса сохранено в backend.", uz: "Balans ayirmasi backend'da saqlandi." },
         "Payment saved": { ru: "Платёж сохранён", uz: "To'lov saqlandi" },
         "Balance updated": { ru: "Баланс обновлён", uz: "Balans yangilandi" },
         "Cash payment synced with backend.": { ru: "Платёж наличными синхронизирован с backend.", uz: "Naqd to'lov backend bilan sinxronlandi." },
         "Terminal payment synced with backend.": { ru: "Платёж через терминал синхронизирован с backend.", uz: "Terminal to'lovi backend bilan sinxronlandi." },
         "Card payment synced with backend.": { ru: "Платёж картой синхронизирован с backend.", uz: "Karta orqali to'lov backend bilan sinxronlandi." },
-        "Payme payment synced with backend.": { ru: "Платёж через Payme синхронизирован с backend.", uz: "Payme to'lovi backend bilan sinxronlandi." },
-        "Click payment synced with backend.": { ru: "Платёж через Click синхронизирован с backend.", uz: "Click to'lovi backend bilan sinxronlandi." },
         "Manual subtraction synced with backend.": { ru: "Ручное списание синхронизировано с backend.", uz: "Qo'lda ayirma backend bilan sinxronlandi." },
         "Billing notice": { ru: "Платёжное уведомление", uz: "To'lov xabarnomasi" },
         "Preview of the resident debt notice generated from current backend data.": { ru: "Предпросмотр уведомления о долге, собранного из текущих backend-данных.", uz: "Joriy backend ma'lumotlaridan yig'ilgan qarzdorlik xabarnomasi ko'rinishi." },
@@ -3061,10 +3057,10 @@
                             <strong class="${balanceClass}"><span class="material-symbols-outlined" aria-hidden="true">${balanceIcon}</span>${formatBillingUzs(resident.balance || 0)}</strong>
                         </div>
                         <div class="resident-list-actions">
-                            <a class="resident-list-action is-edit" href="${escapeAttr(resident.adminUrl || "#")}">
-                                <span class="material-symbols-outlined" aria-hidden="true">edit</span>
-                                <span data-i18n-key="Edit">Edit</span>
-                            </a>
+                            ${resident.ownerBackendId ? `<button aria-label="${escapeAttr(t("Add payment"))}" class="resident-list-action is-payment" data-resident-add-payment title="${escapeAttr(t("Add payment"))}" type="button">
+                                <span class="material-symbols-outlined" aria-hidden="true">add_card</span>
+                                <span data-i18n-key="Add payment">Add payment</span>
+                            </button>` : ""}
                             <button class="resident-list-action is-history" data-resident-billing-history type="button">
                                 <span class="material-symbols-outlined" aria-hidden="true">history</span>
                                 <span data-i18n-key="History">History</span>
@@ -8200,10 +8196,16 @@
         if (kind === "error") addPaymentNodes.status.classList.add("is-error");
         if (kind === "success") addPaymentNodes.status.classList.add("is-success");
     };
+    // The amount is typed by hand (a text field: no spinner, no mouse-wheel changes); "500 000" and
+    // "1250,50" are accepted, anything else counts as no amount.
+    const addPaymentAmount = () => {
+        const raw = String(addPaymentNodes?.amount?.value || "").replace(/\s/g, "").replace(",", ".");
+        return /^\d+(\.\d{1,2})?$/.test(raw) ? Number(raw) : 0;
+    };
     const syncAddPaymentSubmitState = () => {
         if (!addPaymentNodes?.submit) return;
-        const amountValue = Number(addPaymentNodes.amount?.value || 0);
-        const channelReady = addPaymentState.operation === "debit" || ["cash", "card", "payme", "click", "terminal"].includes(addPaymentState.channel);
+        const amountValue = addPaymentAmount();
+        const channelReady = addPaymentState.operation === "debit" || ["cash", "card"].includes(addPaymentState.channel);
         addPaymentNodes.submit.disabled = addPaymentState.submitting || !addPaymentState.selectedResident || !(amountValue > 0) || !channelReady;
     };
     const syncAddPaymentMode = () => {
@@ -8325,6 +8327,10 @@
     const prepareAddPaymentModal = async (preselectedOwnerId = "") => {
         if (!addPaymentModal || !addPaymentNodes) return;
         addPaymentState.preselectedOwnerId = extractOwnerBackendId(preselectedOwnerId);
+        // Every opening starts a fresh operation: cash credit, no amount.
+        addPaymentState.operation = "credit";
+        addPaymentState.channel = "cash";
+        if (addPaymentNodes.amount) addPaymentNodes.amount.value = "";
         setAddPaymentStatus(t("Syncing backend data..."));
         try {
             await refreshPortalDataSnapshot();
@@ -8338,7 +8344,11 @@
         renderAddPaymentResults();
         setAddPaymentStatus("");
         syncAddPaymentMode();
-        window.setTimeout(() => addPaymentNodes.search?.focus(), 0);
+        // Opened for a resident from their row: the operator only has to type the amount.
+        const focusTarget = addPaymentState.preselectedOwnerId && addPaymentState.selectedResident
+            ? addPaymentNodes.amount
+            : addPaymentNodes.search;
+        window.setTimeout(() => focusTarget?.focus(), 0);
     };
     const submitAddPayment = async () => {
         if (!addPaymentNodes || !addPaymentState.selectedResident || addPaymentState.submitting) return;
@@ -8347,7 +8357,7 @@
             addPaymentState.selectedResident.backendId,
             addPaymentState.selectedResident.id
         );
-        const amount = Number(addPaymentNodes.amount?.value || 0);
+        const amount = addPaymentAmount();
         if (!ownerId) {
             setAddPaymentStatus(t("Resident ID could not be resolved."), "error");
             return;
@@ -8368,27 +8378,20 @@
             });
             rehydrateFromPortalData(payload.portalData);
             syncAddPaymentResidents();
-            renderAddPaymentResident(addPaymentResidentByOwnerId(ownerId));
-            renderAddPaymentResults();
             if (addPaymentNodes.amount) addPaymentNodes.amount.value = "";
-            setAddPaymentStatus(
-                addPaymentState.operation === "credit" ? t("Payment saved in backend.") : t("Balance subtraction saved in backend."),
-                "success"
-            );
+            setAddPaymentStatus("");
             playSound("payment-success");
             toast(
                 addPaymentState.operation === "credit" ? t("Payment saved") : t("Balance updated"),
                 addPaymentState.operation === "credit"
-                    ? t({
-                        cash: "Cash payment synced with backend.",
-                        card: "Card payment synced with backend.",
-                        terminal: "Card payment synced with backend.",
-                        payme: "Payme payment synced with backend.",
-                        click: "Click payment synced with backend.",
-                    }[addPaymentState.channel] || "Card payment synced with backend.")
+                    ? t(addPaymentState.channel === "cash" ? "Cash payment synced with backend." : "Card payment synced with backend.")
                     : t("Manual subtraction synced with backend."),
                 "success"
             );
+            // Done: close the window and reload the server-paged tables (residents, transactions),
+            // so the new balance shows on the page without a manual refresh.
+            closeOverlayById("add-payment-modal");
+            window.HydroFlowServerLists?.refreshAll?.();
         } catch (error) {
             setAddPaymentStatus(error.message || "Payment request failed.", "error");
             toast("Payment request failed", error.message || "Backend payment request failed.", "danger");
@@ -8419,6 +8422,8 @@
             setAddPaymentStatus("");
         });
         addPaymentNodes.amount?.addEventListener("input", () => {
+            const cleaned = addPaymentNodes.amount.value.replace(/[^\d.,\s]/g, "");
+            if (cleaned !== addPaymentNodes.amount.value) addPaymentNodes.amount.value = cleaned;
             setAddPaymentStatus("");
             syncAddPaymentSubmitState();
         });
@@ -8450,6 +8455,17 @@
             openOverlayById("add-payment-modal");
             prepareAddPaymentModal(ownerBackendId);
         };
+        // "Add payment" in a resident row opens this window for that resident.
+        document.addEventListener("click", (event) => {
+            const button = event.target.closest("[data-resident-add-payment]");
+            if (!button) return;
+            const ownerId = extractOwnerBackendId(button.closest("[data-resident-card]")?.dataset.ownerBackendId);
+            if (!ownerId) return;
+            event.preventDefault();
+            event.stopPropagation();
+            playSound("soft-click");
+            window.HydroFlowOpenAddPaymentForResident(ownerId);
+        });
         syncAddPaymentResidents();
         renderAddPaymentResults();
         renderAddPaymentResident(null);
