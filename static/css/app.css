@@ -3573,11 +3573,6 @@ html.dark [data-liquid-panel] {
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 18px 38px rgba(0, 0, 0, 0.24) !important;
 }
 
-html.dark [data-liquid-panel="recent-alerts"] {
-    background: rgba(26, 29, 39, 0.86) !important;
-    border-left: 1px solid rgba(255, 255, 255, 0.08) !important;
-}
-
 html.dark [data-liquid-panel] h4 {
     color: #8B90A0 !important;
     font-size: 11px !important;
@@ -3763,12 +3758,6 @@ html:not(.dark) [data-liquid-panel] {
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.90), 0 18px 38px rgba(15, 23, 42, 0.08) !important;
 }
 
-html.light [data-liquid-panel="recent-alerts"],
-html:not(.dark) [data-liquid-panel="recent-alerts"] {
-    background: rgba(255, 255, 255, 0.82) !important;
-    border-left: 1px solid rgba(15, 23, 42, 0.08) !important;
-}
-
 html.light [data-liquid-panel] h4,
 html:not(.dark) [data-liquid-panel] h4 {
     color: #667085 !important;
@@ -3785,45 +3774,6 @@ html:not(.dark) [data-liquid-alert-card] {
     border-bottom: 1px solid rgba(15, 23, 42, 0.08) !important;
     border-radius: 10px !important;
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.92) !important;
-}
-
-.recent-alerts-panel {
-    display: flex;
-    flex-direction: column;
-    min-height: 100%;
-}
-
-.recent-alerts-list {
-    flex: 1 1 auto;
-}
-
-.recent-alerts-panel [data-liquid-alert-card] {
-    padding: 16px 16px 14px !important;
-    border-radius: 14px !important;
-}
-
-.recent-alerts-panel .text-xs.font-bold.text-on-surface {
-    font-size: 13px !important;
-    line-height: 1.35 !important;
-}
-
-.recent-alerts-panel .text-\[11px\].text-on-surface-variant {
-    font-size: 12px !important;
-    line-height: 1.55 !important;
-}
-
-.recent-alerts-panel button {
-    min-height: 44px;
-}
-
-@media (min-width: 1280px) {
-    .recent-alerts-panel {
-        min-height: 700px;
-    }
-}
-
-html.dark .recent-alerts-panel [data-liquid-alert-card] {
-    background: rgba(20, 23, 31, 0.84) !important;
 }
 
 html.light .app-topbar,
@@ -17183,6 +17133,14 @@ html.dark .analytics-v2-table tbody td,
     grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
+.export-report-type-grid.is-three {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.export-report-type-grid[hidden] {
+    display: none;
+}
+
 .export-format-grid button,
 .export-preview-actions button {
     min-height: 38px;
@@ -17248,6 +17206,10 @@ html.dark .analytics-v2-table tbody td,
 
     .export-report-type-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .export-report-type-grid.is-three {
+        grid-template-columns: 1fr;
     }
 }
 

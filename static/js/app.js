@@ -532,6 +532,17 @@
         "Active Residents": { ru: "Активные жильцы", uz: "Faol yashovchilar" },
         "Filter:": { ru: "Фильтр:", uz: "Filtr:" },
         "ALL": { ru: "Все", uz: "Hammasi" },
+        "Report type": { ru: "Тип отчёта", uz: "Hisobot turi" },
+        "General overview": { ru: "Общий отчёт", uz: "Umumiy holat" },
+        "Debtors list": { ru: "Список должников", uz: "Qarzdorlar ro'yxati" },
+        "Payment history": { ru: "История платежей", uz: "To'lovlar tarixi" },
+        "Debtors list + payment history": { ru: "Список должников + история платежей", uz: "Qarzdorlar ro'yxati + to'lovlar tarixi" },
+        "Download file": { ru: "Скачать файл", uz: "Faylni yuklab olish" },
+        "Download ready": { ru: "Файл готов", uz: "Fayl tayyor" },
+        "Export failed": { ru: "Экспорт не выполнен", uz: "Eksport bajarilmadi" },
+        "Backend export failed.": { ru: "Не удалось сформировать файл.", uz: "Faylni yaratib bo'lmadi." },
+        "Source": { ru: "Источник", uz: "Manba" },
+        "Usage Report": { ru: "Отчёт потребления", uz: "Iste'mol hisoboti" },
         "DEBTORS": { ru: "ДОЛЖНИКИ", uz: "QARZDORLAR" },
         "PAID": { ru: "ОПЛАЧЕНО", uz: "TO'LANGAN" },
         "Current Balance": { ru: "Текущий баланс", uz: "Joriy balans" },
@@ -2930,46 +2941,6 @@
         if (debtorSecondaryAction) {
             debtorSecondaryAction.type = "button";
             debtorSecondaryAction.dataset.viewDebtors = "true";
-        }
-
-        const recentAlertsPanel = document.querySelector("[data-liquid-panel='recent-alerts']");
-        if (recentAlertsPanel) {
-            const backendRecentItems = Array.isArray(billingData.notifications)
-                ? billingData.notifications.filter((item) => !item.read)
-                : [];
-            const alertItems = backendRecentItems.length ? backendRecentItems.map((item) => ({
-                severity: item.severity || "info",
-                title: item.title,
-                message: item.message || item.eventAt || "",
-                meta: item.severity === "critical" ? "Priority: High" : item.eventAt || "Backend event",
-            })) : [];
-            const countBadge = recentAlertsPanel.querySelector(".flex.items-center.justify-between span");
-            if (countBadge) countBadge.textContent = `${alertItems.length} ${t("New")}`;
-            const list = recentAlertsPanel.querySelector(".space-y-4");
-            if (list) {
-                list.innerHTML = alertItems.length
-                    ? alertItems.slice(0, 3).map((alert) => {
-                        const tone = alert.severity === "critical" ? "error" : "tertiary";
-                        return `
-                            <div class="p-3 bg-${tone}-container/10 border-l-4 border-${tone} rounded-r-lg" data-liquid-alert-card data-alert-severity="${escapeHtml(alert.severity)}">
-                                <p class="text-xs font-bold text-on-surface">${escapeHtml(alert.title)}</p>
-                                <p class="text-[11px] text-on-surface-variant mt-1">${escapeHtml(alert.message)}</p>
-                                <p class="text-[10px] text-${tone} font-black mt-2 uppercase tracking-tight">${escapeHtml(alert.meta)}</p>
-                            </div>
-                        `;
-                    }).join("")
-                    : `
-                        <div class="p-4 bg-secondary-container/10 border border-secondary/15 rounded-lg" data-liquid-alert-card>
-                            <p class="text-xs font-bold text-on-surface">${escapeHtml(t("No active alerts"))}</p>
-                            <p class="text-[11px] text-on-surface-variant mt-1">${escapeHtml(t("All residential systems are synced with current local data."))}</p>
-                        </div>
-                    `;
-            }
-            const viewActivitiesButton = recentAlertsPanel.querySelector("button");
-            if (viewActivitiesButton) {
-                viewActivitiesButton.type = "button";
-                viewActivitiesButton.dataset.viewActivities = "true";
-            }
         }
 
         document.querySelectorAll("[data-value]").forEach((meter) => {
@@ -8637,7 +8608,10 @@
 
     const exportModal = document.getElementById("export-preview-modal");
     let selectedExportFormat = "XLSX";
-    let selectedExportReportType = "all";
+    // Debt and payment reports everywhere; the usage report quick action keeps the consumption reports.
+    const exportReportSets = { debt: "general", usage: "all" };
+    let activeExportReportSet = "debt";
+    let selectedExportReportType = exportReportSets.debt;
     let lastExportSource = document.title;
     let lastExportButton = null;
     let lastExportContext = "default";
@@ -8663,11 +8637,25 @@
     const exportReportTypeButtons = Array.from(exportModal?.querySelectorAll("[data-export-report-type] button") || []);
     const exportText = (key) => translateValue(key, storage.getItem("hydroflow-lang") || "en");
     const exportReportTypeLabel = (reportType) => ({
+        general: "Debtors list + payment history",
+        debtors: "Debtors list",
+        payment_history: "Payment history",
         all: "GVS + Heating + Payments",
         hot_water: "GVS",
         heating: "Heating",
         payments: "Payments",
     }[reportType] || "GVS + Heating + Payments");
+    const syncExportSubtitle = () => {
+        const subtitle = exportModal?.querySelector("[data-export-subtitle]");
+        if (!subtitle) return;
+        subtitle.textContent = `${exportText("Source")}: ${exportText(lastExportSource || "Current page")} · ${exportText(exportReportTypeLabel(selectedExportReportType))}`;
+    };
+    const syncExportReportTypeButtons = () => {
+        exportModal?.querySelectorAll("[data-report-set]").forEach((grid) => {
+            grid.hidden = grid.dataset.reportSet !== activeExportReportSet;
+        });
+        exportReportTypeButtons.forEach((item) => item.classList.toggle("is-active", item.dataset.reportType === selectedExportReportType));
+    };
     const exportDateTimeLocalValue = (date) => {
         const offsetMs = date.getTimezoneOffset() * 60000;
         return new Date(date.getTime() - offsetMs).toISOString().slice(0, 16);
@@ -8834,8 +8822,8 @@
         if (exportDateToInput) exportDateToInput.value = exportDateTimeLocalValue(new Date());
         syncExportDateLabels();
         closeExportDatePicker();
-        selectedExportReportType = "all";
-        exportReportTypeButtons.forEach((item) => item.classList.toggle("is-active", (item.dataset.reportType || "all") === selectedExportReportType));
+        selectedExportReportType = exportReportSets[activeExportReportSet];
+        syncExportReportTypeButtons();
         syncExportFilters();
     };
     const applyExportContextFromButton = (sourceButton = null) => {
@@ -8900,13 +8888,11 @@
         const source = getExportSourceFromButton(sourceButton);
         lastExportSource = source;
         const isUsageReport = lastExportContext === "usage-report" || source.toLowerCase().includes("usage report");
+        activeExportReportSet = isUsageReport ? "usage" : "debt";
         resetExportFilters();
         applyExportContextFromButton(sourceButton);
         document.querySelectorAll("[data-export-format] button").forEach((item) => item.classList.toggle("is-active", (item.dataset.format || "XLSX") === selectedExportFormat));
-        exportReportTypeButtons.forEach((item) => item.classList.toggle("is-active", (item.dataset.reportType || "all") === selectedExportReportType));
-        exportModal?.querySelector("[data-export-subtitle]")?.replaceChildren(document.createTextNode(isUsageReport
-            ? `Export ${exportReportTypeLabel(selectedExportReportType)} with custom scope and exact date range.`
-            : `Source: ${source}. Export ${exportReportTypeLabel(selectedExportReportType)} from real backend rows.`));
+        syncExportSubtitle();
         openOverlayById("export-preview-modal");
     };
     document.querySelectorAll("[data-export-format] button").forEach((button) => button.addEventListener("click", () => {
@@ -8915,12 +8901,9 @@
         document.querySelectorAll("[data-export-format] button").forEach((item) => item.classList.toggle("is-active", (item.dataset.format || "XLSX") === selectedExportFormat));
     }));
     exportReportTypeButtons.forEach((button) => button.addEventListener("click", () => {
-        selectedExportReportType = button.dataset.reportType || "all";
-        exportReportTypeButtons.forEach((item) => item.classList.toggle("is-active", (item.dataset.reportType || "all") === selectedExportReportType));
-        const subtitle = exportModal?.querySelector("[data-export-subtitle]");
-        if (subtitle) {
-            subtitle.textContent = `Source: ${lastExportSource || "Current page"}. Export ${exportReportTypeLabel(selectedExportReportType)} from real backend rows.`;
-        }
+        selectedExportReportType = button.dataset.reportType || exportReportSets[activeExportReportSet];
+        syncExportReportTypeButtons();
+        syncExportSubtitle();
     }));
     document.addEventListener("click", (event) => {
         const exportButton = event.target.closest("[data-export-open], [data-table-action='export']");
@@ -9073,13 +9056,8 @@
             }
             return selection;
         }
-        if (context === "residential") {
-            const rows = Array.from(document.querySelectorAll("[data-drill-row]:not(.hidden)"));
-            selection.complex_backend_ids = rows.filter((row) => row.dataset.backendType === "complex").map((row) => Number(row.dataset.backendId || 0)).filter(Boolean);
-            selection.building_backend_ids = rows.filter((row) => row.dataset.backendType === "building").map((row) => Number(row.dataset.backendId || 0)).filter(Boolean);
-            selection.apartment_backend_ids = rows.filter((row) => row.dataset.backendType === "apartment").map((row) => Number(row.dataset.backendId || 0)).filter(Boolean);
-            return selection;
-        }
+        // On the houses page the window's House/Apartment/Resident fields alone set the scope: no house
+        // chosen means every house, whatever rows are expanded on the page.
         return selection;
     };
     document.querySelector("[data-export-download]")?.addEventListener("click", async () => {
@@ -9095,9 +9073,9 @@
             });
             triggerDownloadPayload(payload.download);
             rehydrateFromPortalData(payload.portalData);
-            toast("Download ready", `${selectedExportFormat} file generated from backend data.`, "success");
+            toast(exportText("Download ready"), `${exportText(exportReportTypeLabel(selectedExportReportType))} · ${selectedExportFormat}`, "success");
         } catch (error) {
-            toast("Export failed", error.message || "Backend export failed.", "warning");
+            toast(exportText("Export failed"), error.message || exportText("Backend export failed."), "warning");
         }
     });
     const assignStatusModal = document.getElementById("assign-status-modal");
@@ -9581,7 +9559,6 @@
         const normalizedActionKey = String(button.dataset.actionKey || "").trim().toLowerCase();
         const label = actionKey.toLowerCase();
         const lang = storage.getItem("hydroflow-lang") || "en";
-        if (label === "export") toast(translateValue("Export started", lang), "A static report preview is being prepared.");
         if (label.includes("apply filters")) toast(translateValue("Filters applied", lang), "Current data view updated.");
         if (label.includes("reset filters")) toast(translateValue("Filters reset", lang), "Default data view restored.");
         if (label.includes("open checklist")) {

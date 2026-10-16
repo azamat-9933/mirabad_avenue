@@ -666,9 +666,15 @@
 </div>
 </div>
 <div>
-<p class="drawer-label">Report type</p>
-<div class="export-format-grid export-report-type-grid" data-export-report-type>
-<button class="is-active" data-report-type="all" type="button">ALL</button>
+<p class="drawer-label" data-i18n-key="Report type">Report type</p>
+<!-- Debt and payment reports; the usage report (sidebar quick action) keeps the consumption reports. -->
+<div class="export-format-grid export-report-type-grid is-three" data-export-report-type data-report-set="debt">
+<button class="is-active" data-report-type="general" type="button" data-i18n-key="General overview">General overview</button>
+<button data-report-type="debtors" type="button" data-i18n-key="Debtors list">Debtors list</button>
+<button data-report-type="payment_history" type="button" data-i18n-key="Payment history">Payment history</button>
+</div>
+<div class="export-format-grid export-report-type-grid" data-export-report-type data-report-set="usage" hidden>
+<button data-report-type="all" type="button">ALL</button>
 <button data-report-type="hot_water" type="button">GVS</button>
 <button data-report-type="heating" type="button">HEATING</button>
 <button data-report-type="payments" type="button">PAYMENTS</button>
@@ -684,7 +690,7 @@
 </div>
 <div class="export-preview-actions">
 <button data-export-reset type="button"><span class="material-symbols-outlined">restart_alt</span><span data-i18n-key="Reset filters">Reset filters</span></button>
-<button data-export-download type="button"><span class="material-symbols-outlined">download</span><span>Download file</span></button>
+<button data-export-download type="button"><span class="material-symbols-outlined">download</span><span data-i18n-key="Download file">Download file</span></button>
 </div>
 </div>
 </div>

@@ -3,6 +3,7 @@ import gzip
 import io
 import json
 import re
+from datetime import timedelta
 from decimal import Decimal
 from pathlib import Path
 
@@ -365,6 +366,111 @@ class PortalExportTests(TestCase):
         self.assertTrue(download["filename"].startswith("audit-log-"))
         header = next(load_workbook(io.BytesIO(content)).active.iter_rows(values_only=True))
         self.assertEqual(header[:3], ("Audit ID", "Sana va vaqt", "Hodisa turi"))
+
+
+class PortalDebtReportTests(TestCase):
+    """Export window reports: debtors list, payment history and both together, grouped by house."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = get_user_model().objects.create_user(username="operator", password="unused-password")
+        complex_obj = Complex.objects.create(title="Mirabad Avenue", address="", author="test")
+        cls.house_64 = Building.objects.create(number="64A", complex=complex_obj, author="test")
+        cls.house_12 = Building.objects.create(number="12", complex=complex_obj, author="test")
+        debtor_flat = Apartment.objects.create(number="2", area=Decimal("76.50"), building=cls.house_64, author="test")
+        paid_flat = Apartment.objects.create(number="1", area=Decimal("64.50"), building=cls.house_64, author="test")
+        cls.vacant_flat = Apartment.objects.create(number="9", area=Decimal("40"), building=cls.house_12, author="test")
+        cls.debtor = Owner.objects.create(fio="Muhammad Yaxyoyev", phone="+998773487001", apartment=debtor_flat)
+        cls.payer = Owner.objects.create(fio="Azamat Yaxyoyev", phone="+998901139933", apartment=paid_flat)
+        apply_balance_change(cls.debtor.id, Decimal("-300000"), Transaction.TYPE_CHARGE, description="[billing:period-charge] x")
+        apply_balance_change(cls.payer.id, Decimal("-100000"), Transaction.TYPE_CHARGE, description="[billing:period-charge] x")
+        apply_balance_change(
+            cls.payer.id, Decimal("400000"), Transaction.TYPE_MANUAL,
+            description="[portal:transfer-credit] Portal credit via card transfer.", created_by="desk",
+        )
+        apply_account_change(cls.vacant_flat.id, Decimal("-80000"), Transaction.TYPE_CHARGE, description="[billing:period-charge] x")
+
+    def setUp(self):
+        self.client.force_login(self.user)
+
+    def _workbook(self, payload):
+        response = self.client.post(
+            reverse("portal:api_export_report"), {"format": "XLSX", "language": "ru", **payload}, content_type="application/json"
+        )
+        self.assertEqual(response.status_code, 200)
+        workbook = load_workbook(io.BytesIO(base64.b64decode(response.json()["download"]["content"])))
+        return {
+            sheet.title: [row for row in sheet.iter_rows(values_only=True) if any(value not in (None, "") for value in row)]
+            for sheet in workbook
+        }
+
+    def test_debtors_list_groups_debtors_by_house(self):
+        rows = self._workbook({"report_type": "debtors"})["Список должников"]
+        self.assertEqual(rows[3], ("ID", "Дата", "Ф.И.О.", "Дом", "Квартира", "Площадь (м2)", "Сумма долга (UZS)"))
+        today = timezone.localdate().strftime("%d.%m.%Y")
+        self.assertEqual(rows[4][0], "Дом 12")
+        # The vacant apartment's debt is the apartment's; the resident who paid is not listed.
+        self.assertEqual(rows[5], ("—", today, "Владелец не назначен", "12", "9", 40, 80000))
+        self.assertEqual(rows[6][0], "Итого по дому 12 · Должников: 1")
+        self.assertEqual(rows[7][0], "Дом 64A")
+        self.assertEqual(rows[8], (str(self.debtor.pk), today, "Muhammad Yaxyoyev", "64A", "2", 76.5, 300000))
+        self.assertEqual(rows[10][0], "Итого · Должников: 2")
+        self.assertEqual(rows[10][5:], (116.5, 380000))
+
+    def test_selected_house_limits_the_report(self):
+        rows = self._workbook({"report_type": "debtors", "building_backend_ids": [self.house_64.id]})["Список должников"]
+        self.assertEqual(rows[1][0], "Дома: 64A")
+        self.assertEqual([row[2] for row in rows[5:-2]], ["Muhammad Yaxyoyev"])
+
+    def test_debt_is_taken_as_of_date_to(self):
+        # The resident owed 500 last week and paid today: listed for last week, not for today.
+        flat = Apartment.objects.create(number="3", area=Decimal("50"), building=self.house_64, author="test")
+        late = Owner.objects.create(fio="Late Payer", phone="+998901000003", apartment=flat)
+        charge = apply_balance_change(late.id, Decimal("-500"), Transaction.TYPE_CHARGE, description="[billing:period-charge] x")
+        Transaction.objects.filter(pk=charge.pk).update(created_at=timezone.now() - timedelta(days=7))
+        apply_balance_change(late.id, Decimal("500"), Transaction.TYPE_CASH)
+
+        names_now = [row[2] for row in self._workbook({"report_type": "debtors"})["Список должников"]]
+        self.assertNotIn("Late Payer", names_now)
+        last_week = (timezone.localtime() - timedelta(days=3)).strftime("%Y-%m-%dT%H:%M")
+        rows = self._workbook({"report_type": "debtors", "date_to": last_week})["Список должников"]
+        self.assertIn(("Late Payer", 500), [(row[2], row[6]) for row in rows])
+
+    def test_payment_history_lists_only_money_received(self):
+        rows = self._workbook({"report_type": "payment_history"})["История платежей"]
+        header = rows.index(("ID", "Дата и время", "Ф.И.О.", "Квартира", "Способ оплаты", "Сумма оплаты (UZS)", "Оператор"))
+        body = rows[header + 1:]
+        # Charges are not payments; only the transfer is listed, under its house.
+        self.assertEqual(body[0][0], "Дом 64A")
+        self.assertEqual(body[1][2:], ("Azamat Yaxyoyev", "1", "Перевод на карту", 400000, "desk"))
+        self.assertEqual(body[-1][0], "Итого · Платежей: 1")
+        self.assertEqual(body[-1][5], 400000)
+
+    def test_payment_history_respects_the_date_range(self):
+        tomorrow = (timezone.localtime() + timedelta(days=1)).strftime("%Y-%m-%dT%H:%M")
+        rows = self._workbook({"report_type": "payment_history", "date_from": tomorrow})["История платежей"]
+        self.assertEqual(rows[-1], ("Нет строк для текущих фильтров.", None, None, None, None, None, None))
+
+    def test_general_overview_is_one_workbook_with_both_lists(self):
+        sheets = self._workbook({"report_type": "general"})
+        self.assertEqual(list(sheets), ["Список должников", "История платежей"])
+
+    def test_reports_render_as_pdf(self):
+        for report_type in ["general", "debtors", "payment_history"]:
+            with self.subTest(report_type=report_type):
+                response = self.client.post(
+                    reverse("portal:api_export_report"),
+                    {"report_type": report_type, "format": "PDF", "language": "uz"},
+                    content_type="application/json",
+                )
+                download = response.json()["download"]
+                self.assertEqual(download["mime"], "application/pdf")
+                self.assertTrue(base64.b64decode(download["content"]).startswith(b"%PDF"))
+
+    def test_houses_page_has_no_recent_alerts_panel(self):
+        content = self.client.get(reverse("portal:residential")).content.decode()
+        self.assertNotIn("recent-alerts", content)
+        self.assertIn('data-report-type="debtors"', content)
 
 
 DEMO_MARKERS = [

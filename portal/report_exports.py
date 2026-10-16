@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+import re
 from collections import defaultdict
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from decimal import Decimal
 from io import BytesIO
 
@@ -13,11 +14,14 @@ from billing.models import (
     HotWaterMeterReading,
     Invoice,
 )
+from django.db.models import Sum
 from django.utils import timezone
+from main_app.models import Apartment, Building
 from openpyxl import Workbook
 from openpyxl.styles import Alignment, Border, Font, NamedStyle, PatternFill, Side
 from openpyxl.utils import get_column_letter
 from payments.models import Transaction
+from payments.services import incoming_payment_q
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_LEFT
 from reportlab.lib.pagesizes import A4, landscape
@@ -32,6 +36,10 @@ REPORT_TYPE_HOT_WATER = "hot_water"
 REPORT_TYPE_HEATING = "heating"
 REPORT_TYPE_PAYMENTS = "payments"
 REPORT_TYPE_ALL = "all"
+# Debt and payment reports of the export window, grouped by house.
+REPORT_TYPE_GENERAL = "general"
+REPORT_TYPE_DEBTORS = "debtors"
+REPORT_TYPE_PAYMENT_HISTORY = "payment_history"
 EXCEL_MONEY_FORMAT = '#,##0 "UZS"'
 EXCEL_DECIMAL_FORMAT = "#,##0.00"
 EXCEL_INTEGER_FORMAT = "0"
@@ -41,6 +49,9 @@ ALLOWED_REPORT_TYPES = {
     REPORT_TYPE_HEATING,
     REPORT_TYPE_PAYMENTS,
     REPORT_TYPE_ALL,
+    REPORT_TYPE_GENERAL,
+    REPORT_TYPE_DEBTORS,
+    REPORT_TYPE_PAYMENT_HISTORY,
 }
 
 REPORT_TEXT = {
@@ -119,6 +130,26 @@ REPORT_TEXT = {
         "uz": "Uylar bo'yicha jami, isitilgan maydon va m2-kun narxi",
     },
     "empty_report": {"en": "Report", "ru": "Отчёт", "uz": "Hisobot"},
+    "debtors_list": {"en": "Debtors list", "ru": "Список должников", "uz": "Qarzdorlar ro'yxati"},
+    "payment_history": {"en": "Payment history", "ru": "История платежей", "uz": "To'lovlar tarixi"},
+    "general_report": {"en": "General overview", "ru": "Общий отчёт", "uz": "Umumiy holat"},
+    "id": {"en": "ID", "ru": "ID", "uz": "ID"},
+    "full_name": {"en": "Full name", "ru": "Ф.И.О.", "uz": "F.I.O."},
+    "area": {"en": "Area (m2)", "ru": "Площадь (м2)", "uz": "Maydon (m2)"},
+    "debt_amount": {"en": "Debt (UZS)", "ru": "Сумма долга (UZS)", "uz": "Qarz miqdori (UZS)"},
+    "date_time": {"en": "Date and time", "ru": "Дата и время", "uz": "Sana va vaqt"},
+    "payment_method": {"en": "Payment method", "ru": "Способ оплаты", "uz": "To'lov usuli"},
+    "paid_amount": {"en": "Amount paid (UZS)", "ru": "Сумма оплаты (UZS)", "uz": "To'langan summa (UZS)"},
+    "operator": {"en": "Operator", "ru": "Оператор", "uz": "Operator"},
+    "system": {"en": "System", "ru": "Система", "uz": "Tizim"},
+    "as_of": {"en": "Debt as of", "ru": "Долг на дату", "uz": "Qarz holati sanasi"},
+    "houses": {"en": "Houses", "ru": "Дома", "uz": "Uylar"},
+    "all_houses": {"en": "All houses", "ru": "Все дома", "uz": "Barcha uylar"},
+    "house_group": {"en": "House {house}", "ru": "Дом {house}", "uz": "{house}-uy"},
+    "house_total": {"en": "Total for house {house}", "ru": "Итого по дому {house}", "uz": "{house}-uy bo'yicha jami"},
+    "grand_total": {"en": "Total", "ru": "Итого", "uz": "Jami"},
+    "debtors_count": {"en": "Debtors", "ru": "Должников", "uz": "Qarzdorlar"},
+    "payments_count": {"en": "Payments", "ru": "Платежей", "uz": "To'lovlar"},
 }
 
 
@@ -221,6 +252,9 @@ def _report_type_label(report_type: str, language: str) -> str:
         REPORT_TYPE_HEATING: {"en": "Heating", "ru": "Отопление", "uz": "Isitish"},
         REPORT_TYPE_PAYMENTS: {"en": "Payments", "ru": "Платежи", "uz": "To'lovlar"},
         REPORT_TYPE_ALL: {"en": "All reports", "ru": "Все отчёты", "uz": "Barcha hisobotlar"},
+        REPORT_TYPE_GENERAL: REPORT_TEXT["general_report"],
+        REPORT_TYPE_DEBTORS: REPORT_TEXT["debtors_list"],
+        REPORT_TYPE_PAYMENT_HISTORY: REPORT_TEXT["payment_history"],
     }
     return labels.get(report_type, labels[REPORT_TYPE_ALL]).get(language, labels[report_type]["en"] if report_type in labels else "Report")
 
@@ -374,6 +408,9 @@ class WorkbookReportBuilder:
             return
         if template == "plain":
             self._write_plain_table_sheet(ws, sheet)
+            return
+        if template == "grouped":
+            self._write_grouped_sheet(ws, sheet)
             return
 
         headers = sheet["headers"]
@@ -585,6 +622,64 @@ class WorkbookReportBuilder:
         ws.sheet_view.showGridLines = True
 
 
+    def _write_grouped_sheet(self, ws, sheet: dict):
+        """Title and scope lines, the header, then each house: its name row, its rows and its total."""
+        headers = sheet["headers"]
+        col_count = len(headers)
+        ws.cell(1, 1, sheet["title"]).font = Font(name="Arial", size=14, bold=True, color="0F172A")
+        row_idx = 2
+        for label, value in sheet.get("scope_rows", []):
+            ws.cell(row_idx, 1, f"{label}: {value}").font = Font(name="Arial", size=10, color="475569")
+            row_idx += 1
+        header_row = row_idx + 1
+        for col_idx, header in enumerate(headers, start=1):
+            self._sample_header_style(ws.cell(header_row, col_idx, header))
+            ws.cell(header_row, col_idx).fill = _GROUP_HEADER_FILL
+        row_idx = header_row + 1
+        if not sheet["data_rows"]:
+            self._write_empty_sample_row(ws, row_idx, 1, col_count, _t("no_rows", sheet.get("language")))
+        kinds = sheet.get("row_kinds") or [None] * len(sheet["data_rows"])
+        for row, kind in zip(sheet["data_rows"], kinds):
+            if kind == "group":
+                ws.merge_cells(start_row=row_idx, start_column=1, end_row=row_idx, end_column=col_count)
+                cell = ws.cell(row_idx, 1, row[0].get("value"))
+                cell.font = _GROUP_FONT
+                cell.fill = _GROUP_FILL
+                cell.border = _BASE_BORDER
+                row_idx += 1
+                continue
+            for col_idx, source in enumerate(row, start=1):
+                cell = ws.cell(row_idx, col_idx, self._cell_value(source) if source.get("value") not in (None, "") else None)
+                self._sample_body_style(cell, source.get("type") == "number", source)
+                if kind in {"total", "grand_total"}:
+                    cell.font = _TOTAL_FONT
+                    cell.fill = _GRAND_TOTAL_FILL if kind == "grand_total" else _TOTAL_FILL
+            if kind in {"total", "grand_total"} and _label_span(row) > 1:
+                ws.merge_cells(start_row=row_idx, start_column=1, end_row=row_idx, end_column=_label_span(row))
+            row_idx += 1
+        widths = sheet.get("widths") or [18] * col_count
+        for col_idx, width in enumerate(widths, start=1):
+            ws.column_dimensions[get_column_letter(col_idx)].width = width
+        ws.freeze_panes = ws.cell(header_row + 1, 1)
+        ws.sheet_view.showGridLines = False
+
+
+_GROUP_HEADER_FILL = PatternFill("solid", fgColor="CCFBF1")
+_GROUP_FILL = PatternFill("solid", fgColor="E0F2FE")
+_TOTAL_FILL = PatternFill("solid", fgColor="F1F5F9")
+_GRAND_TOTAL_FILL = PatternFill("solid", fgColor="E2E8F0")
+_GROUP_FONT = Font(name="Arial", size=11, bold=True, color="0F172A")
+_TOTAL_FONT = Font(name="Arial", size=10, bold=True, color="0F172A")
+
+
+def _label_span(row) -> int:
+    """How many leading columns a total row's label covers: up to its first figure."""
+    for index, cell in enumerate(row[1:], start=1):
+        if cell.get("value") not in (None, ""):
+            return index
+    return len(row)
+
+
 def _text_cell(value, style: int = 5):
     return {"value": value, "style": style, "type": "text", "display": str(value or "")}
 
@@ -725,6 +820,20 @@ def _build_pdf(
         if sheet.get("subtitle"):
             story.append(Paragraph(sheet["subtitle"], subtitle_style))
         table_rows = [[_pdf_cell(header, header_style) for header in sheet["headers"]]]
+        # House name rows span the table; total rows are shaded (grouped reports).
+        row_styles = []
+        for row_index, kind in enumerate(sheet.get("row_kinds") or [], start=1):
+            if kind == "group":
+                row_styles += [
+                    ("SPAN", (0, row_index), (-1, row_index)),
+                    ("BACKGROUND", (0, row_index), (-1, row_index), colors.HexColor("#E0F2FE")),
+                ]
+            elif kind in {"total", "grand_total"}:
+                shade = "#E2E8F0" if kind == "grand_total" else "#F1F5F9"
+                row_styles.append(("BACKGROUND", (0, row_index), (-1, row_index), colors.HexColor(shade)))
+                span = _label_span(sheet["rows"][row_index - 1])
+                if span > 1:
+                    row_styles.append(("SPAN", (0, row_index), (span - 1, row_index)))
         if sheet["rows"]:
             for row in sheet["rows"]:
                 table_rows.append([
@@ -749,6 +858,7 @@ def _build_pdf(
                     ("TOPPADDING", (0, 0), (-1, -1), 4),
                     ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
                 ]
+                + row_styles
             )
         )
         story.append(table)
@@ -1146,12 +1256,273 @@ def _build_payments_report(filters, language):
     ]
 
 
+def _natural_key(value) -> list:
+    """Sort "2" before "10" and "64A" after "64": numbers compare as numbers."""
+    return [int(part) if part.isdigit() else part.lower() for part in re.split(r"(\d+)", str(value or ""))]
+
+
+def _end_of_minute(value):
+    """The window picks minutes, so "to 16:14" includes everything that happened during 16:14."""
+    if value is None:
+        return None
+    return value.replace(second=59, microsecond=999999)
+
+
+def _scope_rows(filters, buildings, language):
+    houses = ", ".join(building.number for building in buildings) if filters["building_ids"] else _t("all_houses", language)
+    return [(_t("houses", language), houses or _t("all_houses", language))]
+
+
+def _grouped_sheet(name, title, headers, groups, grand_total, scope_rows, widths, language):
+    """A sheet of house groups: [(house, rows, total_row)]; rows are cell lists."""
+    rows, kinds = [], []
+    for house, house_rows, total_row in groups:
+        rows.append([_text_cell(_t("house_group", language).format(house=house))] + [_text_cell("") for _ in headers[1:]])
+        kinds.append("group")
+        rows.extend(house_rows)
+        kinds.extend([None] * len(house_rows))
+        rows.append(total_row)
+        kinds.append("total")
+    if groups:
+        rows.append(grand_total)
+        kinds.append("grand_total")
+    return {
+        "name": name,
+        "title": title,
+        "subtitle": "; ".join(f"{label}: {value}" for label, value in scope_rows),
+        "template": "grouped",
+        "language": language,
+        "headers": headers,
+        "rows": rows,
+        "row_kinds": kinds,
+        "scope_rows": scope_rows,
+        "widths": widths,
+        # Data rows only, not house names and totals.
+        "row_count": sum(len(house_rows) for _house, house_rows, _total in groups),
+    }
+
+
+def _total_row(label, width, cells: dict[int, dict]):
+    """A total line: the label in the first column and the given cells (column index -> cell)."""
+    row = [_text_cell(label)] + [_text_cell("") for _ in range(width - 1)]
+    for index, cell in cells.items():
+        row[index] = cell
+    return row
+
+
+def _area_cell(value):
+    return _number_cell(value, style=7, display=_number_text(value))
+
+
+def _money_cell(value):
+    return _number_cell(value, style=6, display=_money_text(value))
+
+
+def _build_debtors_report(filters, language):
+    """Who owes, house by house, as of the window's "Date to" (now when it is later or empty).
+
+    The account balance at a moment is today's balance minus every ledger entry made after it,
+    so an old date gives the debt as it stood then.
+    """
+    language = _lang(language)
+    now = timezone.now()
+    as_of = min(_end_of_minute(filters["date_to"]) or now, now)
+    apartments = Apartment.objects.select_related("building", "owner")
+    if filters["building_ids"]:
+        apartments = apartments.filter(building_id__in=filters["building_ids"])
+    if filters["apartment_ids"]:
+        apartments = apartments.filter(id__in=filters["apartment_ids"])
+    if filters["owner_ids"]:
+        apartments = apartments.filter(owner__id__in=filters["owner_ids"])
+    apartments = list(apartments)
+    later_changes = dict(
+        Transaction.objects.filter(apartment_id__in=[apartment.id for apartment in apartments], created_at__gt=as_of)
+        .order_by()
+        .values("apartment_id")
+        .annotate(total=Sum("amount"))
+        .values_list("apartment_id", "total")
+    )
+    as_of_text = _date_text(as_of)
+
+    by_house = defaultdict(list)
+    for apartment in apartments:
+        balance = (apartment.balance or Decimal("0")) - (later_changes.get(apartment.id) or Decimal("0"))
+        if balance < 0:
+            by_house[apartment.building].append((apartment, -balance))
+
+    groups = []
+    grand_area = grand_debt = Decimal("0")
+    grand_count = 0
+    for building in sorted(by_house, key=lambda item: _natural_key(item.number)):
+        house_rows = []
+        area_sum = debt_sum = Decimal("0")
+        for apartment, debt in sorted(by_house[building], key=lambda item: _natural_key(item[0].number)):
+            owner = getattr(apartment, "owner", None)
+            house_rows.append([
+                _text_cell(str(owner.pk) if owner else "—"),
+                _text_cell(as_of_text),
+                _text_cell(owner.fio if owner else _t("no_owner", language)),
+                _text_cell(building.number),
+                _text_cell(apartment.number),
+                _area_cell(apartment.area),
+                _money_cell(debt),
+            ])
+            area_sum += apartment.area or Decimal("0")
+            debt_sum += debt
+        count = len(house_rows)
+        label = f"{_t('house_total', language).format(house=building.number)} · {_t('debtors_count', language)}: {count}"
+        groups.append((building.number, house_rows, _total_row(label, 7, {5: _area_cell(area_sum), 6: _money_cell(debt_sum)})))
+        grand_area += area_sum
+        grand_debt += debt_sum
+        grand_count += count
+
+    grand_label = f"{_t('grand_total', language)} · {_t('debtors_count', language)}: {grand_count}"
+    buildings = {apartment.building for apartment in apartments}
+    scope_rows = _scope_rows(filters, sorted(buildings, key=lambda item: _natural_key(item.number)), language)
+    scope_rows.append((_t("as_of", language), as_of_text))
+    return _grouped_sheet(
+        _t("debtors_list", language),
+        _t("debtors_list", language),
+        [
+            _t("id", language),
+            _t("date", language),
+            _t("full_name", language),
+            _t("house", language),
+            _t("apartment", language),
+            _t("area", language),
+            _t("debt_amount", language),
+        ],
+        groups,
+        _total_row(grand_label, 7, {5: _area_cell(grand_area), 6: _money_cell(grand_debt)}),
+        scope_rows,
+        [10, 14, 36, 12, 12, 14, 20],
+        language,
+    )
+
+
+def _build_payment_history_report(filters, language):
+    """Money received in the window's date range, house by house: who, when, how and how much."""
+    language = _lang(language)
+    window = {**filters, "date_to": _end_of_minute(filters["date_to"])}
+    transactions = _filter_transaction_queryset(
+        Transaction.objects.filter(incoming_payment_q(), apartment__isnull=False)
+        .select_related("owner", "apartment__building")
+        .order_by("created_at", "id"),
+        window,
+    )
+
+    by_house = defaultdict(list)
+    for item in transactions:
+        by_house[item.apartment.building].append(item)
+
+    groups = []
+    grand_amount = Decimal("0")
+    grand_count = 0
+    for building in sorted(by_house, key=lambda item: _natural_key(item.number)):
+        house_rows = []
+        amount_sum = Decimal("0")
+        for item in by_house[building]:
+            created = timezone.localtime(item.created_at)
+            house_rows.append([
+                _text_cell(str(item.pk)),
+                _text_cell(created.strftime("%d.%m.%Y %H:%M")),
+                # Who held the account when the money came in.
+                _text_cell(item.owner.fio if item.owner_id else _t("no_owner", language)),
+                _text_cell(item.apartment.number),
+                _text_cell(_transaction_type_text(item, language)),
+                _money_cell(item.amount),
+                _text_cell(item.created_by or _t("system", language)),
+            ])
+            amount_sum += item.amount
+        count = len(house_rows)
+        label = f"{_t('house_total', language).format(house=building.number)} · {_t('payments_count', language)}: {count}"
+        groups.append((building.number, house_rows, _total_row(label, 7, {5: _money_cell(amount_sum)})))
+        grand_amount += amount_sum
+        grand_count += count
+
+    buildings = []
+    if filters["building_ids"]:
+        buildings = sorted(Building.objects.filter(id__in=filters["building_ids"]), key=lambda item: _natural_key(item.number))
+    scope_rows = _scope_rows(filters, buildings, language)
+    period = " — ".join(
+        value for value in (
+            timezone.localtime(filters["date_from"]).strftime("%d.%m.%Y %H:%M") if filters["date_from"] else "",
+            timezone.localtime(filters["date_to"]).strftime("%d.%m.%Y %H:%M") if filters["date_to"] else "",
+        )
+    ).strip(" —")
+    if period:
+        scope_rows.append((_t("period", language), period))
+    grand_label = f"{_t('grand_total', language)} · {_t('payments_count', language)}: {grand_count}"
+    return _grouped_sheet(
+        _t("payment_history", language),
+        _t("payment_history", language),
+        [
+            _t("id", language),
+            _t("date_time", language),
+            _t("full_name", language),
+            _t("apartment", language),
+            _t("payment_method", language),
+            _t("paid_amount", language),
+            _t("operator", language),
+        ],
+        groups,
+        _total_row(grand_label, 7, {5: _money_cell(grand_amount)}),
+        scope_rows,
+        [10, 18, 36, 12, 22, 20, 22],
+        language,
+    )
+
+
+def _build_debt_reports(report_type, filters, language, export_format):
+    """Debtors list, payment history or both (general overview: one workbook, two sheets)."""
+    sheets = []
+    if report_type in {REPORT_TYPE_DEBTORS, REPORT_TYPE_GENERAL}:
+        sheets.append(_build_debtors_report(filters, language))
+    if report_type in {REPORT_TYPE_PAYMENT_HISTORY, REPORT_TYPE_GENERAL}:
+        sheets.append(_build_payment_history_report(filters, language))
+    generated_at = timezone.localtime()
+    row_count = sum(sheet["row_count"] for sheet in sheets)
+    filename = f"{report_type.replace('_', '-')}-{generated_at:%Y%m%d-%H%M}"
+    if export_format == "PDF":
+        title = _report_type_label(report_type, language)
+        subheading = f"{_t('generated', language)}: {generated_at:%d.%m.%Y %H:%M}"
+        return {
+            "filename": f"{filename}.pdf",
+            "mime": "application/pdf",
+            "content": _build_pdf(filename, title, subheading, sheets, [], language),
+            "report_type": report_type,
+            "sheet_count": len(sheets),
+            "row_count": row_count,
+        }
+    builder = WorkbookReportBuilder()
+    for sheet in sheets:
+        builder.add_sheet(
+            sheet["name"],
+            sheet["title"],
+            sheet["subtitle"],
+            [],
+            sheet["headers"],
+            sheet["rows"],
+            **{key: value for key, value in sheet.items() if key not in {"name", "title", "subtitle", "headers", "rows"}},
+        )
+    return {
+        "filename": f"{filename}.xlsx",
+        "mime": XLSX_MIME,
+        "content": builder.build(),
+        "report_type": report_type,
+        "sheet_count": len(sheets),
+        "row_count": row_count,
+    }
+
+
 def build_report_payload(payload, language: str, export_format: str):
     language = _lang(language)
     filters = _collect_export_filters(payload)
     report_type = str(payload.get("report_type") or REPORT_TYPE_ALL).strip().lower()
     if report_type not in ALLOWED_REPORT_TYPES:
         report_type = REPORT_TYPE_ALL
+    if report_type in {REPORT_TYPE_GENERAL, REPORT_TYPE_DEBTORS, REPORT_TYPE_PAYMENT_HISTORY}:
+        return _build_debt_reports(report_type, filters, language, export_format)
 
     sheets = []
     if report_type in {REPORT_TYPE_HOT_WATER, REPORT_TYPE_ALL}:
