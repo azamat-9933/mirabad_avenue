@@ -40,16 +40,6 @@ MESSAGES = {
         "no_debt": "qarz yo'q",
         "language_saved": "✅ Til o'zgartirildi.",
         "start_hint": "Ro'yxatdan o'tish uchun /start buyrug'ini yuboring.",
-        "debt_notice": (
-            "📄 <b>TO'LOV XABARNOMASI</b>\n\n"
-            "Hurmatli {name}!\n\n"
-            "Hisob raqami: {account}\n"
-            "Manzil: Uy {house}, kvartira {apartment}\n\n"
-            "{date} holatiga ko'ra majburiy to'lovlar bo'yicha qarzdorlik: <b>{amount} so'm</b>.\n\n"
-            "Iltimos, qarzdorlikni qisqa muddat ichida to'lang yoki billing bo'limi bilan bog'lanib "
-            "to'lov grafigini aniqlashtiring.\n\n"
-            "MIRABAD AVENUE SERVICE MCHJ"
-        ),
         "button_send_contact": "📲 Kontaktni yuborish",
         "button_confirm": "✅ Tasdiqlash",
         "button_reject": "❌ Rad etish",
@@ -84,16 +74,6 @@ MESSAGES = {
         "no_debt": "долга нет",
         "language_saved": "✅ Язык изменён.",
         "start_hint": "Чтобы зарегистрироваться, отправьте команду /start.",
-        "debt_notice": (
-            "📄 <b>ПЛАТЁЖНОЕ УВЕДОМЛЕНИЕ</b>\n\n"
-            "Уважаемый(ая) {name}!\n\n"
-            "Лицевой счёт: {account}\n"
-            "Адрес: дом {house}, кв. {apartment}\n\n"
-            "По состоянию на {date} задолженность по обязательным платежам составляет <b>{amount} сум</b>.\n\n"
-            "Просим погасить задолженность в ближайший срок либо связаться с billing-отделом "
-            "для уточнения графика оплаты.\n\n"
-            "MIRABAD AVENUE SERVICE MCHJ"
-        ),
         "button_send_contact": "📲 Отправить контакт",
         "button_confirm": "✅ Подтвердить",
         "button_reject": "❌ Отклонить",
@@ -128,15 +108,6 @@ MESSAGES = {
         "no_debt": "no debt",
         "language_saved": "✅ Language changed.",
         "start_hint": "Send /start to register.",
-        "debt_notice": (
-            "📄 <b>PAYMENT NOTICE</b>\n\n"
-            "Dear {name},\n\n"
-            "Account: {account}\n"
-            "Address: house {house}, apt {apartment}\n\n"
-            "As of {date}, your debt for mandatory payments is <b>{amount} UZS</b>.\n\n"
-            "Please pay the debt soon or contact the billing department to agree on a payment schedule.\n\n"
-            "MIRABAD AVENUE SERVICE MCHJ"
-        ),
         "button_send_contact": "📲 Share contact",
         "button_confirm": "✅ Confirm",
         "button_reject": "❌ Reject",

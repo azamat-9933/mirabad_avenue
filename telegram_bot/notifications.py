@@ -1,13 +1,11 @@
-"""Messages the portal sends to residents through the bot: the billing (debt) notice."""
+"""Messages the portal sends to residents through the bot: the payment (debt) notice."""
 from aiogram.exceptions import TelegramAPIError, TelegramForbiddenError
 from asgiref.sync import async_to_sync
 from django.conf import settings
-from django.utils import timezone
 
 from main_app.models import Owner
 
 from .runner import create_bot
-from .texts import DEFAULT_LANGUAGE, format_amount, t
 
 SEND_TIMEOUT_SECONDS = 15
 
@@ -20,21 +18,6 @@ class NoticeNotSent(Exception):
         self.status = status
 
 
-def debt_notice_text(owner, as_of) -> str:
-    """The notice in the resident's bot language, with the debt of their apartment account."""
-    apartment = owner.apartment
-    return t(
-        owner.telegram_language or DEFAULT_LANGUAGE,
-        "debt_notice",
-        name=owner.fio,
-        account=f"ACC-{owner.pk}",
-        house=apartment.building.number,
-        apartment=apartment.number,
-        amount=format_amount(apartment.balance),
-        date=as_of.strftime("%d.%m.%Y"),
-    )
-
-
 async def _send(token, chat_id, text):
     bot = create_bot(token)
     try:
@@ -43,12 +26,8 @@ async def _send(token, chat_id, text):
         await bot.session.close()
 
 
-def send_debt_notice(owner) -> str:
-    """Send the resident's debt notice to their Telegram chat and return the text that was sent.
-
-    The text is built here from the current account balance, so the resident never gets a stale
-    amount or text composed in the browser.
-    """
+def send_debt_notice(owner, text) -> str:
+    """Send the resident's notice (HTML text built by portal.billing_notice) to their Telegram chat."""
     if not settings.TELEGRAM_BOT_TOKEN:
         raise NoticeNotSent("The Telegram bot is not configured (TELEGRAM_BOT_TOKEN).", status=503)
     if owner.telegram_status != Owner.TELEGRAM_CONNECTED or not owner.telegram_id:
@@ -56,7 +35,6 @@ def send_debt_notice(owner) -> str:
     if owner.apartment.balance >= 0:
         raise NoticeNotSent("The resident has no debt.", status=409)
 
-    text = debt_notice_text(owner, timezone.localdate())
     try:
         async_to_sync(_send)(settings.TELEGRAM_BOT_TOKEN, owner.telegram_id, text)
     except TelegramForbiddenError as error:

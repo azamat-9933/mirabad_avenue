@@ -10,7 +10,6 @@ from asgiref.sync import async_to_sync
 from django.contrib.auth import get_user_model
 from django.test import TestCase, override_settings
 from django.urls import reverse
-from django.utils import timezone
 
 from main_app.models import Apartment, Building, Complex, Owner
 from payments.models import Transaction
@@ -18,7 +17,7 @@ from payments.services import apply_account_change
 from portal.models import AuditEvent
 
 from . import services
-from .notifications import debt_notice_text
+from portal.billing_notice import build_debt_notice, notice_telegram_text
 from .runner import create_bot, create_dispatcher
 from .texts import BUTTON_ACTIONS, CHOOSE_LANGUAGE, LANGUAGE_BUTTONS, MESSAGES, format_accounts, format_amount, t
 
@@ -241,12 +240,14 @@ class BillingNoticeTelegramTests(ResidentsMixin, TestCase):
         apply_account_change(self.apartment.pk, Decimal("-150000"), Transaction.TYPE_MANUAL)
         self.session = RecordingSession()
 
-    def post(self, owner_id, session=None):
+    def post(self, owner_id, session=None, language="ru"):
         session = session or self.session
         with patch("telegram_bot.notifications.create_bot", lambda token: create_bot(token, session=session)):
-            return self.client.post(self.url, {"owner_id": owner_id}, content_type="application/json")
+            return self.client.post(
+                self.url, {"owner_id": owner_id, "language": language}, content_type="application/json"
+            )
 
-    def test_sends_the_notice_in_the_residents_language_and_logs_it(self):
+    def test_sends_the_notice_shown_in_the_window_and_logs_it(self):
         response = self.post(self.owner.pk)
 
         self.assertEqual(response.status_code, 200)
@@ -254,10 +255,12 @@ class BillingNoticeTelegramTests(ResidentsMixin, TestCase):
         [sent] = self.session.sent
         self.assertEqual(sent.chat_id, "555")
         self.owner.refresh_from_db()
-        self.assertEqual(sent.text, debt_notice_text(self.owner, timezone.localdate()))
+        # Exactly the notice of the portal window, in the language chosen there, signed by the operator.
+        self.assertEqual(sent.text, notice_telegram_text(build_debt_notice(self.owner, "ru", "billing-desk")))
         self.assertIn("ПЛАТЁЖНОЕ УВЕДОМЛЕНИЕ", sent.text)
         self.assertIn("<b>150 000 сум</b>", sent.text)
-        self.assertIn(f"ACC-{self.owner.pk}", sent.text)
+        self.assertIn("статей 140 и 141 Жилищного кодекса", sent.text)
+        self.assertIn("Ответственный сотрудник: billing-desk", sent.text)
         event = AuditEvent.objects.get(title="Billing notice sent to Telegram")
         self.assertEqual((event.event_type, event.owner_id, event.actor), (AuditEvent.TYPE_REMINDER, self.owner.pk, "billing-desk"))
 

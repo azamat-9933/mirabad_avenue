@@ -287,6 +287,12 @@
         "Payment type": { ru: "Тип оплаты", uz: "To'lov turi" },
         "Username not found": { ru: "Не найден", uz: "Topilmadi" },
         "Pay": { ru: "Оплата", uz: "To'lov" },
+        "Download PDF": { ru: "Скачать PDF", uz: "PDF yuklab olish" },
+        "Preparing notice...": { ru: "Готовим уведомление...", uz: "Xabarnoma tayyorlanmoqda..." },
+        "Could not prepare the notice.": { ru: "Не удалось подготовить уведомление.", uz: "Xabarnomani tayyorlab bo'lmadi." },
+        "Notice downloaded": { ru: "Уведомление скачано", uz: "Xabarnoma yuklab olindi" },
+        "The payment notice was saved as PDF.": { ru: "Платёжное уведомление сохранено в PDF.", uz: "To'lov xabarnomasi PDF ko'rinishida saqlandi." },
+        "Notice not created": { ru: "Уведомление не создано", uz: "Xabarnoma yaratilmadi" },
         "House / apartment": { ru: "Дом / кв.", uz: "Uy / xonadon" },
         "System": { ru: "Система", uz: "Tizim" },
         "Charge": { ru: "Начисление", uz: "Hisoblash" },
@@ -310,7 +316,7 @@
         "Manual subtraction synced with backend.": { ru: "Ручное списание синхронизировано с backend.", uz: "Qo'lda ayirma backend bilan sinxronlandi." },
         "Billing notice": { ru: "Платёжное уведомление", uz: "To'lov xabarnomasi" },
         "Preview of the resident debt notice generated from current backend data.": { ru: "Предпросмотр уведомления о долге, собранного из текущих backend-данных.", uz: "Joriy backend ma'lumotlaridan yig'ilgan qarzdorlik xabarnomasi ko'rinishi." },
-        "Select a resident, review the generated notice and copy or send it later.": { ru: "Выберите абонента, проверьте сгенерированное уведомление и затем скопируйте или отправьте его.", uz: "Abonentni tanlang, yaratilgan xabarnomani ko'rib chiqing va keyin nusxa oling yoki yuboring." },
+        "Select a resident, review the notice, then download it as PDF or send it in Telegram.": { ru: "Выберите абонента, проверьте уведомление, затем скачайте его в PDF или отправьте в Telegram.", uz: "Abonentni tanlang, xabarnomani tekshiring, so'ng uni PDF qilib yuklab oling yoki Telegramga yuboring." },
         "Create Billing Period": { ru: "Создать расчётный период", uz: "Hisob davrini yaratish" },
         "Create a new расчетный период for heating and hot water calculations.": { ru: "Создать новый расчётный период для отопления и горячей воды.", uz: "Isitish va issiq suv hisoblari uchun yangi hisob davrini yarating." },
         "Open admin form": { ru: "Открыть admin форму", uz: "Admin formasini ochish" },
@@ -6613,7 +6619,7 @@
                 }
             }
 
-            if (!modal.querySelector("[data-billing-notice-copy]") || !modal.querySelector("[data-billing-notice-telegram]")) {
+            if (!modal.querySelector("[data-billing-notice-pdf]") || !modal.querySelector("[data-billing-notice-telegram]")) {
                 const panel = modal.querySelector(".modal-panel");
                 if (panel) {
                     const footer = document.createElement("div");
@@ -6621,7 +6627,7 @@
                     footer.className = "px-8 py-5 border-t border-surface-container flex justify-end gap-3 bg-surface-container-lowest";
                     footer.innerHTML = `
                         <button class="px-5 py-3 rounded-xl bg-surface-container text-sm font-bold text-on-surface" data-close-overlay type="button" data-i18n-key="Close">Close</button>
-                        <button class="px-5 py-3 rounded-xl bg-surface-container text-sm font-bold text-on-surface" data-billing-notice-copy type="button" data-i18n-key="Copy notice">Copy notice</button>
+                        <button class="px-5 py-3 rounded-xl bg-surface-container text-sm font-bold text-on-surface" data-billing-notice-pdf type="button" data-i18n-key="Download PDF">Download PDF</button>
                         <button class="px-5 py-3 rounded-xl bg-primary text-sm font-bold text-white" data-billing-notice-telegram type="button" data-i18n-key="Notify in Telegram">Notify in Telegram</button>
                     `;
                     panel.appendChild(footer);
@@ -6638,79 +6644,12 @@
         const countNode = modal.querySelector("[data-billing-notice-count]");
         const listNode = modal.querySelector("[data-billing-notice-list]");
         const emptyNode = modal.querySelector("[data-billing-notice-empty]");
-        const copyButton = modal.querySelector("[data-billing-notice-copy]");
+        const pdfButton = modal.querySelector("[data-billing-notice-pdf]");
         const telegramButton = modal.querySelector("[data-billing-notice-telegram]");
         let activeLang = "uz";
         let activeSort = "desc";
         let activeResidentId = "";
         let noticeResidents = [];
-
-        const noticeCopy = {
-            uz: {
-                docTitle: "TO'LOV XABARNOMASI",
-                company: "MIRABAD AVENUE SERVICE MCHJ",
-                heading: "TO'LOV XABARNOMASI",
-                subheading: "Majburiy to'lovlardan bo'lgan qarzdorlikni to'lash to'g'risida",
-                accountLabel: "Hisob raqami:",
-                addressLabel: "Manzili:",
-                ownerLabel: "Uy egasi:",
-                apartmentLabel: "Kvartira:",
-                phoneLabel: "Telefon:",
-                balanceLabel: "Qarz miqdori:",
-                directorLabel: "Korxona rahbari:",
-                managerLabel: "Mas'ul xodim:",
-                director: "ERGASHEV DILSHOD TURAVOY O'G'LI",
-                manager: "Billing Desk",
-                bodyHtml: (resident, amount) => [
-                    `Sizga ushbu orqali ma'lum qilamizki, ${resident.lastPayment || "31.03.2026"} holatiga ko'ra majburiy to'lovlar bo'yicha <span class="font-black text-error">${amount}</span> qarzdorlik mavjud.`,
-                    "<span class=\"block text-center font-black tracking-tight\">ESLATMA!!!</span>",
-                    "Majburiy to'lovlarni belgilangan muddatda to'lamaslik penya va keyingi undirish choralariga olib keladi.",
-                    "<span class=\"block text-center font-black tracking-tight\">OGOHLANTIRAMIZ!!!</span>",
-                    "Mavjud qarzdorlik sud tartibida undiruv choralariga yuborilishi mumkin. Sud xarajatlari va kechikish jarimalari qarzdor tomon zimmasiga o'tadi.",
-                    "Iltimos, qarzdorlikni qisqa muddat ichida to'lang yoki billing bo'limi bilan bog'lanib to'lov grafig'ini aniqlashtiring.",
-                ],
-                bodyText: (resident, amount) => [
-                    `Sizga ushbu orqali ma'lum qilamizki, ${resident.lastPayment || "31.03.2026"} holatiga ko'ra majburiy to'lovlar bo'yicha ${amount} qarzdorlik mavjud.`,
-                    "ESLATMA!!!",
-                    "Majburiy to'lovlarni belgilangan muddatda to'lamaslik penya va keyingi undirish choralariga olib keladi.",
-                    "OGOHLANTIRAMIZ!!!",
-                    "Mavjud qarzdorlik sud tartibida undiruv choralariga yuborilishi mumkin. Sud xarajatlari va kechikish jarimalari qarzdor tomon zimmasiga o'tadi.",
-                    "Iltimos, qarzdorlikni qisqa muddat ichida to'lang yoki billing bo'limi bilan bog'lanib to'lov grafig'ini aniqlashtiring.",
-                ],
-            },
-            ru: {
-                docTitle: "ПЛАТЁЖНОЕ УВЕДОМЛЕНИЕ",
-                company: "MIRABAD AVENUE SERVICE MCHJ",
-                heading: "ПЛАТЁЖНОЕ УВЕДОМЛЕНИЕ",
-                subheading: "О необходимости погашения задолженности по обязательным платежам",
-                accountLabel: "Лицевой счёт:",
-                addressLabel: "Адрес:",
-                ownerLabel: "Собственник:",
-                apartmentLabel: "Квартира:",
-                phoneLabel: "Телефон:",
-                balanceLabel: "Сумма долга:",
-                directorLabel: "Руководитель:",
-                managerLabel: "Ответственный сотрудник:",
-                director: "ЭРГАШЕВ ДИЛШОД ТУРАВОЙ УГЛИ",
-                manager: "Billing Desk",
-                bodyHtml: (resident, amount) => [
-                    `Сообщаем, что по состоянию на ${resident.lastPayment || "31.03.2026"} по обязательным платежам зафиксирована задолженность в размере <span class="font-black text-error">${amount}</span>.`,
-                    "<span class=\"block text-center font-black tracking-tight\">ВНИМАНИЕ!!!</span>",
-                    "При отсутствии оплаты в установленный срок сумма задолженности может быть передана в дальнейшую работу и сопровождаться начислением пени.",
-                    "<span class=\"block text-center font-black tracking-tight\">ПРЕДУПРЕЖДАЕМ!!!</span>",
-                    "При дальнейшем отсутствии оплаты материалы могут быть переданы на взыскание. Все сопутствующие расходы и штрафные начисления относятся на должника.",
-                    "Просим погасить задолженность в ближайший срок либо связаться с billing-отделом для уточнения графика оплаты.",
-                ],
-                bodyText: (resident, amount) => [
-                    `Сообщаем, что по состоянию на ${resident.lastPayment || "31.03.2026"} по обязательным платежам зафиксирована задолженность в размере ${amount}.`,
-                    "ВНИМАНИЕ!!!",
-                    "При отсутствии оплаты в установленный срок сумма задолженности может быть передана в дальнейшую работу и сопровождаться начислением пени.",
-                    "ПРЕДУПРЕЖДАЕМ!!!",
-                    "При дальнейшем отсутствии оплаты материалы могут быть переданы на взыскание. Все сопутствующие расходы и штрафные начисления относятся на должника.",
-                    "Просим погасить задолженность в ближайший срок либо связаться с billing-отделом для уточнения графика оплаты.",
-                ],
-            },
-        };
 
         const debtValue = (resident) => {
             const value = Number(resident?.balance ?? 0);
@@ -6738,18 +6677,10 @@
             assignNoticeResidents([]);
         };
 
-        const noticeResidentId = (resident) => String(resident?.ownerBackendId || resident?.backendId || resident?.id || "").replace(/[^\d]/g, "");
+        const noticeResidentId = (resident) => String(resident?.ownerBackendId || "").replace(/[^\d]/g, "");
 
-        const getNoticeResidents = () => noticeResidents.filter((resident) => {
-            if (!resident) return false;
-            return Boolean(
-                noticeResidentId(resident)
-                || resident.name
-                || resident.apartment
-                || resident.phone
-                || resident.telegramUser
-            );
-        });
+        // Only residents get a notice: a vacant apartment has nobody to notify.
+        const getNoticeResidents = () => noticeResidents.filter((resident) => Boolean(resident?.ownerBackendId));
 
         const renderLoading = () => {
             if (!listNode) return;
@@ -6823,34 +6754,6 @@
             return sortNoticeResidents(rows);
         };
 
-        const buildAccount = (resident) => `ACC-${resident?.ownerBackendId || resident?.backendId || resident?.id || "000"}`;
-
-        const buildNoticeText = (resident) => {
-            const copy = noticeCopy[activeLang] || noticeCopy.uz;
-            const amount = formatBillingUzs(debtValue(resident));
-            const address = [resident?.complexAddress, resident?.building, resident?.apartment].filter(Boolean).join(", ");
-            return [
-                copy.docTitle,
-                copy.company,
-                "",
-                copy.heading,
-                resident?.complex || "Mirabad Avenue",
-                copy.subheading,
-                "",
-                `${copy.accountLabel} ${buildAccount(resident)}`,
-                `${copy.addressLabel} ${address || "-"}`,
-                `${copy.ownerLabel} ${resident?.name || "-"}`,
-                `${copy.apartmentLabel} ${resident?.apartment || "-"}`,
-                `${copy.phoneLabel} ${resident?.phone || "-"}`,
-                `${copy.balanceLabel} ${amount}`,
-                "",
-                ...copy.bodyText(resident || {}, amount),
-                "",
-                `${copy.directorLabel} ${copy.director}`,
-                `${copy.managerLabel} ${copy.manager}`,
-            ].join("\n");
-        };
-
         const resolveActiveResident = (rows) => {
             if (!rows.length) {
                 activeResidentId = "";
@@ -6897,56 +6800,73 @@
             }).join("");
         };
 
+        // The notice comes from the server (/api/billing-notice/preview/). The PDF and the Telegram
+        // message are built from the same data, so what the operator reads here is what is sent.
+        const noticeCache = new Map();
+        let noticeRequestId = 0;
+        const noticeDocument = modal.querySelector("[data-billing-notice-document]");
+        const setNoticeText = (selector, value) => {
+            const node = modal.querySelector(selector);
+            if (node) node.textContent = value || "";
+        };
+        const noticeFieldMarkup = (item) => `
+            <p><span class="font-black">${escapeHtml(item.label)}:</span> <span class="${item.key === "debt" ? "text-error font-black" : ""}">${escapeHtml(item.value)}</span></p>
+        `;
+        const renderNoticeDocument = (notice) => {
+            setNoticeText("[data-billing-notice-doc-title]", notice?.title);
+            setNoticeText("[data-billing-notice-company]", notice?.company);
+            setNoticeText("[data-billing-notice-preview-balance]", notice?.amount);
+            setNoticeText("[data-billing-notice-generated-at]", notice?.date);
+            if (!noticeDocument) return;
+            if (!notice) {
+                noticeDocument.innerHTML = "";
+                return;
+            }
+            noticeDocument.innerHTML = `
+                <div class="text-center space-y-1">
+                    <p class="text-[26px] font-black tracking-tight">${escapeHtml(notice.title)}</p>
+                    <p class="text-base text-on-surface-variant">${escapeHtml(notice.subheading)}</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-1 text-[15px] leading-7">${notice.fields.map(noticeFieldMarkup).join("")}</div>
+                <div class="space-y-4 text-[15px] leading-7">${notice.paragraphs.map((paragraph) => `<p>${escapeHtml(paragraph)}</p>`).join("")}</div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-1 pt-4 text-[15px]">${notice.signatures.map(noticeFieldMarkup).join("")}</div>
+            `;
+        };
         const renderPreview = (resident) => {
-            const copy = noticeCopy[activeLang] || noticeCopy.uz;
-            const generatedAt = new Date().toLocaleString(activeLang === "ru" ? "ru-RU" : "uz-UZ", {
-                day: "2-digit",
-                month: "2-digit",
-                year: "numeric",
-                hour: "2-digit",
-                minute: "2-digit",
-            });
-            const amount = resident ? formatBillingUzs(debtValue(resident)) : "";
-            const address = [
-                resident?.complexAddress,
-                resident?.building,
-                resident?.apartment,
-            ].filter(Boolean).join(", ");
-            const account = resident ? buildAccount(resident) : "ACC-000";
-
-            modal.querySelector("[data-billing-notice-doc-title]").textContent = copy.docTitle;
-            modal.querySelector("[data-billing-notice-company]").textContent = copy.company;
-            modal.querySelector("[data-billing-notice-generated-at]").textContent = generatedAt;
-            modal.querySelector("[data-billing-notice-preview-balance]").textContent = resident ? amount : "";
-            modal.querySelector("[data-billing-notice-heading]").textContent = copy.heading;
-            modal.querySelector("[data-billing-notice-complex]").textContent = resident?.complex || "Mirabad Avenue";
-            modal.querySelector("[data-billing-notice-subheading]").textContent = copy.subheading;
-            modal.querySelector("[data-billing-notice-account-label]").textContent = copy.accountLabel;
-            modal.querySelector("[data-billing-notice-address-label]").textContent = copy.addressLabel;
-            modal.querySelector("[data-billing-notice-owner-label]").textContent = copy.ownerLabel;
-            modal.querySelector("[data-billing-notice-apartment-label]").textContent = copy.apartmentLabel;
-            modal.querySelector("[data-billing-notice-phone-label]").textContent = copy.phoneLabel;
-            modal.querySelector("[data-billing-notice-balance-label]").textContent = copy.balanceLabel;
-            modal.querySelector("[data-billing-notice-director-label]").textContent = copy.directorLabel;
-            modal.querySelector("[data-billing-notice-manager-label]").textContent = copy.managerLabel;
-            modal.querySelector("[data-billing-notice-director]").textContent = copy.director;
-            modal.querySelector("[data-billing-notice-manager]").textContent = copy.manager;
-            modal.querySelector("[data-billing-notice-account]").textContent = resident ? account : "";
-            modal.querySelector("[data-billing-notice-address]").textContent = resident ? (address || "-") : "";
-            modal.querySelector("[data-billing-notice-owner]").textContent = resident?.name || "";
-            modal.querySelector("[data-billing-notice-apartment]").textContent = resident?.apartment || "";
-            modal.querySelector("[data-billing-notice-phone]").textContent = resident?.phone || "";
-            modal.querySelector("[data-billing-notice-balance]").textContent = resident ? amount : "";
-            modal.querySelector("[data-billing-notice-body]").innerHTML = resident ? copy.bodyHtml(resident || {}, amount)
-                .map((paragraph) => `<p>${paragraph}</p>`)
-                .join("") : "";
-
             langButtons.forEach((button) => {
                 const isActive = button.dataset.billingNoticeLang === activeLang;
                 button.classList.toggle("bg-primary", isActive);
                 button.classList.toggle("text-white", isActive);
                 button.classList.toggle("text-on-surface-variant", !isActive);
             });
+            const requestId = ++noticeRequestId;
+            if (!resident) {
+                renderNoticeDocument(null);
+                return;
+            }
+            const key = `${noticeResidentId(resident)}:${activeLang}`;
+            if (noticeCache.has(key)) {
+                renderNoticeDocument(noticeCache.get(key));
+                return;
+            }
+            if (noticeDocument) {
+                noticeDocument.innerHTML = `<p class="text-sm font-bold text-on-surface-variant">${escapeHtml(t("Preparing notice..."))}</p>`;
+            }
+            const query = new URLSearchParams({ owner_id: noticeResidentId(resident), language: activeLang });
+            fetch(`/api/billing-notice/preview/?${query}`, { credentials: "same-origin", headers: { Accept: "application/json" } })
+                .then((response) => {
+                    if (redirectToLoginIfUnauthorized(response)) throw new Error("Authentication required");
+                    if (!response.ok) throw new Error(`Request failed (${response.status})`);
+                    return response.json();
+                })
+                .then((payload) => {
+                    noticeCache.set(key, payload.notice);
+                    if (requestId === noticeRequestId) renderNoticeDocument(payload.notice);
+                })
+                .catch(() => {
+                    if (requestId !== noticeRequestId || !noticeDocument) return;
+                    noticeDocument.innerHTML = `<p class="text-sm font-bold text-error">${escapeHtml(t("Could not prepare the notice."))}</p>`;
+                });
         };
 
         const syncFilters = () => {
@@ -6969,6 +6889,8 @@
 
         const openNoticeModal = (preferredResidentId = "") => {
             openOverlayById("billing-notice-modal");
+            // A fresh window shows fresh balances.
+            noticeCache.clear();
             activeSort = "desc";
             if (searchInput) searchInput.value = "";
             activeResidentId = preferredResidentId ? String(preferredResidentId).replace(/[^\d]/g, "") : "";
@@ -7031,18 +6953,26 @@
             searchInput?.focus();
         });
 
-        copyButton?.addEventListener("click", async () => {
+        pdfButton?.addEventListener("click", async () => {
             const resident = resolveActiveResident(filteredNoticeResidents());
             if (!resident) return;
+            if (debtValue(resident) <= 0) {
+                toast("Notice not created", "The resident has no debt.", "warning");
+                return;
+            }
+            pdfButton.disabled = true;
             try {
-                await navigator.clipboard.writeText(buildNoticeText(resident));
-                toast("Billing notice copied", "Notice text was copied to clipboard.", "success");
-            } catch {
-                toast("Copy failed", "Could not copy notice text.", "warning");
+                const payload = await postPortalJson("/api/billing-notice/pdf/", { owner_id: noticeResidentId(resident), language: activeLang });
+                triggerDownloadPayload(payload.download);
+                toast("Notice downloaded", "The payment notice was saved as PDF.", "success");
+            } catch (error) {
+                toast("Notice not created", error?.message || "Could not prepare the notice.", "warning");
+            } finally {
+                pdfButton.disabled = false;
             }
         });
 
-        // The server builds the Telegram text from the current balance, in the resident's bot language.
+        // The server sends the notice shown in the window, in the language chosen there.
         telegramButton?.addEventListener("click", async () => {
             const resident = resolveActiveResident(filteredNoticeResidents());
             if (!resident) return;
@@ -7056,7 +6986,7 @@
             }
             telegramButton.disabled = true;
             try {
-                await postPortalJson("/api/billing-notice/telegram/", { owner_id: resident.ownerBackendId });
+                await postPortalJson("/api/billing-notice/telegram/", { owner_id: noticeResidentId(resident), language: activeLang });
                 toast("Sent to Telegram", "The debt notice was sent to the resident in Telegram.", "success");
             } catch (error) {
                 toast("Not sent", error?.message || "Could not send the notice.", "warning");

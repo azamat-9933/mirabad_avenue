@@ -43,8 +43,10 @@ from portal.models import (
     SystemAlert,
 )
 
+from .billing_notice import build_debt_notice, debt_of, notice_pdf, notice_telegram_text
 from .backend_data import (
     _datetime,
+    _display_name,
     _payment_type_labels,
     account_payment_totals,
     build_portal_data,
@@ -1716,40 +1718,88 @@ def api_create_resident(request):
     )
 
 
-@extend_schema(request=OpenApiTypes.OBJECT, responses=OpenApiTypes.OBJECT)
-@api_view(["POST"])
-def api_billing_notice_telegram(request):
-    """Send the selected resident's debt notice to their Telegram through the residents' bot."""
-    payload = _json_payload(request)
-    owner_id = re.sub(r"\D", "", str(payload.get("owner_id") or ""))
-    owner = (
+def _notice_owner(owner_id_value):
+    owner_id = re.sub(r"\D", "", str(owner_id_value or ""))
+    if not owner_id:
+        return None
+    return (
         Owner.objects.select_related("apartment", "apartment__building", "apartment__building__complex")
         .filter(pk=int(owner_id))
         .first()
-        if owner_id
-        else None
     )
-    if owner is None:
-        return JsonResponse({"ok": False, "error": "Resident was not found."}, status=404)
 
-    try:
-        send_debt_notice(owner)
-    except NoticeNotSent as error:
-        return JsonResponse({"ok": False, "error": str(error)}, status=error.status)
 
+def _notice_for(request, owner, language):
+    """The payment notice for the resident; the operator issuing it is the signed-in user."""
+    return build_debt_notice(owner, language, _display_name(request.user))
+
+
+def _log_notice(request, owner, title, channel):
     apartment = owner.apartment
-    debt = -apartment.balance
+    debt = debt_of(owner)
     AuditEvent.objects.create(
         event_type=AuditEvent.TYPE_REMINDER,
-        title="Billing notice sent to Telegram",
-        message=f"Debt notice for {debt:,.2f} UZS was sent to {owner.fio} in Telegram.",
+        title=title,
+        message=f"Payment notice for {debt:,.2f} UZS ({channel}) for {owner.fio}.",
         actor=_actor(request),
         complex=apartment.building.complex,
         building=apartment.building,
         apartment=apartment,
         owner=owner,
-        metadata={"channel": "telegram", "debt": str(debt)},
+        metadata={"channel": channel, "debt": str(debt)},
     )
+
+
+@extend_schema(responses=OpenApiTypes.OBJECT)
+@api_view(["GET"])
+def api_billing_notice_preview(request):
+    """The payment notice of one resident, as shown in the portal window (?owner_id=&language=uz|ru)."""
+    owner = _notice_owner(request.GET.get("owner_id"))
+    if owner is None:
+        return JsonResponse({"ok": False, "error": "Resident was not found."}, status=404)
+    return JsonResponse({"ok": True, "notice": _notice_for(request, owner, request.GET.get("language"))})
+
+
+@extend_schema(request=OpenApiTypes.OBJECT, responses=OpenApiTypes.OBJECT)
+@api_view(["POST"])
+def api_billing_notice_pdf(request):
+    """The payment notice of one resident as a PDF download (same text as the preview)."""
+    payload = _json_payload(request)
+    owner = _notice_owner(payload.get("owner_id"))
+    if owner is None:
+        return JsonResponse({"ok": False, "error": "Resident was not found."}, status=404)
+    if debt_of(owner) <= 0:
+        return JsonResponse({"ok": False, "error": "The resident has no debt."}, status=409)
+
+    notice = _notice_for(request, owner, payload.get("language"))
+    filename = f"notice-{owner.apartment.building.number}-{owner.apartment.number}-{timezone.localdate():%Y%m%d}.pdf"
+    _log_notice(request, owner, "Payment notice downloaded as PDF", "pdf")
+    return JsonResponse({
+        "ok": True,
+        "download": {
+            "filename": re.sub(r"[^\w.-]", "_", filename),
+            "mime": "application/pdf",
+            "content": base64.b64encode(notice_pdf(notice)).decode("ascii"),
+        },
+    })
+
+
+@extend_schema(request=OpenApiTypes.OBJECT, responses=OpenApiTypes.OBJECT)
+@api_view(["POST"])
+def api_billing_notice_telegram(request):
+    """Send the selected resident's payment notice to their Telegram through the residents' bot."""
+    payload = _json_payload(request)
+    owner = _notice_owner(payload.get("owner_id"))
+    if owner is None:
+        return JsonResponse({"ok": False, "error": "Resident was not found."}, status=404)
+
+    notice = _notice_for(request, owner, payload.get("language"))
+    try:
+        send_debt_notice(owner, notice_telegram_text(notice))
+    except NoticeNotSent as error:
+        return JsonResponse({"ok": False, "error": str(error)}, status=error.status)
+
+    _log_notice(request, owner, "Billing notice sent to Telegram", "telegram")
     return JsonResponse({"ok": True, "sent": True, "ownerId": owner.id})
 
 

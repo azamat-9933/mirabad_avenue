@@ -10,12 +10,14 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
 from django.urls import reverse
+from django.utils import timezone
 from openpyxl import load_workbook
 
 from main_app.models import Apartment, Building, Complex, Owner
 from payments.models import Transaction
 from payments.services import OPENING_BALANCE_TAG, apply_account_change, apply_balance_change
 from portal.backend_data import build_portal_data
+from portal.models import AuditEvent
 
 
 PORTAL_PAGES = [
@@ -495,3 +497,61 @@ class PortalBoundedSnapshotTests(TestCase):
             reverse("portal:api_list_transactions"), {"apartment_id": self.owner.apartment_id, "page_size": 100}
         )
         self.assertEqual(response.json()["total"], 13)
+
+
+class PortalBillingNoticeTests(TestCase):
+    """Payment notice: one text for the window preview, the PDF and Telegram."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = get_user_model().objects.create_user(
+            username="desk", password="unused-password", first_name="Dilnoza", last_name="Karimova"
+        )
+        complex_obj = Complex.objects.create(title="Mirabad Avenue", address="", author="test")
+        building = Building.objects.create(number="64A", complex=complex_obj, author="test")
+        cls.apartment = Apartment.objects.create(number="12", area=Decimal("50"), building=building, author="test")
+        cls.owner = Owner.objects.create(fio="Aziz Karimov", phone="+998901112233", apartment=cls.apartment)
+
+    def setUp(self):
+        self.client.force_login(self.user)
+
+    def test_preview_has_the_facts_legal_basis_and_signatures(self):
+        apply_account_change(self.apartment.pk, Decimal("-150000"), Transaction.TYPE_MANUAL)
+
+        response = self.client.get(
+            reverse("portal:api_billing_notice_preview"), {"owner_id": self.owner.pk, "language": "uz"}
+        )
+
+        self.assertEqual(response.status_code, 200)
+        notice = response.json()["notice"]
+        facts = {field["key"]: field["value"] for field in notice["fields"]}
+        self.assertEqual(
+            (facts["sector"], facts["house"], facts["apartment"], facts["resident"], facts["phone"], facts["debt"]),
+            ("Mirabad Avenue", "64A", "12", "Aziz Karimov", "+998901112233", "150 000 so'm"),
+        )
+        self.assertEqual(facts["date"], timezone.localdate().strftime("%d.%m.%Y"))
+        text = " ".join(notice["paragraphs"])
+        for reference in ("132-moddasi", "134-moddasiga", "O'RQ-581", "236 va 237-moddalariga", "140 va 141-moddalariga"):
+            self.assertIn(reference, text)
+        signatures = {item["key"]: item["value"] for item in notice["signatures"]}
+        self.assertEqual(signatures["operator"], "Dilnoza Karimova")
+        self.assertTrue(signatures["director"])
+
+    def test_pdf_download_and_no_debt_refusal(self):
+        url = reverse("portal:api_billing_notice_pdf")
+        refused = self.client.post(url, {"owner_id": self.owner.pk, "language": "ru"}, content_type="application/json")
+        self.assertEqual(refused.status_code, 409)
+
+        apply_account_change(self.apartment.pk, Decimal("-150000"), Transaction.TYPE_MANUAL)
+        response = self.client.post(url, {"owner_id": self.owner.pk, "language": "ru"}, content_type="application/json")
+
+        self.assertEqual(response.status_code, 200)
+        download = response.json()["download"]
+        self.assertEqual(download["mime"], "application/pdf")
+        self.assertTrue(base64.b64decode(download["content"]).startswith(b"%PDF"))
+        self.assertTrue(download["filename"].endswith(".pdf"))
+        self.assertTrue(AuditEvent.objects.filter(title="Payment notice downloaded as PDF", owner=self.owner).exists())
+
+    def test_unknown_resident(self):
+        response = self.client.get(reverse("portal:api_billing_notice_preview"), {"owner_id": 999999})
+        self.assertEqual(response.status_code, 404)
