@@ -1,5 +1,7 @@
 from decimal import Decimal
+from importlib import import_module
 
+from django.apps import apps as django_apps
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
@@ -169,3 +171,67 @@ class BuildingApartmentOwnerInlineTests(TestCase):
         apartment.refresh_from_db()
         self.assertEqual(apartment.area, Decimal("60.00"))
         self.assertEqual(apartment.balance, Decimal("500"))
+
+
+class TelegramStatusMigrationTests(TestCase):
+    """0003 folds the old free-form Telegram statuses into connected / not connected."""
+
+    def test_old_statuses_become_connected_or_not_connected(self):
+        normalize = import_module("main_app.migrations.0003_normalize_telegram_status").normalize_telegram_statuses
+        complex_obj = Complex.objects.create(title="Mirabad Avenue", address="", author="test")
+        building = Building.objects.create(number="64", complex=complex_obj, author="test")
+        legacy = {
+            # (telegram_status, telegram_id, telegram_user): expected status
+            ("connected", None, None): Owner.TELEGRAM_CONNECTED,
+            ("linked", None, None): Owner.TELEGRAM_CONNECTED,
+            ("pending", "12345", None): Owner.TELEGRAM_CONNECTED,
+            ("review", None, "aziz"): Owner.TELEGRAM_CONNECTED,
+            ("pending", None, None): Owner.TELEGRAM_NOT_CONNECTED,
+            ("review", "", ""): Owner.TELEGRAM_NOT_CONNECTED,
+            ("", None, None): Owner.TELEGRAM_NOT_CONNECTED,
+        }
+        owners = {}
+        for number, (values, expected) in enumerate(legacy.items(), start=1):
+            apartment = Apartment.objects.create(number=str(number), area=Decimal("40"), building=building, author="t")
+            owner = Owner.objects.create(fio=f"Owner {number}", phone="+998900000000", apartment=apartment)
+            status, telegram_id, telegram_user = values
+            Owner.objects.filter(pk=owner.pk).update(
+                telegram_status=status, telegram_id=telegram_id, telegram_user=telegram_user
+            )
+            owners[owner.pk] = (values, expected)
+
+        normalize(django_apps, None)
+
+        for pk, (values, expected) in owners.items():
+            with self.subTest(values=values):
+                self.assertEqual(Owner.objects.get(pk=pk).telegram_status, expected)
+
+
+class OwnerTelegramAdminTests(TestCase):
+    def test_disconnect_telegram_action_unlinks_the_selected_residents(self):
+        user = get_user_model().objects.create_superuser(username="owner-admin", password="unused-password")
+        complex_obj = Complex.objects.create(title="Mirabad Avenue", address="", author="test")
+        building = Building.objects.create(number="64", complex=complex_obj, author="test")
+        apartment = Apartment.objects.create(number="1", area=Decimal("40"), building=building, author="test")
+        owner = Owner.objects.create(
+            fio="Aziz Karimov",
+            phone="+998901112233",
+            apartment=apartment,
+            telegram_id="555",
+            telegram_user="aziz_k",
+            telegram_status=Owner.TELEGRAM_CONNECTED,
+            telegram_language="ru",
+        )
+        self.client.force_login(user)
+
+        response = self.client.post(
+            reverse("admin:main_app_owner_changelist"),
+            {"action": "disconnect_telegram", "_selected_action": [owner.pk]},
+        )
+
+        self.assertEqual(response.status_code, 302)
+        owner.refresh_from_db()
+        self.assertEqual(
+            (owner.telegram_id, owner.telegram_user, owner.telegram_language, owner.telegram_status),
+            (None, None, "", Owner.TELEGRAM_NOT_CONNECTED),
+        )

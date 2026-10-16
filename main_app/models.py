@@ -112,6 +112,23 @@ class Apartment(models.Model):
 
 class Owner(models.Model):
     """Kvartira egasi — Payme orqali to'lovni shu model qabul qiladi"""
+
+    # Set by the Telegram bot: a resident is connected once they register there with this phone.
+    TELEGRAM_CONNECTED = "connected"
+    TELEGRAM_NOT_CONNECTED = "not_linked"
+    TELEGRAM_STATUS_CHOICES = [
+        (TELEGRAM_CONNECTED, "Connected"),
+        (TELEGRAM_NOT_CONNECTED, "Not connected"),
+    ]
+    LANGUAGE_UZ = "uz"
+    LANGUAGE_RU = "ru"
+    LANGUAGE_EN = "en"
+    LANGUAGE_CHOICES = [
+        (LANGUAGE_UZ, "O'zbekcha"),
+        (LANGUAGE_RU, "Русский"),
+        (LANGUAGE_EN, "English"),
+    ]
+
     fio = models.CharField(max_length=255, verbose_name="FIO")
     phone = models.CharField(max_length=20, verbose_name="Telefon")
     apartment = models.OneToOneField(
@@ -134,8 +151,20 @@ class Owner(models.Model):
     # Payme / Click uchun unikal ID — owner.id dan foydalanamiz
     # Telegram integratsiyasi
     telegram_id = models.CharField(max_length=255, null=True, blank=True)
-    telegram_status = models.CharField(max_length=50, null=True, blank=True)
+    telegram_status = models.CharField(
+        max_length=50,
+        choices=TELEGRAM_STATUS_CHOICES,
+        default=TELEGRAM_NOT_CONNECTED,
+        verbose_name="Telegram status",
+    )
     telegram_user = models.CharField(max_length=255, null=True, blank=True)
+    telegram_language = models.CharField(
+        max_length=2,
+        choices=LANGUAGE_CHOICES,
+        blank=True,
+        default="",
+        verbose_name="Telegram language",
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

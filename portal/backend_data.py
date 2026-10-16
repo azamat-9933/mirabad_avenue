@@ -252,23 +252,10 @@ def _transaction_method_label(transaction: Transaction, labels: dict[str, str] |
     return labels.get(transaction.payment_type, transaction.payment_type)
 
 
-def _normalized_telegram_status(value) -> str:
-    raw = str(value or "").strip().lower()
-    if raw in {"connected", "active", "verified", "true", "yes", "1", "linked"}:
-        return "connected"
-    return "not_linked"
-
-
 def _telegram_state(owner) -> tuple[str, bool]:
-    """(status, connected): a linked Telegram user/id or a connected-like status counts as connected."""
-    if owner is None:
-        return "not_linked", False
-    connected = bool(
-        str(owner.telegram_user or "").strip()
-        or str(owner.telegram_id or "").strip()
-        or _normalized_telegram_status(owner.telegram_status) == "connected"
-    )
-    return ("connected" if connected else "not_linked"), connected
+    """(status, connected); the Telegram bot sets the status when the resident registers."""
+    connected = bool(owner and owner.telegram_status == Owner.TELEGRAM_CONNECTED)
+    return (Owner.TELEGRAM_CONNECTED if connected else Owner.TELEGRAM_NOT_CONNECTED), connected
 
 
 # Row serializers shared by the portal snapshot and the paginated /api/lists/* endpoints,

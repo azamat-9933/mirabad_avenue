@@ -26,6 +26,7 @@
 - `python-dotenv` `1.2.2` (загрузка `.env`)
 - `openpyxl` `>=3.1,<4` (XLSX-экспорты)
 - `reportlab` `>=4.2,<5` (PDF-экспорты)
+- `aiogram` `3.31.0` (Telegram-бот жильцов, см. 13.1)
 
 ### 2.2 Frontend
 - Django Templates
@@ -68,6 +69,7 @@ flowchart LR
 - `billing/` — расчетный контур и legacy-совместимость биллинга.
 - `payments/` — транзакции и интеграционный слой Payme.
 - `portal/` — операционная модель, backend-агрегация, API и экспорты.
+- `telegram_bot/` — Telegram-бот жильцов (регистрация и привязка к резиденту по телефону), без своих моделей.
 - `templates/` — layout, страницы, body-шаблоны и overlays.
 - `static/` — frontend assets (JS/CSS, изображения).
 
@@ -129,6 +131,7 @@ OpenAPI-схема в репозитории не хранится: она ге�
 6. `python manage.py createsuperuser`
 7. `python manage.py runserver`
 8. Открыть `/login/` и войти созданным пользователем.
+9. (Необязательно) Telegram-бот: указать `TELEGRAM_BOT_TOKEN` в `.env` и в отдельном терминале запустить `python manage.py run_telegram_bot` (см. 13.1).
 
 Тесты: `python manage.py test` (нужен `.env` из шага 4 либо `DEBUG=True` или `SECRET_KEY` в окружении).
 
@@ -188,7 +191,9 @@ Portal page routes:
 
 ### `Owner`
 Поля: `fio`, `phone`, `apartment(OneToOne)`, `balance`, `has_contract`,
-`telegram_id`, `telegram_status`, `telegram_user`, `created_at`.
+`telegram_id`, `telegram_status`, `telegram_user`, `telegram_language`, `created_at`.
+
+Telegram-поля заполняет бот (13.1): `telegram_status` — `connected` (Подключён) или `not_linked` (Не подключён, по умолчанию при создании); `telegram_language` — язык бота (`uz`/`ru`/`en`).
 
 `Owner.balance` — копия счета его квартиры (обновляется вместе с ним). Новый владелец при создании получает текущий баланс квартиры, то есть долг или переплату, накопленные до него; смена квартиры у владельца тоже переносит его на счет новой квартиры.
 
@@ -286,11 +291,13 @@ Proxy-модели (`Complex`, `Building`, `BuildingSection`, `Apartment`, `Owne
 ## 8. Миграции и эволюция схемы
 
 Миграции по приложениям:
-- `main_app`: `0001_initial`, `0002_apartment_accounts`
+- `main_app`: `0001_initial`, `0002_apartment_accounts`, `0003_normalize_telegram_status`, `0004_owner_telegram_fields`
 - `billing`: `0001_initial`, `0002_apartment_accounts`
 - `payments`: `0001_initial`, `0002_apartment_accounts`
 - `properties`: `0001_initial`
 - `portal`: `0001_initial`, `0002_alter_workspaceprofile_organization_and_more`, `0003_remove_system_health`
+
+`main_app 0003/0004` сводят Telegram-статусы к двум: `0003` переводит старые значения (`connected`/`pending`/`review`/`not_linked`/пусто) в `connected`, если у жильца есть Telegram id или username либо статус «подключён», иначе в `not_linked` (так портал их и показывал); `0004` делает `telegram_status` полем с choices и default `not_linked` и добавляет `telegram_language`.
 
 `*_apartment_accounts` вводят лицевой счет квартиры: `Apartment.balance` заполняется балансом ее владельца, у существующих `Transaction` проставляется `apartment` по владельцу, `Transaction.owner` и `Charge.owner` становятся необязательными (`SET_NULL`).
 
@@ -370,6 +377,7 @@ Proxy-модели (`Complex`, `Building`, `BuildingSection`, `Apartment`, `Owne
 - `POST /api/usage-report/export/` — фиксирует событие экспорта usage report.
 - `POST /api/export/report/` — универсальный экспорт (`XLSX`/`PDF`), в т.ч. специализированные billing report types.
 - `POST /api/reminders/send/` — создать reminder-уведомления для целевых жильцов.
+- `POST /api/billing-notice/telegram/` (`owner_id`) — отправить жильцу уведомление о долге в Telegram через бота (кнопка «Уведомить в Telegram» в окне платёжного уведомления) и записать `AuditEvent` типа `reminder`. Текст собирается на сервере из текущего баланса квартиры, на языке жильца в боте. Ошибки: 404 — жилец не найден; 409 — не подключён к Telegram или нет долга; 502 — Telegram не доставил (например, жилец заблокировал бота); 503 — не задан `TELEGRAM_BOT_TOKEN`.
 
 ## 9.4 Период-фильтрация
 `_apply_period_filter` поддерживает:
@@ -405,7 +413,7 @@ Top-level ключи snapshot (`GET /api/portal-data/`):
 Источник данных для snapshot: `portal/backend_data.py` (`build_portal_data`).
 
 Строки описываются одними функциями и в snapshot, и в `/api/lists/*` (`portal/backend_data.py`): `serialize_resident`, `serialize_transaction`, `serialize_complex`, `serialize_notification`, `serialize_audit_event`, плюс `residential_override_maps` / `transaction_override_map` для статусов, назначенных в портале. Новое поле добавляется в одном месте и появляется в обоих источниках; тест `test_snapshot_and_list_endpoints_describe_rows_identically` это проверяет.
-- `telegramStatus` всегда нормализован: `connected` / `not_linked` (как считает и фронтенд).
+- `telegramStatus` — `Owner.telegram_status`: `connected` / `not_linked` (его ставит Telegram-бот); `telegramConnected` — то же как boolean.
 - `/api/lists/complexes/` дополнительно отдает `debt` (= `extraDebt`) и `finances` (= `health`) — только для сортировки этого списка.
 
 ### Производительность snapshot
@@ -536,19 +544,38 @@ API пути, используемые frontend:
   - баланс: для новой квартиры — начальный баланс (`manual` с тегом `[opening-balance]`, через `apply_account_change`); для существующей — только показ текущего счета.
   - очистка ФИО/телефона у квартиры с владельцем — ошибка, а не удаление: убрать владельца можно только на странице резидента (там же Telegram-поля).
 - admin сохраняет квартиру без поля `balance` (`save_apartment`), чтобы не перезаписать платеж, проведенный во время сохранения формы.
+- резидент (`OwnerAdmin`): Telegram-поля только для чтения — их заполняет бот; фильтр по статусу Telegram; действие «Отключить Telegram» очищает id/username/язык и ставит `not_linked`. В портале форма создания жильца Telegram-полей тоже не имеет.
+
+## 13.1 Telegram-бот жильцов
+
+Приложение `telegram_bot` (aiogram 3), запуск: `python manage.py run_telegram_bot` (long polling, токен — `TELEGRAM_BOT_TOKEN` из `.env`). Это отдельный долгоживущий процесс: на сервере его запускают рядом с веб-приложением (systemd/supervisor/pm2) с тем же `.env` и той же БД.
+
+Сценарий:
+1. `/start` → выбор языка (O'zbekcha / Русский / English); дальше все сообщения и кнопки на выбранном языке.
+2. Ф.И.О. → телефон кнопкой «Отправить контакт». Принимается только собственный контакт пользователя (`contact.user_id` = отправитель): Telegram подтверждает, что номер его, поэтому ввести чужой номер нельзя.
+3. Бот показывает введенные данные → «Подтвердить» / «Отклонить». «Отклонить» начинает регистрацию заново (с Ф.И.О., язык сохраняется).
+4. «Подтвердить» → `services.link_by_phone`: ищет резидентов с этим телефоном (сравниваются последние 9 цифр, формат и код страны не важны), всем найденным ставит `telegram_id`, `telegram_user`, `telegram_language`, `telegram_status = connected` и пишет `AuditEvent` «Telegram connected». Если номер не найден — сообщение с кнопкой «Попробовать снова» и `AuditEvent` «phone not found» (администратор видит, кто не смог зарегистрироваться).
+5. Зарегистрированный пользователь по `/start` попадает в главное меню: его квартиры с балансом (долг/переплата), кнопки «Баланс» и «Сменить язык».
+
+Уведомления из портала: в окне платёжного уведомления (Billing → «Generate Billing Notice») подключённые к Telegram должники помечены «Telegram подключён»; кнопка «Уведомить в Telegram» отправляет выбранному жильцу уведомление о долге (`notifications.send_debt_notice`, endpoint `POST /api/billing-notice/telegram/`, см. 9.3). Отправка идет напрямую через Bot API с тем же токеном, поэтому процесс `run_telegram_bot` для неё не нужен; жилец получает сообщение, только если он когда-то нажал /start у этого бота.
+
+Файлы: `handlers.py` (диалог и `build_router()`), `texts.py` (тексты и кнопки на 3 языках), `keyboards.py`, `states.py` (FSM), `services.py` (вся работа с БД через `sync_to_async`), `notifications.py` (уведомление о долге из портала), `runner.py` (бот, диспетчер, закрытие устаревших соединений БД вокруг каждого апдейта).
+
+Ограничение: состояние диалога хранится в памяти процесса — после перезапуска бота незавершенная регистрация начинается заново.
 
 ---
 
 ## 14. Тесты и качество
 
-Запуск: `python manage.py test` — 81 тест (нужен `.env` или `DEBUG=True`, см. 5.5).
+Запуск: `python manage.py test` — 101 тест (нужен `.env` или `DEBUG=True`, см. 5.5).
 
 Наличие тестов:
 - `billing/tests.py` (24) — core биллинга: расчеты, `close_period`, `recalculate`, `Payment.apply`, проводки в журнал, начисления пустой квартире и переход ее долга к новому владельцу.
 - `payments/tests.py` (9) — журнал баланса: `apply_balance_change`, платежи и начальный баланс из портала и admin, что считается платежом.
 - `portal/tests.py` (36) — вход/выход и закрытость страниц и API, CSRF, snapshot (`<script>`-встраивание, gzip, совпадение snapshot и `/api/lists/*`, 5 записей на счет, итоги за всю историю), долг пустой квартиры в портале, XLSX/PDF-экспорты, отсутствие демо-данных, удаленные страницы System Health.
 - `config/tests.py` (5) — безопасные настройки production (секретный ключ, cookies) в отдельных процессах.
-- `main_app/tests.py` (7) — страница дома в admin: создание квартир с владельцами и начальным балансом, владелец пустой квартиры принимает ее долг, правка существующего владельца, проверки полей, защита от удаления владельца очисткой строки, сохранение квартиры не затирает баланс.
+- `main_app/tests.py` (9) — страница дома в admin: создание квартир с владельцами и начальным балансом, владелец пустой квартиры принимает ее долг, правка существующего владельца, проверки полей, защита от удаления владельца очисткой строки, сохранение квартиры не затирает баланс; миграция Telegram-статусов; действие «Отключить Telegram».
+- `telegram_bot/tests.py` (18) — тексты на 3 языках, сравнение телефонов, привязка к одному и нескольким резидентам, неизвестный номер; весь диалог бота через диспетчер aiogram без обращения к Telegram (подтверждение, отклонение, только свой контакт, «Попробовать снова», главное меню и смена языка); уведомление о долге из портала (текст на языке жильца, журнал, отказ без Telegram/без долга/без токена, бот заблокирован).
 
 Не покрыты: большинство action endpoints портала (создание дома/квартиры/жильца, алерты, чеклисты, напоминания, статусы), фильтры list endpoints и frontend (JS) — автотестов браузера нет.
 
@@ -602,6 +629,7 @@ Backend:
 - `portal/views.py`
 - `portal/backend_data.py`
 - `portal/report_exports.py`
+- `telegram_bot/handlers.py`, `telegram_bot/services.py`, `telegram_bot/texts.py`
 
 Frontend:
 - `templates/base.html`

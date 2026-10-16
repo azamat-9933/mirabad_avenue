@@ -95,6 +95,7 @@ INSTALLED_APPS = [
     'main_app',
     'billing',
     'payments',
+    'telegram_bot',
     'rest_framework',
     'corsheaders',
     'drf_spectacular',
@@ -241,3 +242,6 @@ SPECTACULAR_SETTINGS = {
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Residents' Telegram bot (python manage.py run_telegram_bot); token from @BotFather.
+TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN', '').strip()

@@ -249,7 +249,7 @@ class PortalSnapshotTests(TestCase):
 
 
     def test_snapshot_and_list_endpoints_describe_rows_identically(self):
-        Owner.objects.filter(pk=self.owner.pk).update(telegram_status="linked", has_contract=True)
+        Owner.objects.filter(pk=self.owner.pk).update(telegram_status=Owner.TELEGRAM_CONNECTED, has_contract=True)
         apply_balance_change(self.owner.id, Decimal("1000"), Transaction.TYPE_CASH, description="[portal:cash-credit] x")
         snapshot = build_portal_data(self.user)
 

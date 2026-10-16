@@ -328,8 +328,16 @@
         "Notice text was copied to clipboard.": { ru: "Текст уведомления скопирован в буфер обмена.", uz: "Xabarnoma matni almashish buferiga nusxalandi." },
         "Copy failed": { ru: "Не удалось скопировать", uz: "Nusxalab bo'lmadi" },
         "Could not copy notice text.": { ru: "Не удалось скопировать текст уведомления.", uz: "Xabarnoma matnini nusxalab bo'lmadi." },
-        "In development": { ru: "В разработке", uz: "Ishlanmoqda" },
-        "Telegram notification flow is not connected yet.": { ru: "Логика уведомления в Telegram пока не подключена.", uz: "Telegram orqali xabardor qilish hali ulanmagan." },
+        "Telegram connected": { ru: "Telegram подключён", uz: "Telegram ulangan" },
+        "Sent to Telegram": { ru: "Отправлено в Telegram", uz: "Telegramga yuborildi" },
+        "The debt notice was sent to the resident in Telegram.": { ru: "Уведомление о долге отправлено резиденту в Telegram.", uz: "Qarz haqidagi xabarnoma rezidentga Telegramda yuborildi." },
+        "Not sent": { ru: "Не отправлено", uz: "Yuborilmadi" },
+        "The resident is not connected to Telegram.": { ru: "Резидент не подключён к Telegram.", uz: "Rezident Telegramga ulanmagan." },
+        "The resident has no debt.": { ru: "У резидента нет долга.", uz: "Rezidentning qarzi yo'q." },
+        "Could not send the notice.": { ru: "Не удалось отправить уведомление.", uz: "Xabarnomani yuborib bo'lmadi." },
+        "Resident was not found.": { ru: "Резидент не найден.", uz: "Rezident topilmadi." },
+        "The Telegram bot is not configured (TELEGRAM_BOT_TOKEN).": { ru: "Telegram-бот не настроен (TELEGRAM_BOT_TOKEN).", uz: "Telegram-bot sozlanmagan (TELEGRAM_BOT_TOKEN)." },
+        "The resident has blocked the bot, so Telegram did not deliver the notice.": { ru: "Резидент заблокировал бота, поэтому Telegram не доставил уведомление.", uz: "Rezident botni bloklagan, shuning uchun Telegram xabarnomani yetkazmadi." },
         "Close": { ru: "Закрыть", uz: "Yopish" },
         "Add district": { ru: "Добавить район", uz: "Hudud qo'shish" },
         "Add house": { ru: "Добавить дом", uz: "Uy qo'shish" },
@@ -6115,9 +6123,6 @@
                     apartment_id: formData.get("apartment_id"),
                     balance: formData.get("balance"),
                     has_contract: formData.get("has_contract"),
-                    telegram_id: formData.get("telegram_id"),
-                    telegram_user: formData.get("telegram_user"),
-                    telegram_status: formData.get("telegram_status"),
                 });
                 rehydrateFromPortalData(payload.portalData);
                 form.reset();
@@ -6811,6 +6816,7 @@
                                 <p class="text-sm font-black text-on-surface truncate">${escapeHtml(resident.name || "-")}</p>
                                 <p class="text-xs text-on-surface-variant mt-1 truncate">${escapeHtml([resident.building, resident.apartment].filter(Boolean).join(" • ") || resident.apartment || "-")}</p>
                                 <p class="text-xs text-on-surface-variant mt-2 truncate">${escapeHtml(resident.phone || "-")}</p>
+                                ${resident.telegramConnected ? `<p class="text-[11px] font-bold text-primary mt-1" data-i18n-key="Telegram connected">${escapeHtml(t("Telegram connected"))}</p>` : ""}
                             </div>
                             <div class="shrink-0 text-right">
                                 <p class="text-sm font-black text-error">${escapeHtml(formatBillingUzs(debtValue(resident)))}</p>
@@ -6965,7 +6971,7 @@
         });
 
         copyButton?.addEventListener("click", async () => {
-            const resident = resolveActiveResident(filteredDebtors());
+            const resident = resolveActiveResident(filteredNoticeResidents());
             if (!resident) return;
             try {
                 await navigator.clipboard.writeText(buildNoticeText(resident));
@@ -6975,8 +6981,27 @@
             }
         });
 
-        telegramButton?.addEventListener("click", () => {
-            toast("In development", "Telegram notification flow is not connected yet.", "info");
+        // The server builds the Telegram text from the current balance, in the resident's bot language.
+        telegramButton?.addEventListener("click", async () => {
+            const resident = resolveActiveResident(filteredNoticeResidents());
+            if (!resident) return;
+            if (!resident.ownerBackendId || !resident.telegramConnected) {
+                toast("Not sent", "The resident is not connected to Telegram.", "warning");
+                return;
+            }
+            if (debtValue(resident) <= 0) {
+                toast("Not sent", "The resident has no debt.", "warning");
+                return;
+            }
+            telegramButton.disabled = true;
+            try {
+                await postPortalJson("/api/billing-notice/telegram/", { owner_id: resident.ownerBackendId });
+                toast("Sent to Telegram", "The debt notice was sent to the resident in Telegram.", "success");
+            } catch (error) {
+                toast("Not sent", error?.message || "Could not send the notice.", "warning");
+            } finally {
+                telegramButton.disabled = false;
+            }
         });
 
         document.addEventListener("hydroflow:backend-refreshed", () => {
@@ -7952,10 +7977,8 @@
         const balanceValue = Number(resident.balance || 0);
         const isPositiveBalance = balanceValue >= 0;
         const telegramUser = formatTelegramHandle(resident.telegramUser);
-        const telegramStatusRaw = String(resident.telegramStatus || "").toLowerCase();
-        const telegramConnected = Boolean(resident.telegramConnected)
-            || Boolean(telegramUser)
-            || ["connected", "active", "verified", "true", "yes", "1", "linked"].includes(telegramStatusRaw);
+        // The Telegram bot sets the status when the resident registers there.
+        const telegramConnected = Boolean(resident.telegramConnected);
         const hasContract = hasResidentContract(resident);
         const ownerBackendId = extractOwnerBackendId(resident.ownerBackendId, resident.backendId, resident.id);
 

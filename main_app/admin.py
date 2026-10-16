@@ -400,14 +400,6 @@ class BuildingSelect(forms.Select):
 
 
 class OwnerAdminForm(forms.ModelForm):
-    TELEGRAM_STATUS_CHOICES = [
-        ("", "---------"),
-        ("connected", "Connected"),
-        ("pending", "Pending"),
-        ("review", "Review"),
-        ("not_linked", "Not linked"),
-    ]
-
     complex_selector = forms.ModelChoiceField(
         label="Complex",
         queryset=Complex.objects.none(),
@@ -419,11 +411,6 @@ class OwnerAdminForm(forms.ModelForm):
         queryset=Building.objects.none(),
         required=False,
         help_text="Optional helper filter for selecting the apartment.",
-    )
-    telegram_status = forms.ChoiceField(
-        label="Telegram status",
-        choices=TELEGRAM_STATUS_CHOICES,
-        required=False,
     )
 
     class Meta:
@@ -511,12 +498,15 @@ class OwnerAdmin(admin.ModelAdmin):
         "created_at",
     )
     list_display_links = ("fio",)
-    list_filter   = ("apartment__building__complex", "apartment__building")
+    list_filter   = ("apartment__building__complex", "apartment__building", "telegram_status")
     search_fields = ("fio", "phone", "telegram_user", "apartment__number")
+    actions = ("disconnect_telegram",)
     readonly_fields = (
         "created_at",
         "balance_display",
     )
+    # Filled in by the Telegram bot when the resident registers there with this phone.
+    TELEGRAM_FIELDS = ("telegram_status", "telegram_user", "telegram_id", "telegram_language")
     fieldsets = (
         (
             "Personal data",
@@ -551,7 +541,18 @@ class OwnerAdmin(admin.ModelAdmin):
 
     def get_readonly_fields(self, request, obj=None):
         # After creation the balance changes only through the Transaction ledger.
-        return ("created_at", "balance", "balance_display") if obj else ("created_at_note", "balance_display")
+        fields = ("created_at", "balance", "balance_display") if obj else ("created_at_note", "balance_display")
+        return fields + self.TELEGRAM_FIELDS
+
+    @admin.action(description="Disconnect Telegram")
+    def disconnect_telegram(self, request, queryset):
+        queryset.update(
+            telegram_id=None,
+            telegram_user=None,
+            telegram_language="",
+            telegram_status=Owner.TELEGRAM_NOT_CONNECTED,
+        )
+        self.message_user(request, "Telegram was disconnected for the selected residents.")
 
     def save_model(self, request, obj, form, change):
         opening_balance = Decimal("0")
@@ -600,12 +601,11 @@ class OwnerAdmin(admin.ModelAdmin):
             (
                 "Telegram",
                 {
-                    "fields": (
-                        "telegram_id",
-                        "telegram_user",
-                        "telegram_status",
+                    "fields": self.TELEGRAM_FIELDS,
+                    "description": (
+                        "Filled in by the Telegram bot when the resident registers there with this phone number. "
+                        "To unlink, use the \"Disconnect Telegram\" action in the residents list."
                     ),
-                    "classes": ("collapse",),
                 },
             ),
         ]

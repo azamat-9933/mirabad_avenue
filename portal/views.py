@@ -32,6 +32,7 @@ from billing.models import BillingPeriod, Expense, HeatingApartmentUsage, Heatin
 from properties.models import Apartment, Building, Complex, Owner
 from payments.models import Transaction
 from payments.services import OPENING_BALANCE_TAG, apply_balance_change, incoming_payment_q
+from telegram_bot.notifications import NoticeNotSent, send_debt_notice
 from portal.models import (
     AuditEvent,
     ChecklistItem,
@@ -44,7 +45,6 @@ from portal.models import (
 
 from .backend_data import (
     _datetime,
-    _normalized_telegram_status,
     _payment_type_labels,
     account_payment_totals,
     build_portal_data,
@@ -615,17 +615,9 @@ def api_list_residents(request):
     elif status_value == "paid":
         queryset = queryset.filter(balance__gte=0)
     if telegram_value in {"connected", "true", "yes"}:
-        queryset = queryset.filter(
-            (Q(telegram_user__isnull=False) & ~Q(telegram_user=""))
-            | (Q(telegram_id__isnull=False) & ~Q(telegram_id=""))
-            | Q(telegram_status__in=["connected", "active", "verified"])
-        )
+        queryset = queryset.filter(telegram_status=Owner.TELEGRAM_CONNECTED)
     elif telegram_value in {"not_linked", "offline", "false", "no", "pending", "review"}:
-        queryset = queryset.filter(
-            Q(telegram_user__isnull=True) | Q(telegram_user="")
-        ).filter(
-            Q(telegram_id__isnull=True) | Q(telegram_id="")
-        ).exclude(telegram_status__in=["connected", "active", "verified"])
+        queryset = queryset.exclude(telegram_status=Owner.TELEGRAM_CONNECTED)
     if contract_value == "true":
         queryset = queryset.filter(has_contract=True)
     elif contract_value == "false":
@@ -1687,22 +1679,14 @@ def api_create_resident(request):
             status=409,
         )
 
-    telegram_id = str(payload.get("telegram_id") or "").strip() or None
-    telegram_user = str(payload.get("telegram_user") or "").strip() or None
-    telegram_status = _normalized_telegram_status(payload.get("telegram_status"))
-    if telegram_id or telegram_user:
-        telegram_status = "connected"
-
     opening_balance = _decimal_or_zero(payload.get("balance"))
     with transaction.atomic():
+        # Telegram starts as not connected; the bot connects the resident when they register there.
         owner = Owner.objects.create(
             fio=fio,
             phone=phone[:20],
             apartment=apartment,
             has_contract=_to_bool(payload.get("has_contract")),
-            telegram_id=telegram_id,
-            telegram_user=telegram_user,
-            telegram_status=telegram_status,
         )
         if opening_balance:
             apply_balance_change(
@@ -1732,6 +1716,43 @@ def api_create_resident(request):
             "portalData": safe_portal_data(request),
         }
     )
+
+
+@extend_schema(request=OpenApiTypes.OBJECT, responses=OpenApiTypes.OBJECT)
+@api_view(["POST"])
+def api_billing_notice_telegram(request):
+    """Send the selected resident's debt notice to their Telegram through the residents' bot."""
+    payload = _json_payload(request)
+    owner_id = re.sub(r"\D", "", str(payload.get("owner_id") or ""))
+    owner = (
+        Owner.objects.select_related("apartment", "apartment__building", "apartment__building__complex")
+        .filter(pk=int(owner_id))
+        .first()
+        if owner_id
+        else None
+    )
+    if owner is None:
+        return JsonResponse({"ok": False, "error": "Resident was not found."}, status=404)
+
+    try:
+        send_debt_notice(owner)
+    except NoticeNotSent as error:
+        return JsonResponse({"ok": False, "error": str(error)}, status=error.status)
+
+    apartment = owner.apartment
+    debt = -apartment.balance
+    AuditEvent.objects.create(
+        event_type=AuditEvent.TYPE_REMINDER,
+        title="Billing notice sent to Telegram",
+        message=f"Debt notice for {debt:,.2f} UZS was sent to {owner.fio} in Telegram.",
+        actor=_actor(request),
+        complex=apartment.building.complex,
+        building=apartment.building,
+        apartment=apartment,
+        owner=owner,
+        metadata={"channel": "telegram", "debt": str(debt)},
+    )
+    return JsonResponse({"ok": True, "sent": True, "ownerId": owner.id})
 
 
 @extend_schema(request=OpenApiTypes.OBJECT, responses=OpenApiTypes.OBJECT)
