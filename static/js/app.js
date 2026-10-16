@@ -283,6 +283,9 @@
         "Cash": { ru: "Наличные", uz: "Naqd" },
         "Terminal": { ru: "Терминал", uz: "Terminal" },
         "Card": { ru: "Карта", uz: "Karta" },
+        "Card (terminal)": { ru: "Карта (терминал)", uz: "Karta (terminal)" },
+        "Card transfer": { ru: "Перевод на карту", uz: "Kartaga o'tkazma" },
+        "Card transfer payment synced with backend.": { ru: "Платёж переводом на карту синхронизирован с backend.", uz: "Kartaga o'tkazma to'lovi backend bilan sinxronlandi." },
         "Save payment": { ru: "Сохранить платёж", uz: "To'lovni saqlash" },
         "Payment will be saved and balances will refresh from backend data.": { ru: "Платёж будет сохранён, после чего балансы обновятся из backend-данных.", uz: "To'lov saqlanadi va keyin balanslar backend ma'lumotlaridan yangilanadi." },
         "Select a resident": { ru: "Выберите абонента", uz: "Abonentni tanlang" },
@@ -1206,8 +1209,9 @@
         const totalDebt = complexes.reduce((total, complex) => total + complex.debt, 0);
         const detailedDebt = billingData.residents.reduce((total, resident) => total + (resident.balance < 0 ? Math.abs(resident.balance) : 0), 0);
         const summaryChannels = billingData.paymentSummary?.channels || {};
-        const methodTotals = Object.fromEntries(["Payme", "Click", "Cash", "Card"].map((channel) => [channel, Number(summaryChannels[channel]?.amount || 0)]));
-        const methodResidentCounts = Object.fromEntries(["Payme", "Click", "Cash", "Card"].map((channel) => [channel, Number(summaryChannels[channel]?.residents || 0)]));
+        const paymentChannels = ["Payme", "Click", "Cash", "Card", "Card transfer"];
+        const methodTotals = Object.fromEntries(paymentChannels.map((channel) => [channel, Number(summaryChannels[channel]?.amount || 0)]));
+        const methodResidentCounts = Object.fromEntries(paymentChannels.map((channel) => [channel, Number(summaryChannels[channel]?.residents || 0)]));
         const totalWaterM3 = billingData.complexes.reduce((total, complex) => total + complex.waterM3, 0);
         const totalHeatingM3 = billingData.complexes.reduce((total, complex) => total + complex.heatingM3, 0);
         const totalUsageM3 = totalWaterM3 + totalHeatingM3;
@@ -1425,11 +1429,12 @@
             Click: "#17B26A",
             Cash: "#F59E0B",
             Card: "#6C63FF",
+            "Card transfer": "#0EA5E9",
         };
-        const channelDisplayOrder = ["Cash", "Card", "Click", "Payme"];
-        const channelTotals = { Payme: 0, Click: 0, Cash: 0, Card: 0 };
+        const channelDisplayOrder = ["Cash", "Card", "Card transfer", "Click", "Payme"];
+        const channelTotals = { Payme: 0, Click: 0, Cash: 0, Card: 0, "Card transfer": 0 };
         // Accounts are counted per house by the backend; houses never share an account, so they add up.
-        const channelResidentCounts = { Payme: 0, Click: 0, Cash: 0, Card: 0 };
+        const channelResidentCounts = { Payme: 0, Click: 0, Cash: 0, Card: 0, "Card transfer": 0 };
         selectedMonthRows.forEach((row) => {
             if (!(row.channel in channelTotals)) return;
             channelTotals[row.channel] += Number(row.amount || 0);
@@ -1628,6 +1633,7 @@
             const channelIcons = {
                 Cash: '<span class="material-symbols-outlined analytics-v2-channel-symbol analytics-v2-channel-symbol--cash" aria-hidden="true">payments</span>',
                 Card: '<span class="material-symbols-outlined analytics-v2-channel-symbol analytics-v2-channel-symbol--card" aria-hidden="true">credit_card</span>',
+                "Card transfer": '<span class="material-symbols-outlined analytics-v2-channel-symbol analytics-v2-channel-symbol--transfer" aria-hidden="true">sync_alt</span>',
                 Click: `<img alt="" class="payment-brand-logo payment-brand-logo-click" src="${escapeHtml(channelList.dataset.clickLogo || "")}">`,
                 Payme: `<img alt="" class="payment-brand-logo payment-brand-logo-payme" src="${escapeHtml(channelList.dataset.paymeLogo || "")}">`,
             };
@@ -8205,7 +8211,7 @@
     const syncAddPaymentSubmitState = () => {
         if (!addPaymentNodes?.submit) return;
         const amountValue = addPaymentAmount();
-        const channelReady = addPaymentState.operation === "debit" || ["cash", "card"].includes(addPaymentState.channel);
+        const channelReady = addPaymentState.operation === "debit" || ["cash", "card", "transfer"].includes(addPaymentState.channel);
         addPaymentNodes.submit.disabled = addPaymentState.submitting || !addPaymentState.selectedResident || !(amountValue > 0) || !channelReady;
     };
     const syncAddPaymentMode = () => {
@@ -8384,7 +8390,11 @@
             toast(
                 addPaymentState.operation === "credit" ? t("Payment saved") : t("Balance updated"),
                 addPaymentState.operation === "credit"
-                    ? t(addPaymentState.channel === "cash" ? "Cash payment synced with backend." : "Card payment synced with backend.")
+                    ? t({
+                        cash: "Cash payment synced with backend.",
+                        card: "Card payment synced with backend.",
+                        transfer: "Card transfer payment synced with backend.",
+                    }[addPaymentState.channel] || "Card payment synced with backend.")
                     : t("Manual subtraction synced with backend."),
                 "success"
             );

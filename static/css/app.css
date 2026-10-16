@@ -15404,6 +15404,11 @@ html.dark .command-item-icon,
     grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+/* Third channel: a full-width row under cash and card. */
+[data-add-payment-channel-group] .add-payment-toggle-row [data-add-payment-channel="transfer"] {
+    grid-column: 1 / -1;
+}
+
 .add-payment-toggle-row button {
     width: 100%;
     flex: 0 0 auto;
@@ -16622,6 +16627,10 @@ html.dark .analytics-house-debt-row.is-clear .analytics-house-debt-amount,
 
 .analytics-v2-channel-symbol--card {
     color: #0284C7;
+}
+
+.analytics-v2-channel-symbol--transfer {
+    color: #0EA5E9;
 }
 
 html.dark .analytics-v2-channel-avatar,

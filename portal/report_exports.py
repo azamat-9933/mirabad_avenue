@@ -93,6 +93,7 @@ REPORT_TEXT = {
     "payment_cash": {"en": "Cash", "ru": "Наличные", "uz": "Naqd"},
     "payment_card": {"en": "By card", "ru": "Картой", "uz": "Karta orqali"},
     "payment_terminal": {"en": "Terminal", "ru": "Терминал", "uz": "Terminal"},
+    "payment_transfer": {"en": "Card transfer", "ru": "Перевод на карту", "uz": "Kartaga o'tkazma"},
     "payment_manual": {"en": "Manual adjustment", "ru": "Ручная корректировка", "uz": "Qo'lda tuzatish"},
     "payment_charge": {"en": "Monthly charge", "ru": "Начисление за месяц", "uz": "Oylik hisoblash"},
     "payment_recalculation": {"en": "Recalculation", "ru": "Перерасчёт", "uz": "Qayta hisoblash"},
@@ -171,6 +172,8 @@ def _transaction_channel_key(transaction: Transaction) -> str:
         return "payment_terminal"
     if "[portal:card-credit]" in description:
         return "payment_card"
+    if "[portal:transfer-credit]" in description:
+        return "payment_transfer"
     if "[portal:balance-debit]" in description:
         return "payment_balance_debit"
     if "[billing:recalculation]" in description:
@@ -202,6 +205,7 @@ def _transaction_description_text(transaction: Transaction, language: str) -> st
         "portal credit via payme.": "payment_payme",
         "portal credit via cash.": "payment_cash",
         "portal credit via card.": "payment_card",
+        "portal credit via card transfer.": "payment_transfer",
         "portal manual balance subtraction.": "payment_balance_debit",
     }
     common_key = common_descriptions.get(normalized)

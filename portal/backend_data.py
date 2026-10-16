@@ -224,7 +224,7 @@ def _transaction_type(transaction: Transaction, labels: dict[str, str] | None = 
     if transaction.payment_type == Transaction.TYPE_CHARGE and "[billing:recalculation]" in description:
         return "Recalculation"
     if transaction.payment_type == Transaction.TYPE_MANUAL:
-        if "[portal:card-credit]" in description or "[portal:terminal-credit]" in description:
+        if any(tag in description for tag in ("[portal:card-credit]", "[portal:terminal-credit]", "[portal:transfer-credit]")):
             return "Utility Payment"
         if "[portal:balance-debit]" in description:
             return "Manual Adjustment"
@@ -246,6 +246,8 @@ def _transaction_method_label(transaction: Transaction, labels: dict[str, str] |
     if transaction.payment_type == Transaction.TYPE_MANUAL:
         if "[portal:card-credit]" in description or "[portal:terminal-credit]" in description:
             return "Card"
+        if "[portal:transfer-credit]" in description:
+            return "Card transfer"
         if "[portal:balance-debit]" in description:
             return "Adjustment"
     labels = labels if labels is not None else _payment_type_labels()
@@ -708,7 +710,7 @@ def _serialize_support_summary() -> dict:
 # The snapshot carries only the latest ledger rows of each account; anything that needs the whole
 # history gets it pre-aggregated (account_payment_totals, payment_summary) or from /api/lists/transactions/.
 RECENT_TRANSACTIONS_PER_ACCOUNT = 5
-PAYMENT_CHANNELS = ("Payme", "Click", "Cash", "Card")
+PAYMENT_CHANNELS = ("Payme", "Click", "Cash", "Card", "Card transfer")
 
 
 def account_payment_totals() -> dict[int, tuple[float, object]]:
@@ -732,6 +734,8 @@ def _payment_channel(payment_type: str, description: str) -> str:
         return "Cash"
     if "[portal:card-credit]" in description or "[portal:terminal-credit]" in description:
         return "Card"
+    if "[portal:transfer-credit]" in description:
+        return "Card transfer"
     return ""
 
 

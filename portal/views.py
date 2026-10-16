@@ -1099,6 +1099,8 @@ def _current_user_or_none(request):
 def _portal_payment_description(operation: str, channel: str) -> str:
     if operation == "credit" and channel in {"card", "terminal"}:
         return "[portal:card-credit] Portal credit via card."
+    if operation == "credit" and channel == "transfer":
+        return "[portal:transfer-credit] Portal credit via card transfer."
     if operation == "credit":
         return "[portal:cash-credit] Portal credit via cash."
     return "[portal:balance-debit] Portal manual balance subtraction."
@@ -1767,10 +1769,10 @@ def api_create_payment(request):
         return JsonResponse({"ok": False, "error": "Amount must be greater than zero."}, status=400)
     if operation not in {"credit", "debit"}:
         return JsonResponse({"ok": False, "error": "Unknown payment operation."}, status=400)
-    # Operators take cash or a card via the terminal; Payme and Click payments arrive from those
-    # services' own integrations, never typed in by hand.
-    if operation == "credit" and channel not in {"cash", "card", "terminal"}:
-        return JsonResponse({"ok": False, "error": "Payment channel must be cash or card."}, status=400)
+    # Operators take cash, a card via the terminal, or a transfer to the company card made at the
+    # office; Payme and Click payments arrive from those services' own integrations, never by hand.
+    if operation == "credit" and channel not in {"cash", "card", "terminal", "transfer"}:
+        return JsonResponse({"ok": False, "error": "Payment channel must be cash, card or card transfer."}, status=400)
 
     try:
         owner = Owner.objects.select_related(

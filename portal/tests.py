@@ -150,7 +150,7 @@ class PortalAuthenticationTests(TestCase):
         self.owner.refresh_from_db()
         self.assertEqual(self.owner.balance, Decimal("1000"))
 
-    def test_operators_take_cash_or_card_only(self):
+    def test_operators_take_cash_card_or_card_transfer_only(self):
         # Payme and Click payments come from those services' integrations, not from the portal form.
         self.client.force_login(self.user)
         url = reverse("portal:api_create_payment")
@@ -162,10 +162,29 @@ class PortalAuthenticationTests(TestCase):
                 self.assertEqual(response.status_code, 400)
         self.assertFalse(Transaction.objects.exists())
 
-        response = self.client.post(url, {**self._payment_payload(), "channel": "card"}, content_type="application/json")
+        for channel, tag in (("card", "[portal:card-credit]"), ("transfer", "[portal:transfer-credit]")):
+            with self.subTest(channel=channel):
+                response = self.client.post(
+                    url, {**self._payment_payload(), "channel": channel}, content_type="application/json"
+                )
+                self.assertEqual(response.status_code, 200)
+                self.assertIn(tag, Transaction.objects.latest("id").description)
 
-        self.assertEqual(response.status_code, 200)
-        self.assertIn("[portal:card-credit]", Transaction.objects.get().description)
+    def test_card_transfer_is_its_own_payment_channel(self):
+        self.client.force_login(self.user)
+        self.client.post(
+            reverse("portal:api_create_payment"),
+            {**self._payment_payload(), "amount": "250000", "channel": "transfer"},
+            content_type="application/json",
+        )
+
+        snapshot = build_portal_data(self.user)
+        [row] = snapshot["transactions"]
+        self.assertEqual((row["method"], row["type"]), ("Card transfer", "Utility Payment"))
+        self.assertEqual(snapshot["paymentSummary"]["channels"]["Card transfer"]["amount"], 250000.0)
+        # Counted as money received: it becomes the resident's last payment.
+        resident = next(row for row in snapshot["residents"] if row["backendId"] == self.owner.id)
+        self.assertTrue(resident["lastPayment"])
 
     def test_logout_ends_session_and_points_to_login(self):
         self.client.force_login(self.user)
