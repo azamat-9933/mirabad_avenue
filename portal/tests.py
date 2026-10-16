@@ -459,6 +459,39 @@ class PortalApartmentAccountTests(TestCase):
         self.assertEqual([row["signedAmount"] for row in rows], [-500.0])
 
 
+class PortalResidentSearchTests(TestCase):
+    """The command search asks /api/lists/residents/?search= and must get only matching residents."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = get_user_model().objects.create_user(username="operator", password="unused-password")
+        complex_obj = Complex.objects.create(title="Mirabad Avenue", address="", author="test")
+        building = Building.objects.create(number="64A", complex=complex_obj, author="test")
+        first = Apartment.objects.create(number="1", area=Decimal("50"), building=building, author="test")
+        second = Apartment.objects.create(number="2", area=Decimal("50"), building=building, author="test")
+        cls.azamat = Owner.objects.create(fio="Azamat Yaxyoyev", phone="+998901139933", apartment=first)
+        cls.muhammad = Owner.objects.create(fio="Muhammad Yaxyoyev", phone="+998773487001", apartment=second)
+
+    def setUp(self):
+        self.client.force_login(self.user)
+
+    def search(self, query):
+        response = self.client.get(reverse("portal:api_list_residents"), {"search": query})
+        return [row["name"] for row in response.json()["results"]]
+
+    def test_search_returns_only_matching_residents(self):
+        self.assertEqual(self.search("Aza"), ["Azamat Yaxyoyev"])
+        self.assertEqual(self.search("aza"), ["Azamat Yaxyoyev"])
+
+    def test_search_matches_phone_apartment_and_shared_surname(self):
+        self.assertEqual(self.search("487001"), ["Muhammad Yaxyoyev"])
+        self.assertEqual(self.search("Yaxyoyev"), ["Azamat Yaxyoyev", "Muhammad Yaxyoyev"])
+        self.assertEqual(self.search("64A"), ["Azamat Yaxyoyev", "Muhammad Yaxyoyev"])
+
+    def test_search_with_no_match_returns_nothing(self):
+        self.assertEqual(self.search("Zzz"), [])
+
+
 class PortalBoundedSnapshotTests(TestCase):
     """The snapshot keeps a few rows per account; whole-history figures come pre-aggregated."""
 

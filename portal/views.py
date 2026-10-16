@@ -570,6 +570,7 @@ def api_list_residents(request):
     telegram_value = _query_param(request, "telegram", "all").lower()
     contract_value = _query_param(request, "contract", "all").lower()
     owner_id_value = _query_param(request, "owner_id", "")
+    search_value = _query_param(request, "search", "")
     name_value = _query_param(request, "name", "")
     phone_value = _query_param(request, "phone", "")
     telegram_user_value = _query_param(request, "telegram_user", "")
@@ -608,6 +609,15 @@ def api_list_residents(request):
         owner_id_digits = re.sub(r"[^\d]", "", owner_id_value)
         if owner_id_digits:
             queryset = queryset.filter(id=int(owner_id_digits))
+    if search_value:
+        # The fields the command search matches on the page: name, phone, apartment, house, sector.
+        queryset = queryset.filter(
+            Q(fio__icontains=search_value)
+            | Q(phone__icontains=search_value)
+            | Q(apartment__number__icontains=search_value)
+            | Q(apartment__building__number__icontains=search_value)
+            | Q(apartment__building__complex__title__icontains=search_value)
+        )
     if name_value:
         queryset = queryset.filter(fio__icontains=name_value)
     if phone_value:

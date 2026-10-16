@@ -6679,8 +6679,11 @@
 
         const noticeResidentId = (resident) => String(resident?.ownerBackendId || "").replace(/[^\d]/g, "");
 
-        // Only residents get a notice: a vacant apartment has nobody to notify.
-        const getNoticeResidents = () => noticeResidents.filter((resident) => Boolean(resident?.ownerBackendId));
+        // Only debtors get a notice: a vacant apartment has nobody to notify, and a resident at zero
+        // or in credit owes nothing.
+        const getNoticeResidents = () => noticeResidents.filter((resident) => (
+            Boolean(resident?.ownerBackendId) && debtValue(resident) > 0
+        ));
 
         const renderLoading = () => {
             if (!listNode) return;
@@ -6743,7 +6746,7 @@
                 ).includes(query);
             });
             if (activeResidentId) {
-                const selected = noticeResidents.find((resident) => (
+                const selected = getNoticeResidents().find((resident) => (
                     noticeResidentId(resident) === String(activeResidentId).replace(/[^\d]/g, "")
                 ));
                 const selectedId = selected ? noticeResidentId(selected) : "";
@@ -6902,6 +6905,13 @@
             }
             refreshBillingNoticeData()
                 .then(() => {
+                    // Opened for a resident who owes nothing (from their profile): say so instead of
+                    // silently showing another debtor.
+                    const preferredId = String(preferredResidentId || "").replace(/[^\d]/g, "");
+                    const preferred = preferredId && noticeResidents.find((resident) => noticeResidentId(resident) === preferredId);
+                    if (preferred && debtValue(preferred) <= 0) {
+                        toast("Billing notice", "The resident has no debt.", "warning");
+                    }
                     render();
                 })
                 .catch((error) => {
@@ -7834,7 +7844,10 @@
     const mergeCommandEntries = (entries) => {
         const seen = new Set();
         return entries.filter((entry) => {
-            const key = entry.id || `${entry.type}:${entry.title}:${entry.meta}`;
+            // The same resident comes from the page data and from the server; both carry its row id
+            // ("owner-5", or "apartment-7" for a vacant apartment), so key residents by it.
+            const residentKey = entry.type === "resident" && entry.residentId ? `resident:${entry.residentId}` : "";
+            const key = residentKey || entry.id || `${entry.type}:${entry.title}:${entry.meta}`;
             if (seen.has(key)) return false;
             seen.add(key);
             return true;
@@ -8531,7 +8544,9 @@
         fetchResidentCommandEntries(rawQuery, requestId)
             .then((remoteEntries) => {
                 if (requestId !== commandSearchRequestId) return;
-                const merged = mergeCommandEntries([...matches, ...remoteEntries]).slice(0, 16);
+                // Server rows must match the query the same way the local ones do.
+                const remoteMatches = remoteEntries.filter((item) => item.search.includes(query));
+                const merged = mergeCommandEntries([...matches, ...remoteMatches]).slice(0, 16);
                 renderCommandResults(merged);
                 const refreshedItems = getCommandItems();
                 setActiveCommand(refreshedItems, refreshedItems.length ? 0 : -1);
