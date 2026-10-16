@@ -233,6 +233,8 @@
         "Connected": { ru: "Подключён", uz: "Ulangan" },
         "Pending": { ru: "Ожидает", uz: "Kutilmoqda" },
         "Not linked": { ru: "Не подключён", uz: "Ulanmagan" },
+        // Telegram status of a resident ("Connected" is also the portal's backend status, "Подключено").
+        "Linked": { ru: "Подключён", uz: "Ulangan" },
         "Review": { ru: "Проверка", uz: "Tekshiruv" },
         "True": { ru: "Есть", uz: "Bor" },
         "False": { ru: "Нет", uz: "Yo'q" },
@@ -539,6 +541,15 @@
         "Debtors list + payment history": { ru: "Список должников + история платежей", uz: "Qarzdorlar ro'yxati + to'lovlar tarixi" },
         "Download file": { ru: "Скачать файл", uz: "Faylni yuklab olish" },
         "Download ready": { ru: "Файл готов", uz: "Fayl tayyor" },
+        "Telegram username": { ru: "Имя пользователя Telegram", uz: "Telegram foydalanuvchi nomi" },
+        "Resident created": { ru: "Абонент создан", uz: "Abonent yaratildi" },
+        "Payment notice downloaded as PDF": { ru: "Платёжное уведомление скачано в PDF", uz: "To'lov xabarnomasi PDF qilib yuklandi" },
+        "Billing notice sent to Telegram": { ru: "Платёжное уведомление отправлено в Telegram", uz: "To'lov xabarnomasi Telegramga yuborildi" },
+        "Status assigned": { ru: "Статус назначен", uz: "Holat belgilandi" },
+        "Technician assigned": { ru: "Назначен техник", uz: "Texnik biriktirildi" },
+        "Audit event": { ru: "Событие аудита", uz: "Audit hodisasi" },
+        "Balance history": { ru: "История баланса", uz: "Balans tarixi" },
+        "Balance history was saved as Excel.": { ru: "История баланса сохранена в Excel.", uz: "Balans tarixi Excel ko'rinishida saqlandi." },
         "Export failed": { ru: "Экспорт не выполнен", uz: "Eksport bajarilmadi" },
         "Backend export failed.": { ru: "Не удалось сформировать файл.", uz: "Faylni yaratib bo'lmadi." },
         "Source": { ru: "Источник", uz: "Manba" },
@@ -5023,6 +5034,8 @@
                         phone: realApartment.owner?.phone || "",
                         email: realApartment.owner?.email || "",
                         photo: realApartment.owner?.photo || "",
+                        telegramUser: realApartment.owner?.telegramUser || "",
+                        telegramConnected: Boolean(realApartment.owner?.telegramConnected),
                     },
                     ownerBackendId: realApartment.ownerBackendId || "",
                     apartmentBackendId: realApartment.apartmentBackendId || realApartment.backendId || "",
@@ -5223,17 +5236,13 @@
                         data-owner="${attr(apartment.owner.name)}"
                         data-photo="${attr(apartment.owner.photo)}"
                         data-phone="${attr(apartment.owner.phone)}"
-                        data-email="${attr(apartment.owner.email)}"
+                        data-telegram-user="${attr(apartment.owner.telegramUser)}"
+                        data-telegram-connected="${apartment.owner.telegramConnected ? "true" : ""}"
                         data-balance="${attr(formatUzs(apartment.balance))}"
                         data-status="${attr(apartment.status)}"
                         data-unit="${attr(apartment.unit)}"
-                        data-rooms="${attr(apartment.rooms)}"
                         data-area="${attr(apartment.area)}"
-                        data-meter="${attr(apartment.meter)}"
-                        data-charge="${attr(apartment.charge)}"
-                        data-occupancy="${attr(apartment.occupancy)}"
                         data-contract="${attr(apartment.contract)}"
-                        data-visit="${attr(apartment.visit)}"
                         data-payment="${attr(apartment.lastPayment)}"
                         data-owner-backend-id="${attr(apartment.ownerBackendId || "")}"
                         data-apartment-backend-id="${attr(apartment.apartmentBackendId || "")}"
@@ -5511,7 +5520,6 @@
             const yesLabel = lang === "ru" ? "Да" : lang === "uz" ? "Ha" : "Yes";
             const noLabel = lang === "ru" ? "Нет" : lang === "uz" ? "Yo'q" : "No";
             const contractLabel = t("Contract");
-            const lastVisitLabel = t("Last visit");
             const lastPaymentLabel = t("Last payment");
             const apartmentLabel = t("Apartment");
             const houseLabel = t("House");
@@ -5526,13 +5534,10 @@
                 return text.replace(/^Apartment\b/i, apartmentLabel);
             };
             const localizeHouseText = (value) => String(value || "").replace(/\bHouse\b/gi, houseLabel);
-            const localizeActivityText = (value) => {
-                let text = String(value || "");
-                if (!text) return text;
-                text = text.replace(/^Resident balance updated\b/i, t("Resident balance updated"));
-                text = text.replace(/^Transaction\b/i, t("Transaction"));
-                return text;
-            };
+            // Recent activity: ledger entries of the apartment account (kind and signed amount; a balance
+            // change has no status) and the resident's audit events by their translated title and who
+            // did it. The backend's audit messages are English free text, so they are not shown, and
+            // "Resident balance updated" is skipped: it repeats the ledger entry of the same payment.
             const realActivity = [
                 ...(Array.isArray(billingData.transactions) ? billingData.transactions : [])
                     .filter((item) => String(item.apartmentBackendId || "") === apartmentId || String(item.ownerBackendId || "") === ownerId)
@@ -5541,42 +5546,32 @@
                         const prefix = signed > 0 ? "+" : signed < 0 ? "-" : "";
                         return {
                             time: item.createdAt || item.date || "",
-                            text: `${t(item.method || item.type || "Transaction")}: ${prefix}${formatUzs(Math.abs(signed))} · ${t(item.status || "Success")}`,
+                            text: `${t(item.method || item.type || "Transaction")}: ${prefix}${formatUzs(Math.abs(signed))}`,
                         };
                     }),
                 ...(Array.isArray(billingData.auditEvents) ? billingData.auditEvents : [])
-                    .filter((item) => item.ownerId === ownerSlug)
+                    .filter((item) => item.ownerId === ownerSlug && item.title !== "Resident balance updated")
                     .map((item) => ({
                         time: item.time || "",
-                        text: localizeActivityText([item.title, item.message].filter(Boolean).join(" · ") || item.label || "Audit event"),
-                    })),
-                ...(Array.isArray(billingData.notifications) ? billingData.notifications : [])
-                    .filter((item) => item.ownerId === ownerSlug)
-                    .map((item) => ({
-                        time: item.eventAt || "",
-                        text: localizeActivityText([item.title, item.message].filter(Boolean).join(" · ") || "Notification"),
+                        text: [t(item.title || item.label || "Audit event"), item.actor].filter(Boolean).join(" · "),
                     })),
             ].sort((a, b) => transactionDateValue(b.time) - transactionDateValue(a.time)).slice(0, 3);
             set("[data-apartment-title]", localizeApartmentTitle(data.title));
             set("[data-apartment-subtitle]", localizeHouseText(data.subtitle));
             set("[data-apartment-owner]", data.owner);
-            set("[data-apartment-owner-meta]", [
-                contractValue ? `${contractLabel}: ${contractValue}` : "",
-                data.visit ? `${lastVisitLabel}: ${data.visit}` : "",
-            ].filter(Boolean).join(" · ") || localizedEmpty());
+            set("[data-apartment-owner-meta]", contractValue ? `${contractLabel}: ${contractValue}` : localizedEmpty());
             set("[data-apartment-balance]", data.balance);
             set("[data-apartment-payment]", data.payment ? `${lastPaymentLabel} ${data.payment}` : localizedEmpty());
             set("[data-apartment-status]", data.status);
             set("[data-apartment-unit]", data.unit);
-            set("[data-apartment-rooms]", data.rooms);
             set("[data-apartment-area]", data.area);
-            set("[data-apartment-meter]", data.meter || localizedEmpty());
-            set("[data-apartment-charge]", data.charge || localizedEmpty());
-            set("[data-apartment-occupancy]", data.occupancy);
-            set("[data-apartment-phone]", data.phone);
-            set("[data-apartment-email]", data.email || localizedEmpty());
+            set("[data-apartment-phone]", data.phone || localizedEmpty());
             set("[data-apartment-contract]", contractValue || localizedEmpty());
-            set("[data-apartment-visit]", data.visit || localizedEmpty());
+            // Same wording as the resident list: @username, "Not found" (connected without a username),
+            // "Not linked" (not registered in the bot); a vacant apartment has nobody to connect.
+            const telegram = { telegramUser: data.telegramUser, telegramConnected: data.telegramConnected === "true" };
+            set("[data-apartment-telegram-status]", ownerId ? t(telegram.telegramConnected ? "Linked" : "Not linked") : localizedEmpty());
+            set("[data-apartment-telegram-user]", ownerId ? telegramHandleText(telegram) : localizedEmpty());
             const activityList = drawer.querySelector(".apartment-activity-list");
             if (activityList) {
                 activityList.innerHTML = realActivity.length
@@ -7919,7 +7914,7 @@
         residentProfileNodes.balanceWrap.classList.remove("is-negative");
         residentProfileNodes.balanceWrap.classList.add("is-positive");
         residentProfileNodes.tgUser.textContent = formatTelegramHandle(fallback?.telegramUser) || "@telegram";
-        residentProfileNodes.tgStatus.textContent = t("Connected");
+        residentProfileNodes.tgStatus.textContent = t("Linked");
         residentProfileNodes.contract.textContent = t("True");
         residentProfileNodes.copyButtons.forEach((button) => {
             button.dataset.copyValue = "";
@@ -7980,7 +7975,7 @@
         residentProfileNodes.tgUser.classList.toggle("is-connected", Boolean(telegramUser));
         residentProfileNodes.tgUser.classList.toggle("is-missing", !telegramUser);
 
-        residentProfileNodes.tgStatus.textContent = telegramConnected ? t("Connected") : t("Not linked");
+        residentProfileNodes.tgStatus.textContent = telegramConnected ? t("Linked") : t("Not linked");
         residentProfileNodes.tgStatus.classList.toggle("is-connected", telegramConnected);
         residentProfileNodes.tgStatus.classList.toggle("is-missing", !telegramConnected);
 
@@ -9076,6 +9071,30 @@
             toast(exportText("Download ready"), `${exportText(exportReportTypeLabel(selectedExportReportType))} · ${selectedExportFormat}`, "success");
         } catch (error) {
             toast(exportText("Export failed"), error.message || exportText("Backend export failed."), "warning");
+        }
+    });
+    // The apartment window's Export: the apartment account's whole balance history as Excel.
+    document.addEventListener("click", async (event) => {
+        const button = event.target.closest("[data-apartment-history-export]");
+        if (!button) return;
+        event.preventDefault();
+        const apartmentId = Number(button.closest("#apartment-details-drawer")?.dataset.apartmentBackendId || 0);
+        if (!apartmentId || button.disabled) return;
+        button.disabled = true;
+        try {
+            const payload = await postPortalJson("/api/export/report/", {
+                report_type: "account_history",
+                format: "XLSX",
+                apartment_backend_ids: [apartmentId],
+                source: "Apartment balance history",
+                language: exportLang(),
+            });
+            triggerDownloadPayload(payload.download);
+            toast(exportText("Download ready"), exportText("Balance history was saved as Excel."), "success");
+        } catch (error) {
+            toast(exportText("Export failed"), error.message || exportText("Backend export failed."), "warning");
+        } finally {
+            button.disabled = false;
         }
     });
     const assignStatusModal = document.getElementById("assign-status-modal");

@@ -2209,3 +2209,31 @@ html.hf-admin-light #recent-actions-module .timeline i.fa-plus-circle.text-xs::b
     color: #8b949e !important;
     background: transparent !important;
 }
+
+/* Changelist toolbar: filter dropdowns, the search box and its button on one line, one height.
+   Bootstrap's .form-group margin pushed the filter above the search box. */
+#changelist-search {
+    align-items: center !important;
+}
+
+#changelist-search .form-group {
+    display: flex;
+    align-items: center;
+    margin: 0 !important;
+}
+
+#changelist-search .select2-container .select2-selection--single,
+#changelist-search .form-control,
+#changelist-search .btn {
+    box-sizing: border-box;
+    height: 38px !important;
+    min-height: 38px !important;
+    margin: 0 !important;
+}
+
+#changelist-search .btn {
+    display: inline-flex;
+    align-items: center;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+}

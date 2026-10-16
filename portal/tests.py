@@ -436,15 +436,20 @@ class PortalDebtReportTests(TestCase):
         rows = self._workbook({"report_type": "debtors", "date_to": last_week})["Список должников"]
         self.assertIn(("Late Payer", 500), [(row[2], row[6]) for row in rows])
 
-    def test_payment_history_lists_only_money_received(self):
+    def test_payment_history_lists_payments_and_subtractions(self):
+        apply_balance_change(
+            self.payer.id, Decimal("-150000"), Transaction.TYPE_MANUAL,
+            description="[portal:balance-debit] Portal manual balance subtraction.", created_by="desk",
+        )
         rows = self._workbook({"report_type": "payment_history"})["История платежей"]
-        header = rows.index(("ID", "Дата и время", "Ф.И.О.", "Квартира", "Способ оплаты", "Сумма оплаты (UZS)", "Оператор"))
+        header = rows.index(("ID", "Дата и время", "Ф.И.О.", "Квартира", "Способ оплаты", "Сумма (UZS)", "Оператор"))
         body = rows[header + 1:]
-        # Charges are not payments; only the transfer is listed, under its house.
+        # Billing charges are left out; the transfer and the subtraction are listed under their house.
         self.assertEqual(body[0][0], "Дом 64A")
         self.assertEqual(body[1][2:], ("Azamat Yaxyoyev", "1", "Перевод на карту", 400000, "desk"))
-        self.assertEqual(body[-1][0], "Итого · Платежей: 1")
-        self.assertEqual(body[-1][5], 400000)
+        self.assertEqual(body[2][2:], ("Azamat Yaxyoyev", "1", "Вычитание баланса", -150000, "desk"))
+        self.assertEqual(body[-1][0], "Итого · Платежей: 1 (400 000.00) · Вычетов: 1 (-150 000.00)")
+        self.assertEqual(body[-1][5], 250000)
 
     def test_payment_history_respects_the_date_range(self):
         tomorrow = (timezone.localtime() + timedelta(days=1)).strftime("%Y-%m-%dT%H:%M")
@@ -466,6 +471,37 @@ class PortalDebtReportTests(TestCase):
                 download = response.json()["download"]
                 self.assertEqual(download["mime"], "application/pdf")
                 self.assertTrue(base64.b64decode(download["content"]).startswith(b"%PDF"))
+
+    def test_apartment_balance_history_has_every_ledger_entry(self):
+        sheets = self._workbook({"report_type": "account_history", "apartment_backend_ids": [self.payer.apartment_id]})
+        rows = sheets["История баланса"]
+        self.assertEqual(rows[0][0], "История баланса: Дом 64A, Квартира 1")
+        self.assertEqual(rows[1][0], "Владелец: Azamat Yaxyoyev")
+        header = rows.index(("ID", "Дата и время", "Абонент", "Операция", "Оператор", "Сумма (UZS)", "Баланс до", "Баланс после"))
+        # Oldest first: the charge, then the transfer; the balance runs from one entry to the next.
+        self.assertEqual(
+            [row[3:] for row in rows[header + 1:]],
+            [
+                ("Начисление за месяц", "Система", -100000, 0, -100000),
+                ("Перевод на карту", "desk", 400000, -100000, 300000),
+            ],
+        )
+
+    def test_balance_history_needs_an_apartment(self):
+        response = self.client.post(
+            reverse("portal:api_export_report"), {"report_type": "account_history"}, content_type="application/json"
+        )
+        self.assertEqual(response.status_code, 400)
+
+    def test_apartment_window_gets_the_owners_telegram(self):
+        Owner.objects.filter(pk=self.payer.pk).update(
+            telegram_status=Owner.TELEGRAM_CONNECTED, telegram_id="77", telegram_user="azamat_y"
+        )
+        building = next(
+            item for item in build_portal_data(self.user)["complexes"][0]["buildingItems"] if item["number"] == "64A"
+        )
+        owner = next(item["owner"] for item in building["apartments"] if item["unit"] == "1")
+        self.assertEqual((owner["telegramUser"], owner["telegramConnected"]), ("azamat_y", True))
 
     def test_houses_page_has_no_recent_alerts_panel(self):
         content = self.client.get(reverse("portal:residential")).content.decode()

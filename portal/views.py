@@ -2180,7 +2180,10 @@ def api_export_report(request):
     language = str(payload.get("language") or "en").strip().lower()
     source = str(payload.get("source") or "Current page").strip() or "Current page"
     if report_type in ALLOWED_REPORT_TYPES:
-        generated = build_report_payload(payload, language, export_format)
+        try:
+            generated = build_report_payload(payload, language, export_format)
+        except ValueError as error:
+            return JsonResponse({"ok": False, "error": str(error)}, status=400)
         download = _encode_download(generated["filename"], generated["mime"], generated["content"])
         row_count = generated.get("row_count", 0)
         context = report_type

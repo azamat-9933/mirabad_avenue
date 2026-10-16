@@ -14,14 +14,14 @@ from billing.models import (
     HotWaterMeterReading,
     Invoice,
 )
-from django.db.models import Sum
+from django.db.models import Q, Sum
 from django.utils import timezone
 from main_app.models import Apartment, Building
 from openpyxl import Workbook
 from openpyxl.styles import Alignment, Border, Font, NamedStyle, PatternFill, Side
 from openpyxl.utils import get_column_letter
 from payments.models import Transaction
-from payments.services import incoming_payment_q
+from payments.services import OPENING_BALANCE_TAG, incoming_payment_q
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_LEFT
 from reportlab.lib.pagesizes import A4, landscape
@@ -40,6 +40,8 @@ REPORT_TYPE_ALL = "all"
 REPORT_TYPE_GENERAL = "general"
 REPORT_TYPE_DEBTORS = "debtors"
 REPORT_TYPE_PAYMENT_HISTORY = "payment_history"
+# Every ledger entry of one apartment account (the apartment window's Export button).
+REPORT_TYPE_ACCOUNT_HISTORY = "account_history"
 EXCEL_MONEY_FORMAT = '#,##0 "UZS"'
 EXCEL_DECIMAL_FORMAT = "#,##0.00"
 EXCEL_INTEGER_FORMAT = "0"
@@ -52,6 +54,7 @@ ALLOWED_REPORT_TYPES = {
     REPORT_TYPE_GENERAL,
     REPORT_TYPE_DEBTORS,
     REPORT_TYPE_PAYMENT_HISTORY,
+    REPORT_TYPE_ACCOUNT_HISTORY,
 }
 
 REPORT_TEXT = {
@@ -139,7 +142,6 @@ REPORT_TEXT = {
     "debt_amount": {"en": "Debt (UZS)", "ru": "Сумма долга (UZS)", "uz": "Qarz miqdori (UZS)"},
     "date_time": {"en": "Date and time", "ru": "Дата и время", "uz": "Sana va vaqt"},
     "payment_method": {"en": "Payment method", "ru": "Способ оплаты", "uz": "To'lov usuli"},
-    "paid_amount": {"en": "Amount paid (UZS)", "ru": "Сумма оплаты (UZS)", "uz": "To'langan summa (UZS)"},
     "operator": {"en": "Operator", "ru": "Оператор", "uz": "Operator"},
     "system": {"en": "System", "ru": "Система", "uz": "Tizim"},
     "as_of": {"en": "Debt as of", "ru": "Долг на дату", "uz": "Qarz holati sanasi"},
@@ -150,6 +152,12 @@ REPORT_TEXT = {
     "grand_total": {"en": "Total", "ru": "Итого", "uz": "Jami"},
     "debtors_count": {"en": "Debtors", "ru": "Должников", "uz": "Qarzdorlar"},
     "payments_count": {"en": "Payments", "ru": "Платежей", "uz": "To'lovlar"},
+    "debits_count": {"en": "Subtractions", "ru": "Вычетов", "uz": "Ayirmalar"},
+    "balance_history": {"en": "Balance history", "ru": "История баланса", "uz": "Balans tarixi"},
+    "operation": {"en": "Operation", "ru": "Операция", "uz": "Amal"},
+    "current_owner": {"en": "Owner", "ru": "Владелец", "uz": "Egasi"},
+    "current_balance": {"en": "Current balance", "ru": "Текущий баланс", "uz": "Joriy balans"},
+    "entries": {"en": "Entries", "ru": "Записей", "uz": "Yozuvlar"},
 }
 
 
@@ -255,6 +263,7 @@ def _report_type_label(report_type: str, language: str) -> str:
         REPORT_TYPE_GENERAL: REPORT_TEXT["general_report"],
         REPORT_TYPE_DEBTORS: REPORT_TEXT["debtors_list"],
         REPORT_TYPE_PAYMENT_HISTORY: REPORT_TEXT["payment_history"],
+        REPORT_TYPE_ACCOUNT_HISTORY: REPORT_TEXT["balance_history"],
     }
     return labels.get(report_type, labels[REPORT_TYPE_ALL]).get(language, labels[report_type]["en"] if report_type in labels else "Report")
 
@@ -1400,12 +1409,36 @@ def _build_debtors_report(filters, language):
     )
 
 
+def _operator_movements_q():
+    """Payments received plus amounts operators subtracted ("Subtract" in the payment window).
+
+    Billing charges and opening balances are not movements of this kind.
+    """
+    subtraction = (
+        Q(amount__lt=0)
+        & ~Q(payment_type=Transaction.TYPE_CHARGE)
+        & ~Q(description__contains=OPENING_BALANCE_TAG)
+    )
+    return incoming_payment_q() | subtraction
+
+
+def _history_total_label(prefix, payments, payments_sum, debits, debits_sum, language):
+    label = f"{prefix} · {_t('payments_count', language)}: {payments} ({_money_text(payments_sum)})"
+    if debits:
+        label += f" · {_t('debits_count', language)}: {debits} ({_money_text(debits_sum)})"
+    return label
+
+
 def _build_payment_history_report(filters, language):
-    """Money received in the window's date range, house by house: who, when, how and how much."""
+    """Payments and subtractions in the window's date range, house by house: who, when, how, how much.
+
+    Amounts are signed (a subtraction is negative); totals are the net change with both parts
+    in the label.
+    """
     language = _lang(language)
     window = {**filters, "date_to": _end_of_minute(filters["date_to"])}
     transactions = _filter_transaction_queryset(
-        Transaction.objects.filter(incoming_payment_q(), apartment__isnull=False)
+        Transaction.objects.filter(_operator_movements_q(), apartment__isnull=False)
         .select_related("owner", "apartment__building")
         .order_by("created_at", "id"),
         window,
@@ -1416,11 +1449,10 @@ def _build_payment_history_report(filters, language):
         by_house[item.apartment.building].append(item)
 
     groups = []
-    grand_amount = Decimal("0")
-    grand_count = 0
+    grand = {"payments": 0, "payments_sum": Decimal("0"), "debits": 0, "debits_sum": Decimal("0")}
     for building in sorted(by_house, key=lambda item: _natural_key(item.number)):
         house_rows = []
-        amount_sum = Decimal("0")
+        house = {"payments": 0, "payments_sum": Decimal("0"), "debits": 0, "debits_sum": Decimal("0")}
         for item in by_house[building]:
             created = timezone.localtime(item.created_at)
             house_rows.append([
@@ -1433,12 +1465,14 @@ def _build_payment_history_report(filters, language):
                 _money_cell(item.amount),
                 _text_cell(item.created_by or _t("system", language)),
             ])
-            amount_sum += item.amount
-        count = len(house_rows)
-        label = f"{_t('house_total', language).format(house=building.number)} · {_t('payments_count', language)}: {count}"
-        groups.append((building.number, house_rows, _total_row(label, 7, {5: _money_cell(amount_sum)})))
-        grand_amount += amount_sum
-        grand_count += count
+            kind = "payments" if item.amount > 0 else "debits"
+            house[kind] += 1
+            house[f"{kind}_sum"] += item.amount
+        label = _history_total_label(_t("house_total", language).format(house=building.number), **house, language=language)
+        net = house["payments_sum"] + house["debits_sum"]
+        groups.append((building.number, house_rows, _total_row(label, 7, {5: _money_cell(net)})))
+        for key, value in house.items():
+            grand[key] += value
 
     buildings = []
     if filters["building_ids"]:
@@ -1452,7 +1486,8 @@ def _build_payment_history_report(filters, language):
     ).strip(" —")
     if period:
         scope_rows.append((_t("period", language), period))
-    grand_label = f"{_t('grand_total', language)} · {_t('payments_count', language)}: {grand_count}"
+    grand_label = _history_total_label(_t("grand_total", language), **grand, language=language)
+    grand_net = grand["payments_sum"] + grand["debits_sum"]
     return _grouped_sheet(
         _t("payment_history", language),
         _t("payment_history", language),
@@ -1462,15 +1497,74 @@ def _build_payment_history_report(filters, language):
             _t("full_name", language),
             _t("apartment", language),
             _t("payment_method", language),
-            _t("paid_amount", language),
+            _t("amount", language),
             _t("operator", language),
         ],
         groups,
-        _total_row(grand_label, 7, {5: _money_cell(grand_amount)}),
+        _total_row(grand_label, 7, {5: _money_cell(grand_net)}),
         scope_rows,
         [10, 18, 36, 12, 22, 20, 22],
         language,
     )
+
+
+def _account_history_apartment(filters):
+    """The one apartment whose account is exported: chosen directly or through its resident."""
+    apartments = Apartment.objects.select_related("building", "owner")
+    if filters["apartment_ids"]:
+        return apartments.filter(id=filters["apartment_ids"][0]).first()
+    if filters["owner_ids"]:
+        return apartments.filter(owner__id=filters["owner_ids"][0]).first()
+    return None
+
+
+def _build_account_history_report(apartment, language):
+    """Every ledger entry of the apartment account, oldest first, with the balance before and after."""
+    language = _lang(language)
+    entries = Transaction.objects.filter(apartment=apartment).select_related("owner").order_by("created_at", "id")
+    rows = [
+        [
+            _text_cell(str(item.pk)),
+            _text_cell(timezone.localtime(item.created_at).strftime("%d.%m.%Y %H:%M")),
+            # Who held the account at the time; entries made while the apartment was vacant have nobody.
+            _text_cell(item.owner.fio if item.owner_id else _t("no_owner", language)),
+            _text_cell(_transaction_type_text(item, language)),
+            _text_cell(item.created_by or _t("system", language)),
+            _money_cell(item.amount),
+            _money_cell(item.balance_before),
+            _money_cell(item.balance_after),
+        ]
+        for item in entries
+    ]
+    owner = getattr(apartment, "owner", None)
+    title = f"{_t('balance_history', language)}: {_t('house_group', language).format(house=apartment.building.number)}, {_t('apartment', language)} {apartment.number}"
+    scope_rows = [
+        (_t("current_owner", language), owner.fio if owner else _t("no_owner", language)),
+        (_t("current_balance", language), f"{_money_text(apartment.balance)} UZS"),
+        (_t("entries", language), str(len(rows))),
+    ]
+    return {
+        "name": _t("balance_history", language),
+        "title": title,
+        "subtitle": "; ".join(f"{label}: {value}" for label, value in scope_rows),
+        "template": "grouped",
+        "language": language,
+        "headers": [
+            _t("id", language),
+            _t("date_time", language),
+            _t("resident", language),
+            _t("operation", language),
+            _t("operator", language),
+            _t("amount", language),
+            _t("balance_before", language),
+            _t("balance_after", language),
+        ],
+        "rows": rows,
+        "row_kinds": [None] * len(rows),
+        "scope_rows": scope_rows,
+        "widths": [10, 18, 32, 24, 18, 18, 18, 18],
+        "row_count": len(rows),
+    }
 
 
 def _build_debt_reports(report_type, filters, language, export_format):
@@ -1481,8 +1575,13 @@ def _build_debt_reports(report_type, filters, language, export_format):
     if report_type in {REPORT_TYPE_PAYMENT_HISTORY, REPORT_TYPE_GENERAL}:
         sheets.append(_build_payment_history_report(filters, language))
     generated_at = timezone.localtime()
+    return _render_sheets(report_type, sheets, export_format, language, f"{report_type.replace('_', '-')}-{generated_at:%Y%m%d-%H%M}")
+
+
+def _render_sheets(report_type, sheets, export_format, language, filename):
+    """The given sheets as one workbook, or as one PDF with a table per sheet."""
+    generated_at = timezone.localtime()
     row_count = sum(sheet["row_count"] for sheet in sheets)
-    filename = f"{report_type.replace('_', '-')}-{generated_at:%Y%m%d-%H%M}"
     if export_format == "PDF":
         title = _report_type_label(report_type, language)
         subheading = f"{_t('generated', language)}: {generated_at:%d.%m.%Y %H:%M}"
@@ -1523,6 +1622,13 @@ def build_report_payload(payload, language: str, export_format: str):
         report_type = REPORT_TYPE_ALL
     if report_type in {REPORT_TYPE_GENERAL, REPORT_TYPE_DEBTORS, REPORT_TYPE_PAYMENT_HISTORY}:
         return _build_debt_reports(report_type, filters, language, export_format)
+    if report_type == REPORT_TYPE_ACCOUNT_HISTORY:
+        apartment = _account_history_apartment(filters)
+        if apartment is None:
+            raise ValueError("Choose the apartment whose balance history to export.")
+        sheet = _build_account_history_report(apartment, language)
+        filename = f"balance-history-{apartment.building.number}-{apartment.number}-{timezone.localtime():%Y%m%d-%H%M}"
+        return _render_sheets(report_type, [sheet], export_format, language, re.sub(r"[^\w.-]", "_", filename))
 
     sheets = []
     if report_type in {REPORT_TYPE_HOT_WATER, REPORT_TYPE_ALL}:
