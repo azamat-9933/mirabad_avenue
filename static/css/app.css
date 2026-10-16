@@ -19198,29 +19198,31 @@ html.dark .notification-group-label[data-notification-group="pinned"],
     padding-right: 0.35rem !important;
 }
 
+/* Beside the checkbox, the columns share the width evenly enough that the house or owner name
+   no longer takes most of the row. */
 .residential-performance-table th:nth-child(2),
 .residential-performance-table td:nth-child(2) {
-    width: auto;
+    width: 24%;
 }
 
 .residential-performance-table th:nth-child(3),
 .residential-performance-table td:nth-child(3) {
-    width: 128px;
+    width: 16%;
 }
 
 .residential-performance-table th:nth-child(4),
 .residential-performance-table td:nth-child(4) {
-    width: 152px;
+    width: 16%;
 }
 
 .residential-performance-table th:nth-child(5),
 .residential-performance-table td:nth-child(5) {
-    width: 146px;
+    width: 20%;
 }
 
 .residential-performance-table th:nth-child(6),
 .residential-performance-table td:nth-child(6) {
-    width: 214px;
+    width: 24%;
 }
 
 .residential-performance-table .table-filter-heading-inner {

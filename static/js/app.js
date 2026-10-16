@@ -541,6 +541,7 @@
         "Debtors list + payment history": { ru: "Список должников + история платежей", uz: "Qarzdorlar ro'yxati + to'lovlar tarixi" },
         "Download file": { ru: "Скачать файл", uz: "Faylni yuklab olish" },
         "Download ready": { ru: "Файл готов", uz: "Fayl tayyor" },
+        "Unassigned owner": { ru: "Владелец не назначен", uz: "Egasi biriktirilmagan" },
         "Telegram username": { ru: "Имя пользователя Telegram", uz: "Telegram foydalanuvchi nomi" },
         "Resident created": { ru: "Абонент создан", uz: "Abonent yaratildi" },
         "Payment notice downloaded as PDF": { ru: "Платёжное уведомление скачано в PDF", uz: "To'lov xabarnomasi PDF qilib yuklandi" },
@@ -5096,7 +5097,8 @@
             window.HydroFlowSyncLocale?.();
         };
 
-        const renderOwner = (owner, unit) => {
+        const renderOwner = (owner) => {
+            const vacant = owner.name === "Unassigned owner";
             const avatar = owner.photo
                 ? `<img class="residential-owner-photo" src="${attr(owner.photo)}" alt="">`
                 : `<span class="residential-owner-initials">${escapeHtml(initialFor(owner.name))}</span>`;
@@ -5104,15 +5106,14 @@
                 <div class="residential-owner-cell">
                     ${avatar}
                     <div>
-                        <strong>${escapeHtml(owner.name)}</strong>
-                        <span>${escapeHtml(unit)}</span>
-                        <span class="resident-phone-line">
+                        <strong${vacant ? ' data-i18n-key="Unassigned owner"' : ""}>${escapeHtml(vacant ? t(owner.name) : owner.name)}</strong>
+                        ${owner.phone ? `<span class="resident-phone-line">
                             <span class="material-symbols-outlined" aria-hidden="true">call</span>
                             <b>${escapeHtml(owner.phone)}</b>
                             <button aria-label="Copy ${attr(owner.name)} phone number" class="resident-copy-phone" data-copy-phone="${attr(owner.phone)}" type="button">
                                 <span class="material-symbols-outlined" aria-hidden="true">content_copy</span>
                             </button>
-                        </span>
+                        </span>` : ""}
                     </div>
                 </div>
             `;
@@ -5225,9 +5226,9 @@
             row.dataset.backendType = "apartment";
             row.innerHTML = `
                 ${makeSelectCell(`Select apartment ${apartment.unit}`)}
-                <td class="px-6 py-4">${renderOwner(apartment.owner, `Apartment ${apartment.unit}`)}</td>
-                <td class="px-6 py-4"><p class="text-sm font-bold text-on-surface" data-i18n-key="${attr(apartment.rooms)}">${escapeHtml(apartment.rooms)}</p><p class="text-xs text-on-surface-variant">${escapeHtml(apartment.area)} · ${escapeHtml(apartment.meter)}</p></td>
-                <td class="px-6 py-4"><p class="text-sm font-bold text-on-surface">${escapeHtml(apartment.charge)}</p><p class="text-xs text-on-surface-variant" data-i18n-key="Monthly charge">Monthly charge</p></td>
+                <td class="px-6 py-4">${renderOwner(apartment.owner)}</td>
+                <td class="px-6 py-4"><p class="text-sm font-bold text-on-surface">${escapeHtml(apartment.unit)}</p><p class="text-xs text-on-surface-variant" data-i18n-key="Apartment">Apartment</p></td>
+                <td class="px-6 py-4"><p class="text-sm font-bold text-on-surface">${escapeHtml(apartment.area)}</p><p class="text-xs text-on-surface-variant" data-i18n-key="Area (m²)">Area (m²)</p></td>
                 <td class="px-6 py-4"><p class="text-sm font-bold ${apartment.balance < 0 ? "text-error" : "text-on-surface"}">${formatUzs(apartment.balance)}</p><span class="residential-risk-pill ${apartment.status === "Overdue" ? "is-critical" : "is-paid"}" data-i18n-key="${attr(apartment.status)}">${escapeHtml(apartment.status)}</span></td>
                 <td class="px-6 py-4 text-right">
                     <button class="residential-detail-button" data-apartment-details

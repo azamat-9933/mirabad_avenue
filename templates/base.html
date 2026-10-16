@@ -17,8 +17,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
 <link href="{% static 'img/favicon.svg' %}" rel="icon" type="image/svg+xml"/>
-<link href="{% static 'css/app.css' %}?v=apartment-window-20261016-4" rel="stylesheet"/>
-<link href="{% static 'css/responsive.css' %}?v=apartment-window-20261016-4" rel="stylesheet"/>
+<link href="{% static 'css/app.css' %}?v=houses-table-20261016-5" rel="stylesheet"/>
+<link href="{% static 'css/responsive.css' %}?v=houses-table-20261016-5" rel="stylesheet"/>
 <script id="tailwind-config">
         tailwind.config = {
             darkMode: "class",
@@ -587,10 +587,10 @@
                 <span class="material-symbols-outlined" aria-hidden="true">notifications</span>
                 <span data-i18n-key="Send reminders">Send reminders</span>
             </button>
-            <button class="table-tool-button" data-table-action="status" type="button">
+            ${table.dataset.statusTool === "off" ? "" : `<button class="table-tool-button" data-table-action="status" type="button">
                 <span class="material-symbols-outlined" aria-hidden="true">sell</span>
                 <span data-i18n-key="Assign status">Assign status</span>
-            </button>
+            </button>`}
             <span class="table-selected-counter" data-selected-count data-count="0" data-i18n-key="0 selected">0 selected</span>
         `;
         host.parentNode.insertBefore(tools, host);
@@ -898,7 +898,7 @@
 <script>
     window.HydroFlowBackendData = JSON.parse(document.getElementById("hydroflow-backend-data").textContent);
 </script>
-<script src="{% static 'js/app.js' %}?v=apartment-window-20261016-4"></script>
+<script src="{% static 'js/app.js' %}?v=houses-table-20261016-5"></script>
 </body>
 </html>
 
