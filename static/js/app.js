@@ -7773,7 +7773,7 @@
                     photo: apartment.owner?.photo || "",
                     phone: apartment.owner?.phone || "",
                     email: apartment.owner?.email || "",
-                    balance: formatUzs(Number(apartment.balance || 0)),
+                    balance: formatBillingUzs(Number(apartment.balance || 0)),
                     status: apartment.status || "Paid",
                     unit,
                     rooms: apartment.rooms || "Apartment",
