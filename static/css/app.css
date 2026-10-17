@@ -21999,3 +21999,9 @@ html.dark .profile-telegram-disconnect,
     content: " ›";
     letter-spacing: 0;
 }
+
+/* The notice window search has its own clear button; hide the browser's second one. */
+[data-billing-notice-search]::-webkit-search-cancel-button {
+    -webkit-appearance: none;
+    display: none;
+}

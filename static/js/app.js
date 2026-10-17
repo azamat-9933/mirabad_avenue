@@ -6852,13 +6852,31 @@
         // match the name, the house (from its start: "64" finds 64A), the apartment (exactly: "64A 2"
         // is apartment 2 of house 64A) or the Telegram username. The selected resident is not kept
         // when it does not match, otherwise the list never narrowed and the search looked broken.
-        const residentMatchesWord = (resident, word) => (
-            searchNoticeText(resident.name).includes(word)
-            || searchNoticeText(resident.building).startsWith(word)
-            || searchNoticeText(resident.apartment) === word
-            || searchNoticeText(resident.complex).includes(word)
-            || searchNoticeText(resident.telegramUser).replace(/^@/, "").includes(word.replace(/^@/, ""))
-        );
+        // Names are stored in Latin, but operators often type in Cyrillic ("Мух" for Muhammad) or
+        // with the other spelling. Both sides are compared as a loose Latin key: Cyrillic is
+        // transliterated, apostrophes dropped, and letters Russian and Uzbek spell differently
+        // merged (х/ҳ/x → h, қ/q → k), so "Мух", "Муҳ" and "Muh" find the same resident.
+        const cyrillicToLatin = {
+            а: "a", б: "b", в: "v", г: "g", ғ: "g", д: "d", е: "e", ё: "yo", ж: "j", з: "z", и: "i",
+            й: "y", к: "k", қ: "k", л: "l", м: "m", н: "n", о: "o", ў: "o", п: "p", р: "r", с: "s",
+            т: "t", у: "u", ф: "f", х: "h", ҳ: "h", ц: "s", ч: "ch", ш: "sh", щ: "sh", ъ: "", ы: "i",
+            ь: "", э: "e", ю: "yu", я: "ya",
+        };
+        const looseSearchKey = (value) => searchNoticeText(value)
+            .replace(/[ʻʼ'`’‘]/g, "")
+            // Uzbek spelling: "е" at the start of a word or after a vowel is "ye" (Яхёев = Yaxyoyev).
+            .replace(/(^|[\s\-аеёиоуўэюяъь])е/g, "$1ye")
+            .replace(/[Ѐ-ӿ]/g, (char) => cyrillicToLatin[char] ?? char)
+            .replace(/x/g, "h")
+            .replace(/q/g, "k");
+        const residentMatchesWord = (resident, word) => {
+            const key = looseSearchKey(word);
+            return looseSearchKey(resident.name).includes(key)
+                || looseSearchKey(resident.building).startsWith(key)
+                || looseSearchKey(resident.apartment) === key
+                || looseSearchKey(resident.complex).includes(key)
+                || looseSearchKey(resident.telegramUser).replace(/^@/, "").includes(key.replace(/^@/, ""));
+        };
         const filteredNoticeResidents = () => {
             const query = searchNoticeText(searchInput?.value || "").trim();
             const words = query.split(/\s+/).filter(Boolean);
