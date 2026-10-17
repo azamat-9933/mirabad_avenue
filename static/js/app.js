@@ -6837,29 +6837,26 @@
             return sorted;
         };
 
+        // A query is a phone (3+ digits, any formatting: "90 205", "+998-90") or words that each
+        // match the name, the house (from its start: "64" finds 64A), the apartment (exactly: "64A 2"
+        // is apartment 2 of house 64A) or the Telegram username. The selected resident is not kept
+        // when it does not match, otherwise the list never narrowed and the search looked broken.
+        const residentMatchesWord = (resident, word) => (
+            searchNoticeText(resident.name).includes(word)
+            || searchNoticeText(resident.building).startsWith(word)
+            || searchNoticeText(resident.apartment) === word
+            || searchNoticeText(resident.complex).includes(word)
+            || searchNoticeText(resident.telegramUser).replace(/^@/, "").includes(word.replace(/^@/, ""))
+        );
         const filteredNoticeResidents = () => {
-            const query = searchNoticeText(searchInput?.value || "");
+            const query = searchNoticeText(searchInput?.value || "").trim();
+            const words = query.split(/\s+/).filter(Boolean);
+            const phoneDigits = /^[\d\s+()-]+$/.test(query) ? query.replace(/\D/g, "") : "";
             const rows = getNoticeResidents().filter((resident) => {
-                if (!query) return true;
-                return searchNoticeText(
-                    resident.name,
-                    resident.apartment,
-                    resident.building,
-                    resident.phone,
-                    resident.complex,
-                    resident.telegramUser,
-                    resident.telegramStatus,
-                ).includes(query);
+                if (!words.length) return true;
+                if (phoneDigits.length >= 3 && String(resident.phone || "").replace(/\D/g, "").includes(phoneDigits)) return true;
+                return words.every((word) => residentMatchesWord(resident, word));
             });
-            if (activeResidentId) {
-                const selected = getNoticeResidents().find((resident) => (
-                    noticeResidentId(resident) === String(activeResidentId).replace(/[^\d]/g, "")
-                ));
-                const selectedId = selected ? noticeResidentId(selected) : "";
-                if (selected && !rows.some((resident) => noticeResidentId(resident) === selectedId)) {
-                    rows.unshift(selected);
-                }
-            }
             return sortNoticeResidents(rows);
         };
 
@@ -8072,6 +8069,8 @@
         }
         residentProfileNodes.historyButton?.removeAttribute("data-owner-backend-id");
         residentProfileNodes.billingButton?.removeAttribute("data-owner-backend-id");
+        // Shown once the balance is known, and only for a debt.
+        residentProfileNodes.billingButton?.classList.add("hidden");
         setResidentProfileLoading(true);
     };
     const renderResidentCommandProfile = (resident) => {
@@ -8140,6 +8139,8 @@
         residentProfileNodes.editLink.classList.toggle("is-disabled", !editUrl);
         residentProfileNodes.historyButton.dataset.ownerBackendId = ownerBackendId;
         residentProfileNodes.billingButton.dataset.ownerBackendId = ownerBackendId;
+        // A payment notice is about a debt: a resident at zero or in credit has none to notify.
+        residentProfileNodes.billingButton.classList.toggle("hidden", isPositiveBalance);
     };
     const fetchResidentForCommand = async (ownerBackendId) => {
         if (!ownerBackendId) return null;

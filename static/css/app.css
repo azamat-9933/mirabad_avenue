@@ -15614,6 +15614,13 @@ html.dark .add-payment-resident-photo-shell,
     }
 }
 
+/* Without a debt the notice button is hidden: History and Edit share the row. */
+@media (min-width: 761px) {
+    .resident-command-profile-actions:has(> .is-notice.hidden) {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
 @media (max-width: 760px) {
     .resident-command-profile-grid {
         grid-template-columns: 1fr;
