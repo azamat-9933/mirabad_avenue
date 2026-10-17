@@ -1683,22 +1683,28 @@
         return true;
     };
 
-    // Statistics "Debtors" card: the debtors of the selected house at the end of the selected month,
-    // largest debt first. A row opens the resident's profile; a vacant apartment has nobody to open.
+    // The debtors list, largest debt first. The statistics "Debtors" card shows the selected house at
+    // the end of the selected month ([data-analytics-debtors-open]); other cards such as "Active
+    // debtors" on the payments page show every house right now ([data-debtors-list-open]). A row
+    // opens the resident's profile; a vacant apartment has nobody to open.
     const setupAnalyticsDebtorsList = () => {
-        const card = document.querySelector("[data-analytics-debtors-open]");
         const modal = document.getElementById("debtors-list-modal");
-        if (!card || !modal || card.dataset.debtorsReady === "true") return;
-        card.dataset.debtorsReady = "true";
+        if (!modal || modal.dataset.debtorsReady === "true") return;
+        modal.dataset.debtorsReady = "true";
+        const triggerSelector = "[data-analytics-debtors-open], [data-debtors-list-open]";
         const rowsNode = modal.querySelector("[data-debtors-list-rows]");
         const scopeNode = modal.querySelector("[data-debtors-list-scope]");
         const summaryNode = modal.querySelector("[data-debtors-list-summary]");
         const tr = (key) => translateValue(key, currentInterfaceLang());
         let debtors = null;
-        const scopeText = () => [
-            document.querySelector("[data-analytics-building-select]")?.selectedOptions[0]?.textContent,
-            document.querySelector("[data-analytics-month-select]")?.selectedOptions[0]?.textContent,
-        ].filter(Boolean).join(" · ");
+        let fromStatistics = false;
+        const scopeText = () => (fromStatistics
+            ? [
+                document.querySelector("[data-analytics-building-select]")?.selectedOptions[0]?.textContent,
+                document.querySelector("[data-analytics-month-select]")?.selectedOptions[0]?.textContent,
+            ]
+            : [tr("All houses"), new Date().toLocaleDateString("ru-RU")]
+        ).filter(Boolean).join(" · ");
         const render = () => {
             if (scopeNode) scopeNode.textContent = scopeText();
             if (!rowsNode) return;
@@ -1727,8 +1733,9 @@
                 }).join("")
                 : `<tr><td class="debtors-list-empty" colspan="6">${escapeHtml(tr("No debtors"))}</td></tr>`;
         };
-        const open = async () => {
-            const state = window.HydroFlowAnalyticsDashboardState || {};
+        const open = async (trigger) => {
+            fromStatistics = trigger.matches("[data-analytics-debtors-open]");
+            const state = fromStatistics ? window.HydroFlowAnalyticsDashboardState || {} : {};
             const building = (billingData.complexes || [])
                 .flatMap((complex) => complex.buildingItems || [])
                 .find((item) => String(item.id) === String(state.building));
@@ -1771,11 +1778,15 @@
                 }, 0);
             }).observe(profileModal, { attributes: true, attributeFilter: ["aria-hidden"] });
         }
-        card.addEventListener("click", open);
-        card.addEventListener("keydown", (event) => {
-            if (event.key !== "Enter" && event.key !== " ") return;
+        document.addEventListener("click", (event) => {
+            const trigger = event.target.closest(triggerSelector);
+            if (trigger) open(trigger);
+        });
+        document.addEventListener("keydown", (event) => {
+            const trigger = event.target.closest?.(triggerSelector);
+            if (!trigger || (event.key !== "Enter" && event.key !== " ")) return;
             event.preventDefault();
-            open();
+            open(trigger);
         });
         rowsNode?.addEventListener("click", (event) => openProfile(event.target.closest("[data-debtor-owner-id]")));
         rowsNode?.addEventListener("keydown", (event) => {

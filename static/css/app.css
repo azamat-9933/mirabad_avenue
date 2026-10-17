@@ -21964,3 +21964,23 @@ html.dark .profile-telegram-disconnect,
 .system-alerts-config-form .resident-create-field {
     align-self: start;
 }
+
+/* Payments page: "Active debtors" opens the debtors list. */
+.billing-kpi-clickable {
+    margin: -8px;
+    padding: 8px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.billing-kpi-clickable:hover,
+.billing-kpi-clickable:focus-visible {
+    background: rgba(220, 38, 38, 0.06);
+    outline: none;
+}
+
+.billing-kpi-clickable > p:first-child::after {
+    content: " ›";
+    letter-spacing: 0;
+}
