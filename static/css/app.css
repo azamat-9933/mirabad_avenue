@@ -21984,3 +21984,18 @@ html.dark .profile-telegram-disconnect,
     content: " ›";
     letter-spacing: 0;
 }
+
+/* Houses page: the Debtors card opens the debtors list. */
+.residential-kpi-card.is-clickable {
+    cursor: pointer;
+}
+
+.residential-kpi-card.is-clickable:focus-visible {
+    outline: 2px solid rgba(220, 38, 38, 0.5);
+    outline-offset: 2px;
+}
+
+.residential-kpi-card.is-clickable > div:first-child > p:first-child::after {
+    content: " ›";
+    letter-spacing: 0;
+}
