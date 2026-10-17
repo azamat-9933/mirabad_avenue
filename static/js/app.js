@@ -455,8 +455,7 @@
         // Statistics: payments without a known channel (manual top-ups).
         "Other": { ru: "Прочее", uz: "Boshqa" },
         // Payment notice window: the debtor search and the chosen debtor.
-        "Search debtors...": { ru: "Поиск должников...", uz: "Qarzdorlarni qidirish..." },
-        "Choose a debtor": { ru: "Выберите должника", uz: "Qarzdorni tanlang" },
+        "Choose a debtor":{ ru: "Выберите должника", uz: "Qarzdorni tanlang" },
         "Search by name, house, apartment or phone, then pick the debtor.": { ru: "Найдите по имени, дому, квартире или телефону и выберите должника.", uz: "Ism, uy, kvartira yoki telefon bo'yicha qidiring va qarzdorni tanlang." },
         "No debtor found": { ru: "Должник не найден", uz: "Qarzdor topilmadi" },
         "The notice appears here once a debtor is chosen.": { ru: "Уведомление появится здесь, когда будет выбран должник.", uz: "Qarzdor tanlangach, xabarnoma shu yerda ko'rinadi." },
@@ -905,6 +904,7 @@
     };
 
     const placeholderTranslations = {
+        "Search debtors...": { ru: "Поиск должников...", uz: "Qarzdorlarni qidirish..." },
         "Search data points...": { ru: "Поиск данных...", uz: "Ma'lumotlarni qidirish..." },
         "Search": { ru: "Поиск", uz: "Qidirish" },
         "Recent requests": { ru: "Недавние запросы", uz: "So'nggi so'rovlar" },
@@ -6722,6 +6722,7 @@
         const sortLabel = modal.querySelector("[data-billing-notice-sort-label]");
         const countNode = modal.querySelector("[data-billing-notice-count]");
         const selectedNode = modal.querySelector("[data-billing-notice-selected]");
+        const debtorsNode = modal.querySelector("[data-billing-notice-debtors]");
         const pdfButton = modal.querySelector("[data-billing-notice-pdf]");
         const telegramButton = modal.querySelector("[data-billing-notice-telegram]");
         let activeLang = "uz";
@@ -6861,6 +6862,30 @@
             `;
         };
 
+        // Under the chosen debtor: every debtor in the balance order (largest debt first by default);
+        // a row picks that debtor, and the chosen one is marked.
+        const renderDebtors = () => {
+            if (!debtorsNode) return;
+            if (loading) {
+                debtorsNode.innerHTML = "";
+                return;
+            }
+            const debtors = sortNoticeResidents(getNoticeResidents());
+            debtorsNode.innerHTML = debtors.length
+                ? debtors.map((resident) => {
+                    const residentId = noticeResidentId(resident);
+                    const unit = [resident.building, resident.apartment].filter(Boolean).join(" · ") || "-";
+                    return `
+                        <button class="billing-notice-debtor ${residentId === activeResidentId ? "is-selected" : ""}" data-billing-notice-debtor="${escapeAttr(residentId)}" title="${escapeAttr(resident.name || "")}" type="button">
+                            <span class="billing-notice-debtor-unit">${escapeHtml(unit)}</span>
+                            <span class="billing-notice-debtor-name">${escapeHtml(resident.name || "-")}</span>
+                            <span class="billing-notice-debtor-debt">${escapeHtml(formatBillingUzs(debtValue(resident)))}</span>
+                        </button>
+                    `;
+                }).join("")
+                : `<p class="billing-notice-debtors-empty">${escapeHtml(t("No debtors"))}</p>`;
+        };
+
         // The search dropdown: debtors only, best match first; Enter or a click picks one.
         const resultsOpen = () => Boolean(resultsNode && !resultsNode.classList.contains("hidden"));
         const closeResults = () => {
@@ -6974,6 +6999,7 @@
         const render = () => {
             const resident = selectedResident();
             renderSelected(resident);
+            renderDebtors();
             renderPreview(resident);
             syncFilters();
             if (countNode) countNode.textContent = `${t("Debtors")}: ${getNoticeResidents().length}`;
@@ -7076,6 +7102,9 @@
                 event.stopPropagation();
                 closeResults();
             }
+        });
+        debtorsNode?.addEventListener("click", (event) => {
+            chooseResident(event.target.closest("[data-billing-notice-debtor]")?.dataset.billingNoticeDebtor || "");
         });
         // Keep the focus in the search while a result is clicked.
         resultsNode?.addEventListener("mousedown", (event) => event.preventDefault());

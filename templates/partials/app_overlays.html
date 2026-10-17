@@ -1223,8 +1223,8 @@ This form writes directly to Django admin and database.
 </button>
 </div>
 </div>
-<div class="min-h-0 flex-1 overflow-y-auto px-8 py-6">
-<div class="flex flex-col gap-4">
+<div class="billing-notice-body min-h-0 flex-1 overflow-y-auto px-8 py-6">
+<div class="billing-notice-body-inner flex flex-col gap-4">
 <div class="flex flex-col lg:flex-row gap-3 lg:items-center lg:justify-between">
 <div class="relative flex-1 max-w-xl" data-billing-notice-search-box>
 <label class="relative block">
@@ -1246,10 +1246,14 @@ This form writes directly to Django admin and database.
 <span class="ml-1 rounded-full border border-outline-variant/20 px-3 py-1 text-[11px] font-black uppercase tracking-[0.12em] text-on-surface-variant" data-billing-notice-count>0 shown</span>
 </div>
 </div>
-<div class="grid grid-cols-1 xl:grid-cols-[340px_minmax(0,1fr)] gap-6">
-<!-- The debtor the notice is for (chosen in the search or given by the opener). -->
+<div class="billing-notice-grid grid grid-cols-1 xl:grid-cols-[340px_minmax(0,1fr)] gap-6">
+<div class="billing-notice-side">
+<!-- The debtor the notice is for (chosen in the search, in the list below or given by the opener). -->
 <section class="billing-notice-selected" data-billing-notice-selected></section>
-<section class="rounded-[20px] border border-outline-variant/15 bg-white p-8 shadow-sm" data-billing-notice-sheet>
+<!-- Every debtor (house/apartment, name, debt), largest debt first; a row picks that debtor. -->
+<div class="billing-notice-debtors" data-billing-notice-debtors></div>
+</div>
+<section class="billing-notice-sheet rounded-[20px] border border-outline-variant/15 bg-white p-8 shadow-sm" data-billing-notice-sheet>
 <div class="border-b border-outline-variant/15 pb-5 mb-8 flex items-start justify-between gap-6">
 <div>
 <p class="text-[13px] font-black uppercase tracking-[0.18em] text-on-surface" data-billing-notice-doc-title>TO'LOV XABARNOMASI</p>
