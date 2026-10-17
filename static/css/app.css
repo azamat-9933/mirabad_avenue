@@ -15949,7 +15949,9 @@ html.dark .add-payment-resident-photo-shell,
 
 .analytics-v2-page {
     display: grid;
-    gap: 18px;
+    align-content: start;
+    gap: 14px;
+    padding: 20px 24px 28px;
 }
 
 .analytics-v2-hero {
@@ -15962,7 +15964,7 @@ html.dark .add-payment-resident-photo-shell,
 .analytics-v2-hero__copy {
     min-width: 0;
     display: grid;
-    gap: 8px;
+    gap: 6px;
 }
 
 .analytics-v2-eyebrow {
@@ -15977,10 +15979,10 @@ html.dark .add-payment-resident-photo-shell,
 .analytics-v2-hero h1 {
     margin: 0;
     color: #162133;
-    font-size: clamp(32px, 3.1vw, 42px);
+    font-size: clamp(26px, 2.4vw, 34px);
     font-weight: 950;
     letter-spacing: -0.05em;
-    line-height: 0.96;
+    line-height: 1;
 }
 
 .analytics-v2-hero p:last-child {
@@ -15993,14 +15995,14 @@ html.dark .add-payment-resident-photo-shell,
 
 .analytics-v2-toolbar {
     display: grid;
-    grid-template-columns: repeat(2, minmax(190px, 220px));
-    gap: 12px;
+    grid-template-columns: repeat(2, minmax(170px, 210px));
+    gap: 10px;
     justify-content: end;
 }
 
 .analytics-v2-select-wrap {
     display: grid;
-    gap: 8px;
+    gap: 6px;
 }
 
 .analytics-v2-select-wrap span {
@@ -16012,8 +16014,8 @@ html.dark .add-payment-resident-photo-shell,
 }
 
 .analytics-v2-select-wrap select {
-    min-height: 48px;
-    border-radius: 16px;
+    min-height: 40px;
+    border-radius: 12px;
     border: 1px solid rgba(146, 168, 197, 0.22);
     background:
         radial-gradient(circle at 18% 16%, rgba(255, 255, 255, 0.92), transparent 32%),
@@ -16030,7 +16032,7 @@ html.dark .add-payment-resident-photo-shell,
 .analytics-v2-kpi-grid {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 14px;
+    gap: 12px;
 }
 
 .analytics-v2-kpi,
@@ -16103,9 +16105,10 @@ html.dark .add-payment-resident-photo-shell,
 
 .analytics-v2-kpi {
     display: grid;
-    gap: 8px;
-    padding: 16px 16px 14px;
-    min-height: 138px;
+    align-content: space-between;
+    gap: 10px;
+    padding: 14px 16px;
+    border-radius: 20px;
 }
 
 .analytics-v2-kpi__label-row {
@@ -16127,12 +16130,12 @@ html.dark .add-payment-resident-photo-shell,
 }
 
 .analytics-v2-kpi__icon {
-    width: 42px;
-    height: 42px;
+    width: 36px;
+    height: 36px;
     display: grid;
     place-items: center;
-    border-radius: 15px;
-    font-size: 20px !important;
+    border-radius: 12px;
+    font-size: 19px !important;
     background: rgba(79, 142, 247, 0.10);
     color: #3173E0;
     border: 1px solid rgba(79, 142, 247, 0.18);
@@ -16157,11 +16160,17 @@ html.dark .add-payment-resident-photo-shell,
     border-color: rgba(34, 197, 94, 0.18);
 }
 
+.analytics-v2-kpi--amber .analytics-v2-kpi__icon {
+    color: #C2410C;
+    background: rgba(245, 158, 11, 0.12);
+    border-color: rgba(245, 158, 11, 0.22);
+}
+
 .analytics-v2-kpi strong,
 .analytics-v2-mini strong,
 .analytics-v2-profile-card strong {
     color: #182332;
-    font-size: clamp(25px, 1.95vw, 38px);
+    font-size: clamp(22px, 1.7vw, 30px);
     font-weight: 950;
     letter-spacing: -0.05em;
     line-height: 0.95;
@@ -16192,11 +16201,12 @@ html.dark .add-payment-resident-photo-shell,
 
 .analytics-v2-grid {
     display: grid;
-    gap: 18px;
+    gap: 14px;
 }
 
 .analytics-v2-grid--top {
-    grid-template-columns: minmax(0, 1.55fr) minmax(340px, 0.9fr);
+    grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+    align-items: start;
 }
 
 .analytics-v2-grid--bottom {
@@ -16212,7 +16222,8 @@ html.dark .add-payment-resident-photo-shell,
 }
 
 .analytics-v2-panel {
-    padding: 16px;
+    padding: 14px 16px 16px;
+    border-radius: 20px;
 }
 
 .analytics-v2-panel--table {
@@ -16224,7 +16235,7 @@ html.dark .add-payment-resident-photo-shell,
     align-items: flex-start;
     justify-content: space-between;
     gap: 16px;
-    margin-bottom: 12px;
+    margin-bottom: 10px;
 }
 
 .analytics-v2-panel__head--stack {
@@ -16238,7 +16249,7 @@ html.dark .add-payment-resident-photo-shell,
 .analytics-v2-panel__head h2 {
     margin: 0;
     color: #162133;
-    font-size: 25px;
+    font-size: 20px;
     font-weight: 930;
     letter-spacing: -0.045em;
 }
@@ -16279,8 +16290,8 @@ html.dark .add-payment-resident-photo-shell,
 
 .analytics-house-debt-list {
     display: grid;
-    gap: 10px;
-    margin: 4px 0 0;
+    gap: 8px;
+    margin: 0;
     padding: 0;
     list-style: none;
 }
@@ -16288,18 +16299,18 @@ html.dark .add-payment-resident-photo-shell,
 .analytics-house-debt-row {
     display: grid;
     /* Fixed amount column so every bar track has the same length. */
-    grid-template-columns: minmax(64px, 140px) minmax(0, 1fr) 240px;
+    grid-template-columns: minmax(56px, 110px) minmax(0, 1fr) 170px;
     align-items: center;
-    gap: 18px;
-    padding: 12px 18px;
-    border-radius: 16px;
+    gap: 14px;
+    padding: 10px 14px;
+    border-radius: 14px;
     border: 1px solid rgba(174, 194, 220, 0.24);
     background: rgba(255, 255, 255, 0.78);
 }
 
 .analytics-house-debt-name {
     color: #1A2535;
-    font-size: 20px;
+    font-size: 17px;
     font-weight: 900;
     letter-spacing: -0.02em;
 }
@@ -16320,7 +16331,7 @@ html.dark .add-payment-resident-photo-shell,
 
 .analytics-house-debt-amount {
     color: #DC2626;
-    font-size: 20px;
+    font-size: 17px;
     font-weight: 900;
     font-variant-numeric: tabular-nums;
     text-align: right;
@@ -16397,18 +16408,14 @@ html.dark .analytics-house-debt-row.is-clear .analytics-house-debt-amount,
         repeating-linear-gradient(90deg, rgba(92, 116, 148, 0.035) 0 1px, transparent 1px 94px);
 }
 
-.analytics-v2-chart-wrap--tall {
-    min-height: 300px;
-    height: 300px;
-    max-height: 300px;
-}
-
-.analytics-v2-chart-wrap--donut {
-    min-height: 184px;
-    height: 184px;
-    max-height: 184px;
-    max-width: 190px;
+.analytics-v2-chart-wrap--pie {
+    width: 100%;
+    min-height: 168px;
+    height: 168px;
+    max-height: 168px;
+    max-width: 168px;
     margin-inline: auto;
+    background: none;
 }
 
 .analytics-v2-chart-wrap--compact {
@@ -16502,14 +16509,14 @@ html.dark .analytics-house-debt-row.is-clear .analytics-house-debt-amount,
 
 .analytics-v2-channel-layout {
     display: grid;
-    grid-template-columns: minmax(176px, 190px) minmax(0, 1fr);
+    grid-template-columns: 168px minmax(0, 1fr);
     align-items: center;
     gap: 16px;
 }
 
 .analytics-v2-channel-list {
     display: grid;
-    gap: 10px;
+    gap: 8px;
 }
 
 .analytics-v2-channel-card {
@@ -16517,8 +16524,8 @@ html.dark .analytics-house-debt-row.is-clear .analytics-house-debt-amount,
     grid-template-columns: auto 1fr auto;
     align-items: center;
     gap: 12px;
-    padding: 10px 12px;
-    border-radius: 16px;
+    padding: 8px 12px 8px 10px;
+    border-radius: 14px;
     border: 1px solid rgba(174, 194, 220, 0.24);
     background: rgba(255, 255, 255, 0.78);
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.88);
@@ -16534,43 +16541,27 @@ html.dark .analytics-house-debt-row.is-clear .analytics-house-debt-amount,
         inset 0 1px 0 rgba(255, 255, 255, 0.92);
 }
 
-/* base.html sets .chart-canvas-wrap { min-height: 22rem }, which overrode these chart sizes. */
-.chart-canvas-wrap.analytics-v2-chart-wrap--tall {
-    min-height: 300px;
-}
-
-/* When the channels panel next to it is taller, the payments chart grows instead of leaving a gap. */
-.analytics-v2-grid--top > .analytics-v2-panel--chart {
-    display: flex;
-    flex-direction: column;
-}
-
-.analytics-v2-grid--top .analytics-v2-chart-wrap--tall {
-    flex: 1 1 auto;
-    height: auto;
-    max-height: none;
-}
-
-.chart-canvas-wrap.analytics-v2-chart-wrap--donut {
-    min-height: 184px;
+/* base.html sets .chart-canvas-wrap { min-height: 22rem }, which overrode the pie size. */
+.chart-canvas-wrap.analytics-v2-chart-wrap--pie {
+    min-height: 168px;
 }
 
 .analytics-v2-channel-layout.is-empty {
     grid-template-columns: minmax(0, 1fr);
 }
 
-/* Donut beside the list only when the panel itself has room; otherwise stack them. */
+/* Pie beside the list only when the panel itself has room; otherwise stack them. */
 .analytics-v2-panel--side {
     container-type: inline-size;
 }
 
-@container (max-width: 560px) {
+@container (max-width: 480px) {
     .analytics-v2-channel-layout {
         grid-template-columns: minmax(0, 1fr);
     }
 }
 
-.analytics-v2-channel-layout.is-empty .analytics-v2-chart-wrap--donut {
+.analytics-v2-channel-layout.is-empty .analytics-v2-chart-wrap--pie {
     display: none;
 }
 
@@ -16582,8 +16573,8 @@ html.dark .analytics-house-debt-row.is-clear .analytics-house-debt-amount,
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 56px;
-    height: 40px;
+    width: 48px;
+    height: 34px;
     padding: 6px;
     border-radius: 12px;
     border: 1px solid rgba(15, 23, 42, 0.08);
@@ -16612,6 +16603,10 @@ html.dark .analytics-house-debt-row.is-clear .analytics-house-debt-amount,
     color: #0EA5E9;
 }
 
+.analytics-v2-channel-symbol--other {
+    color: #64748B;
+}
+
 html.dark .analytics-v2-channel-avatar,
 [data-theme="dark"] .analytics-v2-channel-avatar {
     border-color: rgba(255, 255, 255, 0.10);
@@ -16634,7 +16629,7 @@ html.dark .analytics-v2-channel-avatar,
 
 .analytics-v2-channel-copy strong {
     color: #1A2535;
-    font-size: 17px;
+    font-size: 15px;
     font-weight: 900;
     letter-spacing: -0.03em;
 }
@@ -16653,7 +16648,7 @@ html.dark .analytics-v2-channel-avatar,
 
 .analytics-v2-channel-value strong {
     color: #162133;
-    font-size: 18px;
+    font-size: 16px;
     font-weight: 950;
     letter-spacing: -0.03em;
 }
@@ -16969,6 +16964,19 @@ html.dark .analytics-v2-split-card,
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
 }
 
+/* The channel's pie color stays on the card's left edge in dark mode too. */
+html.dark .analytics-v2-channel-card,
+[data-theme="dark"] .analytics-v2-channel-card {
+    border-left-color: var(--channel-color, rgba(116, 139, 170, 0.16));
+}
+
+html.dark .analytics-v2-kpi--amber .analytics-v2-kpi__icon,
+[data-theme="dark"] .analytics-v2-kpi--amber .analytics-v2-kpi__icon {
+    color: #FBBF24;
+    background: rgba(245, 158, 11, 0.14);
+    border-color: rgba(245, 158, 11, 0.26);
+}
+
 html.dark .analytics-v2-chart-wrap,
 [data-theme="dark"] .analytics-v2-chart-wrap {
     background:
@@ -17015,9 +17023,15 @@ html.dark .analytics-v2-table tbody td,
 }
 
 @media (max-width: 1360px) {
-    .analytics-v2-grid--top,
     .analytics-v2-grid--bottom,
     .analytics-v2-grid--wide {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Debt by house and the channels stay side by side while both still fit. */
+@media (max-width: 1180px) {
+    .analytics-v2-grid--top {
         grid-template-columns: 1fr;
     }
 }
@@ -17052,14 +17066,21 @@ html.dark .analytics-v2-table tbody td,
 }
 
 @media (max-width: 720px) {
-    .analytics-v2-kpi-grid {
-        grid-template-columns: 1fr;
+    .analytics-v2-page {
+        padding: 16px 16px 24px;
     }
 
     .analytics-v2-panel__head,
     .analytics-v2-health-copy {
         flex-direction: column;
         align-items: flex-start;
+    }
+}
+
+/* Two short cards per row down to small phones; one per row below that. */
+@media (max-width: 480px) {
+    .analytics-v2-kpi-grid {
+        grid-template-columns: 1fr;
     }
 }
 

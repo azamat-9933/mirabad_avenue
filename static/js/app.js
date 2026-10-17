@@ -452,6 +452,8 @@
         "Monthly collected": { ru: "Собрано за месяц", uz: "Oy bo'yicha tushum" },
         "Operations": { ru: "Операции", uz: "Operatsiyalar" },
         "Payment channels": { ru: "Каналы оплаты", uz: "To'lov kanallari" },
+        // Statistics: payments without a known channel (manual top-ups).
+        "Other": { ru: "Прочее", uz: "Boshqa" },
         "Distribution by real backend payment methods.": { ru: "Распределение по реальным способам оплаты из backend.", uz: "Backenddagi haqiqiy to'lov usullari bo'yicha taqsimot." },
         "Debt aging": { ru: "Возраст долга", uz: "Qarz yoshi" },
         "How long current debtors have gone without a successful payment.": { ru: "Сколько времени текущие должники без успешного платежа.", uz: "Joriy qarzdorlar muvaffaqiyatli to'lovsiz qancha vaqt qolganini ko'rsatadi." },
@@ -1042,6 +1044,8 @@
         // Full-history payment figures computed by the backend; transactions above are only the
         // latest rows of each account.
         paymentSummary: { months: [], monthly: [], channels: {}, currentMonthPayments: 0 },
+        // Debt, overpayment and debtors of each house at the end of each of those months.
+        balanceSummary: [],
         profile: {},
     };
 
@@ -1058,7 +1062,8 @@
         billingData.paymentSummary = payload.paymentSummary && typeof payload.paymentSummary === "object"
             ? payload.paymentSummary
             : { months: [], monthly: [], channels: {}, currentMonthPayments: 0 };
-        billingData.profile = payload.profile && typeof payload.profile === "object" ? payload.profile : {};
+        billingData.balanceSummary = Array.isArray(payload.balanceSummary) ? payload.balanceSummary : [];
+        billingData.profile =payload.profile && typeof payload.profile === "object" ? payload.profile : {};
         billingData.source = payload.source || "backend";
         billingData.generatedAt = payload.generatedAt || "";
         return true;
@@ -1348,9 +1353,8 @@
             "noyabr",
             "dekabr",
         ];
-        const chartTextColor = root.dataset.theme === "dark" ? "#A5B6C9" : "#6F7E93";
-        const chartGridColor = root.dataset.theme === "dark" ? "rgba(148, 166, 188, 0.12)" : "rgba(160, 176, 198, 0.18)";
-        const tooltipBg = root.dataset.theme === "dark" ? "#101722" : "#172030";
+        const isDark = root.dataset.theme === "dark";
+        const tooltipBg = isDark ? "#101722" : "#172030";
         const tooltipText = "#F8FBFF";
         const monthKeyFromDate = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
         const monthLabel = (monthKey) => {
@@ -1361,29 +1365,10 @@
             return new Intl.DateTimeFormat(localeMap[lang] || "en-US", { month: "long", year: "numeric" })
                 .format(new Date(year, (month || 1) - 1, 1));
         };
-        const rollingMonths = (monthKey, count = 6) => {
-            const [year, month] = String(monthKey).split("-").map(Number);
-            const base = new Date(year, (month || 1) - 1, 1);
-            return Array.from({ length: count }, (_, index) => {
-                const current = new Date(base.getFullYear(), base.getMonth() - (count - index - 1), 1);
-                return monthKeyFromDate(current);
-            });
-        };
         const sumBy = (items, mapper) => items.reduce((total, item) => total + Number(mapper(item) || 0), 0);
-        const formatSignedUzs = (value) => {
-            const numeric = Number(value || 0);
-            if (!numeric) return `0 UZS`;
-            const abs = formatBillingUzs(Math.abs(numeric));
-            return `${numeric > 0 ? "+" : "-"}${abs}`;
-        };
         const setText = (selector, value) => {
             const node = document.querySelector(selector);
             if (node) node.textContent = value;
-        };
-        const setMeter = (key, value) => {
-            document.querySelectorAll(`[data-analytics-meter="${key}"]`).forEach((node) => {
-                node.style.width = `${Math.max(0, Math.min(100, Number(value) || 0))}%`;
-            });
         };
         const destroyChart = (key) => {
             const chart = analyticsChartRegistry[key];
@@ -1393,22 +1378,15 @@
             }
         };
 
-        const backendComplexes = Array.isArray(billingData.complexes) ? billingData.complexes : [];
-        const backendResidents = Array.isArray(billingData.residents) ? billingData.residents : [];
+        const complexes = Array.isArray(billingData.complexes) ? billingData.complexes : [];
         // One row per (month, house, channel) of successful payments over the whole history.
         const paymentRows = Array.isArray(billingData.paymentSummary?.monthly) ? billingData.paymentSummary.monthly : [];
-        const analyticsData = { complexes: backendComplexes, residents: backendResidents };
-        const complexes = analyticsData.complexes;
+        // One row per (month, house): debt, overpayment and debtors at the end of that month.
+        const balanceRows = Array.isArray(billingData.balanceSummary) ? billingData.balanceSummary : [];
         const buildings = complexes.flatMap((complex) => (complex.buildingItems || []).map((building) => ({
             ...building,
             complexName: complex.name,
-            complexId: complex.id,
-            complexBackendId: complex.backendId,
-            sector: complex.sector,
-            complexWaterM3: Number(complex.waterM3 || 0),
-            complexHeatingM3: Number(complex.heatingM3 || 0),
         })));
-        const residents = analyticsData.residents;
         const monthKeys = (Array.isArray(billingData.paymentSummary?.months) ? billingData.paymentSummary.months : [])
             .filter(Boolean)
             .slice()
@@ -1455,179 +1433,63 @@
         const selectedBuildings = selectedBuilding ? [selectedBuilding] : buildings;
         const selectedBuildingIds = new Set(selectedBuildings.map((building) => String(building.id)));
         const selectedBuildingBackendIds = new Set(selectedBuildings.map((building) => String(building.backendId || "")));
-        const selectedResidents = residents.filter((resident) => {
-            if (!selectedBuilding) return true;
-            return selectedBuildingIds.has(String(resident.buildingId || ""))
-                || selectedBuildingBackendIds.has(String(resident.buildingBackendId || ""));
-        });
-        const selectedPaymentRows = paymentRows.filter((row) => !selectedBuilding
-            || selectedBuildingBackendIds.has(String(row.buildingBackendId ?? "")));
-        const selectedMonthRows = selectedPaymentRows.filter((row) => row.month === analyticsDashboardState.month);
+        const inSelectedBuildings = (row) => !selectedBuilding || selectedBuildingBackendIds.has(String(row.buildingBackendId ?? ""));
+        const selectedMonthRows = paymentRows.filter((row) => inSelectedBuildings(row) && row.month === analyticsDashboardState.month);
+        // Balances as they stood at the end of the selected month (the current month: right now).
+        const monthBalanceRows = balanceRows.filter((row) => row.month === analyticsDashboardState.month);
+        const selectedBalanceRows = monthBalanceRows.filter(inSelectedBuildings);
 
-        const debtTotal = sumBy(selectedResidents, (resident) => {
-            const balance = Number(resident.balance || 0);
-            return balance < 0 ? Math.abs(balance) : 0;
-        });
-        const overpaymentTotal = sumBy(selectedResidents, (resident) => {
-            const balance = Number(resident.balance || 0);
-            return balance > 0 ? balance : 0;
-        });
+        const debtTotal = sumBy(selectedBalanceRows, (row) => row.debt);
+        const overpaymentTotal = sumBy(selectedBalanceRows, (row) => row.overpayment);
+        const debtorsCount = sumBy(selectedBalanceRows, (row) => row.debtors);
         const monthPaid = sumBy(selectedMonthRows, (row) => row.amount);
-        const monthPaymentCount = sumBy(selectedMonthRows, (row) => row.count);
-        const debtorsCount = selectedResidents.filter((resident) => Number(resident.balance || 0) < 0).length;
-        const withContract = selectedResidents.filter((resident) => Boolean(resident.hasContract)).length;
-        const averagePayment = monthPaymentCount ? monthPaid / monthPaymentCount : 0;
-        const averageBalance = selectedResidents.length ? sumBy(selectedResidents, (resident) => resident.balance) / selectedResidents.length : 0;
         const channelPalette = {
             Payme: "#3A77F1",
             Click: "#17B26A",
             Cash: "#F59E0B",
             Card: "#6C63FF",
             "Card transfer": "#0EA5E9",
+            Other: "#94A3B8",
         };
-        const channelDisplayOrder = ["Cash", "Card", "Card transfer", "Click", "Payme"];
-        const channelTotals = { Payme: 0, Click: 0, Cash: 0, Card: 0, "Card transfer": 0 };
+        const channelOrder = ["Cash", "Card", "Card transfer", "Click", "Payme", "Other"];
+        const channelTotals = Object.fromEntries(channelOrder.map((channel) => [channel, 0]));
         // Accounts are counted per house by the backend; houses never share an account, so they add up.
-        const channelResidentCounts = { Payme: 0, Click: 0, Cash: 0, Card: 0, "Card transfer": 0 };
+        const channelResidentCounts = Object.fromEntries(channelOrder.map((channel) => [channel, 0]));
         selectedMonthRows.forEach((row) => {
-            if (!(row.channel in channelTotals)) return;
-            channelTotals[row.channel] += Number(row.amount || 0);
-            channelResidentCounts[row.channel] += Number(row.residents || 0);
+            // Payments without a known channel (manual top-ups) still count in "Paid this month".
+            const channel = row.channel in channelTotals ? row.channel : "Other";
+            channelTotals[channel] += Number(row.amount || 0);
+            channelResidentCounts[channel] += Number(row.residents || 0);
         });
-        // Debt by house: current negative balances of each house's residents, largest first.
-        const houseDebtRows = selectedBuildings.map((building) => {
-            const buildingResidents = residents.filter((resident) => String(resident.buildingId || "") === String(building.id) || String(resident.buildingBackendId || "") === String(building.backendId || ""));
-            return {
-                label: building.number || building.name || t("House"),
-                debt: sumBy(buildingResidents, (resident) => {
-                    const balance = Number(resident.balance || 0);
-                    return balance < 0 ? Math.abs(balance) : 0;
-                }),
-            };
-        }).sort((left, right) => right.debt - left.debt);
+        // "Other" appears only when there is such a payment, so the slices add up to "Paid this month".
+        const channelDisplayOrder = channelOrder.filter((channel) => channel !== "Other" || channelTotals.Other > 0);
+        // Debt by house at the end of the selected month, largest first.
+        const houseDebtRows = selectedBuildings.map((building) => ({
+            label: building.number || building.name || t("House"),
+            debt: sumBy(monthBalanceRows.filter((row) => String(row.buildingBackendId ?? "") === String(building.backendId || "")), (row) => row.debt),
+        })).sort((left, right) => right.debt - left.debt);
 
         setText('[data-analytics-value="paid-this-month"]', formatBillingUzs(monthPaid));
-        setText('[data-analytics-value="payments-count"]', moneyFormatter.format(monthPaymentCount));
         setText('[data-analytics-value="total-debt"]', formatBillingUzs(debtTotal));
         setText('[data-analytics-value="overpayment"]', formatBillingUzs(overpaymentTotal));
         setText('[data-analytics-value="debtors-count"]', moneyFormatter.format(debtorsCount));
-        setText('[data-analytics-value="average-payment"]', formatBillingUzs(averagePayment));
-        setText('[data-analytics-value="with-contract"]', moneyFormatter.format(withContract));
-        setText('[data-analytics-value="average-balance"]', formatSignedUzs(averageBalance));
-
-        const rollingMonthKeys = rollingMonths(analyticsDashboardState.month, 6);
-        const monthlyPaid = rollingMonthKeys.map((monthKey) => sumBy(selectedPaymentRows.filter((row) => row.month === monthKey), (row) => row.amount));
-        const monthlyOps = rollingMonthKeys.map((monthKey) => sumBy(selectedPaymentRows.filter((row) => row.month === monthKey), (row) => row.count));
 
         if (window.Chart) {
-            destroyChart("analytics-payments");
-            const paymentsCanvas = document.getElementById("analytics-payments-chart");
-            if (paymentsCanvas) {
-                analyticsChartRegistry["analytics-payments"] = new window.Chart(paymentsCanvas, {
-                    type: "bar",
-                    data: {
-                        labels: rollingMonthKeys.map((monthKey) => monthLabel(monthKey)),
-                        datasets: [
-                            {
-                                label: t("Monthly collected"),
-                                data: monthlyPaid,
-                                backgroundColor: root.dataset.theme === "dark" ? "rgba(96, 165, 250, 0.72)" : "rgba(58, 119, 241, 0.82)",
-                                borderRadius: 14,
-                                maxBarThickness: 42,
-                                yAxisID: "y",
-                            },
-                            {
-                                label: t("Operations"),
-                                type: "line",
-                                data: monthlyOps,
-                                borderColor: root.dataset.theme === "dark" ? "rgba(182, 206, 255, 0.92)" : "rgba(121, 147, 184, 0.95)",
-                                backgroundColor: root.dataset.theme === "dark" ? "rgba(182, 206, 255, 0.25)" : "rgba(121, 147, 184, 0.18)",
-                                borderWidth: 2,
-                                pointRadius: 2,
-                                pointHoverRadius: 2,
-                                pointHitRadius: 12,
-                                tension: 0.34,
-                                yAxisID: "y1",
-                            },
-                        ],
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        animation: false,
-                        animations: false,
-                        resizeDelay: 0,
-                        interaction: {
-                            mode: "nearest",
-                            intersect: false,
-                        },
-                        transitions: {
-                            active: {
-                                animation: {
-                                    duration: 0,
-                                },
-                            },
-                            resize: {
-                                animation: {
-                                    duration: 0,
-                                },
-                            },
-                        },
-                        plugins: {
-                            legend: {
-                                display: false,
-                            },
-                            tooltip: {
-                                animation: false,
-                                backgroundColor: tooltipBg,
-                                titleColor: tooltipText,
-                                bodyColor: tooltipText,
-                                borderColor: root.dataset.theme === "dark" ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.12)",
-                                borderWidth: 1,
-                                callbacks: {
-                                    label: (context) => context.dataset.yAxisID === "y1"
-                                        ? `${context.dataset.label}: ${moneyFormatter.format(context.raw)}`
-                                        : `${context.dataset.label}: ${formatBillingUzs(context.raw)}`,
-                                },
-                            },
-                        },
-                        scales: {
-                            x: {
-                                ticks: { color: chartTextColor, font: { weight: "800" } },
-                                grid: { display: false },
-                            },
-                            y: {
-                                beginAtZero: true,
-                                ticks: {
-                                    color: chartTextColor,
-                                    callback: (value) => formatCompactUzs(value),
-                                },
-                                grid: { color: chartGridColor },
-                            },
-                            y1: {
-                                beginAtZero: true,
-                                position: "right",
-                                ticks: { color: chartTextColor },
-                                grid: { display: false },
-                            },
-                        },
-                    },
-                });
-            }
-
             destroyChart("analytics-channels");
             const channelsCanvas = document.getElementById("analytics-channel-chart");
             const hasChannelPayments = channelDisplayOrder.some((channel) => (channelTotals[channel] || 0) > 0);
             document.querySelector("[data-analytics-channel-layout]")?.classList.toggle("is-empty", !hasChannelPayments);
             if (channelsCanvas && hasChannelPayments) {
                 analyticsChartRegistry["analytics-channels"] = new window.Chart(channelsCanvas, {
-                    type: "doughnut",
+                    type: "pie",
                     data: {
                         labels: channelDisplayOrder.map((channel) => t(channel)),
                         datasets: [{
                             data: channelDisplayOrder.map((channel) => channelTotals[channel] || 0),
                             backgroundColor: channelDisplayOrder.map((channel) => channelPalette[channel]),
-                            borderWidth: 0,
+                            // Thin separators in the panel's color between the slices.
+                            borderColor: isDark ? "#121823" : "#FFFFFF",
+                            borderWidth: 2,
                             hoverOffset: 4,
                         }],
                     },
@@ -1649,7 +1511,7 @@
                                 },
                             },
                         },
-                        cutout: "72%",
+                        layout: { padding: 4 },
                         plugins: {
                             legend: { display: false },
                             tooltip: {
@@ -1683,31 +1545,27 @@
 
         const channelList = document.querySelector("[data-analytics-channel-list]");
         if (channelList) {
-            // Same marks as the Payments page; the donut color stays as the card's left edge.
+            // Same marks as the Payments page; the pie slice color stays as the card's left edge.
             const channelIcons = {
                 Cash: '<span class="material-symbols-outlined analytics-v2-channel-symbol analytics-v2-channel-symbol--cash" aria-hidden="true">payments</span>',
                 Card: '<span class="material-symbols-outlined analytics-v2-channel-symbol analytics-v2-channel-symbol--card" aria-hidden="true">credit_card</span>',
                 "Card transfer": '<span class="material-symbols-outlined analytics-v2-channel-symbol analytics-v2-channel-symbol--transfer" aria-hidden="true">sync_alt</span>',
                 Click: `<img alt="" class="payment-brand-logo payment-brand-logo-click" src="${escapeHtml(channelList.dataset.clickLogo || "")}">`,
                 Payme: `<img alt="" class="payment-brand-logo payment-brand-logo-payme" src="${escapeHtml(channelList.dataset.paymeLogo || "")}">`,
+                Other: '<span class="material-symbols-outlined analytics-v2-channel-symbol analytics-v2-channel-symbol--other" aria-hidden="true">more_horiz</span>',
             };
-            channelList.innerHTML = channelDisplayOrder.map((channel) => {
-                const amount = channelTotals[channel] || 0;
-                const residentsCount = channelResidentCounts[channel] || 0;
-                return `
+            channelList.innerHTML = channelDisplayOrder.map((channel) => `
                 <div class="analytics-v2-channel-card" style="--channel-color:${channelPalette[channel]}">
                     <span class="analytics-v2-channel-avatar">${channelIcons[channel] || ""}</span>
                     <div class="analytics-v2-channel-copy">
                         <strong>${escapeHtml(t(channel))}</strong>
-                        <span>${escapeHtml(`${moneyFormatter.format(residentsCount)} ${t("Residents").toLowerCase()}`)}</span>
+                        <span>${escapeHtml(`${t("Residents")}: ${moneyFormatter.format(channelResidentCounts[channel] || 0)}`)}</span>
                     </div>
                     <div class="analytics-v2-channel-value">
-                        <strong>${escapeHtml(formatBillingUzs(amount))}</strong>
-                        <span>${escapeHtml(t("Selected month"))}</span>
+                        <strong>${escapeHtml(formatBillingUzs(channelTotals[channel] || 0))}</strong>
                     </div>
                 </div>
-            `;
-            }).join("");
+            `).join("");
         }
 
         return true;
@@ -2056,6 +1914,12 @@
                     dataset._hydroflowLightBackground = dataset.backgroundColor;
                     dataset._hydroflowLightBorder = dataset.borderColor;
                     dataset._hydroflowLightHover = dataset.hoverBackgroundColor;
+                }
+                // Per-slice colors (pie: one color per payment channel) mean something: keep them and
+                // only match the slice separators to the panel.
+                if (Array.isArray(dataset._hydroflowLightBackground)) {
+                    dataset.borderColor = isDark ? "#121823" : "#FFFFFF";
+                    return;
                 }
                 dataset.backgroundColor = isDark ? darkDatasetColors[index % darkDatasetColors.length] : dataset._hydroflowLightBackground;
                 dataset.borderColor = isDark ? "rgba(255,255,255,0.12)" : dataset._hydroflowLightBorder;

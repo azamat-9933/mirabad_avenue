@@ -1,11 +1,10 @@
 {% load static %}
 <main class="app-main app-main--under-sidebar min-h-screen flex flex-col pt-16 analytics-v2-shell" data-analytics-dashboard-page>
-    <div class="analytics-v2-page p-8 flex-1">
+    <div class="analytics-v2-page flex-1">
         <section class="analytics-v2-hero">
             <div class="analytics-v2-hero__copy">
                 <p class="analytics-v2-eyebrow" data-i18n-key="Reports">Reports</p>
                 <h1 data-i18n-key="Analytics dashboard">Analytics dashboard</h1>
-                <p data-i18n-key="Live billing snapshot from backend residents, payments and current balances.">Live billing snapshot from backend residents, payments and current balances.</p>
             </div>
             <div class="analytics-v2-toolbar">
                 <label class="analytics-v2-select-wrap">
@@ -19,6 +18,7 @@
             </div>
         </section>
 
+        <!-- Balances are as of the end of the selected month (now, for the current month). -->
         <section class="analytics-v2-kpi-grid" data-analytics-dashboard>
             <article class="analytics-v2-kpi analytics-v2-kpi--blue">
                 <div class="analytics-v2-kpi__label-row">
@@ -26,15 +26,6 @@
                     <span class="material-symbols-outlined analytics-v2-kpi__icon">payments</span>
                 </div>
                 <strong data-analytics-value="paid-this-month">0 UZS</strong>
-                <small data-analytics-support="paid-this-month" data-i18n-key="Real successful payments in selected month.">Real successful payments in selected month.</small>
-            </article>
-            <article class="analytics-v2-kpi analytics-v2-kpi--emerald">
-                <div class="analytics-v2-kpi__label-row">
-                    <span data-i18n-key="Payment operations">Payment operations</span>
-                    <span class="material-symbols-outlined analytics-v2-kpi__icon">receipt_long</span>
-                </div>
-                <strong data-analytics-value="payments-count">0</strong>
-                <small data-analytics-support="payments-count" data-i18n-key="Successful payment operations in selected month.">Successful payment operations in selected month.</small>
             </article>
             <article class="analytics-v2-kpi analytics-v2-kpi--red">
                 <div class="analytics-v2-kpi__label-row">
@@ -42,7 +33,6 @@
                     <span class="material-symbols-outlined analytics-v2-kpi__icon">warning</span>
                 </div>
                 <strong data-analytics-value="total-debt">0 UZS</strong>
-                <small data-analytics-support="total-debt" data-i18n-key="Current negative balances across selected residents.">Current negative balances across selected residents.</small>
             </article>
             <article class="analytics-v2-kpi analytics-v2-kpi--green">
                 <div class="analytics-v2-kpi__label-row">
@@ -50,74 +40,35 @@
                     <span class="material-symbols-outlined analytics-v2-kpi__icon">savings</span>
                 </div>
                 <strong data-analytics-value="overpayment">0 UZS</strong>
-                <small data-analytics-support="overpayment" data-i18n-key="Positive balances across selected residents.">Positive balances across selected residents.</small>
             </article>
-            <article class="analytics-v2-mini">
-                <span data-i18n-key="Debtors">Debtors</span>
+            <article class="analytics-v2-kpi analytics-v2-kpi--amber">
+                <div class="analytics-v2-kpi__label-row">
+                    <span data-i18n-key="Debtors">Debtors</span>
+                    <span class="material-symbols-outlined analytics-v2-kpi__icon">group</span>
+                </div>
                 <strong data-analytics-value="debtors-count">0</strong>
-                <small data-i18n-key="Residents with negative balance right now.">Residents with negative balance right now.</small>
-            </article>
-            <article class="analytics-v2-mini">
-                <span data-i18n-key="Average payment">Average payment</span>
-                <strong data-analytics-value="average-payment">0 UZS</strong>
-                <small data-i18n-key="Average successful payment in current scope.">Average successful payment in current scope.</small>
-            </article>
-            <article class="analytics-v2-mini">
-                <span data-i18n-key="With contract">With contract</span>
-                <strong data-analytics-value="with-contract">0</strong>
-                <small data-i18n-key="Resident profiles with active contract flag.">Resident profiles with active contract flag.</small>
-            </article>
-            <article class="analytics-v2-mini">
-                <span data-i18n-key="Average balance">Average balance</span>
-                <strong data-analytics-value="average-balance">0 UZS</strong>
-                <small data-i18n-key="Current mean resident balance.">Current mean resident balance.</small>
             </article>
         </section>
 
         <section class="analytics-v2-grid analytics-v2-grid--top">
-            <article class="analytics-v2-panel analytics-v2-panel--chart">
+            <article class="analytics-v2-panel">
                 <header class="analytics-v2-panel__head">
-                    <div>
-                        <h2 data-i18n-key="Payment dynamics">Payment dynamics</h2>
-                        <p data-i18n-key="Six-month trend from backend payment records.">Six-month trend from backend payment records.</p>
-                    </div>
-                    <div class="analytics-v2-legend">
-                        <span><i class="analytics-v2-dot analytics-v2-dot--blue"></i><b data-i18n-key="Monthly collected">Monthly collected</b></span>
-                        <span><i class="analytics-v2-dot analytics-v2-dot--soft"></i><b data-i18n-key="Operations">Operations</b></span>
-                    </div>
+                    <h2 data-i18n-key="Debt by house">Debt by house</h2>
                 </header>
-                <div class="chart-canvas-wrap analytics-v2-chart-wrap analytics-v2-chart-wrap--tall">
-                    <canvas id="analytics-payments-chart" aria-label="Payments dynamics chart" role="img"></canvas>
-                </div>
+                <ol class="analytics-house-debt-list" data-analytics-house-debt-list></ol>
             </article>
 
             <article class="analytics-v2-panel analytics-v2-panel--side">
-                <header class="analytics-v2-panel__head analytics-v2-panel__head--stack">
-                    <div>
-                        <h2 data-i18n-key="Payment channels">Payment channels</h2>
-                        <p data-i18n-key="Distribution by real backend payment methods.">Distribution by real backend payment methods.</p>
-                    </div>
+                <header class="analytics-v2-panel__head">
+                    <h2 data-i18n-key="Payment channels">Payment channels</h2>
                 </header>
                 <div class="analytics-v2-channel-layout" data-analytics-channel-layout>
-                    <div class="chart-canvas-wrap analytics-v2-chart-wrap analytics-v2-chart-wrap--donut">
+                    <div class="chart-canvas-wrap analytics-v2-chart-wrap analytics-v2-chart-wrap--pie">
                         <canvas id="analytics-channel-chart" aria-label="Payment channels chart" role="img"></canvas>
                     </div>
                     <div class="analytics-v2-channel-list" data-analytics-channel-list data-click-logo="{% static 'img/click-logo.png' %}" data-payme-logo="{% static 'img/payme-logo.png' %}"></div>
                 </div>
             </article>
         </section>
-
-        <section class="analytics-v2-grid">
-            <article class="analytics-v2-panel">
-                <header class="analytics-v2-panel__head">
-                    <div>
-                        <h2 data-i18n-key="Debt by house">Debt by house</h2>
-                        <p data-i18n-key="Current outstanding debt of residents in each house.">Current outstanding debt of residents in each house.</p>
-                    </div>
-                </header>
-                <ol class="analytics-house-debt-list" data-analytics-house-debt-list></ol>
-            </article>
-        </section>
-
     </div>
 </main>

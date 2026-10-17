@@ -771,7 +771,8 @@ def payment_summary(building_by_apartment: dict[int, int], status_overrides: dic
     current_tz = timezone.get_current_timezone()
     now = timezone.localtime(timezone.now(), current_tz)
     current_month = f"{now.year}-{now.month:02d}"
-    months = set()
+    # The current month is always offered, even before its first ledger entry.
+    months = {current_month}
     monthly = defaultdict(lambda: [Decimal("0"), 0, set()])
     channels = {channel: [Decimal("0"), set()] for channel in PAYMENT_CHANNELS}
     current_month_payments = 0
@@ -823,6 +824,47 @@ def payment_summary(building_by_apartment: dict[int, int], status_overrides: dic
         },
         "currentMonthPayments": current_month_payments,
     }
+
+
+def balance_summary(apartments_by_id: dict, months: list[str]) -> list[dict]:
+    """Debt, overpayment and debtors of each house at the end of each month (now, for the current one).
+
+    An account's balance at the end of a month is today's balance minus every ledger entry made after
+    that month, so the statistics month filter shows the debt as it stood then.
+    """
+    current_tz = timezone.get_current_timezone()
+    entries_by_month = defaultdict(dict)
+    rows = (
+        Transaction.objects.filter(apartment__isnull=False)
+        .annotate(month=TruncMonth("created_at", tzinfo=current_tz))
+        .values("apartment_id", "month")
+        .annotate(total=Sum("amount"))
+        .order_by()
+    )
+    for row in rows:
+        entries_by_month[f"{row['month'].year}-{row['month'].month:02d}"][row["apartment_id"]] = row["total"]
+
+    balances = {apartment_id: apartment.balance or Decimal("0") for apartment_id, apartment in apartments_by_id.items()}
+    summary = []
+    # Newest month first: after each month its own entries are taken back out of the balances.
+    for month in sorted(months, reverse=True):
+        houses = defaultdict(lambda: [Decimal("0"), Decimal("0"), 0])
+        for apartment_id, apartment in apartments_by_id.items():
+            balance = balances[apartment_id]
+            house = houses[apartment.building_id]
+            if balance < 0:
+                house[0] -= balance
+                house[2] += 1
+            elif balance > 0:
+                house[1] += balance
+        summary.extend(
+            {"month": month, "buildingBackendId": building_id, "debt": _money(debt), "overpayment": _money(overpayment), "debtors": debtors}
+            for building_id, (debt, overpayment, debtors) in sorted(houses.items())
+        )
+        for apartment_id, amount in entries_by_month.get(month, {}).items():
+            if apartment_id in balances:
+                balances[apartment_id] -= amount
+    return summary
 
 
 def recent_account_transactions(limit: int = RECENT_TRANSACTIONS_PER_ACCOUNT):
@@ -917,6 +959,10 @@ def build_portal_data(user=None) -> dict:
         )
         for transaction in transactions
     ]
+    payments = payment_summary(
+        {apartment_id: apartment.building_id for apartment_id, apartment in apartments_by_id.items()},
+        transaction_overrides,
+    )
 
     return {
         "source": "mirabad_avenue_backend",
@@ -926,10 +972,9 @@ def build_portal_data(user=None) -> dict:
         "complexes": complex_rows,
         "residents": resident_rows,
         "transactions": transaction_rows,
-        "paymentSummary": payment_summary(
-            {apartment_id: apartment.building_id for apartment_id, apartment in apartments_by_id.items()},
-            transaction_overrides,
-        ),
+        "paymentSummary": payments,
+        # Statistics page: house balances at the end of every month it offers.
+        "balanceSummary": balance_summary(apartments_by_id, payments["months"]),
         "notifications": _serialize_notifications(),
         "systemAlerts": _serialize_system_alerts(),
         "auditEvents": _serialize_audit_events(user),

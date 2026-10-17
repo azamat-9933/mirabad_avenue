@@ -667,6 +667,27 @@ class PortalBoundedSnapshotTests(TestCase):
         self.assertEqual({row["channel"] for row in summary["monthly"]}, {"Payme"})
         self.assertEqual(summary["currentMonthPayments"], 12)
 
+    def test_balance_summary_gives_house_balances_at_the_end_of_each_month(self):
+        # A charge two months back, then this month's payments: the old month shows the debt it had then.
+        apartment = self.owner.apartment
+        today = timezone.localtime()
+        old = (today.replace(day=1) - timedelta(days=40)).replace(day=15)
+        charge = apply_account_change(apartment.pk, Decimal("-50000"), Transaction.TYPE_CHARGE, description="[billing:period-charge] x")
+        Transaction.objects.filter(pk=charge.pk).update(created_at=old)
+        apartment.refresh_from_db()
+
+        data = build_portal_data(self.user)
+        months = data["paymentSummary"]["months"]
+        current, old_key = today.strftime("%Y-%m"), old.strftime("%Y-%m")
+        self.assertIn(current, months)
+        rows = {row["month"]: row for row in data["balanceSummary"]}
+        self.assertEqual(set(rows), set(months))
+        # Now: this month's payments (+11 766) against the old charge.
+        self.assertEqual(apartment.balance, Decimal("-38234.00"))
+        self.assertEqual((rows[current]["debt"], rows[current]["overpayment"], rows[current]["debtors"]), (38234.0, 0.0, 1))
+        # At the end of the old month only the charge had been posted.
+        self.assertEqual((rows[old_key]["debt"], rows[old_key]["overpayment"], rows[old_key]["debtors"]), (50000.0, 0.0, 1))
+
     def test_resident_collected_total_uses_the_whole_history(self):
         complex_row = build_portal_data(self.user)["complexes"][0]
         self.assertEqual(complex_row["baselineCollected"], float(sum(1000 + i for i in range(12))))
