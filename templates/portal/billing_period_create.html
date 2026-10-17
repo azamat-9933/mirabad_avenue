@@ -178,8 +178,12 @@
                 <option value="{{ value }}" {% if selected_period.status == value %}selected{% endif %}>{{ label }}</option>
               {% endfor %}
             </select>
+            {% if selected_period.status == "reopened" %}
+              <input name="reason" maxlength="500" class="w-full rounded-lg border border-outline-variant/40 px-2 py-2 text-xs text-on-surface" placeholder="Recalculation reason (optional)"/>
+            {% endif %}
             <p class="text-xs text-on-surface-variant">
               Closing period will generate charges and invoices for residents.
+              Closing a reopened period recalculates it and posts only the difference to balances.
             </p>
             <button type="submit" class="w-full rounded-lg bg-primary px-3 py-2 text-xs font-bold text-white hover:opacity-90">Apply status</button>
           </form>

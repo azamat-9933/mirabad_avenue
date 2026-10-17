@@ -60,10 +60,12 @@
 <span class="material-symbols-outlined account-menu-icon">account_circle</span>
 <span><strong>Profile</strong><small>Account, role and access</small></span>
 </button>
+{% if perms.portal.view_auditevent %}
 <button class="account-menu-item" data-drawer-open="audit-drawer" role="menuitem" type="button">
 <span class="material-symbols-outlined account-menu-icon">history</span>
 <span><strong data-i18n-key="Audit log">Audit log</strong><small data-i18n-key="Action history">Action history</small></span>
 </button>
+{% endif %}
 </div>
 <div class="account-menu-footer">
 <button class="account-menu-item account-menu-danger" data-action-key="Sign out" role="menuitem" type="button">

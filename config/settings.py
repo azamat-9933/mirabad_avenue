@@ -76,6 +76,9 @@ CSRF_TRUSTED_ORIGINS = env_list("CSRF_TRUSTED_ORIGINS", [])
 if env_bool("USE_X_FORWARDED_PROTO", False):
     # Only behind a proxy that overwrites X-Forwarded-Proto; otherwise clients could spoof HTTPS.
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+# Only behind a proxy that appends X-Forwarded-For; the activity log then records the client IP
+# instead of the proxy's. Without such a proxy clients could forge it, so it is off by default.
+TRUST_X_FORWARDED_FOR = env_bool("TRUST_X_FORWARDED_FOR", False)
 SECURE_SSL_REDIRECT = env_bool("SECURE_SSL_REDIRECT", False)
 SECURE_HSTS_SECONDS = int(os.getenv("SECURE_HSTS_SECONDS", "0") or 0)
 
@@ -113,6 +116,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     # Every non-DRF view requires a session unless marked with @login_not_required.
     'django.contrib.auth.middleware.LoginRequiredMiddleware',
+    # Lets signal handlers attribute admin edits and sign-ins to the request (IP address).
+    'portal.audit.AuditRequestMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]

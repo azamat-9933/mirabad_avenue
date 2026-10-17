@@ -104,7 +104,8 @@ def iter_resident_rows(workbook_path: Path):
                 area = to_decimal(row[2] if len(row) > 2 else None)
                 section_name = clean_text(row[3] if len(row) > 3 else "")
                 fio = clean_text(row[4] if len(row) > 4 else "")
-                phone = clean_text(row[5] if len(row) > 5 else "")
+                # Owner.phone is max_length=20; a longer cell would abort the whole import on PostgreSQL.
+                phone = clean_text(row[5] if len(row) > 5 else "")[:20]
                 address = f"{DEFAULT_SECTOR_NAME}, {building_number}"
             else:
                 apartment_number = clean_number(row[0] if len(row) > 0 else "")

@@ -1,8 +1,14 @@
+from decimal import Decimal
+
 from django.contrib import admin, messages
 from django.core.exceptions import ValidationError
+from django.db import transaction
 from django.db.models import Sum, Count
 from django.urls import reverse
 from django.utils.html import format_html, format_html_join
+
+from portal.audit import record_event
+from portal.models import AuditEvent
 
 from .models import (
     BillingPeriod,
@@ -69,7 +75,9 @@ class BillingPeriodAdmin(admin.ModelAdmin):
     list_filter   = ("status",)
     search_fields = ("name",)
     filter_horizontal = ("buildings",)
-    readonly_fields   = ("created_at", "closed_at", "total_days")
+    # Status changes only through the close/reopen actions: editing it here would mark a period
+    # closed without posting its charges, or strand a reopened period's charges.
+    readonly_fields   = ("created_at", "closed_at", "total_days", "status")
     inlines           = [ExpenseInline, GasMeterReadingInline]
     actions           = ["action_close_period", "action_reopen_period"]
 
@@ -163,7 +171,28 @@ class BillingPeriodAdmin(admin.ModelAdmin):
         errors_count = 0
         for period in queryset:
             try:
-                period.close_period()
+                was_reopened = period.status == BillingPeriod.STATUS_REOPENED
+                with transaction.atomic():
+                    # A reopened period is recalculated, which closes it again with delta postings.
+                    charges = period.close_or_recalculate(author=request.user)
+                    total = sum((charge.amount for charge in charges), Decimal("0"))
+                    record_event(
+                        request,
+                        event_type=AuditEvent.TYPE_BILLING,
+                        title="Billing period recalculated" if was_reopened else "Billing period closed",
+                        message=(
+                            f"Period {period.title} was {'recalculated and closed' if was_reopened else 'closed'} "
+                            f"in admin: {len(charges)} charges, {total} UZS."
+                        ),
+                        metadata={
+                            "source": "admin_billing_period_action",
+                            "periodId": period.id,
+                            "fromStatus": BillingPeriod.STATUS_REOPENED if was_reopened else BillingPeriod.STATUS_DRAFT,
+                            "toStatus": BillingPeriod.STATUS_CLOSED,
+                            "chargeCount": len(charges),
+                            "chargeTotal": str(total),
+                        },
+                    )
                 closed_count += 1
             except ValidationError as exc:
                 errors_count += 1
@@ -182,7 +211,20 @@ class BillingPeriodAdmin(admin.ModelAdmin):
         reopened_count = 0
         for period in queryset:
             try:
-                period.reopen_period()
+                with transaction.atomic():
+                    period.reopen_period()
+                    record_event(
+                        request,
+                        event_type=AuditEvent.TYPE_BILLING,
+                        title="Billing period reopened",
+                        message=f"Period {period.title} was reopened in admin.",
+                        metadata={
+                            "source": "admin_billing_period_action",
+                            "periodId": period.id,
+                            "fromStatus": BillingPeriod.STATUS_CLOSED,
+                            "toStatus": BillingPeriod.STATUS_REOPENED,
+                        },
+                    )
                 reopened_count += 1
             except ValidationError as exc:
                 self.message_user(request, f"{period.name}: {exc}", messages.ERROR)

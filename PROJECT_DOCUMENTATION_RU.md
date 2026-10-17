@@ -94,6 +94,7 @@ OpenAPI-схема в репозитории не хранится: она ге�
 - `DB_ENGINE`, `DB_NAME`, `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`
 - `CORS_ALLOW_ALL_ORIGINS`, `CORS_ALLOWED_ORIGINS`, `CORS_ALLOW_CREDENTIALS`
 - HTTPS (необязательные): `SECURE_COOKIES`, `CSRF_TRUSTED_ORIGINS`, `USE_X_FORWARDED_PROTO`, `SECURE_SSL_REDIRECT`, `SECURE_HSTS_SECONDS`
+- `TRUST_X_FORWARDED_FOR` (по умолчанию `False`): включать только за прокси (nginx), который дописывает `X-Forwarded-For`, — тогда журнал действий записывает IP клиента, а не прокси.
 
 Безопасные значения по умолчанию (если переменная не задана или пустая):
 - `DEBUG=False`. Для локальной разработки нужно явно `DEBUG=True` в `.env`.
@@ -286,6 +287,21 @@ Proxy-модели (`Complex`, `Building`, `BuildingSection`, `Apartment`, `Owne
 - аудит пользовательских действий,
 - UI-override статусов таблиц без изменения core-моделей.
 
+### Журнал действий операторов (`AuditEvent`)
+Операторы — обычные пользователи Django (`auth.User`, свой `AUTH_USER_MODEL` не задан). Главный администратор — суперпользователь (или пользователь с правом `portal.view_auditevent`).
+
+- Каждая запись привязана к пользователю: `user` (FK на `auth.User`, `SET_NULL` — при удалении оператора история остаётся), `actor` (username на момент действия), `ip_address`, `created_at`, связи с сектором/домом/квартирой/жильцом и `metadata` (детали: id транзакции, суммы, статусы «было → стало», изменённые поля).
+- Запись создаётся только через `portal.audit.record_event()`; пользователь и IP берутся из запроса (`portal.audit.AuditRequestMiddleware` даёт запрос и сигналам).
+- Что пишется:
+  - все POST-действия портала (платежи и списания, создание домов/квартир/жильцов, экспорт, напоминания, алерты, статусы, заметки, платёжное уведомление — PDF и отправка в Telegram);
+  - billing-период (тип `billing`): добавление расхода, изменение дней отопления (было → стало), закрытие, перерасчёт, повторное открытие, возврат в draft — из портала и из admin actions; действие и запись коммитятся в одной транзакции;
+  - любое добавление/изменение/удаление в Django admin (тип `admin`, сигнал на `LogEntry`, с перечнем изменённых полей);
+  - массовое удаление в admin («Удалить выбранные»): Django создаёт `LogEntry` таких удалений через `bulk_create`, без сигнала, поэтому действие `delete_selected` для всех моделей заменено обёрткой (`portal/admin.py`), которая пишет запись на каждый удалённый объект (одиночное удаление этим действием тоже пишется один раз);
+  - вход, выход и неудачные попытки входа (тип `auth`; сохраняется только введённый username, пароль никогда).
+- Чтение: только главный администратор. `GET /api/lists/audit/` и `POST /api/audit/export/` отвечают 403 остальным, `auditEvents` в snapshot для них пуст, кнопки и дровер журнала в портале не рендерятся.
+- Журнал неизменяемый: в admin нельзя добавить, изменить или удалить запись (даже суперпользователю). Список в admin фильтруется по оператору, типу и дате.
+- Миграция `portal.0004_audit_operator` привязывает старые записи к пользователям по username.
+
 ---
 
 ## 8. Миграции и эволюция схемы
@@ -295,7 +311,7 @@ Proxy-модели (`Complex`, `Building`, `BuildingSection`, `Apartment`, `Owne
 - `billing`: `0001_initial`, `0002_apartment_accounts`
 - `payments`: `0001_initial`, `0002_apartment_accounts`
 - `properties`: `0001_initial`
-- `portal`: `0001_initial`, `0002_alter_workspaceprofile_organization_and_more`, `0003_remove_system_health`
+- `portal`: `0001_initial`, `0002_alter_workspaceprofile_organization_and_more`, `0003_remove_system_health`, `0004_audit_operator`
 
 `main_app 0003/0004` сводят Telegram-статусы к двум: `0003` переводит старые значения (`connected`/`pending`/`review`/`not_linked`/пусто) в `connected`, если у жильца есть Telegram id или username либо статус «подключён», иначе в `not_linked` (так портал их и показывал); `0004` делает `telegram_status` полем с choices и default `not_linked` и добавляет `telegram_language`.
 
@@ -340,8 +356,9 @@ Proxy-модели (`Complex`, `Building`, `BuildingSection`, `Apartment`, `Owne
 
 ### `GET /api/lists/audit/`
 Фильтры:
-- `search`, `type`, `actor`, `district`, `period`, `period_from`, `period_to`,
+- `search`, `type`, `actor`, `user_id` (оператор), `district`, `period`, `period_from`, `period_to`,
 `complex_id`, `owner_id`, `ordering`.
+- Только для главного администратора (иначе 403). Строка содержит `actor`, `actorId`, `actorName`, `ipAddress`.
 
 ### `GET /api/lists/complexes/`
 Фильтры:
@@ -351,7 +368,7 @@ Proxy-модели (`Complex`, `Building`, `BuildingSection`, `Apartment`, `Owne
 
 ### Audit/checklist/support/session
 - `POST /api/audit/note/` — добавить `AuditEvent`.
-- `POST /api/audit/export/` — выгрузка журнала аудита в XLSX.
+- `POST /api/audit/export/` — выгрузка журнала аудита в XLSX (только главный администратор; фильтр `user_id`, колонка IP).
 - `POST /api/checklist/note/` — create/toggle checklist note.
 - `POST /api/checklist/item/` — отметить/сбросить пункты чеклиста.
 - `POST /api/support/ticket/` — создать `SupportTicket` + `AuditEvent`.
@@ -567,6 +584,8 @@ API пути, используемые frontend:
 - списки admin: фильтры, поле поиска и кнопка «Поиск» стоят в одну линию одной высоты (`#changelist-search` в `admin_custom.css`).
 - страница квартиры (`ApartmentAdmin`): жилец добавляется вместе с квартирой — строка `OwnerInline` (ФИО, телефон, договор, статус Telegram только для чтения); пустая строка оставляет квартиру без владельца; удалить жильца отсюда нельзя.
 - резидент (`OwnerAdmin`): поля баланса нет (только показ); Telegram-поля только для чтения — их заполняет бот; фильтр по статусу Telegram; действие «Отключить Telegram» очищает id/username/язык и ставит `not_linked`. В портале форма создания жильца не имеет ни Telegram-полей, ни баланса.
+- статус billing-периода в admin только для чтения: меняется действиями «закрыть» (для reopened — перерасчёт) и «открыть».
+- журнал действий (`AuditEvent`) в admin только для чтения, без удаления.
 
 ## 13.1 Telegram-бот жильцов
 
@@ -589,7 +608,7 @@ API пути, используемые frontend:
 
 ## 14. Тесты и качество
 
-Запуск: `python manage.py test` — 122 теста (нужен `.env` или `DEBUG=True`, см. 5.5).
+Запуск: `python manage.py test` — 146 тестов (нужен `.env` или `DEBUG=True`, см. 5.5).
 
 Наличие тестов:
 - `billing/tests.py` (24) — core биллинга: расчеты, `close_period`, `recalculate`, `Payment.apply`, проводки в журнал, начисления пустой квартире и переход ее долга к новому владельцу.

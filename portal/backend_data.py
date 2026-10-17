@@ -5,7 +5,7 @@ from datetime import timedelta
 from decimal import Decimal
 
 from django.contrib.auth import get_user_model
-from django.db.models import F, Max, Prefetch, Q, Sum, Window
+from django.db.models import Case, DecimalField, F, Max, Prefetch, Q, Sum, Value, When, Window
 from django.db.models.functions import RowNumber, TruncMonth
 from django.urls import reverse
 from django.utils import timezone
@@ -15,6 +15,7 @@ from main_app.models import DEFAULT_SECTOR_NAME
 from properties.models import Apartment, Building, Complex, Owner
 from payments.models import Transaction
 from payments.services import OPENING_BALANCE_TAG, incoming_payment_q, is_incoming_payment
+from portal.audit import can_view_audit
 from portal.models import (
     AuditEvent,
     ChecklistItem,
@@ -393,6 +394,9 @@ def serialize_audit_event(event: AuditEvent) -> dict:
         "title": event.title,
         "message": event.message,
         "actor": event.actor,
+        "actorId": event.user_id,
+        "actorName": _display_name(event.user) if event.user_id else event.actor,
+        "ipAddress": event.ip_address or "",
         "time": _datetime(event.created_at),
         "complexId": _slug("complex", event.complex_id) if event.complex_id else "",
         "buildingId": _slug("building", event.building_id) if event.building_id else "",
@@ -565,9 +569,20 @@ def serialize_complex(complex_obj, owner_for, payment_totals_for, override_maps,
 
 
 def hot_water_totals_by_complex() -> dict[int, float]:
+    """Metered hot-water consumption per complex, the same per-row rule as HotWaterMeterReading.consumption.
+
+    Meter readings are cumulative, so summing raw end readings would count every past period again.
+    """
+    consumption = Case(
+        When(end_reading__isnull=True, then=Value(Decimal("0"))),
+        When(start_reading__isnull=True, then=F("end_reading")),
+        When(end_reading__gte=F("start_reading"), then=F("end_reading") - F("start_reading")),
+        default=Value(Decimal("0")),
+        output_field=DecimalField(max_digits=12, decimal_places=2),
+    )
     return {
         row["apartment__building__complex_id"]: _money(row["total"])
-        for row in HotWaterMeterReading.objects.values("apartment__building__complex_id").annotate(total=Sum("end_reading"))
+        for row in HotWaterMeterReading.objects.values("apartment__building__complex_id").annotate(total=Sum(consumption))
     }
 
 
@@ -624,12 +639,16 @@ def _serialize_system_alerts() -> list[dict]:
 
 
 
-def _serialize_audit_events() -> list[dict]:
+def _serialize_audit_events(user=None) -> list[dict]:
+    # The activity log is for the head administrator; operators get no audit rows in their snapshot.
+    if not can_view_audit(user):
+        return []
     queryset = AuditEvent.objects.select_related(
         "complex",
         "building",
         "apartment",
         "owner",
+        "user",
     ).order_by("-created_at")[:120]
     return [serialize_audit_event(event) for event in queryset]
 
@@ -913,7 +932,7 @@ def build_portal_data(user=None) -> dict:
         ),
         "notifications": _serialize_notifications(),
         "systemAlerts": _serialize_system_alerts(),
-        "auditEvents": _serialize_audit_events(),
+        "auditEvents": _serialize_audit_events(user),
         "checklistItems": _serialize_checklist_items(),
         "checklistNotes": _serialize_checklist_notes(),
         "supportTickets": _serialize_support_tickets(),
