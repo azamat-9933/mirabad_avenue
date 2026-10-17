@@ -4,14 +4,16 @@
 Confirm connects the Telegram account to the resident(s) with that phone; reject starts the
 registration over. A registered user gets the main menu with their apartments and balances.
 """
+from html import escape
+
 from aiogram import F, Router
 from aiogram.enums import ChatType
-from aiogram.filters import CommandStart, StateFilter
+from aiogram.filters import CommandObject, CommandStart, StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, ReplyKeyboardRemove
 from asgiref.sync import sync_to_async
 
-from . import services
+from . import operators, services
 from .keyboards import (
     generate_language_buttons,
     generate_main_menu_buttons,
@@ -42,6 +44,15 @@ async def start(message: Message, state: FSMContext):
         return
     await message.answer(bold(CHOOSE_LANGUAGE), reply_markup=generate_language_buttons())
     await state.set_state(RegistrationStatesGroup.wait_language)
+
+
+async def operator_start(message: Message, state: FSMContext, command: CommandObject):
+    """/start op_<token> from an operator's portal link: connect this chat to their portal account."""
+    await state.clear()
+    token = (command.args or "")[len(operators.LINK_PREFIX):]
+    result = await sync_to_async(operators.link_operator)(token, message.from_user.id, message.from_user.username)
+    reply = operators.text(result.language, "linked").format(name=escape(result.name)) if result.linked else operators.invalid_link_text()
+    await message.answer(reply, reply_markup=ReplyKeyboardRemove())
 
 
 async def start_registration(message: Message, state: FSMContext):
@@ -165,6 +176,10 @@ def build_router() -> Router:
     """A fresh router with the bot's handlers (a router can be attached to one dispatcher only)."""
     user_router = Router(name="residents")
     user_router.message.filter(F.chat.type == ChatType.PRIVATE)
+    # Operators' link first: a plain /start (or any other payload) is the residents' registration.
+    user_router.message.register(
+        operator_start, CommandStart(deep_link=True, magic=F.args.startswith(operators.LINK_PREFIX))
+    )
     user_router.message.register(start, CommandStart())
     user_router.message.register(start_registration, RegistrationStatesGroup.wait_language)
     user_router.message.register(ask_user_phone_number, RegistrationStatesGroup.wait_full_name)

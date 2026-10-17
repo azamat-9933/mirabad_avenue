@@ -57,30 +57,48 @@ class SeverityBadgeMixin:
 
 @admin.register(WorkspaceProfile)
 class WorkspaceProfileAdmin(admin.ModelAdmin):
-    list_display = ("user", "workspace_name", "role_label", "status", "organization", "updated_at")
+    list_display = ("user", "workspace_name", "role_label", "status", "telegram_connected", "updated_at")
     list_filter = ("status", "session_status", "two_factor_enabled", "workspace_name")
-    search_fields = ("user__username", "user__email", "user__first_name", "user__last_name", "workspace_name", "organization")
+    search_fields = ("user__username", "user__email", "user__first_name", "user__last_name", "workspace_name", "organization", "telegram_username")
     autocomplete_fields = ("user",)
+    # The operator links Telegram from the portal profile through the bot; admin can only disconnect it.
+    readonly_fields = ("telegram_chat_id", "telegram_username", "telegram_language", "telegram_linked_at")
+    actions = ["disconnect_telegram"]
     fieldsets = (
         ("User", {"fields": ("user", "role_label", "status")}),
         ("Workspace", {"fields": ("workspace_name", "organization", "access_level", "timezone_name")}),
         ("Security", {"fields": ("two_factor_enabled", "session_status")}),
+        ("Telegram (alerts)", {"fields": ("telegram_chat_id", "telegram_username", "telegram_language", "telegram_linked_at")}),
         ("Portal note", {"fields": ("note",)}),
     )
+
+    @admin.display(boolean=True, description="Telegram")
+    def telegram_connected(self, obj):
+        return bool(obj.telegram_chat_id)
+
+    @admin.action(description="Disconnect Telegram")
+    def disconnect_telegram(self, request, queryset):
+        updated = queryset.update(
+            telegram_chat_id=None, telegram_username="", telegram_linked_at=None,
+            telegram_link_token="", telegram_link_requested_at=None,
+        )
+        self.message_user(request, f"Telegram disconnected for {updated} operator(s).")
 
 
 @admin.register(PortalNotification)
 class PortalNotificationAdmin(SeverityBadgeMixin, admin.ModelAdmin):
-    list_display = ("title", "severity_badge", "status", "pinned", "event_at", "complex", "building")
-    list_filter = ("severity", "status", "pinned", "complex", "building")
+    list_display = ("title", "severity_badge", "status", "created_by", "assignee", "telegram_status", "event_at")
+    list_filter = ("severity", "status", "pinned", "assignee", "telegram_status")
     search_fields = ("title", "message", "complex__title", "building__number", "owner__fio")
-    list_editable = ("status", "pinned")
+    list_editable = ("status",)
     date_hierarchy = "event_at"
-    autocomplete_fields = ("complex", "building", "apartment", "owner", "created_by")
+    autocomplete_fields = ("complex", "building", "apartment", "owner", "created_by", "assignee")
+    readonly_fields = ("resolved_by", "resolved_at", "telegram_status")
     fieldsets = (
         ("Content", {"fields": ("title", "message", "severity", "status", "pinned", "event_at")}),
+        ("Task", {"fields": ("created_by", "assignee", "telegram_status", "resolved_by", "resolved_at")}),
         ("Actions", {"fields": ("action_primary", "action_secondary", "action_state")}),
-        ("Relations", {"fields": ("complex", "building", "apartment", "owner", "created_by")}),
+        ("Relations", {"fields": ("complex", "building", "apartment", "owner")}),
     )
 
 

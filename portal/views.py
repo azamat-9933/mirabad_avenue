@@ -32,7 +32,8 @@ from billing.models import BillingPeriod, Charge, Expense, HeatingApartmentUsage
 from properties.models import Apartment, Building, Complex, Owner
 from payments.models import Transaction
 from payments.services import apply_balance_change, incoming_payment_q
-from telegram_bot.notifications import NoticeNotSent, send_debt_notice
+from telegram_bot import operators as telegram_operators
+from telegram_bot.notifications import NoticeNotSent, operator_link, send_debt_notice, send_operator_alert
 from portal.models import (
     AuditEvent,
     ChecklistItem,
@@ -45,12 +46,14 @@ from portal.models import (
 
 from .billing_notice import build_debt_notice, debt_of, notice_pdf, notice_telegram_text
 from .backend_data import (
+    NOTIFICATION_RELATED,
     _datetime,
     _display_name,
     _payment_type_labels,
     _serialize_audit_events,
     account_payment_totals,
     build_portal_data,
+    debtors_at,
     hot_water_totals_by_complex,
     residential_override_maps,
     serialize_audit_event,
@@ -900,12 +903,7 @@ def api_list_alerts(request):
         "pinned": "pinned",
         "title": "title",
     }
-    queryset = PortalNotification.objects.select_related(
-        "complex",
-        "building",
-        "apartment",
-        "owner",
-    )
+    queryset = PortalNotification.objects.select_related(*NOTIFICATION_RELATED)
     if status_value == PortalNotification.STATUS_ARCHIVED:
         queryset = queryset.filter(status=PortalNotification.STATUS_ARCHIVED)
     else:
@@ -2167,6 +2165,13 @@ def api_system_alerts_configure(request):
             )
         if not alert and not notification:
             return JsonResponse({"ok": False, "error": "System alert was not found."}, status=404)
+        if not notification and alert:
+            notification_id = (alert.metadata or {}).get("notification_id")
+            notification = _optional_instance(PortalNotification, notification_id)
+        # An alert set for an operator is theirs to close (everyone sees it); unassigned ones anyone may close.
+        user = request.user if getattr(request.user, "is_authenticated", False) else None
+        if notification and notification.assignee_id and notification.assignee_id != getattr(user, "id", None):
+            return JsonResponse({"ok": False, "error": "Only the operator the alert is assigned to can resolve it."}, status=403)
 
         if alert:
             alert.status = SystemAlert.STATUS_ACKNOWLEDGED if mode == "acknowledge" else SystemAlert.STATUS_RESOLVED
@@ -2174,13 +2179,15 @@ def api_system_alerts_configure(request):
                 alert.resolved_at = timezone.now()
             alert.save(update_fields=["status", "resolved_at"])
 
-        if not notification and alert:
-            notification_id = (alert.metadata or {}).get("notification_id")
-            notification = _optional_instance(PortalNotification, notification_id)
         if notification:
             notification.status = PortalNotification.STATUS_READ if mode == "acknowledge" else PortalNotification.STATUS_ARCHIVED
             notification.action_state = "Acknowledged from dashboard" if mode == "acknowledge" else f"Resolved by {actor_name}"
-            notification.save(update_fields=["status", "action_state"])
+            update_fields = ["status", "action_state"]
+            if mode == "resolve":
+                notification.resolved_by = user
+                notification.resolved_at = timezone.now()
+                update_fields += ["resolved_by", "resolved_at"]
+            notification.save(update_fields=update_fields)
 
         if alert:
             record_event(
@@ -2256,7 +2263,16 @@ def api_system_alerts_configure(request):
     if building and not complex_obj:
         complex_obj = building.complex
 
-    assigned_to = str(payload.get("assigned_to") or "Operations Team").strip() or "Operations Team"
+    # The operator the alert is set for (any active account, the creator included).
+    assignee = None
+    assignee_raw = str(payload.get("assignee_id") or "").strip()
+    if assignee_raw:
+        assignee = get_user_model().objects.filter(pk=assignee_raw, is_active=True).first() if assignee_raw.isdigit() else None
+        if assignee is None:
+            return JsonResponse({"ok": False, "error": "The chosen operator was not found."}, status=400)
+    assigned_to = (
+        _display_name(assignee) if assignee else str(payload.get("assigned_to") or "Operations Team").strip() or "Operations Team"
+    )[:120]
     action_label = str(payload.get("action_label") or "Review alert").strip() or "Review alert"
     message = str(payload.get("message") or "").strip()
     if not message:
@@ -2293,6 +2309,7 @@ def api_system_alerts_configure(request):
             apartment=apartment,
             owner=owner,
             created_by=getattr(request, "user", None) if getattr(getattr(request, "user", None), "is_authenticated", False) else None,
+            assignee=assignee,
         )
         alert.metadata = {
             **(alert.metadata or {}),
@@ -2303,20 +2320,72 @@ def api_system_alerts_configure(request):
             request,
             event_type=AuditEvent.TYPE_ALERT,
             title="System alert created",
-            message=f"{alert.title} was created from the portal.",
+            message=f"{alert.title} was created from the portal" + (f" for {assigned_to}." if assignee else "."),
             complex=complex_obj,
             building=building,
             apartment=apartment,
             owner=owner,
-            metadata={"source": "portal_system_alerts", "alertId": alert.id},
+            metadata={"source": "portal_system_alerts", "alertId": alert.id, "assigneeId": getattr(assignee, "id", None)},
         )
+
+    # After the commit: the alert exists whatever Telegram does; its delivery is recorded on it.
+    if assignee:
+        notification.telegram_status = send_operator_alert(notification)
+        notification.save(update_fields=["telegram_status"])
 
     return portal_response(
         {
             "alertId": alert.id,
+            "telegramStatus": notification.telegram_status,
             "adminUrl": f"/admin/portal/systemalert/{alert.id}/change/",
         }
     )
+
+
+@extend_schema(responses=OpenApiTypes.OBJECT)
+@api_view(["GET", "POST"])
+def api_operator_telegram(request):
+    """The signed-in operator's Telegram link: status (GET), a new t.me link (POST mode=link) or unlink."""
+    user = request.user
+
+    def status_payload(extra=None):
+        profile = telegram_operators.profile_of(user)
+        return JsonResponse({
+            "ok": True,
+            "connected": bool(profile.telegram_chat_id),
+            "username": profile.telegram_username or "",
+            **(extra or {}),
+        })
+
+    if request.method == "GET":
+        return status_payload()
+    payload = _json_payload(request)
+    mode = str(payload.get("mode") or "link").strip().lower()
+    if mode == "unlink":
+        telegram_operators.unlink_operator(user)
+        record_event(request, event_type=AuditEvent.TYPE_SYSTEM, title="Operator Telegram disconnected",
+                     message=f"{_display_name(user)} disconnected Telegram.", metadata={"source": "portal_profile"})
+        return status_payload()
+    if mode != "link":
+        return JsonResponse({"ok": False, "error": "Unknown mode."}, status=400)
+    token = telegram_operators.new_link_token(user, str(payload.get("language") or "uz").strip().lower())
+    try:
+        link = operator_link(token)
+    except Exception:
+        link = ""
+    if not link:
+        return JsonResponse({"ok": False, "error": "The Telegram bot is not configured or not reachable."}, status=503)
+    return status_payload({"link": link})
+
+
+@extend_schema(responses=OpenApiTypes.OBJECT)
+@api_view(["GET"])
+def api_list_debtors(request):
+    """Debtors of the statistics page: at the end of ``month`` (YYYY-MM), optionally of one house."""
+    building_raw = _query_param(request, "building_id", "")
+    building_id = int(building_raw) if building_raw.isdigit() else None
+    rows = debtors_at(_query_param(request, "month", ""), building_id)
+    return JsonResponse({"ok": True, "results": rows, "total": len(rows), "debt": round(sum(row["debt"] for row in rows), 2)})
 
 
 @extend_schema(request=OpenApiTypes.OBJECT, responses=OpenApiTypes.OBJECT)

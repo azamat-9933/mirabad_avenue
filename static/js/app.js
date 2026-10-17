@@ -454,6 +454,29 @@
         "Payment channels": { ru: "Каналы оплаты", uz: "To'lov kanallari" },
         // Statistics: payments without a known channel (manual top-ups).
         "Other": { ru: "Прочее", uz: "Boshqa" },
+        // Statistics: the debtors list behind the "Debtors" card.
+        "No debtors": { ru: "Должников нет", uz: "Qarzdorlar yo'q" },
+        "Loading...": { ru: "Загрузка...", uz: "Yuklanmoqda..." },
+        // Alerts set for operators (tasks) and the operator's Telegram.
+        "Set by": { ru: "Поставил", uz: "Qo'ygan" },
+        "you": { ru: "вы", uz: "siz" },
+        "without Telegram": { ru: "без Telegram", uz: "Telegramsiz" },
+        "No operators found": { ru: "Операторы не найдены", uz: "Operatorlar topilmadi" },
+        "Open": { ru: "Открыто", uz: "Ochiq" },
+        "Closed": { ru: "Решено", uz: "Hal qilindi" },
+        "No Telegram": { ru: "Telegram не подключён", uz: "Telegram ulanmagan" },
+        "Not delivered": { ru: "Не доставлено", uz: "Yetkazilmadi" },
+        "Also sent to their Telegram.": { ru: "Также придёт в его Telegram.", uz: "Uning Telegramiga ham boradi." },
+        "Their Telegram is not connected: the alert is shown in the portal only.": { ru: "Telegram не подключён: оповещение будет только в портале.", uz: "Telegrami ulanmagan: ogohlantirish faqat portalda ko'rinadi." },
+        "Alert sent to Telegram": { ru: "Оповещение отправлено в Telegram", uz: "Ogohlantirish Telegramga yuborildi" },
+        "The operator has no Telegram: the alert is in the portal only.": { ru: "У оператора нет Telegram: оповещение только в портале.", uz: "Operatorda Telegram yo'q: ogohlantirish faqat portalda." },
+        "Telegram did not deliver the alert; it is in the portal.": { ru: "Telegram не доставил оповещение; оно есть в портале.", uz: "Telegram ogohlantirishni yetkazmadi; u portalda bor." },
+        "Telegram for alerts": { ru: "Telegram для оповещений", uz: "Ogohlantirishlar uchun Telegram" },
+        "Connect Telegram": { ru: "Подключить Telegram", uz: "Telegramni ulash" },
+        "Disconnect": { ru: "Отключить", uz: "Uzish" },
+        "Not connected: alerts reach you only in the portal.": { ru: "Не подключён: оповещения видны только в портале.", uz: "Ulanmagan: ogohlantirishlar faqat portalda ko'rinadi." },
+        "Telegram opened: press Start in the bot. The status here updates by itself.": { ru: "Откроется Telegram: нажмите «Start» в боте. Статус здесь обновится сам.", uz: "Telegram ochiladi: botda «Start» ni bosing. Holat bu yerda o'zi yangilanadi." },
+        "Telegram not connected": { ru: "Telegram не подключён", uz: "Telegram ulanmadi" },
         "Distribution by real backend payment methods.": { ru: "Распределение по реальным способам оплаты из backend.", uz: "Backenddagi haqiqiy to'lov usullari bo'yicha taqsimot." },
         "Debt aging": { ru: "Возраст долга", uz: "Qarz yoshi" },
         "How long current debtors have gone without a successful payment.": { ru: "Сколько времени текущие должники без успешного платежа.", uz: "Joriy qarzdorlar muvaffaqiyatli to'lovsiz qancha vaqt qolganini ko'rsatadi." },
@@ -1063,6 +1086,9 @@
             ? payload.paymentSummary
             : { months: [], monthly: [], channels: {}, currentMonthPayments: 0 };
         billingData.balanceSummary = Array.isArray(payload.balanceSummary) ? payload.balanceSummary : [];
+        // Everyone an alert can be assigned to (the alert window's "Assigned to" list).
+        billingData.operators = Array.isArray(payload.operators) ? payload.operators : [];
+        billingData.adminUsers = Array.isArray(payload.adminUsers) ? payload.adminUsers : [];
         billingData.profile =payload.profile && typeof payload.profile === "object" ? payload.profile : {};
         billingData.source = payload.source || "backend";
         billingData.generatedAt = payload.generatedAt || "";
@@ -1137,6 +1163,92 @@
     };
 
     renderBackendProfile();
+
+    // The signed-in operator's Telegram (profile drawer): alerts assigned to them are also sent there.
+    // "Connect" opens the bot with a one-time link; pressing Start there links the chat, and this
+    // section notices it by asking the server every few seconds for a while.
+    const setupOperatorTelegram = () => {
+        const section = document.querySelector("[data-operator-telegram]");
+        if (!section || section.dataset.telegramReady === "true") return;
+        section.dataset.telegramReady = "true";
+        const statusNode = section.querySelector("[data-operator-telegram-status]");
+        const hint = section.querySelector("[data-operator-telegram-hint]");
+        const connect = section.querySelector("[data-operator-telegram-connect]");
+        const disconnect = section.querySelector("[data-operator-telegram-disconnect]");
+        let pollTimer = null;
+        const render = (state) => {
+            const lang = currentInterfaceLang();
+            const connected = Boolean(state?.connected);
+            if (statusNode) {
+                statusNode.textContent = connected
+                    ? `${translateValue("Connected", lang)}${state.username ? ` · @${state.username}` : ""}`
+                    : translateValue("Not connected: alerts reach you only in the portal.", lang);
+                statusNode.classList.toggle("is-connected", connected);
+            }
+            connect?.classList.toggle("hidden", connected);
+            disconnect?.classList.toggle("hidden", !connected);
+            if (connected) hint?.classList.add("hidden");
+        };
+        const remember = (state) => {
+            if (!state) return;
+            billingData.profile = { ...(billingData.profile || {}), telegram: { connected: Boolean(state.connected), username: state.username || "" } };
+            render(billingData.profile.telegram);
+        };
+        const stopPolling = () => {
+            window.clearInterval(pollTimer);
+            pollTimer = null;
+        };
+        const fetchState = async () => {
+            const response = await fetch("/api/operator-telegram/", { headers: { Accept: "application/json" }, credentials: "same-origin" });
+            if (redirectToLoginIfUnauthorized(response) || !response.ok) return null;
+            return response.json();
+        };
+        render(billingData.profile?.telegram);
+        connect?.addEventListener("click", async () => {
+            connect.disabled = true;
+            try {
+                const payload = await postPortalJson("/api/operator-telegram/", { mode: "link", language: currentInterfaceLang() });
+                window.open(payload.link, "_blank", "noopener");
+                hint?.classList.remove("hidden");
+                stopPolling();
+                const startedAt = Date.now();
+                pollTimer = window.setInterval(async () => {
+                    if (Date.now() - startedAt > 180000) {
+                        stopPolling();
+                        return;
+                    }
+                    const state = await fetchState().catch(() => null);
+                    if (state?.connected) {
+                        stopPolling();
+                        remember(state);
+                        toast(translateValue("Telegram connected", currentInterfaceLang()), state.username ? `@${state.username}` : "", "success");
+                    }
+                }, 3000);
+            } catch (error) {
+                toast(translateValue("Telegram not connected", currentInterfaceLang()), error.message || "", "warning");
+            } finally {
+                connect.disabled = false;
+            }
+        });
+        disconnect?.addEventListener("click", async () => {
+            disconnect.disabled = true;
+            try {
+                remember(await postPortalJson("/api/operator-telegram/", { mode: "unlink" }));
+            } catch (error) {
+                toast(translateValue("Telegram not connected", currentInterfaceLang()), error.message || "", "warning");
+            } finally {
+                disconnect.disabled = false;
+            }
+        });
+        // Opening the profile shows the current state (the operator may have linked from another device).
+        document.addEventListener("click", (event) => {
+            if (!event.target.closest("[data-drawer-open='profile-drawer']")) return;
+            fetchState().then(remember).catch(() => {});
+        });
+        document.addEventListener("hydroflow:backend-refreshed", () => render(billingData.profile?.telegram));
+        document.addEventListener("hydroflow:language-changed", () => render(billingData.profile?.telegram));
+    };
+    setupOperatorTelegram();
 
     const getResidentById = (id) => billingData.residents.find((resident) => resident.id === id);
     const getComplexById = (id) => billingData.complexes.find((complex) => complex.id === id);
@@ -1570,6 +1682,111 @@
 
         return true;
     };
+
+    // Statistics "Debtors" card: the debtors of the selected house at the end of the selected month,
+    // largest debt first. A row opens the resident's profile; a vacant apartment has nobody to open.
+    const setupAnalyticsDebtorsList = () => {
+        const card = document.querySelector("[data-analytics-debtors-open]");
+        const modal = document.getElementById("debtors-list-modal");
+        if (!card || !modal || card.dataset.debtorsReady === "true") return;
+        card.dataset.debtorsReady = "true";
+        const rowsNode = modal.querySelector("[data-debtors-list-rows]");
+        const scopeNode = modal.querySelector("[data-debtors-list-scope]");
+        const summaryNode = modal.querySelector("[data-debtors-list-summary]");
+        const tr = (key) => translateValue(key, currentInterfaceLang());
+        let debtors = null;
+        const scopeText = () => [
+            document.querySelector("[data-analytics-building-select]")?.selectedOptions[0]?.textContent,
+            document.querySelector("[data-analytics-month-select]")?.selectedOptions[0]?.textContent,
+        ].filter(Boolean).join(" · ");
+        const render = () => {
+            if (scopeNode) scopeNode.textContent = scopeText();
+            if (!rowsNode) return;
+            if (debtors === null) {
+                rowsNode.innerHTML = `<tr><td class="debtors-list-empty" colspan="6">${escapeHtml(tr("Loading..."))}</td></tr>`;
+                if (summaryNode) summaryNode.textContent = "";
+                return;
+            }
+            const total = debtors.reduce((sum, row) => sum + Number(row.debt || 0), 0);
+            if (summaryNode) {
+                summaryNode.textContent = `${tr("Debtors")}: ${moneyFormatter.format(debtors.length)} · ${tr("Total debt")}: ${formatBillingUzs(total)}`;
+            }
+            rowsNode.innerHTML = debtors.length
+                ? debtors.map((row, index) => {
+                    const owner = String(row.ownerBackendId || "");
+                    return `
+                        <tr class="${owner ? "is-clickable" : "is-vacant"}" ${owner ? `data-debtor-owner-id="${escapeAttr(owner)}" tabindex="0"` : ""}>
+                            <td class="is-index">${index + 1}</td>
+                            <td><span class="table-cell-label">${escapeHtml(tr("House"))}</span>${escapeHtml(row.house)}</td>
+                            <td><span class="table-cell-label">${escapeHtml(tr("Apartment"))}</span>${escapeHtml(row.apartment)}</td>
+                            <td class="is-name">${escapeHtml(owner ? row.name : tr(row.name))}</td>
+                            <td><span class="table-cell-label">${escapeHtml(tr("Phone"))}</span>${escapeHtml(row.phone || "—")}</td>
+                            <td class="is-amount">${escapeHtml(formatBillingUzs(row.debt))}</td>
+                        </tr>
+                    `;
+                }).join("")
+                : `<tr><td class="debtors-list-empty" colspan="6">${escapeHtml(tr("No debtors"))}</td></tr>`;
+        };
+        const open = async () => {
+            const state = window.HydroFlowAnalyticsDashboardState || {};
+            const building = (billingData.complexes || [])
+                .flatMap((complex) => complex.buildingItems || [])
+                .find((item) => String(item.id) === String(state.building));
+            debtors = null;
+            render();
+            openOverlayById("debtors-list-modal");
+            const params = new URLSearchParams({ month: state.month || "" });
+            if (building?.backendId) params.set("building_id", building.backendId);
+            try {
+                const response = await fetch(`/api/lists/debtors/?${params}`, { headers: { Accept: "application/json" }, credentials: "same-origin" });
+                if (redirectToLoginIfUnauthorized(response)) return;
+                const payload = await response.json();
+                if (!response.ok) throw new Error(payload.error || response.statusText);
+                debtors = Array.isArray(payload.results) ? payload.results : [];
+            } catch (error) {
+                debtors = [];
+                toast(tr("Debtors"), error.message || "", "warning");
+            }
+            render();
+        };
+        // One window is open at a time, so the profile replaces this list; closing that profile brings
+        // the list back (unless the operator went on from the profile to another window).
+        let returnFromProfile = false;
+        const openProfile = (row) => {
+            const ownerBackendId = row?.dataset.debtorOwnerId;
+            if (!ownerBackendId) return;
+            const fallback = billingData.residents.find((resident) => String(resident.ownerBackendId || "") === ownerBackendId) || null;
+            returnFromProfile = true;
+            openResidentProfileByOwner({ ownerBackendId, fallback });
+        };
+        const profileModal = document.getElementById("resident-command-profile-modal");
+        if (profileModal) {
+            new MutationObserver(() => {
+                if (!returnFromProfile || profileModal.getAttribute("aria-hidden") !== "true") return;
+                returnFromProfile = false;
+                window.setTimeout(() => {
+                    if (document.querySelector(".app-modal.is-open, .app-drawer.is-open")) return;
+                    openOverlayById("debtors-list-modal");
+                    render();
+                }, 0);
+            }).observe(profileModal, { attributes: true, attributeFilter: ["aria-hidden"] });
+        }
+        card.addEventListener("click", open);
+        card.addEventListener("keydown", (event) => {
+            if (event.key !== "Enter" && event.key !== " ") return;
+            event.preventDefault();
+            open();
+        });
+        rowsNode?.addEventListener("click", (event) => openProfile(event.target.closest("[data-debtor-owner-id]")));
+        rowsNode?.addEventListener("keydown", (event) => {
+            if (event.key !== "Enter") return;
+            openProfile(event.target.closest("[data-debtor-owner-id]"));
+        });
+        document.addEventListener("hydroflow:language-changed", () => {
+            if (modal.getAttribute("aria-hidden") === "false") render();
+        });
+    };
+    setupAnalyticsDebtorsList();
 
     const syncDashboardStatCards = (stats = getSiteStats()) => {
         const paidPercent = stats.detailedResidents ? (stats.detailedPaidResidents / stats.detailedResidents) * 100 : 0;
@@ -2455,6 +2672,26 @@
         anchor.insertAdjacentElement("afterend", item);
     };
 
+    // Alerts set for an operator work like tasks: everyone sees them, only the assignee resolves them.
+    const myProfileId = () => String(billingData.profile?.id || "");
+    const canResolveNotification = (item) => !item.assigneeId || String(item.assigneeId) === myProfileId();
+    const isMyOpenNotification = (item) => Boolean(item.assigneeId)
+        && String(item.assigneeId) === myProfileId()
+        && String(item.status || "").toLowerCase() !== "archived";
+    const notificationTaskMeta = (item) => {
+        if (!item.assigneeId && !item.createdByName) return "";
+        const resolved = String(item.status || "").toLowerCase() === "archived";
+        const telegram = { sent: "Sent to Telegram", not_linked: "No Telegram", failed: "Not delivered" }[item.telegramStatus] || "";
+        const rows = [
+            item.createdByName ? [t("Set by"), item.createdByName] : null,
+            item.assigneeId ? [t("Assigned to"), `${item.assigneeName || "—"}${String(item.assigneeId) === myProfileId() ? ` (${t("you")})` : ""}`] : null,
+            [t("Status"), t(resolved ? "Closed" : "Open")],
+            resolved && (item.resolvedBy || item.resolvedAt) ? [t("Resolved by"), [item.resolvedBy, item.resolvedAt].filter(Boolean).join(" · ")] : null,
+            telegram ? ["Telegram", t(telegram)] : null,
+        ].filter(Boolean);
+        return `<dl class="notification-task-meta">${rows.map(([label, value]) => `<div><dt>${escapeHtml(label)}</dt><dd>${escapeHtml(value)}</dd></div>`).join("")}</dl>`;
+    };
+
     const renderBackendNotifications = () => {
         const list = document.querySelector("[data-notification-list]");
         const notifications = Array.isArray(billingData.notifications) ? billingData.notifications : [];
@@ -2465,6 +2702,7 @@
         const groupLabel = (key, label, hidden = false) => `<div class="notification-group-label ${hidden ? "hidden" : ""}" data-notification-group="${key}">${escapeHtml(t(label))}</div>`;
         const severityLabel = (severity) => severity === "critical" ? t("Critical") : severity === "warning" ? t("Warning") : t("Info");
         const actionButtons = (item) => {
+            if (!canResolveNotification(item)) return "";
             return `
                 <div class="mt-3 flex gap-2">
                     <button class="drawer-action bg-surface-container text-primary" data-notification-resolve type="button">${escapeHtml(translateNotificationAction("Resolve"))}</button>
@@ -2474,7 +2712,7 @@
         const renderItem = (item) => {
             const severity = ["critical", "warning", "info"].includes(item.severity) ? item.severity : "info";
             return `
-                <div class="notification-item ${severity === "critical" ? "critical-pulse" : ""}"
+                <div class="notification-item ${severity === "critical" ? "critical-pulse" : ""} ${isMyOpenNotification(item) ? "is-mine" : ""}"
                     data-notification-id="${escapeHtml(item.id)}"
                     data-notification-backend-id="${escapeHtml(item.backendId || "")}"
                     data-alert-backend-id="${escapeHtml(item.alertBackendId || "")}"
@@ -2491,7 +2729,8 @@
                     </div>
                     <p class="text-sm font-bold text-on-surface mt-2">${escapeHtml(translateNotificationTitle(item.title))}</p>
                     <p class="text-xs text-on-surface-variant mt-1">${escapeHtml(translateNotificationMessage(item.message || ""))}</p>
-                    <p class="notification-action-state ${visibleNotificationState(item.actionState) ? "" : "hidden"}" data-notification-state>${escapeHtml(translateNotificationAction(visibleNotificationState(item.actionState)))}</p>
+                    ${notificationTaskMeta(item)}
+                    <p class="notification-action-state ${visibleNotificationState(item.actionState) && !item.assigneeId ? "" : "hidden"}" data-notification-state>${escapeHtml(translateNotificationAction(visibleNotificationState(item.actionState)))}</p>
                     ${actionButtons(item)}
                 </div>
             `;
@@ -2547,22 +2786,24 @@
             .filter(Boolean)
             .reverse()
             .forEach((item) => pinnedGroup?.insertAdjacentElement("afterend", item));
-        const unread = (Array.isArray(billingData.notifications) ? billingData.notifications : [])
-            .filter((item) => !item.read)
-            .length;
+        // The snapshot holds the open alerts; the bell turns red only for alerts set for the signed-in operator.
+        const openAlerts = (Array.isArray(billingData.notifications) ? billingData.notifications : [])
+            .filter((item) => String(item.status || "").toLowerCase() !== "archived");
+        const open = openAlerts.length;
+        const mine = openAlerts.filter(isMyOpenNotification).length;
         const lang = storage.getItem("hydroflow-lang") || "en";
         const activeFilter = document.querySelector("[data-notification-filter].is-active")?.dataset.notificationFilter || "all";
         const resolvedVisible = items.filter((item) => String(item.dataset.status || "").toLowerCase() === "archived").length;
-        const unreadLabel = lang === "ru" ? `${unread} непрочитанных` : lang === "uz" ? `${unread} ta o'qilmagan` : `${unread} unread`;
+        const openLabel = lang === "ru" ? `${open} открытых · ${mine} вам` : lang === "uz" ? `${open} ta ochiq · ${mine} ta sizga` : `${open} open · ${mine} for you`;
         const resolvedLabel = lang === "ru" ? `${resolvedVisible} решено` : lang === "uz" ? `${resolvedVisible} hal qilingan` : `${resolvedVisible} resolved`;
         document.querySelector("[data-notification-count]")?.replaceChildren(
-            document.createTextNode(activeFilter === "resolved" ? resolvedLabel : unreadLabel)
+            document.createTextNode(activeFilter === "resolved" ? resolvedLabel : openLabel)
         );
         document.querySelectorAll("[data-notification-dot]").forEach((dot) => {
-            dot.classList.toggle("hidden", unread === 0);
+            dot.classList.toggle("hidden", mine === 0);
         });
         document.querySelectorAll("[data-sidebar-notification-item]").forEach((item) => {
-            item.classList.toggle("is-unread", unread > 0);
+            item.classList.toggle("is-unread", mine > 0);
         });
         let visible = 0;
         items.forEach((item) => {
@@ -3151,7 +3392,7 @@
         const groupLabel = (key, label, hidden = false) => `<div class="notification-group-label ${hidden ? "hidden" : ""}" data-notification-group="${key}">${escapeHtml(t(label))}</div>`;
         const severityLabel = (severity) => severity === "critical" ? t("Critical") : severity === "warning" ? t("Warning") : t("Info");
         const actionButtons = (item) => {
-            if (String(item.status || "").toLowerCase() === "archived") return "";
+            if (String(item.status || "").toLowerCase() === "archived" || !canResolveNotification(item)) return "";
             return `
                 <div class="mt-3 flex gap-2">
                     <button class="drawer-action bg-surface-container text-primary" data-notification-resolve type="button">${escapeHtml(translateNotificationAction("Resolve"))}</button>
@@ -3164,7 +3405,8 @@
             const resolvedBy = String(item.resolvedBy || "").trim();
             const actionStateValue = visibleNotificationState(item.actionState);
             const actionStateText = (() => {
-                if (!actionStateValue) return "";
+                // A task shows who resolved it in its details below instead.
+                if (!actionStateValue || item.assigneeId) return "";
                 if (isResolved && resolvedBy) {
                     return `${t("Resolved by")}: ${resolvedBy}`;
                 }
@@ -3174,7 +3416,7 @@
                 ? ""
                 : `<button aria-label="${escapeAttr(item.pinned ? t("Pinned") : t("Pin"))}" aria-pressed="${item.pinned ? "true" : "false"}" class="notification-pin" data-notification-pin type="button"><span class="material-symbols-outlined">${item.pinned ? "keep_off" : "keep"}</span><span class="notification-pin-label">${escapeHtml(item.pinned ? t("Pinned") : t("Pin"))}</span></button>`;
             return `
-                <div class="notification-item ${severity === "critical" ? "critical-pulse" : ""}"
+                <div class="notification-item ${severity === "critical" ? "critical-pulse" : ""} ${isMyOpenNotification(item) ? "is-mine" : ""}"
                     data-notification-id="${escapeAttr(item.id)}"
                     data-notification-backend-id="${escapeAttr(item.backendId || "")}"
                     data-alert-backend-id="${escapeAttr(item.alertBackendId || "")}"
@@ -3192,6 +3434,7 @@
                     </div>
                     <p class="text-sm font-bold text-on-surface mt-2">${escapeHtml(translateNotificationTitle(item.title))}</p>
                     <p class="text-xs text-on-surface-variant mt-1">${escapeHtml(translateNotificationMessage(item.message || ""))}</p>
+                    ${notificationTaskMeta(item)}
                     <p class="notification-action-state ${actionStateText ? "" : "hidden"}" data-notification-state>${escapeHtml(actionStateText)}</p>
                     ${actionButtons(item)}
                 </div>
@@ -6266,27 +6509,36 @@
             const selected = buildings.find((building) => String(building.backendId) === String(buildingSelect.value));
             if (complexInput) complexInput.value = selected?.parentComplex?.backendId || "";
         };
-        const adminUsers = () => (Array.isArray(billingData.adminUsers) ? billingData.adminUsers : [])
-            .map((user) => ({
-                username: String(user.username || "").trim(),
-                name: String(user.name || user.username || "").trim(),
-            }))
-            .filter((user) => user.username);
+        // Every active portal account, the administrator included; the creator may assign themselves.
+        const operators = () => (Array.isArray(billingData.operators) ? billingData.operators : [])
+            .filter((user) => user.id);
+        const myId = () => String(billingData.profile?.id || "");
+        const assigneeHint = form.querySelector("[data-system-alert-assignee-hint]");
+        const syncAssigneeHint = () => {
+            if (!assigneeHint || !assigneeSelect) return;
+            const chosen = operators().find((user) => String(user.id) === assigneeSelect.value);
+            assigneeHint.textContent = chosen
+                ? t(chosen.telegramConnected ? "Also sent to their Telegram." : "Their Telegram is not connected: the alert is shown in the portal only.")
+                : "";
+            assigneeHint.classList.toggle("is-warning", Boolean(chosen && !chosen.telegramConnected));
+        };
         const syncAssigneeOptions = () => {
             if (!assigneeSelect) return;
-            const admins = adminUsers();
+            const people = operators();
             const previous = assigneeSelect.value;
-            assigneeSelect.innerHTML = admins.length
-                ? admins.map((user) => {
-                    const label = user.name && user.name !== user.username ? `${user.username} · ${user.name}` : user.username;
-                    return `<option value="${escapeHtml(user.username)}">${escapeHtml(label)}</option>`;
+            assigneeSelect.innerHTML = people.length
+                ? people.map((user) => {
+                    const name = String(user.name || user.username || "");
+                    const label = `${name}${String(user.id) === myId() ? ` (${t("you")})` : ""}${user.telegramConnected ? "" : ` · ${t("without Telegram")}`}`;
+                    return `<option value="${escapeAttr(user.id)}">${escapeHtml(label)}</option>`;
                 }).join("")
-                : `<option value="">${escapeHtml(t("No admins found"))}</option>`;
-            assigneeSelect.disabled = !admins.length;
-            assigneeSelect.value = previous && admins.some((user) => user.username === previous)
-                ? previous
-                : (admins[0]?.username || "");
+                : `<option value="">${escapeHtml(t("No operators found"))}</option>`;
+            assigneeSelect.disabled = !people.length;
+            const keep = previous && people.some((user) => String(user.id) === previous);
+            assigneeSelect.value = keep ? previous : (people.some((user) => String(user.id) === myId()) ? myId() : String(people[0]?.id || ""));
+            syncAssigneeHint();
         };
+        assigneeSelect?.addEventListener("change", syncAssigneeHint);
         const chipClass = (severity) => severity === "critical" ? "is-critical" : severity === "warning" ? "is-warning" : "is-info";
         const renderAlerts = () => {
             if (!list) return;
@@ -6311,7 +6563,9 @@
                     </div>
                     <div class="system-alert-card-actions">
                         <span class="system-alert-chip is-status">${escapeHtml(statusLabel(alert.status || "active"))}</span>
-                        <button data-system-alert-action="resolve" data-system-alert-id="${escapeHtml(alert.backendId || "")}" type="button">${escapeHtml(t("Resolve"))}</button>
+                        ${!alert.assigneeId || String(alert.assigneeId) === myId()
+                            ? `<button data-system-alert-action="resolve" data-system-alert-id="${escapeHtml(alert.backendId || "")}" type="button">${escapeHtml(t("Resolve"))}</button>`
+                            : ""}
                     </div>
                 </article>
             `).join("") : `<div class="system-alert-empty">${escapeHtml(t("No active alerts. Create one from this panel."))}</div>`;
@@ -6352,7 +6606,7 @@
                 severity: formData.get("severity"),
                 complex_id: formData.get("complex_id") || "",
                 building_id: formData.get("building_id") || "",
-                assigned_to: formData.get("assigned_to"),
+                assignee_id: formData.get("assignee_id") || "",
                 message: formData.get("message"),
             };
             submit.disabled = true;
@@ -6370,7 +6624,13 @@
                 form.reset();
                 syncBuildingOptions();
                 syncAssigneeOptions();
-                toast("System alert created", "The alert is now stored in Django admin and visible in the portal.", "success");
+                // Where the alert reached the assignee: Telegram, or the portal only.
+                const delivery = {
+                    sent: ["Alert sent to Telegram", "success"],
+                    not_linked: ["The operator has no Telegram: the alert is in the portal only.", "warning"],
+                    failed: ["Telegram did not deliver the alert; it is in the portal.", "warning"],
+                }[payload.telegramStatus] || ["The alert is now stored in Django admin and visible in the portal.", "success"];
+                toast("System alert created", delivery[0], delivery[1]);
             } catch (error) {
                 const recovered = await refreshPortalDataSnapshot().then(() => findRecoveredSystemAlert(requestPayload, previousAlertIds)).catch(() => null);
                 if (recovered) {

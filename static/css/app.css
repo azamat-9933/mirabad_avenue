@@ -16204,9 +16204,25 @@ html.dark .add-payment-resident-photo-shell,
     gap: 14px;
 }
 
+/* Debt by house takes the room; the channels panel keeps a compact width. */
 .analytics-v2-grid--top {
-    grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+    grid-template-columns: minmax(0, 1fr) clamp(380px, 36%, 560px);
     align-items: start;
+}
+
+/* The Debtors card opens the debtors list. */
+.analytics-v2-kpi.is-clickable {
+    cursor: pointer;
+}
+
+.analytics-v2-kpi.is-clickable:focus-visible {
+    outline: 2px solid rgba(245, 158, 11, 0.6);
+    outline-offset: 2px;
+}
+
+.analytics-v2-kpi.is-clickable .analytics-v2-kpi__label-row span:first-child::after {
+    content: " ›";
+    letter-spacing: 0;
 }
 
 .analytics-v2-grid--bottom {
@@ -21629,4 +21645,315 @@ html.dark .sidebar-premium-icon,
         0 8px 20px rgba(0, 0, 0, 0.14),
         inset 0 1px 0 rgba(255, 255, 255, 0.04) !important;
     filter: none !important;
+}
+
+/* ---- Statistics: debtors list (opened from the Debtors card) ------------------------------- */
+
+.debtors-list-panel {
+    margin-top: 4vh;
+}
+
+.debtors-list-body {
+    display: grid;
+    gap: 12px;
+    padding: 16px 20px 20px;
+}
+
+.debtors-list-summary {
+    color: #475569;
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.debtors-list-table-wrap {
+    max-height: min(62vh, 640px);
+    overflow: auto;
+    border: 1px solid rgba(174, 194, 220, 0.28);
+    border-radius: 14px;
+}
+
+.debtors-list-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.debtors-list-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    padding: 10px 12px;
+    background: #F4F8FD;
+    color: #64748B;
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: 0.12em;
+    text-align: left;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.debtors-list-table td {
+    padding: 10px 12px;
+    border-top: 1px solid rgba(174, 194, 220, 0.22);
+    color: #1E293B;
+    font-weight: 700;
+}
+
+.debtors-list-table .is-index {
+    color: #94A3B8;
+    width: 44px;
+}
+
+.debtors-list-table .is-name {
+    font-weight: 850;
+}
+
+.debtors-list-table .is-amount {
+    color: #DC2626;
+    font-variant-numeric: tabular-nums;
+    font-weight: 900;
+    text-align: right;
+    white-space: nowrap;
+}
+
+.debtors-list-table thead .is-amount {
+    color: #64748B;
+}
+
+.debtors-list-table tr.is-clickable {
+    cursor: pointer;
+    transition: background-color 0.14s ease;
+}
+
+.debtors-list-table tr.is-clickable:hover,
+.debtors-list-table tr.is-clickable:focus-visible {
+    background: rgba(59, 130, 246, 0.07);
+    outline: none;
+}
+
+.debtors-list-table tr.is-vacant .is-name {
+    color: #94A3B8;
+    font-style: italic;
+}
+
+.debtors-list-table .table-cell-label {
+    display: none;
+}
+
+.debtors-list-empty {
+    padding: 24px 12px !important;
+    color: #64748B !important;
+    text-align: center;
+}
+
+/* Phones: each debtor becomes a small card; name and debt on top, house/apartment/phone below. */
+@media (max-width: 640px) {
+    .debtors-list-body {
+        padding: 12px;
+    }
+
+    .debtors-list-table thead {
+        display: none;
+    }
+
+    .debtors-list-table tr {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 2px 12px;
+        padding: 10px 12px;
+        border-top: 1px solid rgba(174, 194, 220, 0.22);
+    }
+
+    .debtors-list-table td {
+        padding: 0;
+        border: 0;
+    }
+
+    .debtors-list-table .is-index {
+        display: none;
+    }
+
+    .debtors-list-table .is-name {
+        grid-column: 1;
+        grid-row: 1;
+    }
+
+    .debtors-list-table .is-amount {
+        grid-column: 2;
+        grid-row: 1;
+    }
+
+    .debtors-list-table td:nth-child(2),
+    .debtors-list-table td:nth-child(3),
+    .debtors-list-table td:nth-child(5) {
+        grid-column: 1 / -1;
+        color: #64748B;
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    .debtors-list-table .table-cell-label {
+        display: inline;
+        margin-right: 6px;
+        color: #94A3B8;
+    }
+}
+
+html.dark .debtors-list-table thead th,
+[data-theme="dark"] .debtors-list-table thead th {
+    background: #151C28;
+    color: #94A3B8;
+}
+
+html.dark .debtors-list-table td,
+[data-theme="dark"] .debtors-list-table td {
+    border-color: rgba(116, 139, 170, 0.16);
+    color: #E2E8F0;
+}
+
+html.dark .debtors-list-table .is-amount,
+[data-theme="dark"] .debtors-list-table .is-amount {
+    color: #F87171;
+}
+
+html.dark .debtors-list-summary,
+[data-theme="dark"] .debtors-list-summary {
+    color: #CBD5E1;
+}
+
+html.dark .debtors-list-table-wrap,
+[data-theme="dark"] .debtors-list-table-wrap {
+    border-color: rgba(116, 139, 170, 0.18);
+}
+
+/* ---- Alerts set for operators: who set it, for whom, status, Telegram delivery ---------------- */
+
+.notification-task-meta {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 6px 14px;
+    margin: 10px 0 0;
+    padding: 8px 10px;
+    border-radius: 10px;
+    background: rgba(148, 163, 184, 0.10);
+}
+
+.notification-task-meta div {
+    min-width: 0;
+}
+
+.notification-task-meta dt {
+    color: #64748B;
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.notification-task-meta dd {
+    margin: 1px 0 0;
+    color: #1E293B;
+    font-size: 12px;
+    font-weight: 800;
+    overflow-wrap: anywhere;
+}
+
+/* An open alert set for the signed-in operator stands out in the list. */
+.notification-item.is-mine {
+    box-shadow: inset 4px 0 0 #DC2626;
+}
+
+html.dark .notification-task-meta,
+[data-theme="dark"] .notification-task-meta {
+    background: rgba(148, 163, 184, 0.12);
+}
+
+html.dark .notification-task-meta dd,
+[data-theme="dark"] .notification-task-meta dd {
+    color: #E2E8F0;
+}
+
+.system-alert-assignee-hint {
+    display: block;
+    margin-top: 4px;
+    color: #059669;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.system-alert-assignee-hint.is-warning {
+    color: #B45309;
+}
+
+/* ---- Profile: the operator's Telegram for alerts --------------------------------------------- */
+
+.profile-telegram-status {
+    margin: 0 0 10px;
+    color: #64748B;
+    font-size: 13px;
+    font-weight: 750;
+}
+
+.profile-telegram-status.is-connected {
+    color: #047857;
+    font-weight: 850;
+}
+
+.profile-telegram-hint {
+    margin: 0 0 10px;
+    padding: 8px 10px;
+    border-radius: 10px;
+    background: rgba(14, 165, 233, 0.10);
+    color: #0369A1;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.profile-telegram-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.profile-telegram-connect,
+.profile-telegram-disconnect {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 38px;
+    padding: 0 14px;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 850;
+}
+
+.profile-telegram-connect {
+    background: #229ED9;
+    color: #FFFFFF;
+}
+
+.profile-telegram-disconnect {
+    border: 1px solid rgba(148, 163, 184, 0.4);
+    color: #475569;
+}
+
+.profile-telegram-connect .material-symbols-outlined,
+.profile-telegram-disconnect .material-symbols-outlined {
+    font-size: 18px;
+}
+
+.profile-telegram-connect:disabled,
+.profile-telegram-disconnect:disabled {
+    opacity: 0.6;
+}
+
+html.dark .profile-telegram-disconnect,
+[data-theme="dark"] .profile-telegram-disconnect {
+    color: #CBD5E1;
+}
+
+/* The assignee hint makes its cell taller; the severity field beside it keeps its own height. */
+.system-alerts-config-form .resident-create-field {
+    align-self: start;
 }

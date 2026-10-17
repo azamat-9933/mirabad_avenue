@@ -688,6 +688,33 @@ class PortalBoundedSnapshotTests(TestCase):
         # At the end of the old month only the charge had been posted.
         self.assertEqual((rows[old_key]["debt"], rows[old_key]["overpayment"], rows[old_key]["debtors"]), (50000.0, 0.0, 1))
 
+    def test_debtors_list_follows_the_statistics_month_and_house(self):
+        # Another house: a resident charged this month and a vacant apartment in debt.
+        other = Building.objects.create(number="61", complex=self.owner.apartment.building.complex, author="test")
+        flat = Apartment.objects.create(number="7", area=Decimal("40.00"), building=other, author="test")
+        Owner.objects.create(fio="New Debtor", phone="+998900000007", apartment=flat)
+        apply_account_change(flat.pk, Decimal("-80000"), Transaction.TYPE_CHARGE, description="[billing:period-charge] x")
+        vacant = Apartment.objects.create(number="8", area=Decimal("40.00"), building=other, author="test")
+        apply_account_change(vacant.pk, Decimal("-10000"), Transaction.TYPE_CHARGE, description="[billing:period-charge] x")
+        # The first house's resident: charged two months ago, paid in full since (setUpTestData payments).
+        today = timezone.localtime()
+        old = (today.replace(day=1) - timedelta(days=40)).replace(day=15)
+        charge = apply_account_change(self.owner.apartment_id, Decimal("-10000"), Transaction.TYPE_CHARGE, description="[billing:period-charge] x")
+        Transaction.objects.filter(pk=charge.pk).update(created_at=old)
+
+        def debtors(**params):
+            response = self.client.get(reverse("portal:api_list_debtors"), params)
+            self.assertEqual(response.status_code, 200)
+            return [(row["name"], row["house"], row["apartment"], row["debt"]) for row in response.json()["results"]]
+
+        now = [("New Debtor", "61", "7", 80000.0), ("Unassigned owner", "61", "8", 10000.0)]
+        self.assertEqual(debtors(month=today.strftime("%Y-%m")), now)
+        self.assertEqual(debtors(), now)
+        self.assertEqual(debtors(month=today.strftime("%Y-%m"), building_id=other.pk), now)
+        self.assertEqual(debtors(month=today.strftime("%Y-%m"), building_id=self.owner.apartment.building_id), [])
+        # At the end of the old month only the old charge existed.
+        self.assertEqual(debtors(month=old.strftime("%Y-%m")), [("Long History", "64", "1", 10000.0)])
+
     def test_resident_collected_total_uses_the_whole_history(self):
         complex_row = build_portal_data(self.user)["complexes"][0]
         self.assertEqual(complex_row["baselineCollected"], float(sum(1000 + i for i in range(12))))

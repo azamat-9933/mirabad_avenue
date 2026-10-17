@@ -250,6 +250,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Residents' Telegram bot (python manage.py run_telegram_bot); token from @BotFather.
 TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN', '').strip()
+# Optional: the bot's @username for operators' t.me links; asked from Telegram (getMe) when empty.
+TELEGRAM_BOT_USERNAME = os.getenv('TELEGRAM_BOT_USERNAME', '').strip()
 
 # Payment (debt) notice: the company and the director signing it (portal/billing_notice.py).
 BILLING_NOTICE_COMPANY = os.getenv('BILLING_NOTICE_COMPANY', 'MIRABAD AVENUE SERVICE MCHJ').strip()

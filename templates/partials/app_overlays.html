@@ -442,6 +442,19 @@
 <div><span data-i18n-key="Role">Role</span><strong data-profile-field="role">Administrator</strong></div>
 </div>
 </section>
+<!-- Alerts assigned to the operator are also sent to this Telegram chat (linked through the bot). -->
+<section class="profile-info-section profile-telegram-section" data-operator-telegram>
+<div class="profile-section-heading">
+<span class="material-symbols-outlined">send</span>
+<h3 data-i18n-key="Telegram for alerts">Telegram for alerts</h3>
+</div>
+<p class="profile-telegram-status" data-operator-telegram-status>—</p>
+<p class="profile-telegram-hint hidden" data-operator-telegram-hint data-i18n-key="Telegram opened: press Start in the bot. The status here updates by itself.">Telegram opened: press Start in the bot. The status here updates by itself.</p>
+<div class="profile-telegram-actions">
+<button class="profile-telegram-connect" data-operator-telegram-connect type="button"><span class="material-symbols-outlined">link</span><span data-i18n-key="Connect Telegram">Connect Telegram</span></button>
+<button class="profile-telegram-disconnect hidden" data-operator-telegram-disconnect type="button"><span class="material-symbols-outlined">link_off</span><span data-i18n-key="Disconnect">Disconnect</span></button>
+</div>
+</section>
 <section class="profile-info-section">
 <div class="profile-section-heading">
 <span class="material-symbols-outlined">admin_panel_settings</span>
@@ -772,7 +785,8 @@
 <input name="complex_id" type="hidden" value=""/>
 <label class="resident-create-field">
 <span data-i18n-key="Assigned to">Assigned to</span>
-<select data-system-alert-assignee name="assigned_to"></select>
+<select data-system-alert-assignee name="assignee_id" required></select>
+<small class="system-alert-assignee-hint" data-system-alert-assignee-hint></small>
 </label>
 <label class="resident-create-field md:col-span-2">
 <span data-i18n-key="Message">Message</span>
@@ -1263,6 +1277,41 @@ This form writes directly to Django admin and database.
 <button class="px-5 py-3 rounded-xl bg-surface-container text-sm font-bold text-on-surface" data-close-overlay type="button" data-i18n-key="Close">Close</button>
 <button class="px-5 py-3 rounded-xl bg-surface-container text-sm font-bold text-on-surface" data-billing-notice-pdf type="button" data-i18n-key="Download PDF">Download PDF</button>
 <button class="px-5 py-3 rounded-xl bg-primary text-sm font-bold text-white" data-billing-notice-telegram type="button" data-i18n-key="Notify in Telegram">Notify in Telegram</button>
+</div>
+</div>
+</div>
+
+<!-- Statistics "Debtors" card: who owes at the end of the selected month; a row opens the resident's
+     profile, which (like the windows it opens) stacks above this list. -->
+<div aria-labelledby="debtors-list-title" aria-hidden="true" class="app-modal fixed inset-0 z-[78] hidden items-start justify-center overflow-y-auto p-4 md:p-6" id="debtors-list-modal" role="dialog">
+<div class="modal-panel debtors-list-panel w-full max-w-4xl bg-white rounded-lg shadow-2xl border border-outline-variant/20 overflow-hidden">
+<div class="export-preview-hero">
+<span class="material-symbols-outlined">group</span>
+<div>
+<h2 data-i18n-key="Debtors" id="debtors-list-title">Debtors</h2>
+<small data-debtors-list-scope></small>
+</div>
+<button aria-label="Close debtors" class="profile-drawer-close" data-close-overlay type="button">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<div class="debtors-list-body">
+<div class="debtors-list-summary" data-debtors-list-summary></div>
+<div class="debtors-list-table-wrap">
+<table class="debtors-list-table" data-skip-base-table-enhance="true">
+<thead>
+<tr>
+<th>#</th>
+<th data-i18n-key="House">House</th>
+<th data-i18n-key="Apartment">Apartment</th>
+<th data-i18n-key="Resident">Resident</th>
+<th data-i18n-key="Phone">Phone</th>
+<th class="is-amount" data-i18n-key="Debt">Debt</th>
+</tr>
+</thead>
+<tbody data-debtors-list-rows></tbody>
+</table>
+</div>
 </div>
 </div>
 </div>

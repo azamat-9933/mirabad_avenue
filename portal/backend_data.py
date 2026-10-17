@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+import re
 from collections import defaultdict
-from datetime import timedelta
+from datetime import datetime, timedelta
 from decimal import Decimal
 
 from django.contrib.auth import get_user_model
@@ -135,7 +136,33 @@ def _serialize_profile(user=None) -> dict:
         "groupsLabel": ", ".join(groups),
         "permissionsCount": permission_count,
         "backendSource": "Django User + WorkspaceProfile" if profile else "Django User",
+        # Alerts assigned to this operator are also sent to this Telegram chat.
+        "telegram": {
+            "connected": bool(profile and profile.telegram_chat_id),
+            "username": (profile.telegram_username if profile else "") or "",
+            "linkedAt": _datetime(profile.telegram_linked_at) if profile and profile.telegram_linked_at else "",
+        },
     }
+
+
+def _serialize_operators() -> list[dict]:
+    """Everyone an alert can be assigned to: every active portal account, the administrator included."""
+    users = (
+        get_user_model().objects.filter(is_active=True)
+        .select_related("workspace_profile")
+        .order_by("-is_superuser", "first_name", "last_name", "username")
+    )
+    rows = []
+    for user in users:
+        profile = getattr(user, "workspace_profile", None)
+        rows.append({
+            "id": user.id,
+            "username": user.get_username(),
+            "name": _display_name(user),
+            "isSuperuser": user.is_superuser,
+            "telegramConnected": bool(profile and profile.telegram_chat_id),
+        })
+    return rows
 
 
 def _serialize_admin_users() -> list[dict]:
@@ -359,8 +386,8 @@ def serialize_transaction(transaction, apartment, owner, labels=None, status_ove
 def serialize_notification(item: PortalNotification, alert_backend_id="") -> dict:
     related = item.complex or (item.building.complex if item.building_id else None)
     action_state = "" if item.action_state == "Created from dashboard" else item.action_state
-    resolved_by = ""
-    if isinstance(action_state, str) and action_state.lower().startswith("resolved by "):
+    resolved_by = _display_name(item.resolved_by) if item.resolved_by_id else ""
+    if not resolved_by and isinstance(action_state, str) and action_state.lower().startswith("resolved by "):
         resolved_by = action_state[12:].strip()
     return {
         "id": _slug("notification", item.id),
@@ -377,12 +404,23 @@ def serialize_notification(item: PortalNotification, alert_backend_id="") -> dic
         "actionSecondary": item.action_secondary,
         "actionState": action_state,
         "resolvedBy": resolved_by,
+        # Task fields: who set it, for whom, and who closed it when. Only the assignee resolves it.
+        "createdById": item.created_by_id,
+        "createdByName": _display_name(item.created_by) if item.created_by_id else "",
+        "assigneeId": item.assignee_id,
+        "assigneeName": _display_name(item.assignee) if item.assignee_id else "",
+        "resolvedById": item.resolved_by_id,
+        "resolvedAt": _datetime(item.resolved_at) if item.resolved_at else "",
+        "telegramStatus": item.telegram_status,
         "complexId": _slug("complex", related.id) if related else "",
         "buildingId": _slug("building", item.building_id) if item.building_id else "",
         "ownerId": _slug("owner", item.owner_id) if item.owner_id else "",
         "status": item.status,
         "adminUrl": f"/admin/portal/portalnotification/{item.id}/change/",
     }
+
+
+NOTIFICATION_RELATED = ("complex", "building", "building__complex", "apartment", "owner", "created_by", "assignee", "resolved_by")
 
 
 def serialize_audit_event(event: AuditEvent) -> dict:
@@ -587,13 +625,8 @@ def hot_water_totals_by_complex() -> dict[int, float]:
 
 
 def _serialize_notifications() -> list[dict]:
-    queryset = list(PortalNotification.objects.select_related(
-        "complex",
-        "building",
-        "building__complex",
-        "apartment",
-        "owner",
-    ).exclude(status=PortalNotification.STATUS_ARCHIVED).order_by("-pinned", "-event_at")[:80])
+    queryset = list(PortalNotification.objects.select_related(*NOTIFICATION_RELATED)
+                    .exclude(status=PortalNotification.STATUS_ARCHIVED).order_by("-pinned", "-event_at")[:80])
     notification_ids = [item.id for item in queryset]
     alert_map = {}
     if notification_ids:
@@ -612,7 +645,13 @@ def _serialize_system_alerts() -> list[dict]:
         "apartment",
         "owner",
     ).exclude(status=SystemAlert.STATUS_RESOLVED).order_by("-detected_at")[:80]
-    for alert in queryset:
+    queryset = list(queryset)
+    # The assignee lives on the alert's notification (the task): only they may resolve it.
+    notification_ids = [int((alert.metadata or {}).get("notification_id") or 0) for alert in queryset]
+    assignees = dict(
+        PortalNotification.objects.filter(id__in=[pk for pk in notification_ids if pk]).values_list("id", "assignee_id")
+    )
+    for alert, notification_id in zip(queryset, notification_ids):
         related = alert.complex or (alert.building.complex if alert.building_id else None)
         location = alert.message or ""
         if not location and related:
@@ -629,6 +668,7 @@ def _serialize_system_alerts() -> list[dict]:
             "message": alert.message,
             "meta": alert.assigned_to or alert.get_category_display(),
             "assignedTo": alert.assigned_to,
+            "assigneeId": assignees.get(notification_id),
             "action": alert.action_label,
             "detectedAt": _datetime(alert.detected_at),
             "complexId": _slug("complex", related.id) if related else "",
@@ -867,6 +907,51 @@ def balance_summary(apartments_by_id: dict, months: list[str]) -> list[dict]:
     return summary
 
 
+def debtors_at(month: str = "", building_id=None) -> list[dict]:
+    """Debtor apartments at the end of ``month`` ("YYYY-MM"; empty or the current month: now), largest debt first.
+
+    Same rule as ``balance_summary``: the balance then is today's balance minus the ledger entries
+    made after that month, so the list matches the statistics "Debtors" card.
+    """
+    current_tz = timezone.get_current_timezone()
+    now = timezone.localtime(timezone.now(), current_tz)
+    apartments = Apartment.objects.select_related("building", "owner").order_by()
+    if building_id:
+        apartments = apartments.filter(building_id=building_id)
+    apartments = list(apartments)
+    later = {}
+    match = re.fullmatch(r"(\d{4})-(\d{2})", str(month or ""))
+    if match and match.group(0) != f"{now.year}-{now.month:02d}":
+        year, number = int(match.group(1)), int(match.group(2))
+        next_month = timezone.make_aware(datetime(year + number // 12, number % 12 + 1, 1), current_tz)
+        later = dict(
+            Transaction.objects.filter(apartment_id__in=[apartment.id for apartment in apartments], created_at__gte=next_month)
+            .values("apartment_id")
+            .annotate(total=Sum("amount"))
+            .order_by()
+            .values_list("apartment_id", "total")
+        )
+    rows = []
+    for apartment in apartments:
+        balance = (apartment.balance or Decimal("0")) - (later.get(apartment.id) or Decimal("0"))
+        if balance >= 0:
+            continue
+        owner = getattr(apartment, "owner", None)
+        rows.append({
+            "residentId": _slug("owner", owner.id) if owner else _slug("apartment", apartment.id),
+            "ownerBackendId": owner.id if owner else None,
+            "apartmentBackendId": apartment.id,
+            "buildingBackendId": apartment.building_id,
+            "name": owner.fio if owner else "Unassigned owner",
+            "phone": (owner.phone or "") if owner else "",
+            "house": str(apartment.building.number),
+            "apartment": str(apartment.number),
+            "debt": _money(-balance),
+        })
+    rows.sort(key=lambda row: (-row["debt"], row["house"], row["apartment"]))
+    return rows
+
+
 def recent_account_transactions(limit: int = RECENT_TRANSACTIONS_PER_ACCOUNT):
     """The newest ``limit`` ledger rows of every apartment account, newest first."""
     return list(
@@ -969,6 +1054,7 @@ def build_portal_data(user=None) -> dict:
         "generatedAt": timezone.localtime().isoformat(),
         "profile": _serialize_profile(user),
         "adminUsers": _serialize_admin_users(),
+        "operators": _serialize_operators(),
         "complexes": complex_rows,
         "residents": resident_rows,
         "transactions": transaction_rows,

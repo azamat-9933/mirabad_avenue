@@ -1,4 +1,4 @@
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from unittest.mock import patch
 
@@ -14,9 +14,12 @@ from django.urls import reverse
 from main_app.models import Apartment, Building, Complex, Owner
 from payments.models import Transaction
 from payments.services import apply_account_change
-from portal.models import AuditEvent
+from django.utils import timezone
 
-from . import services
+from portal.backend_data import build_portal_data
+from portal.models import AuditEvent, PortalNotification, WorkspaceProfile
+
+from . import operators, services
 from portal.billing_notice import build_debt_notice, notice_telegram_text
 from .runner import create_bot, create_dispatcher
 from .texts import BUTTON_ACTIONS, CHOOSE_LANGUAGE, LANGUAGE_BUTTONS, MESSAGES, format_accounts, format_amount, t
@@ -299,3 +302,145 @@ class BillingNoticeTelegramTests(ResidentsMixin, TestCase):
     def test_unknown_resident(self):
         self.assertEqual(self.post(999999).status_code, 404)
         self.assertEqual(self.post("").status_code, 404)
+
+
+@override_settings(TELEGRAM_BOT_TOKEN="123456:TEST-TOKEN", TELEGRAM_BOT_USERNAME="mirabad_test_bot")
+class OperatorAlertsTelegramTests(TestCase):
+    """Operators link Telegram through the bot and receive the alerts set for them; only they resolve them."""
+
+    CHAT_ID = 777
+
+    @classmethod
+    def setUpTestData(cls):
+        User = get_user_model()
+        cls.boss = User.objects.create_superuser(username="boss", password="unused-password", first_name="Dilshod")
+        cls.cashier = User.objects.create_user(username="kassir", password="unused-password", first_name="Ali", last_name="Valiyev")
+
+    def setUp(self):
+        self.session = RecordingSession()
+        self.bot = create_bot("123456:TEST-TOKEN", session=self.session)
+        self.dispatcher = create_dispatcher()
+
+    def bot_start(self, payload, user_id=CHAT_ID):
+        message = Message(
+            message_id=1,
+            date=datetime.now(UTC),
+            chat=Chat(id=user_id, type="private"),
+            from_user=User(id=user_id, is_bot=False, first_name="Ali", username="ali_v"),
+            text=f"/start {payload}".strip(),
+        )
+        already_sent = len(self.session.sent)
+        async_to_sync(self.dispatcher.feed_update)(self.bot, Update(update_id=1, message=message))
+        return [method.text for method in self.session.sent[already_sent:]]
+
+    def link_payload(self, user):
+        self.client.force_login(user)
+        response = self.client.post(
+            reverse("portal:api_operator_telegram"), {"mode": "link", "language": "ru"}, content_type="application/json"
+        )
+        link = response.json()["link"]
+        self.assertTrue(link.startswith("https://t.me/mirabad_test_bot?start=op_"), link)
+        return link.split("start=", 1)[1]
+
+    def create_alert(self, assignee):
+        self.client.force_login(self.boss)
+        with patch("telegram_bot.notifications.create_bot", lambda token: create_bot(token, session=self.session)):
+            return self.client.post(
+                reverse("portal:api_system_alerts_configure"),
+                {"mode": "create", "title": "Kassani tekshiring", "message": "Kun oxirida", "severity": "critical",
+                 "assignee_id": assignee.pk if assignee else ""},
+                content_type="application/json",
+            )
+
+    def resolve(self, user, notification):
+        self.client.force_login(user)
+        return self.client.post(
+            reverse("portal:api_system_alerts_configure"),
+            {"mode": "resolve", "notification_id": notification.pk},
+            content_type="application/json",
+        )
+
+    def test_operator_links_telegram_with_the_one_time_bot_link(self):
+        payload = self.link_payload(self.cashier)
+
+        [reply] = self.bot_start(payload)
+
+        self.assertIn("Telegram подключён", reply)
+        self.assertIn("Ali Valiyev", reply)
+        profile = WorkspaceProfile.objects.get(user=self.cashier)
+        self.assertEqual((profile.telegram_chat_id, profile.telegram_username, profile.telegram_link_token), (self.CHAT_ID, "ali_v", ""))
+        self.assertTrue(self.client.get(reverse("portal:api_operator_telegram")).json()["connected"])
+        # The link works once.
+        [again] = self.bot_start(payload, user_id=888)
+        self.assertEqual(again, operators.invalid_link_text())
+
+    def test_a_plain_start_is_still_the_residents_registration(self):
+        self.assertEqual(self.bot_start(""), [f"<b>{CHOOSE_LANGUAGE}</b>"])
+
+    def test_expired_link_is_refused(self):
+        payload = self.link_payload(self.cashier)
+        WorkspaceProfile.objects.filter(user=self.cashier).update(
+            telegram_link_requested_at=timezone.now() - operators.LINK_TOKEN_LIFETIME - timedelta(minutes=1)
+        )
+        self.bot_start(payload)
+        self.assertIsNone(WorkspaceProfile.objects.get(user=self.cashier).telegram_chat_id)
+
+    def test_one_telegram_account_serves_one_operator(self):
+        self.bot_start(self.link_payload(self.cashier))
+        self.bot_start(self.link_payload(self.boss))
+        self.assertIsNone(WorkspaceProfile.objects.get(user=self.cashier).telegram_chat_id)
+        self.assertEqual(WorkspaceProfile.objects.get(user=self.boss).telegram_chat_id, self.CHAT_ID)
+
+    def test_alert_reaches_the_assignee_telegram(self):
+        self.bot_start(self.link_payload(self.cashier))
+        already_sent = len(self.session.sent)
+
+        response = self.create_alert(self.cashier)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["telegramStatus"], PortalNotification.TELEGRAM_SENT)
+        [sent] = self.session.sent[already_sent:]
+        self.assertEqual(sent.chat_id, self.CHAT_ID)
+        self.assertIn("Kassani tekshiring", sent.text)
+        self.assertIn("Dilshod", sent.text)
+        notification = PortalNotification.objects.get()
+        self.assertEqual((notification.assignee, notification.created_by), (self.cashier, self.boss))
+        row = next(item for item in build_portal_data(self.boss)["notifications"] if item["backendId"] == notification.pk)
+        self.assertEqual((row["assigneeName"], row["createdByName"], row["telegramStatus"]), ("Ali Valiyev", "Dilshod", "sent"))
+
+    def test_operator_without_telegram_gets_the_alert_in_the_portal_only(self):
+        response = self.create_alert(self.cashier)
+        self.assertEqual(response.json()["telegramStatus"], PortalNotification.TELEGRAM_NOT_LINKED)
+        self.assertEqual(self.session.sent, [])
+
+    def test_only_the_assignee_resolves_the_alert(self):
+        self.create_alert(self.cashier)
+        notification = PortalNotification.objects.get()
+
+        self.assertEqual(self.resolve(self.boss, notification).status_code, 403)
+        notification.refresh_from_db()
+        self.assertEqual(notification.status, PortalNotification.STATUS_UNREAD)
+
+        self.assertEqual(self.resolve(self.cashier, notification).status_code, 200)
+        notification.refresh_from_db()
+        self.assertEqual((notification.status, notification.resolved_by), (PortalNotification.STATUS_ARCHIVED, self.cashier))
+        self.assertIsNotNone(notification.resolved_at)
+
+    def test_unassigned_alert_can_be_resolved_by_anyone(self):
+        self.create_alert(None)
+        self.assertEqual(self.resolve(self.cashier, PortalNotification.objects.get()).status_code, 200)
+
+    def test_unknown_assignee_is_refused(self):
+        self.client.force_login(self.boss)
+        response = self.client.post(
+            reverse("portal:api_system_alerts_configure"),
+            {"mode": "create", "title": "X", "assignee_id": 999999},
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertFalse(PortalNotification.objects.exists())
+
+    def test_operators_list_has_every_active_account_with_its_telegram(self):
+        self.bot_start(self.link_payload(self.cashier))
+        rows = {row["username"]: row["telegramConnected"] for row in build_portal_data(self.boss)["operators"]}
+        self.assertEqual(rows, {"boss": False, "kassir": True})

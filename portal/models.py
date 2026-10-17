@@ -39,6 +39,15 @@ class WorkspaceProfile(models.Model):
         max_length=240,
         default="Profile data is loaded from Django admin and the active backend session.",
     )
+    # The operator's Telegram chat, linked through the bot (/start op_<token> from the portal profile);
+    # alerts assigned to the operator are delivered there.
+    telegram_chat_id = models.BigIntegerField(null=True, blank=True, unique=True)
+    telegram_username = models.CharField(max_length=64, blank=True)
+    telegram_language = models.CharField(max_length=2, default="uz")
+    telegram_linked_at = models.DateTimeField(null=True, blank=True)
+    # One-time token of the pending link; cleared when the bot uses it.
+    telegram_link_token = models.CharField(max_length=48, blank=True, db_index=True)
+    telegram_link_requested_at = models.DateTimeField(null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -91,6 +100,32 @@ class PortalNotification(models.Model):
         blank=True,
         related_name="portal_notifications",
     )
+    # An alert set for an operator works like a task: everyone sees it, only the assignee resolves it.
+    assignee = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="assigned_portal_notifications",
+    )
+    resolved_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="resolved_portal_notifications",
+    )
+    resolved_at = models.DateTimeField(null=True, blank=True)
+    TELEGRAM_SENT = "sent"
+    TELEGRAM_NOT_LINKED = "not_linked"
+    TELEGRAM_FAILED = "failed"
+    TELEGRAM_STATUS_CHOICES = [
+        (TELEGRAM_SENT, "Sent"),
+        (TELEGRAM_NOT_LINKED, "Assignee has no Telegram"),
+        (TELEGRAM_FAILED, "Not delivered"),
+    ]
+    # Delivery of the alert to the assignee's Telegram; blank when there is no assignee.
+    telegram_status = models.CharField(max_length=16, choices=TELEGRAM_STATUS_CHOICES, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
