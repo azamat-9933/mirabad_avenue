@@ -417,7 +417,12 @@
         "Remove Uylar by selecting them and then select the \"Remove\" arrow button.": { en: "Remove buildings by selecting them and then clicking the \"Remove\" arrow button.", ru: "Выберите дома и затем нажмите кнопку-стрелку «Убрать».", uz: "Uylarni tanlab, so'ng \"Olib tashlash\" strelka tugmasini bosing." },
         "Hold down “Control”, or “Command” on a Mac, to select more than one.": { en: "Hold down “Control”, or “Command” on a Mac, to select more than one.", ru: "Удерживайте «Control», или «Command» на Mac, чтобы выбрать несколько элементов.", uz: "Bir nechta element tanlash uchun «Control» yoki Mac’da «Command» tugmasini bosib turing." },
         "Hold down 'Control', or 'Command' on a Mac, to select more than one.": { en: "Hold down 'Control', or 'Command' on a Mac, to select more than one.", ru: "Удерживайте 'Control', или 'Command' на Mac, чтобы выбрать несколько элементов.", uz: "Bir nechta element tanlash uchun 'Control' yoki Mac’da 'Command' tugmasini bosib turing." },
+        // Billing period state messages, shown after "<period name>: " (see translatePattern).
+        "davr yopildi, hisoblar yaratildi.": { en: "period closed, charges created.", ru: "период закрыт, начисления созданы.", uz: "davr yopildi, hisoblar yaratildi." },
+        "davr qayta ochildi.": { en: "period reopened.", ru: "период снова открыт.", uz: "davr qayta ochildi." },
+        "yopiq davrni faqat administrator ochishi mumkin.": { en: "only an administrator can reopen a closed period.", ru: "закрытый период может открыть только администратор.", uz: "yopiq davrni faqat administrator ochishi mumkin." },
     };
+    const PERIOD_STATE_MESSAGES = new Set(["davr yopildi, hisoblar yaratildi.", "davr qayta ochildi.", "yopiq davrni faqat administrator ochishi mumkin."]);
 
     const aliases = new Map();
     const normalize = (value) => String(value || "").replace(/\s+/g, " ").trim();
@@ -561,6 +566,10 @@
             if (lang === "ru") return `${countGeneric[1]} шт.`;
             return `${countGeneric[1]} ta`;
         }
+        const periodStateMatch = text.match(/^(.+?):\s+(.+)$/);
+        if (periodStateMatch && PERIOD_STATE_MESSAGES.has(aliases.get(aliasKey(periodStateMatch[2])))) {
+            return `${periodStateMatch[1]}: ${translateExact(periodStateMatch[2], lang)}`;
+        }
         return null;
     };
 
@@ -703,6 +712,44 @@
         input.addEventListener("input", () => formatBalance(input.value));
         input.addEventListener("change", () => formatBalance(input.value));
         formatBalance(input.value);
+    };
+
+    // 1234567,5 -> "1 234 567,5": the server's SpacedNumberInput shows numbers this way and accepts it back.
+    const groupThousands = (raw) => {
+        const compact = String(raw || "").replace(/[\s  ]/g, "");
+        const negative = compact.startsWith("-");
+        const text = compact.replace(/[^\d.,]/g, "");
+        const separator = text.search(/[.,]/);
+        // Leading zeros stay: deleting the first digit of "1 000" to retype it must not collapse it to "0".
+        const integer = separator === -1 ? text : text.slice(0, separator);
+        const fraction = separator === -1 ? null : text.slice(separator + 1).replace(/[.,]/g, "");
+        const grouped = integer.replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+        return `${negative ? "-" : ""}${grouped}${fraction === null ? "" : `,${fraction}`}`;
+    };
+
+    const formatThousandsInput = (input) => {
+        const { value } = input;
+        const formatted = groupThousands(value);
+        if (formatted === value) return;
+        // Keep the caret after the same digit it followed before the spaces moved.
+        const caret = input.selectionStart ?? value.length;
+        const digitsBefore = value.slice(0, caret).replace(/[\s  ]/g, "").length;
+        let position = 0;
+        for (let seen = 0; position < formatted.length && seen < digitsBefore; position += 1) {
+            if (formatted[position] !== " ") seen += 1;
+        }
+        input.value = formatted;
+        input.setSelectionRange(position, position);
+    };
+
+    const bindThousandsInputs = () => {
+        if (document.documentElement.dataset.thousandsBound === "true") return;
+        document.documentElement.dataset.thousandsBound = "true";
+        // Delegated, so inline rows added with "Add another" are grouped too.
+        document.addEventListener("input", (event) => {
+            const input = event.target;
+            if (input instanceof HTMLInputElement && input.dataset.thousands === "true") formatThousandsInput(input);
+        });
     };
 
     const translateBillingPeriodSelectorWidget = (lang = selectedLanguage()) => {
@@ -865,6 +912,7 @@
         initOwnerApartmentFilters();
         bindAdminActionSubmit();
         initOwnerBalancePreview();
+        bindThousandsInputs();
         translatePage(selectedLanguage());
         if ("MutationObserver" in window) {
             let scheduled = false;

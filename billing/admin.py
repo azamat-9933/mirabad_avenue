@@ -1,9 +1,9 @@
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 
+from django import forms
 from django.contrib import admin, messages
 from django.core.exceptions import ValidationError
-from django.db import transaction
-from django.db.models import Sum, Count
+from django.db import models, transaction
 from django.urls import reverse
 from django.utils.html import format_html, format_html_join
 
@@ -28,11 +28,67 @@ def admin_number(value, places=0):
     return format(value or 0, f",.{places}f")
 
 
+def group_thousands(number: Decimal) -> str:
+    """1234567.5 -> "1 234 567,5": digits in groups of three, a decimal comma only when needed."""
+    sign = "-" if number < 0 else ""
+    integer, _, fraction = f"{abs(number):f}".partition(".")
+    fraction = fraction.rstrip("0")
+    grouped = f"{int(integer):,}".replace(",", " ")
+    return f"{sign}{grouped}{',' + fraction if fraction else ''}"
+
+
+class SpacedNumberInput(forms.TextInput):
+    """A number shown in groups of three (1 000 000); admin_custom.js keeps grouping while typing."""
+
+    def __init__(self, attrs=None):
+        super().__init__({"inputmode": "decimal", "autocomplete": "off", "data-thousands": "true", **(attrs or {})})
+
+    def format_value(self, value):
+        if value in (None, ""):
+            return None
+        try:
+            return group_thousands(Decimal(str(value).replace(" ", "").replace("\xa0", "").replace(",", ".")))
+        except InvalidOperation:
+            return str(value)
+
+
+class SpacedDecimalField(forms.DecimalField):
+    """Accepts what SpacedNumberInput shows: spaces between groups, a decimal comma or point."""
+
+    widget = SpacedNumberInput
+
+    def to_python(self, value):
+        if isinstance(value, str):
+            value = value.replace(" ", "").replace("\xa0", "").replace(" ", "").replace(",", ".")
+        return super().to_python(value)
+
+
+# Money and meter readings are typed as 1 000 000 instead of 1000000.
+SPACED_DECIMALS = {models.DecimalField: {"form_class": SpacedDecimalField}}
+
+
+def period_is_closed(period) -> bool:
+    return bool(period and period.pk and period.status == BillingPeriod.STATUS_CLOSED)
+
+
 # ══════════════════════════════════════════════════════
 #  INLINES  (BillingPeriod ichiga joylashadi)
 # ══════════════════════════════════════════════════════
 
-class ExpenseInline(admin.TabularInline):
+class ClosedPeriodReadOnlyInline:
+    """A closed period's inputs are already billed: they are read-only until the period is reopened."""
+
+    def has_add_permission(self, request, obj=None):
+        return not period_is_closed(obj) and super().has_add_permission(request, obj)
+
+    def has_change_permission(self, request, obj=None):
+        return not period_is_closed(obj) and super().has_change_permission(request, obj)
+
+    def has_delete_permission(self, request, obj=None):
+        return not period_is_closed(obj) and super().has_delete_permission(request, obj)
+
+
+class ExpenseInline(ClosedPeriodReadOnlyInline, admin.TabularInline):
     """
     Davr ichida xarajatlarni to'g\'ridan-to\'g'ri kiritish:
       Qozonxona xizmati, Gaz sarfi, Sovuq suv sarfi...
@@ -40,14 +96,15 @@ class ExpenseInline(admin.TabularInline):
     model   = Expense
     extra   = 1
     fields  = ("building", "service_type", "name", "amount")
+    formfield_overrides = SPACED_DECIMALS
     verbose_name        = "Xarajat"
     verbose_name_plural = "Xarajatlar"
 
 
-class GasMeterReadingInline(admin.TabularInline):
+class GasMeterReadingInline(ClosedPeriodReadOnlyInline, admin.TabularInline):
     """
     Gaz hisoblagich ko'rsatkichlari — davr ichida uy/seksiya bo'yicha.
-    Kiritgandan keyin consumption va cost avtomatik ko'rsatiladi.
+    Narxi (iste'mol × 1 kub narxi) davr yopilganda xizmat xarajatiga qo'shiladi.
     """
     model   = GasMeterReading
     extra   = 1
@@ -56,8 +113,32 @@ class GasMeterReadingInline(admin.TabularInline):
         "start_reading", "end_reading", "price_per_m3",
     )
     readonly_fields = ()
+    formfield_overrides = SPACED_DECIMALS
     verbose_name        = "Gaz hisoblagich"
     verbose_name_plural = "Gaz hisoblagichlar"
+
+
+class BillingPeriodAdminForm(forms.ModelForm):
+    """The period's state as the operator sees it: open (draft or reopened) or closed.
+
+    Choosing "closed" closes the period on save (charges posted; a reopened period is recalculated),
+    after its expenses and gas meters are saved; choosing "open" for a closed period reopens it,
+    which only a superuser may do.
+    """
+
+    STATE_OPEN = "open"
+    STATE_CLOSED = "closed"
+    # Optional: a read-only page does not send it, and no state keeps the current one.
+    state = forms.ChoiceField(label="Holat", choices=[(STATE_OPEN, "Ochiq"), (STATE_CLOSED, "Yopiq")], required=False)
+
+    class Meta:
+        model = BillingPeriod
+        exclude = ("status",)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if "state" in self.fields:
+            self.fields["state"].initial = self.STATE_CLOSED if period_is_closed(self.instance) else self.STATE_OPEN
 
 
 @admin.register(BillingPeriod)
@@ -75,9 +156,10 @@ class BillingPeriodAdmin(admin.ModelAdmin):
     list_filter   = ("status",)
     search_fields = ("name",)
     filter_horizontal = ("buildings",)
-    # Status changes only through the close/reopen actions: editing it here would mark a period
-    # closed without posting its charges, or strand a reopened period's charges.
-    readonly_fields   = ("created_at", "closed_at", "total_days", "status")
+    form = BillingPeriodAdminForm
+    # The status is set through "Holat" (open/closed), which closes or reopens the period properly;
+    # the raw status field would mark a period closed without posting its charges.
+    readonly_fields   = ("created_at", "closed_at", "total_days", "state_display")
     inlines           = [ExpenseInline, GasMeterReadingInline]
     actions           = ["action_close_period", "action_reopen_period"]
 
@@ -87,7 +169,7 @@ class BillingPeriodAdmin(admin.ModelAdmin):
             {
                 "fields": (
                     "name", "start_date", "end_date",
-                    "total_days", "status",
+                    "total_days", "state",
                 )
             },
         ),
@@ -107,11 +189,52 @@ class BillingPeriodAdmin(admin.ModelAdmin):
         ),
     )
 
-    # ── Kastom kolonkalar ───────────────────────────
+    # ── Holat (ochiq / yopiq) ───────────────────────
+
+    def has_change_permission(self, request, obj=None):
+        # A closed period is already billed: only an administrator (superuser) may reopen it,
+        # everyone else sees it read-only.
+        if period_is_closed(obj) and not request.user.is_superuser:
+            return False
+        return super().has_change_permission(request, obj)
+
+    def get_fieldsets(self, request, obj=None):
+        fieldsets = super().get_fieldsets(request, obj)
+        if obj is None or self.has_change_permission(request, obj):
+            return fieldsets
+        # Read-only page: "state" is a form field, so the period's state is shown through state_display.
+        return tuple(
+            (name, {**options, "fields": tuple("state_display" if field == "state" else field for field in options["fields"])})
+            for name, options in fieldsets
+        )
+
+    def get_readonly_fields(self, request, obj=None):
+        readonly = super().get_readonly_fields(request, obj)
+        if period_is_closed(obj):
+            # Only the state changes on a closed period: reopen it to edit its data, then close it again.
+            readonly = (*readonly, "name", "start_date", "end_date", "buildings")
+        return readonly
+
+    def get_actions(self, request):
+        actions = super().get_actions(request)
+        if not request.user.is_superuser:
+            actions.pop("action_reopen_period", None)
+        return actions
+
+    @admin.display(description="Holat")
+    def state_display(self, obj):
+        return "Yopiq" if period_is_closed(obj) else "Ochiq"
 
     def save_related(self, request, form, formsets, change):
+        # Expenses and gas meters are saved first, so closing the period bills them too.
         super().save_related(request, form, formsets, change)
-        created = form.instance.sync_default_records()
+        period = form.instance
+        target = form.cleaned_data.get("state")
+        if period_is_closed(period):
+            if target == BillingPeriodAdminForm.STATE_OPEN and self._reopen(request, period, "admin_billing_period_form"):
+                self.message_user(request, f"{period.name}: davr qayta ochildi.", messages.WARNING)
+            return
+        created = period.sync_default_records()
         total_created = created["heating_created"] + created["hot_water_created"]
         if total_created:
             self.message_user(
@@ -123,6 +246,63 @@ class BillingPeriodAdmin(admin.ModelAdmin):
                 ),
                 messages.INFO,
             )
+        if target == BillingPeriodAdminForm.STATE_CLOSED and self._close(request, period, "admin_billing_period_form"):
+            self.message_user(request, f"{period.name}: davr yopildi, hisoblar yaratildi.", messages.SUCCESS)
+
+    def _close(self, request, period, source) -> bool:
+        """Close a draft period, or recalculate a reopened one; on an error nothing is billed."""
+        was_reopened = period.status == BillingPeriod.STATUS_REOPENED
+        try:
+            with transaction.atomic():
+                # A reopened period is recalculated, which closes it again with delta postings.
+                charges = period.close_or_recalculate(author=request.user)
+                total = sum((charge.amount for charge in charges), Decimal("0"))
+                record_event(
+                    request,
+                    event_type=AuditEvent.TYPE_BILLING,
+                    title="Billing period recalculated" if was_reopened else "Billing period closed",
+                    message=(
+                        f"Period {period.title} was {'recalculated and closed' if was_reopened else 'closed'} "
+                        f"in admin: {len(charges)} charges, {total} UZS."
+                    ),
+                    metadata={
+                        "source": source,
+                        "periodId": period.id,
+                        "fromStatus": BillingPeriod.STATUS_REOPENED if was_reopened else BillingPeriod.STATUS_DRAFT,
+                        "toStatus": BillingPeriod.STATUS_CLOSED,
+                        "chargeCount": len(charges),
+                        "chargeTotal": str(total),
+                    },
+                )
+        except ValidationError as exc:
+            period.refresh_from_db(fields=["status", "closed_at"])
+            self.message_user(request, f"{period.name}: {' '.join(exc.messages)}", messages.ERROR)
+            return False
+        return True
+
+    def _reopen(self, request, period, source) -> bool:
+        if not request.user.is_superuser:
+            self.message_user(request, f"{period.name}: yopiq davrni faqat administrator ochishi mumkin.", messages.ERROR)
+            return False
+        try:
+            with transaction.atomic():
+                period.reopen_period()
+                record_event(
+                    request,
+                    event_type=AuditEvent.TYPE_BILLING,
+                    title="Billing period reopened",
+                    message=f"Period {period.title} was reopened in admin.",
+                    metadata={
+                        "source": source,
+                        "periodId": period.id,
+                        "fromStatus": BillingPeriod.STATUS_CLOSED,
+                        "toStatus": BillingPeriod.STATUS_REOPENED,
+                    },
+                )
+        except ValidationError as exc:
+            self.message_user(request, f"{period.name}: {' '.join(exc.messages)}", messages.ERROR)
+            return False
+        return True
 
     @admin.display(description="Holat")
     def status_badge(self, obj):
@@ -158,9 +338,9 @@ class BillingPeriodAdmin(admin.ModelAdmin):
 
     @admin.display(description="Umumiy xarajatlar (so'm)")
     def total_expenses_display(self, obj):
-        total = obj.expenses.aggregate(s=Sum("amount"))["s"] or 0
+        # Gas meters count too: their cost is part of what closing spreads over the residents.
         return format_html(
-            '<span style="font-weight:600;">{} so\'m</span>', admin_number(total)
+            '<span style="font-weight:600;">{} so\'m</span>', admin_number(obj.total_expenses())
         )
 
     # ── Deystviya ────────────────────────────────────
@@ -170,33 +350,10 @@ class BillingPeriodAdmin(admin.ModelAdmin):
         closed_count = 0
         errors_count = 0
         for period in queryset:
-            try:
-                was_reopened = period.status == BillingPeriod.STATUS_REOPENED
-                with transaction.atomic():
-                    # A reopened period is recalculated, which closes it again with delta postings.
-                    charges = period.close_or_recalculate(author=request.user)
-                    total = sum((charge.amount for charge in charges), Decimal("0"))
-                    record_event(
-                        request,
-                        event_type=AuditEvent.TYPE_BILLING,
-                        title="Billing period recalculated" if was_reopened else "Billing period closed",
-                        message=(
-                            f"Period {period.title} was {'recalculated and closed' if was_reopened else 'closed'} "
-                            f"in admin: {len(charges)} charges, {total} UZS."
-                        ),
-                        metadata={
-                            "source": "admin_billing_period_action",
-                            "periodId": period.id,
-                            "fromStatus": BillingPeriod.STATUS_REOPENED if was_reopened else BillingPeriod.STATUS_DRAFT,
-                            "toStatus": BillingPeriod.STATUS_CLOSED,
-                            "chargeCount": len(charges),
-                            "chargeTotal": str(total),
-                        },
-                    )
+            if self._close(request, period, "admin_billing_period_action"):
                 closed_count += 1
-            except ValidationError as exc:
+            else:
                 errors_count += 1
-                self.message_user(request, f"{period.name}: {exc}", messages.ERROR)
         if closed_count:
             self.message_user(
                 request,
@@ -208,26 +365,7 @@ class BillingPeriodAdmin(admin.ModelAdmin):
 
     @admin.action(description="↺ Tanlangan davrlarni OChISh (pereraschyot uchun)")
     def action_reopen_period(self, request, queryset):
-        reopened_count = 0
-        for period in queryset:
-            try:
-                with transaction.atomic():
-                    period.reopen_period()
-                    record_event(
-                        request,
-                        event_type=AuditEvent.TYPE_BILLING,
-                        title="Billing period reopened",
-                        message=f"Period {period.title} was reopened in admin.",
-                        metadata={
-                            "source": "admin_billing_period_action",
-                            "periodId": period.id,
-                            "fromStatus": BillingPeriod.STATUS_CLOSED,
-                            "toStatus": BillingPeriod.STATUS_REOPENED,
-                        },
-                    )
-                reopened_count += 1
-            except ValidationError as exc:
-                self.message_user(request, f"{period.name}: {exc}", messages.ERROR)
+        reopened_count = sum(1 for period in queryset if self._reopen(request, period, "admin_billing_period_action"))
         if reopened_count:
             self.message_user(
                 request,
@@ -251,6 +389,7 @@ class ExpenseAdmin(admin.ModelAdmin):
     search_fields = ("name", "building__number", "period__name")
     readonly_fields = ()
     exclude = ("section",)
+    formfield_overrides = SPACED_DECIMALS
 
     def get_queryset(self, request):
         return super().get_queryset(request).select_related(
@@ -294,6 +433,7 @@ class GasMeterReadingAdmin(admin.ModelAdmin):
     search_fields = ("building__number", "period__name")
     readonly_fields = ("consumption_display", "total_gas_cost_display")
     exclude = ("section",)
+    formfield_overrides = SPACED_DECIMALS
 
     def get_queryset(self, request):
         return super().get_queryset(request).select_related(

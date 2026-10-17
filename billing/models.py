@@ -233,6 +233,27 @@ class BillingPeriod(models.Model):
         legacy_expenses = defaultdict(list)
         for expense in self.expenses.select_related("building").all():
             legacy_expenses[(expense.building_id, expense.service_type)].append(expense)
+        # Gas meters are costs of their service too: consumption × price per m³.
+        legacy_gas = defaultdict(list)
+        for reading in self.gas_meter_readings.all():
+            legacy_gas[(reading.building_id, reading.service_type)].append(reading)
+
+        def sync_expense_items(service, key, default_title):
+            items = [
+                ServiceExpense(service=service, title=(expense.name or default_title)[:255], amount=money(expense.amount))
+                for expense in legacy_expenses.get(key, [])
+            ] + [
+                ServiceExpense(
+                    service=service,
+                    title=f"Gaz hisoblagich: {reading.consumption} m³ × {reading.price_per_m3}"[:255],
+                    amount=money(reading.total_gas_cost),
+                )
+                for reading in legacy_gas.get(key, [])
+            ]
+            if items:
+                service.expense_items.all().delete()
+                ServiceExpense.objects.bulk_create(items)
+
         existing_services = set(
             self.services.values_list("building_id", "service_type")
         )
@@ -244,11 +265,13 @@ class BillingPeriod(models.Model):
             has_hot_water_records = any(apartment.id in hot_water_records for apartment in apartment_rows)
             heating_needed = bool(
                 legacy_expenses.get((building_id, SERVICE_HEATING))
+                or legacy_gas.get((building_id, SERVICE_HEATING))
                 or has_heating_overrides
                 or (building_id, SERVICE_HEATING) in existing_services
             )
             hot_water_needed = bool(
                 legacy_expenses.get((building_id, SERVICE_HOT_WATER))
+                or legacy_gas.get((building_id, SERVICE_HOT_WATER))
                 or has_hot_water_records
                 or (building_id, SERVICE_HOT_WATER) in existing_services
             )
@@ -264,19 +287,7 @@ class BillingPeriod(models.Model):
                 else:
                     updated_services += 1
 
-                expenses = legacy_expenses.get((building_id, SERVICE_HEATING), [])
-                if expenses:
-                    service.expense_items.all().delete()
-                    ServiceExpense.objects.bulk_create(
-                        [
-                            ServiceExpense(
-                                service=service,
-                                title=(expense.name or "Heating expense")[:255],
-                                amount=money(expense.amount),
-                            )
-                            for expense in expenses
-                        ]
-                    )
+                sync_expense_items(service, (building_id, SERVICE_HEATING), "Heating expense")
 
                 for apartment in apartment_rows:
                     record = heating_records.get(apartment.id)
@@ -302,19 +313,7 @@ class BillingPeriod(models.Model):
                 else:
                     updated_services += 1
 
-                expenses = legacy_expenses.get((building_id, SERVICE_HOT_WATER), [])
-                if expenses:
-                    service.expense_items.all().delete()
-                    ServiceExpense.objects.bulk_create(
-                        [
-                            ServiceExpense(
-                                service=service,
-                                title=(expense.name or "Hot water expense")[:255],
-                                amount=money(expense.amount),
-                            )
-                            for expense in expenses
-                        ]
-                    )
+                sync_expense_items(service, (building_id, SERVICE_HOT_WATER), "Hot water expense")
 
                 for apartment in apartment_rows:
                     reading = hot_water_records.get(apartment.id)
@@ -456,6 +455,19 @@ class BillingPeriod(models.Model):
                 apartment = reading.apartment
                 owner = getattr(apartment, "owner", None)
                 yield owner, apartment, reading.consumption, service.tariff, money(reading.consumption * service.tariff)
+
+    def expense_totals(self) -> dict:
+        """Costs per (building id, service type): the expense rows plus the gas meters' cost."""
+        totals = defaultdict(lambda: Decimal("0"))
+        for building_id, service_type, amount in self.expenses.values_list("building_id", "service_type", "amount"):
+            totals[(building_id, service_type)] += amount or Decimal("0")
+        for reading in self.gas_meter_readings.all():
+            totals[(reading.building_id, reading.service_type)] += reading.total_gas_cost
+        return {key: money(value) for key, value in totals.items()}
+
+    def total_expenses(self) -> Decimal:
+        """All costs of the period, gas meters included (what closing spreads over the residents)."""
+        return money(sum(self.expense_totals().values(), Decimal("0")))
 
     def close_period(self):
         with transaction.atomic():

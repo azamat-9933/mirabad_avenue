@@ -28,7 +28,15 @@ from drf_spectacular.utils import extend_schema
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 
-from billing.models import BillingPeriod, Charge, Expense, HeatingApartmentUsage, HeatingRecord, Invoice
+from billing.models import (
+    BillingPeriod,
+    Charge,
+    Expense,
+    GasMeterReading,
+    HeatingApartmentUsage,
+    HeatingRecord,
+    Invoice,
+)
 from properties.models import Apartment, Building, Complex, Owner
 from payments.models import Transaction
 from payments.services import apply_balance_change, incoming_payment_q
@@ -425,6 +433,9 @@ class BillingPeriodCreateView(PortalPageView):
         expense_totals = defaultdict(Decimal)
         for expense in expenses:
             expense_totals[(expense.period_id, expense.building_id, expense.service_type)] += expense.amount or Decimal("0")
+        # Gas meters are costs of their service too (consumption × price), as when the period closes.
+        for reading in GasMeterReading.objects.all():
+            expense_totals[(reading.period_id, reading.building_id, reading.service_type)] += reading.total_gas_cost
 
         # One grouped query each instead of two COUNT queries per (building, period) row.
         charge_counts = (
