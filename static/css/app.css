@@ -22005,3 +22005,190 @@ html.dark .profile-telegram-disconnect,
     -webkit-appearance: none;
     display: none;
 }
+
+/* ---- Payment notice window: debtor search dropdown and the chosen debtor -------------------- */
+
+/* A fixed height: typing in the search or switching debtors never resizes the window. */
+.billing-notice-panel {
+    height: min(calc(100dvh - 2rem), 900px);
+}
+
+.billing-notice-results {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    right: 0;
+    z-index: 30;
+    display: grid;
+    gap: 6px;
+    max-height: min(52vh, 420px);
+    overflow-y: auto;
+    padding: 8px;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    border-radius: 18px;
+    background: #FFFFFF;
+    box-shadow: 0 24px 48px rgba(15, 23, 42, 0.16);
+}
+
+.billing-notice-results.hidden {
+    display: none;
+}
+
+.billing-notice-result {
+    display: grid;
+    grid-template-columns: 36px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid rgba(15, 23, 42, 0.06);
+    border-radius: 14px;
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.96), rgba(244, 249, 255, 0.9));
+    text-align: left;
+    transition: background 0.14s ease, border-color 0.14s ease;
+}
+
+.billing-notice-result:hover,
+.billing-notice-result.is-active {
+    border-color: rgba(59, 130, 246, 0.35);
+    background: rgba(239, 246, 255, 0.95);
+}
+
+.billing-notice-result-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 11px;
+    background: rgba(239, 246, 255, 0.96);
+    color: #4F8EF7;
+    font-size: 19px;
+}
+
+.billing-notice-result-copy {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+}
+
+.billing-notice-result-copy strong {
+    overflow: hidden;
+    color: #111827;
+    font-size: 14px;
+    font-weight: 850;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.billing-notice-result-copy small {
+    color: #64748B;
+    font-size: 11px;
+    font-weight: 750;
+}
+
+.billing-notice-result-debt {
+    color: #DC2626;
+    font-size: 14px;
+    font-weight: 900;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.billing-notice-result-empty {
+    padding: 14px 12px;
+    color: #64748B;
+    font-size: 13px;
+    font-weight: 700;
+    text-align: center;
+}
+
+.billing-notice-selected {
+    align-self: start;
+}
+
+.billing-notice-selected-card {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 16px 18px;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    border-radius: 20px;
+    background: #EEF4F6;
+}
+
+.billing-notice-selected-empty {
+    display: grid;
+    justify-items: center;
+    gap: 6px;
+    padding: 28px 18px;
+    border: 1px dashed rgba(148, 163, 184, 0.5);
+    border-radius: 20px;
+    color: #64748B;
+    text-align: center;
+}
+
+.billing-notice-selected-empty .material-symbols-outlined {
+    font-size: 30px;
+}
+
+.billing-notice-selected-empty p {
+    margin: 0;
+    color: #1E293B;
+    font-size: 14px;
+    font-weight: 850;
+}
+
+.billing-notice-selected-empty small {
+    font-size: 12px;
+    font-weight: 650;
+    line-height: 1.45;
+}
+
+.billing-notice-placeholder {
+    padding: 32px 0;
+    color: #64748B;
+    font-size: 14px;
+    font-weight: 700;
+    text-align: center;
+}
+
+[data-billing-notice-pdf]:disabled,
+[data-billing-notice-telegram]:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+html.dark .billing-notice-results,
+[data-theme="dark"] .billing-notice-results {
+    border-color: rgba(116, 139, 170, 0.18);
+    background: #151C28;
+}
+
+html.dark .billing-notice-result,
+[data-theme="dark"] .billing-notice-result {
+    border-color: rgba(116, 139, 170, 0.14);
+    background: rgba(19, 26, 38, 0.9);
+}
+
+html.dark .billing-notice-result:hover,
+html.dark .billing-notice-result.is-active,
+[data-theme="dark"] .billing-notice-result:hover,
+[data-theme="dark"] .billing-notice-result.is-active {
+    border-color: rgba(96, 165, 250, 0.4);
+    background: rgba(30, 41, 59, 0.95);
+}
+
+html.dark .billing-notice-result-copy strong,
+html.dark .billing-notice-selected-empty p,
+[data-theme="dark"] .billing-notice-result-copy strong,
+[data-theme="dark"] .billing-notice-selected-empty p {
+    color: #E2E8F0;
+}
+
+html.dark .billing-notice-selected-card,
+[data-theme="dark"] .billing-notice-selected-card {
+    border-color: rgba(116, 139, 170, 0.18);
+    background: rgba(30, 41, 59, 0.7);
+}

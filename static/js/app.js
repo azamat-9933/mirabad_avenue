@@ -454,6 +454,12 @@
         "Payment channels": { ru: "Каналы оплаты", uz: "To'lov kanallari" },
         // Statistics: payments without a known channel (manual top-ups).
         "Other": { ru: "Прочее", uz: "Boshqa" },
+        // Payment notice window: the debtor search and the chosen debtor.
+        "Search debtors...": { ru: "Поиск должников...", uz: "Qarzdorlarni qidirish..." },
+        "Choose a debtor": { ru: "Выберите должника", uz: "Qarzdorni tanlang" },
+        "Search by name, house, apartment or phone, then pick the debtor.": { ru: "Найдите по имени, дому, квартире или телефону и выберите должника.", uz: "Ism, uy, kvartira yoki telefon bo'yicha qidiring va qarzdorni tanlang." },
+        "No debtor found": { ru: "Должник не найден", uz: "Qarzdor topilmadi" },
+        "The notice appears here once a debtor is chosen.": { ru: "Уведомление появится здесь, когда будет выбран должник.", uz: "Qarzdor tanlangach, xabarnoma shu yerda ko'rinadi." },
         // Statistics: the debtors list behind the "Debtors" card.
         "No debtors": { ru: "Должников нет", uz: "Qarzdorlar yo'q" },
         "Loading...": { ru: "Загрузка...", uz: "Yuklanmoqda..." },
@@ -6699,74 +6705,32 @@
         });
     };
 
+    // The payment notice window. It is about one debtor at a time: the operator finds them with the
+    // search (a dropdown of debtors only: ID, name, house, apartment, debt) or the window is opened
+    // for a resident (their profile, "Send reminder"). The left column shows that debtor and the
+    // right one the notice the server builds for them; the panel keeps its size whatever is typed.
     const setupBillingNoticeQuickAction = () => {
         const modal = document.getElementById("billing-notice-modal");
         if (!modal || modal.dataset.ready === "true") return;
         modal.dataset.ready = "true";
-        const ensureBillingNoticeLayout = () => {
-            const body = modal.querySelector(".px-8.py-6");
-            if (body && !modal.querySelector("[data-billing-notice-search]")) {
-                const toolbar = document.createElement("div");
-                toolbar.dataset.billingNoticeToolbar = "true";
-                toolbar.className = "flex flex-col lg:flex-row gap-3 lg:items-center lg:justify-between mb-4";
-                toolbar.innerHTML = `
-                    <div class="flex-1 max-w-xl">
-                        <label class="relative block">
-                            <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]">search</span>
-                            <input class="w-full h-12 rounded-2xl border border-outline-variant/20 bg-surface-container-lowest pl-12 pr-12 text-sm text-on-surface placeholder:text-on-surface-variant/70 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30" data-billing-notice-search placeholder="Search residents..." type="search"/>
-                            <button aria-label="Clear debtor search" class="absolute right-3 top-1/2 -translate-y-1/2 hidden h-8 w-8 rounded-full bg-surface-container text-on-surface-variant transition-colors hover:text-on-surface" data-billing-notice-search-clear type="button">
-                                <span class="material-symbols-outlined text-[18px]">close</span>
-                            </button>
-                        </label>
-                    </div>
-                    <div class="inline-flex flex-wrap items-center gap-2 rounded-2xl border border-outline-variant/15 bg-surface-container-lowest px-3 py-2" data-billing-notice-filter-group>
-                        <span class="text-[11px] font-black uppercase tracking-[0.18em] text-on-surface-variant" data-i18n-key="Balance order">Balance order</span>
-                        <button class="px-4 py-2 rounded-xl text-xs font-black tracking-[0.12em] uppercase bg-primary/10 text-primary inline-flex items-center gap-2" data-billing-notice-sort type="button">
-                            <span class="material-symbols-outlined text-[16px]">swap_vert</span>
-                            <span data-billing-notice-sort-label>Largest first</span>
-                        </button>
-                        <span class="ml-1 rounded-full border border-outline-variant/20 px-3 py-1 text-[11px] font-black uppercase tracking-[0.12em] text-on-surface-variant" data-billing-notice-count>0 shown</span>
-                    </div>
-                `;
-                const grid = body.querySelector(".grid");
-                if (grid) {
-                    body.insertBefore(toolbar, grid);
-                } else {
-                    body.prepend(toolbar);
-                }
-            }
-
-            if (!modal.querySelector("[data-billing-notice-pdf]") || !modal.querySelector("[data-billing-notice-telegram]")) {
-                const panel = modal.querySelector(".modal-panel");
-                if (panel) {
-                    const footer = document.createElement("div");
-                    footer.dataset.billingNoticeFooter = "true";
-                    footer.className = "px-8 py-5 border-t border-surface-container flex justify-end gap-3 bg-surface-container-lowest";
-                    footer.innerHTML = `
-                        <button class="px-5 py-3 rounded-xl bg-surface-container text-sm font-bold text-on-surface" data-close-overlay type="button" data-i18n-key="Close">Close</button>
-                        <button class="px-5 py-3 rounded-xl bg-surface-container text-sm font-bold text-on-surface" data-billing-notice-pdf type="button" data-i18n-key="Download PDF">Download PDF</button>
-                        <button class="px-5 py-3 rounded-xl bg-primary text-sm font-bold text-white" data-billing-notice-telegram type="button" data-i18n-key="Notify in Telegram">Notify in Telegram</button>
-                    `;
-                    panel.appendChild(footer);
-                }
-            }
-        };
-
-        ensureBillingNoticeLayout();
         const langButtons = Array.from(modal.querySelectorAll("[data-billing-notice-lang]"));
+        const searchBox = modal.querySelector("[data-billing-notice-search-box]");
         const searchInput = modal.querySelector("[data-billing-notice-search]");
         const searchClear = modal.querySelector("[data-billing-notice-search-clear]");
+        const resultsNode = modal.querySelector("[data-billing-notice-results]");
         const sortButton = modal.querySelector("[data-billing-notice-sort]");
         const sortLabel = modal.querySelector("[data-billing-notice-sort-label]");
         const countNode = modal.querySelector("[data-billing-notice-count]");
-        const listNode = modal.querySelector("[data-billing-notice-list]");
-        const emptyNode = modal.querySelector("[data-billing-notice-empty]");
+        const selectedNode = modal.querySelector("[data-billing-notice-selected]");
         const pdfButton = modal.querySelector("[data-billing-notice-pdf]");
         const telegramButton = modal.querySelector("[data-billing-notice-telegram]");
         let activeLang = "uz";
         let activeSort = "desc";
         let activeResidentId = "";
         let noticeResidents = [];
+        let loading = false;
+        let resultRows = [];
+        let highlighted = -1;
 
         const debtValue = (resident) => {
             const value = Number(resident?.balance ?? 0);
@@ -6802,17 +6766,6 @@
             Boolean(resident?.ownerBackendId) && debtValue(resident) > 0
         ));
 
-        const renderLoading = () => {
-            if (!listNode) return;
-            listNode.innerHTML = `
-                <div class="px-5 py-8 text-sm font-bold text-on-surface-variant">
-                    ${escapeHtml(t("Loading residents..."))}
-                </div>
-            `;
-            emptyNode?.classList.add("hidden");
-            if (countNode) countNode.textContent = `0 ${t("shown")}`;
-        };
-
         const refreshBillingNoticeData = async () => {
             try {
                 const response = await fetch("/api/portal-data/", {
@@ -6833,29 +6786,18 @@
         };
 
         const sortNoticeResidents = (rows) => {
-            const sorted = rows.slice();
-            if (activeSort === "asc") {
-                sorted.sort((a, b) => {
-                    const byDebt = debtValue(a) - debtValue(b);
-                    return byDebt || String(a.name || "").localeCompare(String(b.name || ""));
-                });
-                return sorted;
-            }
-            sorted.sort((a, b) => {
-                const byDebt = debtValue(b) - debtValue(a);
-                return byDebt || String(a.name || "").localeCompare(String(b.name || ""));
-            });
-            return sorted;
+            const direction = activeSort === "asc" ? 1 : -1;
+            return rows.slice().sort((a, b) => (
+                direction * (debtValue(a) - debtValue(b)) || String(a.name || "").localeCompare(String(b.name || ""))
+            ));
         };
 
         // A query is a phone (3+ digits, any formatting: "90 205", "+998-90") or words that each
         // match the name, the house (from its start: "64" finds 64A), the apartment (exactly: "64A 2"
-        // is apartment 2 of house 64A) or the Telegram username. The selected resident is not kept
-        // when it does not match, otherwise the list never narrowed and the search looked broken.
-        // Names are stored in Latin, but operators often type in Cyrillic ("Мух" for Muhammad) or
-        // with the other spelling. Both sides are compared as a loose Latin key: Cyrillic is
-        // transliterated, apostrophes dropped, and letters Russian and Uzbek spell differently
-        // merged (х/ҳ/x → h, қ/q → k), so "Мух", "Муҳ" and "Muh" find the same resident.
+        // is apartment 2 of house 64A) or the Telegram username. Names are stored in Latin, but
+        // operators often type in Cyrillic ("Мух" for Muhammad) or with the other spelling, so both
+        // sides are compared as a loose Latin key: Cyrillic transliterated, apostrophes dropped, and
+        // letters Russian and Uzbek spell differently merged (х/ҳ/x → h, қ/q → k).
         const cyrillicToLatin = {
             а: "a", б: "b", в: "v", г: "g", ғ: "g", д: "d", е: "e", ё: "yo", ж: "j", з: "z", и: "i",
             й: "y", к: "k", қ: "k", л: "l", м: "m", н: "n", о: "o", ў: "o", п: "p", р: "r", с: "s",
@@ -6877,62 +6819,82 @@
                 || looseSearchKey(resident.complex).includes(key)
                 || looseSearchKey(resident.telegramUser).replace(/^@/, "").includes(key.replace(/^@/, ""));
         };
-        const filteredNoticeResidents = () => {
+        const matchingDebtors = () => {
             const query = searchNoticeText(searchInput?.value || "").trim();
             const words = query.split(/\s+/).filter(Boolean);
             const phoneDigits = /^[\d\s+()-]+$/.test(query) ? query.replace(/\D/g, "") : "";
-            const rows = getNoticeResidents().filter((resident) => {
-                if (!words.length) return true;
+            return sortNoticeResidents(getNoticeResidents().filter((resident) => {
                 if (phoneDigits.length >= 3 && String(resident.phone || "").replace(/\D/g, "").includes(phoneDigits)) return true;
                 return words.every((word) => residentMatchesWord(resident, word));
-            });
-            return sortNoticeResidents(rows);
+            }));
         };
 
-        const resolveActiveResident = (rows) => {
-            if (!rows.length) {
-                activeResidentId = "";
-                return null;
-            }
-            const current = rows.find((resident) => noticeResidentId(resident) === String(activeResidentId).replace(/[^\d]/g, ""));
-            if (current) return current;
-            const next = rows[0];
-            activeResidentId = noticeResidentId(next);
-            return next;
-        };
+        const selectedResident = () => getNoticeResidents()
+            .find((resident) => noticeResidentId(resident) === activeResidentId) || null;
 
-        const renderList = (rows) => {
-            if (!listNode || !emptyNode) return;
-            if (!rows.length) {
-                listNode.innerHTML = "";
-                emptyNode.classList.remove("hidden");
+        // Left column: the chosen debtor, or how to choose one.
+        const renderSelected = (resident) => {
+            if (!selectedNode) return;
+            if (!resident) {
+                selectedNode.innerHTML = `
+                    <div class="billing-notice-selected-empty">
+                        <span class="material-symbols-outlined" aria-hidden="true">${loading ? "hourglass_top" : "person_search"}</span>
+                        <p>${escapeHtml(t(loading ? "Loading residents..." : "Choose a debtor"))}</p>
+                        ${loading ? "" : `<small>${escapeHtml(t("Search by name, house, apartment or phone, then pick the debtor."))}</small>`}
+                    </div>
+                `;
                 return;
             }
-            emptyNode.classList.add("hidden");
-            listNode.innerHTML = rows.map((resident) => {
-                const residentId = noticeResidentId(resident);
-                const isActive = residentId === String(activeResidentId).replace(/[^\d]/g, "");
-                return `
-                    <button
-                        class="w-full text-left px-5 py-4 transition-colors ${isActive ? "bg-primary/5" : "bg-white hover:bg-surface-container-low"}"
-                        data-billing-notice-resident="${escapeHtml(residentId)}"
-                        type="button"
-                    >
-                        <div class="flex items-start justify-between gap-3">
-                            <div class="min-w-0">
-                                <p class="text-sm font-black text-on-surface truncate">${escapeHtml(resident.name || "-")}</p>
-                                <p class="text-xs text-on-surface-variant mt-1 truncate">${escapeHtml([resident.building, resident.apartment].filter(Boolean).join(" • ") || resident.apartment || "-")}</p>
-                                <p class="text-xs text-on-surface-variant mt-2 truncate">${escapeHtml(resident.phone || "-")}</p>
-                                ${resident.telegramConnected ? `<p class="text-[11px] font-bold text-primary mt-1" data-i18n-key="Telegram connected">${escapeHtml(t("Telegram connected"))}</p>` : ""}
-                            </div>
-                            <div class="shrink-0 text-right">
-                                <p class="text-sm font-black text-error">${escapeHtml(formatBillingUzs(debtValue(resident)))}</p>
-                                <p class="text-[11px] font-bold uppercase tracking-[0.14em] text-on-surface-variant mt-1">${escapeHtml(resident.lastPayment || "-")}</p>
-                            </div>
-                        </div>
-                    </button>
-                `;
-            }).join("");
+            selectedNode.innerHTML = `
+                <div class="billing-notice-selected-card">
+                    <div class="min-w-0">
+                        <p class="text-sm font-black text-on-surface">${escapeHtml(resident.name || "-")}</p>
+                        <p class="text-xs text-on-surface-variant mt-1">${escapeHtml([resident.building, resident.apartment].filter(Boolean).join(" • ") || "-")}</p>
+                        <p class="text-xs text-on-surface-variant mt-2">${escapeHtml(resident.phone || "-")}</p>
+                        ${resident.telegramConnected ? `<p class="text-[11px] font-bold text-primary mt-1">${escapeHtml(t("Telegram connected"))}</p>` : ""}
+                    </div>
+                    <div class="shrink-0 text-right">
+                        <p class="text-sm font-black text-error">${escapeHtml(formatBillingUzs(debtValue(resident)))}</p>
+                        <p class="text-[11px] font-bold uppercase tracking-[0.14em] text-on-surface-variant mt-1">${escapeHtml(resident.lastPayment || "-")}</p>
+                    </div>
+                </div>
+            `;
+        };
+
+        // The search dropdown: debtors only, best match first; Enter or a click picks one.
+        const resultsOpen = () => Boolean(resultsNode && !resultsNode.classList.contains("hidden"));
+        const closeResults = () => {
+            resultsNode?.classList.add("hidden");
+            searchInput?.setAttribute("aria-expanded", "false");
+            highlighted = -1;
+        };
+        const renderResults = () => {
+            if (!resultsNode) return;
+            if (!(searchInput?.value || "").trim()) {
+                resultRows = [];
+                closeResults();
+                return;
+            }
+            resultRows = matchingDebtors();
+            highlighted = resultRows.length ? Math.min(Math.max(highlighted, 0), resultRows.length - 1) : -1;
+            resultsNode.innerHTML = resultRows.length
+                ? resultRows.map((resident, index) => {
+                    const residentId = noticeResidentId(resident);
+                    return `
+                        <button aria-selected="${index === highlighted}" class="billing-notice-result ${index === highlighted ? "is-active" : ""}" data-billing-notice-result="${escapeAttr(residentId)}" role="option" tabindex="-1" type="button">
+                            <span class="billing-notice-result-icon material-symbols-outlined" aria-hidden="true">person</span>
+                            <span class="billing-notice-result-copy">
+                                <strong>${escapeHtml(resident.name || "-")}</strong>
+                                <small>ID ${escapeHtml(residentId)} · ${escapeHtml(t("House"))} ${escapeHtml(resident.building || "-")} · ${escapeHtml(t("Apartment"))} ${escapeHtml(resident.apartment || "-")}</small>
+                            </span>
+                            <span class="billing-notice-result-debt">${escapeHtml(formatBillingUzs(debtValue(resident)))}</span>
+                        </button>
+                    `;
+                }).join("")
+                : `<div class="billing-notice-result-empty">${escapeHtml(t("No debtor found"))}</div>`;
+            resultsNode.classList.remove("hidden");
+            searchInput?.setAttribute("aria-expanded", "true");
+            resultsNode.querySelector(".billing-notice-result.is-active")?.scrollIntoView({ block: "nearest" });
         };
 
         // The notice comes from the server (/api/billing-notice/preview/). The PDF and the Telegram
@@ -6954,7 +6916,7 @@
             setNoticeText("[data-billing-notice-generated-at]", notice?.date);
             if (!noticeDocument) return;
             if (!notice) {
-                noticeDocument.innerHTML = "";
+                noticeDocument.innerHTML = `<p class="billing-notice-placeholder">${escapeHtml(t("The notice appears here once a debtor is chosen."))}</p>`;
                 return;
             }
             noticeDocument.innerHTML = `
@@ -7006,20 +6968,27 @@
 
         const syncFilters = () => {
             if (!sortButton || !sortLabel) return;
-            const descending = activeSort !== "asc";
-            sortButton.classList.toggle("bg-primary/10", true);
-            sortButton.classList.toggle("text-primary", true);
-            sortLabel.textContent = descending ? t("Largest first") : t("Smallest first");
+            sortLabel.textContent = activeSort === "asc" ? t("Smallest first") : t("Largest first");
         };
 
         const render = () => {
-            const rows = filteredNoticeResidents();
-            const resident = resolveActiveResident(rows);
-            renderList(rows);
+            const resident = selectedResident();
+            renderSelected(resident);
             renderPreview(resident);
             syncFilters();
-            if (countNode) countNode.textContent = `${rows.length} ${t("shown")}`;
+            if (countNode) countNode.textContent = `${t("Debtors")}: ${getNoticeResidents().length}`;
             if (searchClear) searchClear.classList.toggle("hidden", !(searchInput?.value || "").trim());
+            if (pdfButton) pdfButton.disabled = !resident;
+            if (telegramButton) telegramButton.disabled = !resident;
+            if (resultsOpen()) renderResults();
+        };
+
+        const chooseResident = (residentId) => {
+            if (!residentId) return;
+            activeResidentId = residentId;
+            if (searchInput) searchInput.value = "";
+            closeResults();
+            render();
         };
 
         const openNoticeModal = (preferredResidentId = "") => {
@@ -7028,25 +6997,25 @@
             noticeCache.clear();
             activeSort = "desc";
             if (searchInput) searchInput.value = "";
-            activeResidentId = preferredResidentId ? String(preferredResidentId).replace(/[^\d]/g, "") : "";
+            closeResults();
+            activeResidentId = String(preferredResidentId || "").replace(/[^\d]/g, "");
             hydrateNoticeResidentsFromState();
-            if (noticeResidents.length) {
-                render();
-            } else {
-                renderLoading();
-            }
+            loading = !noticeResidents.length;
+            render();
+            // Opened without a debtor: the operator starts by searching for one.
+            if (!activeResidentId) window.setTimeout(() => searchInput?.focus(), 200);
             refreshBillingNoticeData()
                 .then(() => {
-                    // Opened for a resident who owes nothing (from their profile): say so instead of
-                    // silently showing another debtor.
-                    const preferredId = String(preferredResidentId || "").replace(/[^\d]/g, "");
-                    const preferred = preferredId && noticeResidents.find((resident) => noticeResidentId(resident) === preferredId);
+                    loading = false;
+                    // Opened for a resident who owes nothing: say so instead of an empty window.
+                    const preferred = activeResidentId && noticeResidents.find((resident) => noticeResidentId(resident) === activeResidentId);
                     if (preferred && debtValue(preferred) <= 0) {
                         toast("Billing notice", "The resident has no debt.", "warning");
                     }
                     render();
                 })
                 .catch((error) => {
+                    loading = false;
                     console.error("Billing notice modal render failed", error);
                     toast("Billing notice", "Could not prepare debtor list.", "warning");
                 });
@@ -7081,27 +7050,51 @@
             render();
         });
 
-        listNode?.addEventListener("click", (event) => {
-            const item = event.target.closest("[data-billing-notice-resident]");
-            if (!item) return;
-            activeResidentId = item.dataset.billingNoticeResident || "";
-            render();
+        searchInput?.addEventListener("input", () => {
+            highlighted = 0;
+            renderResults();
+            searchClear?.classList.toggle("hidden", !(searchInput.value || "").trim());
         });
-
-        searchInput?.addEventListener("input", () => render());
+        searchInput?.addEventListener("focus", () => renderResults());
+        searchInput?.addEventListener("keydown", (event) => {
+            if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+                if (!resultRows.length) return;
+                event.preventDefault();
+                const step = event.key === "ArrowDown" ? 1 : -1;
+                highlighted = (highlighted + step + resultRows.length) % resultRows.length;
+                renderResults();
+                return;
+            }
+            if (event.key === "Enter" && resultsOpen()) {
+                event.preventDefault();
+                chooseResident(noticeResidentId(resultRows[highlighted]));
+                return;
+            }
+            // Escape closes the dropdown first; with it closed, Escape closes the window as usual.
+            if (event.key === "Escape" && resultsOpen()) {
+                event.preventDefault();
+                event.stopPropagation();
+                closeResults();
+            }
+        });
+        // Keep the focus in the search while a result is clicked.
+        resultsNode?.addEventListener("mousedown", (event) => event.preventDefault());
+        resultsNode?.addEventListener("click", (event) => {
+            chooseResident(event.target.closest("[data-billing-notice-result]")?.dataset.billingNoticeResult || "");
+        });
+        document.addEventListener("click", (event) => {
+            if (resultsOpen() && !searchBox?.contains(event.target)) closeResults();
+        });
         searchClear?.addEventListener("click", () => {
             if (searchInput) searchInput.value = "";
+            closeResults();
             render();
             searchInput?.focus();
         });
 
         pdfButton?.addEventListener("click", async () => {
-            const resident = resolveActiveResident(filteredNoticeResidents());
+            const resident = selectedResident();
             if (!resident) return;
-            if (debtValue(resident) <= 0) {
-                toast("Notice not created", "The resident has no debt.", "warning");
-                return;
-            }
             pdfButton.disabled = true;
             try {
                 const payload = await postPortalJson("/api/billing-notice/pdf/", { owner_id: noticeResidentId(resident), language: activeLang });
@@ -7116,14 +7109,10 @@
 
         // The server sends the notice shown in the window, in the language chosen there.
         telegramButton?.addEventListener("click", async () => {
-            const resident = resolveActiveResident(filteredNoticeResidents());
+            const resident = selectedResident();
             if (!resident) return;
-            if (!resident.ownerBackendId || !resident.telegramConnected) {
+            if (!resident.telegramConnected) {
                 toast("Not sent", "The resident is not connected to Telegram.", "warning");
-                return;
-            }
-            if (debtValue(resident) <= 0) {
-                toast("Not sent", "The resident has no debt.", "warning");
                 return;
             }
             telegramButton.disabled = true;
@@ -7138,6 +7127,9 @@
         });
 
         document.addEventListener("hydroflow:backend-refreshed", () => {
+            if (!modal.classList.contains("hidden")) render();
+        });
+        document.addEventListener("hydroflow:language-changed", () => {
             if (!modal.classList.contains("hidden")) render();
         });
     };

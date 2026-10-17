@@ -1203,7 +1203,10 @@ This form writes directly to Django admin and database.
 </div>
 
 <div aria-labelledby="billing-notice-title" aria-hidden="true" class="app-modal fixed inset-0 z-[80] hidden items-start justify-center overflow-y-auto p-4 md:p-6" id="billing-notice-modal" role="dialog">
-<div class="modal-panel flex max-h-[calc(100dvh-2rem)] w-full max-w-5xl flex-col overflow-hidden rounded-[28px] border border-outline-variant/20 bg-white shadow-2xl">
+<!-- One debtor at a time: found with the search (a dropdown of debtors) or given by the opener
+     (the resident's profile, "Send reminder"). The panel has a fixed height, so typing in the
+     search or switching debtors never resizes the window. -->
+<div class="modal-panel billing-notice-panel flex max-h-[calc(100dvh-2rem)] w-full max-w-5xl flex-col overflow-hidden rounded-[28px] border border-outline-variant/20 bg-white shadow-2xl">
 <div class="px-8 py-6 border-b border-surface-container flex items-start justify-between gap-4">
 <div>
 <p class="text-[11px] font-black uppercase tracking-[0.18em] text-primary" data-i18n-key="Billing notice">Billing notice</p>
@@ -1220,17 +1223,19 @@ This form writes directly to Django admin and database.
 </button>
 </div>
 </div>
-<div class="min-h-0 overflow-y-auto px-8 py-6">
+<div class="min-h-0 flex-1 overflow-y-auto px-8 py-6">
 <div class="flex flex-col gap-4">
 <div class="flex flex-col lg:flex-row gap-3 lg:items-center lg:justify-between">
-<div class="flex-1 max-w-xl">
+<div class="relative flex-1 max-w-xl" data-billing-notice-search-box>
 <label class="relative block">
 <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]">search</span>
-<input class="w-full h-12 rounded-2xl border border-outline-variant/20 bg-surface-container-lowest pl-12 pr-12 text-sm text-on-surface placeholder:text-on-surface-variant/70 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30" data-billing-notice-search placeholder="Search residents..." type="search"/>
+<input aria-autocomplete="list" aria-controls="billing-notice-results" aria-expanded="false" autocomplete="off" class="w-full h-12 rounded-2xl border border-outline-variant/20 bg-surface-container-lowest pl-12 pr-12 text-sm text-on-surface placeholder:text-on-surface-variant/70 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30" data-billing-notice-search data-i18n-placeholder="Search debtors..." placeholder="Search debtors..." role="combobox" type="search"/>
 <button aria-label="Clear debtor search" class="absolute right-3 top-1/2 -translate-y-1/2 hidden h-8 w-8 rounded-full bg-surface-container text-on-surface-variant transition-colors hover:text-on-surface" data-billing-notice-search-clear type="button">
 <span class="material-symbols-outlined text-[18px]">close</span>
 </button>
 </label>
+<!-- Debtors matching the search: ID, name, house, apartment, debt. Floats over the window. -->
+<div class="billing-notice-results hidden" data-billing-notice-results id="billing-notice-results" role="listbox"></div>
 </div>
 <div class="inline-flex flex-wrap items-center gap-2 rounded-2xl border border-outline-variant/15 bg-surface-container-lowest px-3 py-2" data-billing-notice-filter-group>
 <span class="text-[11px] font-black uppercase tracking-[0.18em] text-on-surface-variant" data-i18n-key="Balance order">Balance order</span>
@@ -1242,20 +1247,8 @@ This form writes directly to Django admin and database.
 </div>
 </div>
 <div class="grid grid-cols-1 xl:grid-cols-[340px_minmax(0,1fr)] gap-6">
-<section class="rounded-[20px] border border-outline-variant/15 bg-surface-container-lowest overflow-hidden">
-<div class="px-5 py-4 border-b border-outline-variant/10 flex items-center justify-between gap-3">
-<div>
-<p class="text-[11px] font-black uppercase tracking-[0.18em] text-on-surface-variant" data-i18n-key="Residents">Residents</p>
-<p class="text-sm text-on-surface-variant mt-1" data-i18n-key="Choose a resident to preview the billing notice.">Choose a resident to preview the billing notice.</p>
-</div>
-</div>
-<div class="max-h-[520px] overflow-y-auto divide-y divide-outline-variant/10" data-billing-notice-list></div>
-<div class="hidden px-5 py-10 text-center" data-billing-notice-empty>
-<span class="material-symbols-outlined text-[30px] text-on-surface-variant">person_search</span>
-<p class="mt-3 text-sm font-bold text-on-surface" data-i18n-key="No residents found">No residents found</p>
-<p class="mt-1 text-xs text-on-surface-variant" data-i18n-key="Adjust search or filters to find a resident.">Adjust search or filters to find a resident.</p>
-</div>
-</section>
+<!-- The debtor the notice is for (chosen in the search or given by the opener). -->
+<section class="billing-notice-selected" data-billing-notice-selected></section>
 <section class="rounded-[20px] border border-outline-variant/15 bg-white p-8 shadow-sm" data-billing-notice-sheet>
 <div class="border-b border-outline-variant/15 pb-5 mb-8 flex items-start justify-between gap-6">
 <div>
