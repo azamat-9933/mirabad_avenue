@@ -1,5 +1,6 @@
 from decimal import Decimal
 
+from django.core.exceptions import ValidationError
 from django.db import models
 
 
@@ -91,6 +92,19 @@ class Apartment(models.Model):
         related_name="apartments",
         verbose_name="Seksiya",
     )
+    # Heating is billed from the connection day; an apartment without it is not heated (not billed).
+    heating_connected_on = models.DateField(
+        null=True,
+        blank=True,
+        verbose_name="Isitishga ulangan sana",
+        help_text="Shu kundan boshlab isitish hisoblanadi. Bo'sh — isitishga ulanmagan.",
+    )
+    heating_disconnected_on = models.DateField(
+        null=True,
+        blank=True,
+        verbose_name="Isitishdan uzilgan sana",
+        help_text="Shu kundan boshlab isitish hisoblanmaydi. Bo'sh — ulanganicha.",
+    )
     # The billing account belongs to the apartment: charges are posted here even while it has
     # no owner, and an owner always sees this balance. Changed only through payments.services.
     balance = models.DecimalField(
@@ -104,6 +118,15 @@ class Apartment(models.Model):
 
     def __str__(self):
         return f"Kv. {self.number} ({self.building})"
+
+    def clean(self):
+        super().clean()
+        if (
+            self.heating_connected_on
+            and self.heating_disconnected_on
+            and self.heating_disconnected_on <= self.heating_connected_on
+        ):
+            raise ValidationError({"heating_disconnected_on": "Uzilgan sana ulangan sanadan keyin bo'lishi kerak."})
 
     class Meta:
         verbose_name = "Apartment"

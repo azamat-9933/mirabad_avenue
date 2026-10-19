@@ -195,6 +195,9 @@ USE_I18N = True
 
 USE_TZ = True
 
+# A billing period page posts every apartment's hot water reading at once (hundreds of rows).
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 20000
+
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/

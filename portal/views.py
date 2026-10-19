@@ -245,7 +245,9 @@ class BillingPeriodCreateView(PortalPageView):
                 else:
                     messages.error(request, "Noma'lum amal.")
         except ValidationError as exc:
-            messages.error(request, str(exc))
+            # Closing reports every problem (house, apartment) at once: one message each.
+            for problem in exc.messages:
+                messages.error(request, problem)
         except (DatabaseError, OperationalError) as exc:
             messages.error(
                 request,

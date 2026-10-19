@@ -23,6 +23,7 @@ from billing.models import (
     Payment,
     RecalculationLog,
     ServiceExpense,
+    money,
 )
 from payments.models import Transaction
 from portal.models import AuditEvent
@@ -47,6 +48,7 @@ class BillingCoreModelTests(TestCase):
             area=Decimal("80.00"),
             building=self.building,
             author="test",
+            heating_connected_on=date(2026, 4, 1),
         )
         self.apartment_2 = Apartment.objects.create(
             number="102",
@@ -54,6 +56,7 @@ class BillingCoreModelTests(TestCase):
             building=self.building,
             author="test",
             balance=Decimal("150000.00"),
+            heating_connected_on=date(2026, 4, 1),
         )
         self.owner_1 = Owner.objects.create(
             fio="Sarah Jenkins",
@@ -198,8 +201,8 @@ class BillingCoreModelTests(TestCase):
 
         self.assertEqual(self.period.status, BillingPeriod.STATUS_CLOSED)
         self.assertEqual(Charge.objects.filter(period=self.period, is_cancelled=False).count(), 2)
-        self.assertEqual(self.owner_1.balance, Decimal("-3123.52"))
-        self.assertEqual(self.owner_2.balance, Decimal("148223.50"))
+        self.assertEqual(self.owner_1.balance, Decimal("-3123.51"))
+        self.assertEqual(self.owner_2.balance, Decimal("148223.51"))
         self.assertEqual(Invoice.objects.filter(period=self.period).count(), 2)
 
     def test_close_period_bootstraps_core_rows_from_legacy_records(self):
@@ -242,7 +245,7 @@ class BillingCoreModelTests(TestCase):
 
         service = BuildingService.objects.get(period=self.period, building=self.building, service_type="heating")
         self.assertEqual(service.calculate_total_expense(), Decimal("14900.00"))
-        self.assertTrue(service.expense_items.filter(title__startswith="Gaz hisoblagich", amount=Decimal("10000.00")).exists())
+        self.assertTrue(service.expense_items.filter(title__startswith="Gaz: 10 m³", amount=Decimal("10000.00")).exists())
         charged = sum(Charge.objects.filter(period=self.period, is_cancelled=False).values_list("amount", flat=True))
         # Within the tariff rounding (4 places per m²·day); without the gas it would be 4 900.
         self.assertAlmostEqual(charged, Decimal("14900.00"), delta=Decimal("1.00"))
@@ -347,8 +350,8 @@ class BillingCoreModelTests(TestCase):
 
         rows_1 = self._assert_ledger_matches_balance(self.owner_1, Decimal("0.00"))
         rows_2 = self._assert_ledger_matches_balance(self.owner_2, Decimal("150000.00"))
-        self.assertEqual([row.amount for row in rows_1], [Decimal("-3123.52")])
-        self.assertEqual([row.amount for row in rows_2], [Decimal("-1776.50")])
+        self.assertEqual([row.amount for row in rows_1], [Decimal("-3123.51")])
+        self.assertEqual([row.amount for row in rows_2], [Decimal("-1776.49")])
         for row, apartment in [(rows_1[0], self.apartment_1), (rows_2[0], self.apartment_2)]:
             self.assertEqual(row.payment_type, Transaction.TYPE_CHARGE)
             self.assertEqual(row.invoice, Invoice.objects.get(period=self.period, apartment=apartment))
@@ -399,7 +402,7 @@ class BillingCoreModelTests(TestCase):
         self.assertEqual(service.total_volume, Decimal("80.00") * 10 + Decimal("45.50") * 10 + Decimal("30.00") * 10)
         charge = Charge.objects.get(apartment=vacant)
         self.assertIsNone(charge.owner)
-        self.assertEqual(charge.amount, (Decimal("300.0000") * service.tariff).quantize(Decimal("0.01")))
+        self.assertEqual(charge.amount, money(Decimal("300.0000") * service.total_expense / service.total_volume))
         rows = self._assert_account_ledger(vacant, Decimal("0.00"))
         self.assertEqual(len(rows), 1)
         self.assertIsNone(rows[0].owner)
@@ -518,7 +521,9 @@ class BillingPeriodAdminStateTests(TestCase):
         complex_ = Complex.objects.create(title="Skyline", address="North", author="test")
         self.building = Building.objects.create(number="A", address="North", complex=complex_, author="test")
         for number in ("101", "102"):
-            apartment = Apartment.objects.create(number=number, area=Decimal("50.00"), building=self.building, author="test")
+            apartment = Apartment.objects.create(
+                number=number, area=Decimal("50.00"), building=self.building, author="test", heating_connected_on=date(2026, 4, 1)
+            )
             Owner.objects.create(fio=f"Owner {number}", phone=f"+99890000{number}", apartment=apartment)
         self.period = BillingPeriod.objects.create(name="April 2026", start_date=date(2026, 4, 1), end_date=date(2026, 4, 30))
         self.period.buildings.add(self.building)
@@ -539,6 +544,7 @@ class BillingPeriodAdminStateTests(TestCase):
             "state": state,
             "expenses-TOTAL_FORMS": "0", "expenses-INITIAL_FORMS": "0",
             "gas_meter_readings-TOTAL_FORMS": "0", "gas_meter_readings-INITIAL_FORMS": "0",
+            "hot_water_readings-TOTAL_FORMS": "0", "hot_water_readings-INITIAL_FORMS": "0",
             **extra,
         }
         return self.client.post(self.change_url, data)
@@ -619,3 +625,187 @@ class BillingPeriodAdminStateTests(TestCase):
         self.assertEqual(response.status_code, 302)
         self.period.refresh_from_db()
         self.assertEqual(self.period.status, BillingPeriod.STATUS_CLOSED)
+
+
+class BillingCalculationRulesTests(TestCase):
+    """The billing formula: who is billed, for how many days or m³, and what blocks closing."""
+
+    def setUp(self):
+        complex_ = Complex.objects.create(title="Mirabad", address="Mirabad", author="test")
+        self.building = Building.objects.create(number="60", address="Mirabad", complex=complex_, author="test")
+        self.april = BillingPeriod.objects.create(name="April 2026", start_date=date(2026, 4, 1), end_date=date(2026, 4, 30))
+        self.april.buildings.add(self.building)
+
+    def flat(self, number, area="50.00", connected=None, disconnected=None, section=None):
+        apartment = Apartment.objects.create(
+            number=number, area=Decimal(area), building=self.building, author="test", section=section,
+            heating_connected_on=connected, heating_disconnected_on=disconnected,
+        )
+        Owner.objects.create(fio=f"Owner {number}", phone=f"+9989000{number:0>5}", apartment=apartment)
+        return apartment
+
+    def cost(self, service_type, amount, period=None, room=None):
+        return Expense.objects.create(
+            period=period or self.april, building=self.building, service_type=service_type,
+            name="Qozonxona xizmati", amount=Decimal(amount), boiler_room=room,
+        )
+
+    def charged(self, period=None):
+        totals = {}
+        for charge in Charge.objects.filter(period=period or self.april, is_cancelled=False).select_related("apartment"):
+            totals[charge.apartment.number] = totals.get(charge.apartment.number, Decimal("0")) + charge.amount
+        return totals
+
+    def test_heating_bills_connected_apartments_from_their_connection_day(self):
+        self.flat("1", connected=date(2025, 10, 15))
+        self.flat("2", connected=date(2026, 4, 21))  # 21–30 April: 10 days
+        self.flat("3")  # not connected: not billed, not in the volume
+        self.cost("heating", "4000")
+
+        self.april.close_period()
+
+        # 1: 50 m² × 30 days = 1500; 2: 50 m² × 10 days = 500 → 4000 split 3:1.
+        self.assertEqual(self.charged(), {"1": Decimal("3000.00"), "2": Decimal("1000.00")})
+
+    def test_heating_stops_on_the_disconnection_day_and_skips_days_without_heating(self):
+        first = self.flat("1", connected=date(2026, 1, 1), disconnected=date(2026, 4, 11))  # 1–10 April
+        self.flat("2", connected=date(2026, 1, 1))
+        HeatingRecord.objects.create(period=self.april, apartment=first, excluded_dates=["2026-04-05", "2026-04-20"])
+        self.cost("heating", "3900")
+
+        self.april.close_period()
+
+        # 20 April is after the disconnection, so only 5 April is taken off: 9 days against 30.
+        usages = dict(HeatingApartmentUsage.objects.values_list("apartment__number", "days_provided"))
+        self.assertEqual(usages, {"1": 9, "2": 30})
+        self.assertEqual(self.charged(), {"1": Decimal("900.00"), "2": Decimal("3000.00")})
+
+    def test_each_boiler_room_spreads_its_own_costs_over_its_sections(self):
+        from billing.models import BoilerRoom
+        from properties.models import BuildingSection
+
+        a1 = BuildingSection.objects.create(building=self.building, name="A1")
+        a5 = BuildingSection.objects.create(building=self.building, name="A5")
+        room_a1 = BoilerRoom.objects.create(building=self.building, name="A1")
+        room_a1.sections.add(a1)
+        room_a5 = BoilerRoom.objects.create(building=self.building, name="A5")
+        room_a5.sections.add(a5)
+        self.flat("1", connected=date(2026, 1, 1), section=a1)
+        self.flat("2", connected=date(2026, 1, 1), section=a1, area="150.00")
+        self.flat("3", connected=date(2026, 1, 1), section=a5)
+        self.cost("heating", "1000", room=room_a1)
+        self.cost("heating", "3000", room=room_a5)
+
+        self.april.close_period()
+
+        self.assertEqual(self.charged(), {"1": Decimal("250.00"), "2": Decimal("750.00"), "3": Decimal("3000.00")})
+        self.assertEqual(BuildingService.objects.filter(period=self.april, service_type="heating").count(), 2)
+
+    def test_heating_cost_without_boiler_room_in_a_house_with_several_is_reported(self):
+        from billing.models import BoilerRoom
+
+        BoilerRoom.objects.create(building=self.building, name="A1")
+        BoilerRoom.objects.create(building=self.building, name="A5")
+        self.flat("1", connected=date(2026, 1, 1))
+        self.cost("heating", "1000")
+
+        with self.assertRaises(ValidationError) as caught:
+            self.april.close_period()
+        self.assertIn("qaysi qozonxonaga tegishli ekani ko'rsatilmagan", " ".join(caught.exception.messages))
+        self.assertFalse(Charge.objects.exists())
+
+    def test_hot_water_start_reading_comes_from_the_previous_period(self):
+        march = BillingPeriod.objects.create(name="March 2026", start_date=date(2026, 3, 1), end_date=date(2026, 3, 31))
+        first = self.flat("1")
+        second = self.flat("2")
+        HotWaterMeterReading.objects.create(period=march, apartment=first, start_reading=Decimal("2"), end_reading=Decimal("10"))
+        HotWaterMeterReading.objects.create(period=march, apartment=second, start_reading=Decimal("4"))  # not read in March
+        HotWaterMeterReading.objects.create(period=self.april, apartment=first, end_reading=Decimal("13"))  # 13 − 10
+        HotWaterMeterReading.objects.create(period=self.april, apartment=second, end_reading=Decimal("13"))  # 13 − 4
+        self.cost("hot_water", "1200")
+
+        self.april.close_period()
+
+        self.assertEqual(self.charged(), {"1": Decimal("300.00"), "2": Decimal("900.00")})
+
+    def test_hot_water_reading_problems_name_the_apartments_and_block_closing(self):
+        readings = {"1": (None, "5"), "2": ("9", "7"), "3": ("4", None)}
+        for number, (start, end) in readings.items():
+            HotWaterMeterReading.objects.create(
+                period=self.april, apartment=self.flat(number),
+                start_reading=Decimal(start) if start else None, end_reading=Decimal(end) if end else None,
+            )
+        self.cost("hot_water", "1000")
+
+        with self.assertRaises(ValidationError) as caught:
+            self.april.close_period()
+
+        problems = caught.exception.messages
+        self.assertTrue(any("kv 1" in problem and "boshlang'ich ko'rsatkich yo'q" in problem for problem in problems))
+        self.assertTrue(any("kv 2" in problem and "kichik" in problem for problem in problems))
+        self.assertFalse(Charge.objects.exists())
+        self.assertFalse(Transaction.objects.exists())
+
+    def test_hot_water_costs_without_any_readings_explain_what_to_enter(self):
+        self.flat("1")
+        self.flat("2")
+        self.cost("hot_water", "6032050")
+        GasMeterReading.objects.create(
+            period=self.april, building=self.building, service_type="hot_water",
+            start_reading=Decimal("10000"), end_reading=Decimal("14356"), price_per_m3=Decimal("1000"),
+        )
+
+        with self.assertRaises(ValidationError) as caught:
+            self.april.close_period()
+
+        self.assertEqual(
+            caught.exception.messages,
+            [
+                "60 uy — issiq suv: xarajat 10 388 050 so'm, lekin kvartiralar sarfi 0 m³. "
+                "Davr sahifasidagi «GVS hisoblagich ko'rsatkichlari»ga oxirgi ko'rsatkichlarni kiriting."
+            ],
+        )
+
+    def test_gas_meter_start_reading_comes_from_the_previous_period(self):
+        march = BillingPeriod.objects.create(name="March 2026", start_date=date(2026, 3, 1), end_date=date(2026, 3, 31))
+        GasMeterReading.objects.create(
+            period=march, building=self.building, service_type="heating",
+            start_reading=Decimal("900"), end_reading=Decimal("1000"), price_per_m3=Decimal("1000"),
+        )
+        april_gas = GasMeterReading.objects.create(
+            period=self.april, building=self.building, service_type="heating",
+            end_reading=Decimal("1100"), price_per_m3=Decimal("1000"),
+        )
+        self.flat("1", connected=date(2026, 1, 1))
+
+        self.assertEqual(april_gas.consumption, Decimal("100"))
+        self.april.close_period()
+        self.assertEqual(self.charged(), {"1": Decimal("100000.00")})
+
+    def test_recalculation_stops_charging_a_removed_cost(self):
+        first = self.flat("1", connected=date(2026, 1, 1))
+        heating = self.cost("heating", "3000")
+        self.cost("hot_water", "500")
+        HotWaterMeterReading.objects.create(period=self.april, apartment=first, start_reading=Decimal("1"), end_reading=Decimal("3"))
+        self.april.close_period()
+        self.assertEqual(self.charged(), {"1": Decimal("3500.00")})
+
+        self.april.reopen_period()
+        heating.delete()
+        self.april.recalculate("Heating cost was entered by mistake", author=None)
+
+        self.assertEqual(self.charged(), {"1": Decimal("500.00")})
+        first.refresh_from_db()
+        self.assertEqual(first.balance, Decimal("-500.00"))
+
+    def test_period_admin_previews_the_calculation(self):
+        self.flat("1", connected=date(2026, 1, 1))
+        self.cost("heating", "1500")
+        self.cost("hot_water", "700")
+        self.client.force_login(get_user_model().objects.create_superuser(username="root", password="testpass"))
+
+        page = self.client.get(reverse("admin:billing_billingperiod_change", args=[self.april.pk]))
+
+        self.assertContains(page, "60 uy — isitish")
+        self.assertContains(page, "1 500 so&#x27;m")
+        self.assertContains(page, "60 uy — issiq suv: xarajat 700 so&#x27;m, lekin kvartiralar sarfi 0 m³")

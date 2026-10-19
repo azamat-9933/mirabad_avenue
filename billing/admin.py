@@ -6,12 +6,15 @@ from django.core.exceptions import ValidationError
 from django.db import models, transaction
 from django.urls import reverse
 from django.utils.html import format_html, format_html_join
+from django.utils.safestring import mark_safe
 
 from portal.audit import record_event
 from portal.models import AuditEvent
 
+from .calculation import build_plan, group_thousands, previous_hot_water_readings
 from .models import (
     BillingPeriod,
+    BoilerRoom,
     Expense,
     GasMeterReading,
     HeatingCalculationSummary,
@@ -21,20 +24,13 @@ from .models import (
     Invoice,
     SERVICE_HEATING,
     SERVICE_HOT_WATER,
+    money,
+    rate,
 )
 
 
 def admin_number(value, places=0):
     return format(value or 0, f",.{places}f")
-
-
-def group_thousands(number: Decimal) -> str:
-    """1234567.5 -> "1 234 567,5": digits in groups of three, a decimal comma only when needed."""
-    sign = "-" if number < 0 else ""
-    integer, _, fraction = f"{abs(number):f}".partition(".")
-    fraction = fraction.rstrip("0")
-    grouped = f"{int(integer):,}".replace(",", " ")
-    return f"{sign}{grouped}{',' + fraction if fraction else ''}"
 
 
 class SpacedNumberInput(forms.TextInput):
@@ -95,7 +91,7 @@ class ExpenseInline(ClosedPeriodReadOnlyInline, admin.TabularInline):
     """
     model   = Expense
     extra   = 1
-    fields  = ("building", "service_type", "name", "amount")
+    fields  = ("building", "service_type", "boiler_room", "name", "amount")
     formfield_overrides = SPACED_DECIMALS
     verbose_name        = "Xarajat"
     verbose_name_plural = "Xarajatlar"
@@ -109,13 +105,122 @@ class GasMeterReadingInline(ClosedPeriodReadOnlyInline, admin.TabularInline):
     model   = GasMeterReading
     extra   = 1
     fields  = (
-        "building", "service_type",
+        "building", "service_type", "boiler_room",
         "start_reading", "end_reading", "price_per_m3",
     )
     readonly_fields = ()
     formfield_overrides = SPACED_DECIMALS
     verbose_name        = "Gaz hisoblagich"
     verbose_name_plural = "Gaz hisoblagichlar"
+
+
+class HotWaterMeterReadingInline(ClosedPeriodReadOnlyInline, admin.TabularInline):
+    """Apartment hot water meters of the period, one row per apartment of its houses (created on save).
+
+    An empty start reading takes the apartment's last reading from the previous period.
+    """
+    model = HotWaterMeterReading
+    extra = 0
+    can_delete = False
+    fields = ("apartment_label", "previous_reading", "start_reading", "end_reading", "consumption_display")
+    readonly_fields = ("apartment_label", "previous_reading", "consumption_display")
+    formfield_overrides = SPACED_DECIMALS
+    verbose_name = "GVS hisoblagich ko'rsatkichi"
+    verbose_name_plural = "GVS hisoblagich ko'rsatkichlari"
+
+    def has_add_permission(self, request, obj=None):
+        return False  # rows are created for every apartment of the period's houses
+
+    def get_queryset(self, request):
+        return (
+            super().get_queryset(request)
+            .select_related("apartment", "apartment__building")
+            .order_by("apartment__building__number", "apartment_id")
+        )
+
+    def get_formset(self, request, obj=None, **kwargs):
+        # One query for every row's previous reading instead of one per row.
+        self._previous = {}
+        if obj is not None and obj.pk:
+            self._previous = previous_hot_water_readings(obj.hot_water_readings.values_list("apartment_id", flat=True), obj)
+        return super().get_formset(request, obj, **kwargs)
+
+    def _start(self, obj):
+        if obj.start_reading is not None:
+            return obj.start_reading
+        return getattr(self, "_previous", {}).get(obj.apartment_id)
+
+    @admin.display(description="Kvartira")
+    def apartment_label(self, obj):
+        return f"{obj.apartment.building.number} — kv {obj.apartment.number}"
+
+    @admin.display(description="O'tgan oy")
+    def previous_reading(self, obj):
+        value = getattr(self, "_previous", {}).get(obj.apartment_id)
+        return group_thousands(value) if value is not None else "—"
+
+    @admin.display(description="Sarf (kub)")
+    def consumption_display(self, obj):
+        start = self._start(obj)
+        if obj.end_reading is None or start is None:
+            return "—"
+        return group_thousands(obj.end_reading - start)
+
+
+def render_plan(plan):
+    """The period's calculation as tables: what closing will charge, and what must be fixed first."""
+    parts = []
+    if plan.errors:
+        parts.append(format_html(
+            '<div class="hf-plan-note hf-plan-note--error"><strong>{}</strong><ul>{}</ul></div>',
+            "Yopishdan oldin tuzatish kerak:",
+            format_html_join("", "<li>{}</li>", ((error,) for error in plan.errors)),
+        ))
+    if plan.warnings:
+        parts.append(format_html(
+            '<div class="hf-plan-note hf-plan-note--warning"><strong>{}</strong><ul>{}</ul></div>',
+            "E'tibor bering:",
+            format_html_join("", "<li>{}</li>", ((warning,) for warning in plan.warnings)),
+        ))
+    zones = [zone for zone in plan.zones if zone.billable or zone.has_inputs]
+    if not zones:
+        parts.append(format_html('<p class="hf-plan-empty">{}</p>', "Bu davrga hali xarajat kiritilmagan."))
+    for zone in zones:
+        unit = "m²·kun" if zone.is_heating else "m³"
+        costs = format_html_join(
+            "", '<tr><td>{}</td><td class="hf-plan-num">{}</td></tr>',
+            ((title, f"{group_thousands(amount)} so'm") for title, amount in zone.costs),
+        )
+        if zone.is_heating:
+            head = format_html("<tr><th>{}</th><th>{}</th><th>{}</th><th>{}</th><th>{}</th><th>{}</th></tr>",
+                               "Kv", "Ega", "Maydon (m²)", "Kun", unit, "Summa (so'm)")
+            body = format_html_join("", '<tr><td>{}</td><td>{}</td><td class="hf-plan-num">{}</td><td class="hf-plan-num">{}</td>'
+                                    '<td class="hf-plan-num">{}</td><td class="hf-plan-num">{}</td></tr>',
+                                    ((row.apartment.number, row.owner_name or "—", group_thousands(row.apartment.area), row.days,
+                                      group_thousands(row.volume), group_thousands(row.amount)) for row in zone.rows))
+        else:
+            head = format_html("<tr><th>{}</th><th>{}</th><th>{}</th><th>{}</th><th>{}</th><th>{}</th></tr>",
+                               "Kv", "Ega", "Boshlang'ich", "Oxirgi", unit, "Summa (so'm)")
+            body = format_html_join("", '<tr><td>{}</td><td>{}</td><td class="hf-plan-num">{}</td><td class="hf-plan-num">{}</td>'
+                                    '<td class="hf-plan-num">{}</td><td class="hf-plan-num">{}</td></tr>',
+                                    ((row.apartment.number, row.owner_name or "—", group_thousands(row.start), group_thousands(row.end),
+                                      group_thousands(row.volume), group_thousands(row.amount)) for row in zone.rows))
+        total_amount = sum((row.amount for row in zone.rows), Decimal("0"))
+        parts.append(format_html(
+            '<section class="hf-plan-zone"><h4>{}</h4>'
+            '<table class="hf-plan-costs">{}<tr class="hf-plan-total"><td>{}</td><td class="hf-plan-num">{}</td></tr></table>'
+            '<p class="hf-plan-summary">{}: <strong>{} {}</strong> · {}: <strong>{} so\'m / {}</strong> · {}: <strong>{} ta</strong></p>'
+            '<table class="hf-plan-rows"><thead>{}</thead><tbody>{}</tbody>'
+            '<tfoot><tr><td colspan="4">{}</td><td class="hf-plan-num">{}</td><td class="hf-plan-num">{}</td></tr></tfoot></table>'
+            '</section>',
+            zone.label, costs, "Jami xarajat", f"{group_thousands(zone.total_cost)} so'm",
+            "Jami hajm", group_thousands(zone.total_volume), unit,
+            "Tarif", group_thousands(rate(zone.tariff)), unit,
+            "Kvartiralar", len(zone.rows),
+            head, body or format_html('<tr><td colspan="6">{}</td></tr>', "Hisoblanadigan kvartira yo'q."),
+            "Jami", group_thousands(zone.total_volume), group_thousands(total_amount),
+        ))
+    return mark_safe("".join(parts))
 
 
 class BillingPeriodAdminForm(forms.ModelForm):
@@ -159,8 +264,8 @@ class BillingPeriodAdmin(admin.ModelAdmin):
     form = BillingPeriodAdminForm
     # The status is set through "Holat" (open/closed), which closes or reopens the period properly;
     # the raw status field would mark a period closed without posting its charges.
-    readonly_fields   = ("created_at", "closed_at", "total_days", "state_display")
-    inlines           = [ExpenseInline, GasMeterReadingInline]
+    readonly_fields   = ("created_at", "closed_at", "total_days", "state_display", "calculation_preview")
+    inlines           = [ExpenseInline, GasMeterReadingInline, HotWaterMeterReadingInline]
     actions           = ["action_close_period", "action_reopen_period"]
 
     fieldsets = (
@@ -181,6 +286,16 @@ class BillingPeriodAdmin(admin.ModelAdmin):
             },
         ),
         (
+            "Hisob-kitob",
+            {
+                "fields": ("calculation_preview",),
+                "description": (
+                    "Kiritilgan xarajatlar va ko'rsatkichlar bo'yicha davr yopilganda qo'yiladigan hisoblar. "
+                    "Isitish faqat isitishga ulangan kvartiralarga, ulangan kundan boshlab hisoblanadi."
+                ),
+            },
+        ),
+        (
             "Sistema",
             {
                 "fields": ("created_at", "closed_at"),
@@ -188,6 +303,12 @@ class BillingPeriodAdmin(admin.ModelAdmin):
             },
         ),
     )
+
+    @admin.display(description="Hisob-kitob")
+    def calculation_preview(self, obj):
+        if obj is None or not obj.pk:
+            return "Davr saqlangandan keyin ko'rinadi."
+        return render_plan(build_plan(obj))
 
     # ── Holat (ochiq / yopiq) ───────────────────────
 
@@ -276,7 +397,13 @@ class BillingPeriodAdmin(admin.ModelAdmin):
                 )
         except ValidationError as exc:
             period.refresh_from_db(fields=["status", "closed_at"])
-            self.message_user(request, f"{period.name}: {' '.join(exc.messages)}", messages.ERROR)
+            problems = exc.messages
+            for problem in problems[:12]:
+                self.message_user(request, f"{period.name}: {problem}", messages.ERROR)
+            if len(problems) > 12:
+                self.message_user(
+                    request, f"{period.name}: yana {len(problems) - 12} ta muammo — «Hisob-kitob» bo'limida.", messages.ERROR
+                )
             return False
         return True
 
@@ -372,6 +499,49 @@ class BillingPeriodAdmin(admin.ModelAdmin):
                 f"{reopened_count} ta davr qayta ochildi.",
                 messages.WARNING,
             )
+
+
+# ══════════════════════════════════════════════════════
+#  BOILER ROOM  (Qozonxona)
+# ══════════════════════════════════════════════════════
+
+class BoilerRoomForm(forms.ModelForm):
+    class Meta:
+        model = BoilerRoom
+        fields = ("building", "name", "sections")
+
+    def clean(self):
+        cleaned = super().clean()
+        building, sections = cleaned.get("building"), cleaned.get("sections")
+        if building and sections:
+            foreign = [section.name for section in sections if section.building_id != building.pk]
+            if foreign:
+                self.add_error("sections", f"Bu seksiyalar boshqa uyniki: {', '.join(foreign)}.")
+            taken = BoilerRoom.objects.filter(sections__in=sections).exclude(pk=self.instance.pk).distinct()
+            if taken:
+                self.add_error(
+                    "sections",
+                    "Seksiya bitta qozonxonaga tegishli bo'ladi; band: " + ", ".join(room.name for room in taken) + ".",
+                )
+        return cleaned
+
+
+@admin.register(BoilerRoom)
+class BoilerRoomAdmin(admin.ModelAdmin):
+    """Boiler rooms: a building with several is billed for heating per boiler room (its sections)."""
+
+    form = BoilerRoomForm
+    list_display = ("name", "building", "sections_list")
+    list_filter = ("building",)
+    search_fields = ("name", "building__number")
+    filter_horizontal = ("sections",)
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related("building").prefetch_related("sections")
+
+    @admin.display(description="Seksiyalar")
+    def sections_list(self, obj):
+        return ", ".join(section.name for section in obj.sections.all()) or "—"
 
 
 # ══════════════════════════════════════════════════════

@@ -792,7 +792,9 @@ class PortalBillingPeriodLifecycleTests(TestCase):
         cls.user = get_user_model().objects.create_user(username="operator", password="unused-password")
         complex_obj = Complex.objects.create(title="Mirabad Avenue", address="", author="test")
         cls.building = Building.objects.create(number="64", complex=complex_obj, author="test")
-        cls.apartment = Apartment.objects.create(number="1", area=Decimal("50.00"), building=cls.building, author="test")
+        cls.apartment = Apartment.objects.create(
+            number="1", area=Decimal("50.00"), building=cls.building, author="test", heating_connected_on=date(2026, 4, 1)
+        )
         cls.owner = Owner.objects.create(fio="Heated Owner", phone="+998901234567", apartment=cls.apartment)
 
     def setUp(self):
@@ -920,7 +922,9 @@ class OperatorActivityLogTests(TestCase):
         cls.head_admin = User.objects.create_superuser(username="boss", password=cls.password)
         complex_obj = Complex.objects.create(title="Mirabad Avenue", address="", author="test")
         cls.building = Building.objects.create(number="64", complex=complex_obj, author="test")
-        cls.apartment = Apartment.objects.create(number="5", area=Decimal("50.00"), building=cls.building, author="test")
+        cls.apartment = Apartment.objects.create(
+            number="5", area=Decimal("50.00"), building=cls.building, author="test", heating_connected_on=date(2026, 4, 1)
+        )
         cls.owner = Owner.objects.create(fio="Mijoz", phone="+998901234567", apartment=cls.apartment)
 
     def _post_json(self, name, payload, **extra):

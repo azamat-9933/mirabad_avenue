@@ -128,7 +128,7 @@ class ApartmentInline(admin.TabularInline):
     """Uy ichidagi kvartiralar va ularning egalari — bitta jadvalda"""
     model = Apartment
     form = ApartmentInlineForm
-    fields = ("number", "area", "owner_fio", "owner_phone", "owner_has_contract", "account_balance")
+    fields = ("number", "area", "heating_connected_on", "owner_fio", "owner_phone", "owner_has_contract", "account_balance")
     readonly_fields = ("account_balance",)
     show_change_link = True
     verbose_name = "Kvartira"
@@ -310,14 +310,32 @@ class BuildingAdmin(admin.ModelAdmin):
 #  APARTMENT  (Kvartira)
 # ══════════════════════════════════════════════════════
 
+class HeatingConnectionFilter(admin.SimpleListFilter):
+    title = "Isitish"
+    parameter_name = "heating"
+
+    def lookups(self, request, model_admin):
+        return (("connected", "Ulangan"), ("not_connected", "Ulanmagan"))
+
+    def queryset(self, request, queryset):
+        if self.value() == "connected":
+            return queryset.filter(heating_connected_on__isnull=False)
+        if self.value() == "not_connected":
+            return queryset.filter(heating_connected_on__isnull=True)
+        return queryset
+
+
 @admin.register(Apartment)
 class ApartmentAdmin(admin.ModelAdmin):
     list_display  = (
         "number", "building", "area",
+        "heating_connected_on", "heating_disconnected_on",
         "owner_link", "balance", "created_at",
     )
     list_display_links = ("number",)
-    list_filter   = ("building__complex", "building")
+    # Heating connection dates are set for many apartments at once right in the list.
+    list_editable = ("heating_connected_on", "heating_disconnected_on")
+    list_filter   = ("building__complex", "building", HeatingConnectionFilter)
     search_fields = (
         "number",
         "building__number",
@@ -334,9 +352,10 @@ class ApartmentAdmin(admin.ModelAdmin):
         return ("balance", "created_at") if obj else ()
 
     def get_fields(self, request, obj=None):
+        heating = ("section", "heating_connected_on", "heating_disconnected_on")
         if obj:
-            return ("number", "building", "area", "balance", "created_at")
-        return ("number", "building", "area")
+            return ("number", "building", "area", *heating, "balance", "created_at")
+        return ("number", "building", "area", *heating)
 
     def save_model(self, request, obj, form, change):
         if not obj.author:

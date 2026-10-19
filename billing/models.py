@@ -13,6 +13,8 @@ from django.utils.dateparse import parse_date
 
 from properties.models import Apartment, Building, BuildingSection, Owner
 
+from .calculation import group_thousands, heated_days, previous_hot_water_readings
+
 
 MONEY_PLACES = Decimal("0.01")
 RATE_PLACES = Decimal("0.0001")
@@ -53,6 +55,33 @@ SERVICE_CHOICES = [
 
 # Invoice owner name for an apartment that had no owner when the period was billed.
 VACANT_OWNER_LABEL = "Egasi biriktirilmagan"
+
+
+class BoilerRoom(models.Model):
+    """A boiler room heating part of a building: heating costs and rates are counted per boiler room.
+
+    A building without boiler rooms is heated as a whole; with one, all its apartments belong to it;
+    with several, an apartment belongs to the boiler room serving its section.
+    """
+
+    building = models.ForeignKey(Building, on_delete=models.CASCADE, related_name="boiler_rooms", verbose_name="Uy")
+    name = models.CharField(max_length=50, verbose_name="Nomi", help_text="Masalan: A1")
+    sections = models.ManyToManyField(
+        BuildingSection,
+        blank=True,
+        related_name="boiler_rooms",
+        verbose_name="Seksiyalar",
+        help_text="Uyda bir nechta qozonxona bo'lsa: shu qozonxona isitadigan seksiyalar.",
+    )
+
+    class Meta:
+        verbose_name = "Qozonxona"
+        verbose_name_plural = "Qozonxonalar"
+        unique_together = ("building", "name")
+        ordering = ["building__number", "name"]
+
+    def __str__(self):
+        return f"{self.building.number} uy — {self.name}"
 
 
 class BillingPeriod(models.Model):
@@ -179,6 +208,7 @@ class BillingPeriod(models.Model):
     def _building_ids_for_period(self):
         ids = set(self.buildings.values_list("id", flat=True))
         ids.update(self.expenses.values_list("building_id", flat=True))
+        ids.update(self.gas_meter_readings.values_list("building_id", flat=True))
         ids.update(
             HeatingRecord.objects.filter(period=self).values_list(
                 "apartment__building_id", flat=True
@@ -191,148 +221,62 @@ class BillingPeriod(models.Model):
         )
         return {building_id for building_id in ids if building_id}
 
-    def bootstrap_services_from_legacy(self):
+    def bootstrap_services_from_legacy(self, plan=None):
         """
-        Build/refresh billing-core records from legacy billing rows.
+        Build/refresh the billing-core rows (services, their expense items, heating usages and hot
+        water readings) from the period's entered data, as worked out by calculation.build_plan.
 
-        This keeps close/recalculate working even when users only filled
-        legacy period data (Expense, HeatingRecord, HotWaterMeterReading).
+        A service built from entered data follows it exactly: when its data is removed it is emptied,
+        so a recalculation stops charging it. Services created directly (not from entered data) are
+        left as they are.
         """
         if not self.pk:
             return {"services_created": 0, "services_updated": 0}
+        from .calculation import build_plan
 
-        period_days = self.days_count()
+        plan = plan or build_plan(self)
         created_services = 0
         updated_services = 0
-        building_ids = self._building_ids_for_period()
-        if not building_ids:
-            return {"services_created": 0, "services_updated": 0}
-
-        apartments = Apartment.objects.filter(building_id__in=building_ids).select_related("building")
-        apartments_by_building = defaultdict(list)
-        apartment_ids = []
-        for apartment in apartments:
-            apartments_by_building[apartment.building_id].append(apartment)
-            apartment_ids.append(apartment.id)
-
-        heating_records = {
-            record.apartment_id: record
-            for record in HeatingRecord.objects.filter(period=self, apartment_id__in=apartment_ids)
+        services = {
+            (service.building_id, service.boiler_room_id, service.service_type): service
+            for service in self.services.all()
         }
-        heating_override_apartment_ids = {
-            record.apartment_id
-            for record in heating_records.values()
-            if record.excluded_dates
-        }
-        hot_water_records = {}
-        for record in HotWaterMeterReading.objects.filter(period=self, apartment_id__in=apartment_ids):
-            if record.start_reading is None and record.end_reading is None:
+        synced = set()
+        for zone in plan.zones:
+            service = services.get(zone.key)
+            if service is None:
+                if not zone.has_inputs:
+                    continue
+                service = BuildingService.objects.create(
+                    period=self,
+                    building=zone.building,
+                    boiler_room=zone.boiler_room,
+                    service_type=zone.service_type,
+                    is_from_inputs=True,
+                )
+                created_services += 1
+            elif zone.has_inputs or service.is_from_inputs:
+                if not service.is_from_inputs:
+                    service.is_from_inputs = True
+                    service.save(update_fields=["is_from_inputs", "updated_at"])
+                updated_services += 1
+            else:
                 continue
-            hot_water_records[record.apartment_id] = record
-
-        legacy_expenses = defaultdict(list)
-        for expense in self.expenses.select_related("building").all():
-            legacy_expenses[(expense.building_id, expense.service_type)].append(expense)
-        # Gas meters are costs of their service too: consumption × price per m³.
-        legacy_gas = defaultdict(list)
-        for reading in self.gas_meter_readings.all():
-            legacy_gas[(reading.building_id, reading.service_type)].append(reading)
-
-        def sync_expense_items(service, key, default_title):
-            items = [
-                ServiceExpense(service=service, title=(expense.name or default_title)[:255], amount=money(expense.amount))
-                for expense in legacy_expenses.get(key, [])
-            ] + [
-                ServiceExpense(
-                    service=service,
-                    title=f"Gaz hisoblagich: {reading.consumption} m³ × {reading.price_per_m3}"[:255],
-                    amount=money(reading.total_gas_cost),
-                )
-                for reading in legacy_gas.get(key, [])
-            ]
-            if items:
+            synced.add(service.pk)
+            service.expense_items.all().delete()
+            ServiceExpense.objects.bulk_create(
+                ServiceExpense(service=service, title=title, amount=amount) for title, amount in zone.costs
+            )
+            if zone.is_heating:
+                service.sync_heating_usages(zone.rows)
+            else:
+                service.sync_hot_water_readings(zone.rows)
+        # A service built from data that no longer exists (house removed, boiler room deleted) charges nothing.
+        for service in services.values():
+            if service.is_from_inputs and service.pk not in synced:
                 service.expense_items.all().delete()
-                ServiceExpense.objects.bulk_create(items)
-
-        existing_services = set(
-            self.services.values_list("building_id", "service_type")
-        )
-
-        for building_id, apartment_rows in apartments_by_building.items():
-            has_heating_overrides = any(
-                apartment.id in heating_override_apartment_ids for apartment in apartment_rows
-            )
-            has_hot_water_records = any(apartment.id in hot_water_records for apartment in apartment_rows)
-            heating_needed = bool(
-                legacy_expenses.get((building_id, SERVICE_HEATING))
-                or legacy_gas.get((building_id, SERVICE_HEATING))
-                or has_heating_overrides
-                or (building_id, SERVICE_HEATING) in existing_services
-            )
-            hot_water_needed = bool(
-                legacy_expenses.get((building_id, SERVICE_HOT_WATER))
-                or legacy_gas.get((building_id, SERVICE_HOT_WATER))
-                or has_hot_water_records
-                or (building_id, SERVICE_HOT_WATER) in existing_services
-            )
-
-            if heating_needed:
-                service, created = BuildingService.objects.get_or_create(
-                    period=self,
-                    building_id=building_id,
-                    service_type=SERVICE_HEATING,
-                )
-                if created:
-                    created_services += 1
-                else:
-                    updated_services += 1
-
-                sync_expense_items(service, (building_id, SERVICE_HEATING), "Heating expense")
-
-                for apartment in apartment_rows:
-                    record = heating_records.get(apartment.id)
-                    days_value = record.heated_days if record else period_days
-                    usage, usage_created = HeatingApartmentUsage.objects.get_or_create(
-                        service=service,
-                        apartment=apartment,
-                        defaults={"days_provided": days_value},
-                    )
-                    should_sync_existing = bool(record and record.excluded_dates)
-                    if not usage_created and should_sync_existing and usage.days_provided != days_value:
-                        usage.days_provided = days_value
-                        usage.save(update_fields=["days_provided", "heated_area", "updated_at"])
-
-            if hot_water_needed:
-                service, created = BuildingService.objects.get_or_create(
-                    period=self,
-                    building_id=building_id,
-                    service_type=SERVICE_HOT_WATER,
-                )
-                if created:
-                    created_services += 1
-                else:
-                    updated_services += 1
-
-                sync_expense_items(service, (building_id, SERVICE_HOT_WATER), "Hot water expense")
-
-                for apartment in apartment_rows:
-                    reading = hot_water_records.get(apartment.id)
-                    if not reading:
-                        continue
-                    start_value = _decimal(reading.start_reading)
-                    end_value = _decimal(reading.end_reading) if reading.end_reading is not None else start_value
-                    usage, usage_created = HotWaterReading.objects.get_or_create(
-                        service=service,
-                        apartment=apartment,
-                        defaults={"start_value": start_value, "end_value": end_value},
-                    )
-                    if not usage_created and (
-                        usage.start_value != start_value or usage.end_value != end_value
-                    ):
-                        usage.start_value = start_value
-                        usage.end_value = end_value
-                        usage.save(update_fields=["start_value", "end_value", "consumption", "updated_at"])
-
+                service.heating_usages.all().delete()
+                service.hot_water_readings.all().delete()
         return {"services_created": created_services, "services_updated": updated_services}
 
     def _sync_summaries_from_services(self):
@@ -440,21 +384,22 @@ class BillingPeriod(models.Model):
 
     def _build_service_charges(self, service: "BuildingService"):
         service.calculate()
-        if service.total_volume <= 0:
-            raise ValidationError(f"{service} total volume must be greater than zero.")
-
+        if service.total_expense <= 0:
+            return  # nothing to spread
+        # Each share is volume × cost / total volume, rounded only once (to the tiyin), never via a rounded tariff.
+        share = service.total_expense / service.total_volume
         if service.service_type == SERVICE_HEATING:
             rows = service.heating_usages.select_related("apartment", "apartment__owner")
             for usage in rows:
                 apartment = usage.apartment
                 owner = getattr(apartment, "owner", None)
-                yield owner, apartment, usage.heated_area, service.tariff, money(usage.heated_area * service.tariff)
+                yield owner, apartment, usage.heated_area, service.tariff, money(usage.heated_area * share)
         else:
             rows = service.hot_water_readings.select_related("apartment", "apartment__owner")
             for reading in rows:
                 apartment = reading.apartment
                 owner = getattr(apartment, "owner", None)
-                yield owner, apartment, reading.consumption, service.tariff, money(reading.consumption * service.tariff)
+                yield owner, apartment, reading.consumption, service.tariff, money(reading.consumption * share)
 
     def expense_totals(self) -> dict:
         """Costs per (building id, service type): the expense rows plus the gas meters' cost."""
@@ -469,37 +414,52 @@ class BillingPeriod(models.Model):
         """All costs of the period, gas meters included (what closing spreads over the residents)."""
         return money(sum(self.expense_totals().values(), Decimal("0")))
 
+    def _prepare_services(self):
+        """Refresh the core rows from the entered data; every problem is reported at once, before any change."""
+        from .calculation import build_plan
+
+        self.sync_default_records()
+        plan = build_plan(self)
+        if plan.errors:
+            raise ValidationError(plan.errors)
+        self.bootstrap_services_from_legacy(plan)
+
+    def _charge_rows(self):
+        """Charges of every service of the period: (service, owner, apartment, volume, tariff, amount)."""
+        rows = []
+        for service in self.services.select_related("building", "boiler_room"):
+            rows.extend((service, *row) for row in self._build_service_charges(service))
+        return rows
+
     def close_period(self):
         with transaction.atomic():
             locked = BillingPeriod.objects.select_for_update().get(pk=self.pk)
             if locked.status == self.STATUS_CLOSED:
-                raise ValidationError("Billing period is already closed.")
+                raise ValidationError("Davr allaqachon yopilgan.")
             if locked._active_charges().exists():
-                raise ValidationError("Active charges already exist for this period.")
+                raise ValidationError("Bu davr uchun hisoblar allaqachon qo'yilgan.")
 
-            locked.sync_default_records()
-            locked.bootstrap_services_from_legacy()
-            services = list(locked.services.select_related("building").all())
-            if not services:
-                raise ValidationError("Billing period has no building services to close.")
+            locked._prepare_services()
+            charge_specs = locked._charge_rows()
+            if not charge_specs:
+                raise ValidationError("Davrda hisoblanadigan xarajat yo'q: avval xarajatlar va ko'rsatkichlarni kiriting.")
 
             account_totals: dict[int, Decimal] = {}
             charge_rows = []
-            for service in services:
-                for owner, apartment, row_volume, row_tariff, row_amount in locked._build_service_charges(service):
-                    charge_rows.append(
-                        Charge(
-                            period=locked,
-                            service=service,
-                            owner=owner,
-                            apartment=apartment,
-                            charge_type=service.service_type,
-                            amount=row_amount,
-                            tariff=row_tariff,
-                            volume=row_volume,
-                        )
+            for service, owner, apartment, row_volume, row_tariff, row_amount in charge_specs:
+                charge_rows.append(
+                    Charge(
+                        period=locked,
+                        service=service,
+                        owner=owner,
+                        apartment=apartment,
+                        charge_type=service.service_type,
+                        amount=row_amount,
+                        tariff=row_tariff,
+                        volume=row_volume,
                     )
-                    account_totals[apartment.pk] = account_totals.get(apartment.pk, Decimal("0")) + row_amount
+                )
+                account_totals[apartment.pk] = account_totals.get(apartment.pk, Decimal("0")) + row_amount
 
             Charge.objects.bulk_create(charge_rows)
             locked._sync_invoices_from_active_charges(mark_recalculated=False)
@@ -524,7 +484,7 @@ class BillingPeriod(models.Model):
 
     def reopen_period(self):
         if self.status != self.STATUS_CLOSED:
-            raise ValidationError("Only closed periods can be reopened.")
+            raise ValidationError("Faqat yopiq davrni qayta ochish mumkin.")
         self.status = self.STATUS_REOPENED
         self.save(update_fields=["status"])
         return self
@@ -533,10 +493,9 @@ class BillingPeriod(models.Model):
         with transaction.atomic():
             locked = BillingPeriod.objects.select_for_update().get(pk=self.pk)
             if locked.status not in {self.STATUS_CLOSED, self.STATUS_REOPENED}:
-                raise ValidationError("Only closed or reopened periods can be recalculated.")
+                raise ValidationError("Faqat yopiq yoki qayta ochilgan davrni qayta hisoblash mumkin.")
 
-            locked.sync_default_records()
-            locked.bootstrap_services_from_legacy()
+            locked._prepare_services()
             active_charges = list(locked.charges.filter(is_cancelled=False))
             old_totals: dict[int, Decimal] = {}
             for charge in active_charges:
@@ -551,22 +510,20 @@ class BillingPeriod(models.Model):
 
             new_charge_rows = []
             new_totals: dict[int, Decimal] = {}
-            services = list(locked.services.select_related("building").all())
-            for service in services:
-                for owner, apartment, row_volume, row_tariff, row_amount in locked._build_service_charges(service):
-                    new_charge_rows.append(
-                        Charge(
-                            period=locked,
-                            service=service,
-                            owner=owner,
-                            apartment=apartment,
-                            charge_type=service.service_type,
-                            amount=row_amount,
-                            tariff=row_tariff,
-                            volume=row_volume,
-                        )
+            for service, owner, apartment, row_volume, row_tariff, row_amount in locked._charge_rows():
+                new_charge_rows.append(
+                    Charge(
+                        period=locked,
+                        service=service,
+                        owner=owner,
+                        apartment=apartment,
+                        charge_type=service.service_type,
+                        amount=row_amount,
+                        tariff=row_tariff,
+                        volume=row_volume,
                     )
-                    new_totals[apartment.pk] = new_totals.get(apartment.pk, Decimal("0")) + row_amount
+                )
+                new_totals[apartment.pk] = new_totals.get(apartment.pk, Decimal("0")) + row_amount
 
             Charge.objects.bulk_create(new_charge_rows)
             locked._sync_invoices_from_active_charges(mark_recalculated=True)
@@ -596,7 +553,11 @@ class BillingPeriod(models.Model):
 class BuildingService(models.Model):
     period = models.ForeignKey(BillingPeriod, on_delete=models.CASCADE, related_name="services")
     building = models.ForeignKey(Building, on_delete=models.CASCADE, related_name="billing_services")
+    # Heating of a building with boiler rooms is billed per boiler room; empty = the whole building.
+    boiler_room = models.ForeignKey(BoilerRoom, on_delete=models.PROTECT, null=True, blank=True, related_name="services")
     service_type = models.CharField(max_length=20, choices=SERVICE_CHOICES)
+    # Built from the period's entered data (expenses, meters, connections) and refreshed from it on every close.
+    is_from_inputs = models.BooleanField(default=False)
     gas_start = models.DecimalField(max_digits=14, decimal_places=4, null=True, blank=True)
     gas_end = models.DecimalField(max_digits=14, decimal_places=4, null=True, blank=True)
     gas_price = models.DecimalField(max_digits=14, decimal_places=4, null=True, blank=True)
@@ -610,12 +571,29 @@ class BuildingService(models.Model):
 
     class Meta:
         constraints = [
-            models.UniqueConstraint(fields=["period", "building", "service_type"], name="uniq_building_service_period_type")
+            models.UniqueConstraint(
+                fields=["period", "building", "service_type"],
+                condition=models.Q(boiler_room__isnull=True),
+                name="uniq_building_service_period_type",
+            ),
+            models.UniqueConstraint(
+                fields=["period", "boiler_room", "service_type"],
+                condition=models.Q(boiler_room__isnull=False),
+                name="uniq_boiler_room_service_period_type",
+            ),
         ]
         ordering = ["period__start_date", "building__complex__title", "building__number", "service_type"]
 
     def __str__(self):
-        return f"{self.period.title} | {self.building} | {self.get_service_type_display()}"
+        room = f" | {self.boiler_room.name}" if self.boiler_room_id else ""
+        return f"{self.period.title} | {self.building}{room} | {self.get_service_type_display()}"
+
+    @property
+    def label(self):
+        place = f"{self.building.number} uy"
+        if self.boiler_room_id:
+            place += f", {self.boiler_room.name} qozonxona"
+        return f"{place} — {'isitish' if self.service_type == SERVICE_HEATING else 'issiq suv'}"
 
     def clean(self):
         super().clean()
@@ -649,8 +627,41 @@ class BuildingService(models.Model):
 
     def calculate_tariff(self):
         if self.total_volume <= 0:
-            raise ValidationError("Total volume must be greater than zero.")
+            if self.total_expense <= 0:
+                return Decimal("0")  # nothing to spread, nothing billed
+            raise ValidationError(
+                f"{self.label}: xarajat {group_thousands(self.total_expense)} so'm, lekin "
+                f"{'isitilgan maydon' if self.service_type == SERVICE_HEATING else 'sarf'} 0 — taqsimlab bo'lmaydi."
+            )
         return rate(self.total_expense / self.total_volume)
+
+    def sync_heating_usages(self, rows):
+        """Make the heating usages exactly the given plan rows (apartment, days)."""
+        wanted = {row.apartment.pk: row for row in rows}
+        self.heating_usages.exclude(apartment_id__in=list(wanted)).delete()
+        existing = {usage.apartment_id: usage for usage in self.heating_usages.all()}
+        for apartment_id, row in wanted.items():
+            usage = existing.get(apartment_id)
+            if usage is None:
+                HeatingApartmentUsage.objects.create(service=self, apartment=row.apartment, days_provided=row.days)
+            elif usage.days_provided != row.days or usage.heated_area != row.volume:
+                usage.apartment = row.apartment
+                usage.days_provided = row.days
+                usage.save(update_fields=["days_provided", "heated_area", "updated_at"])
+
+    def sync_hot_water_readings(self, rows):
+        """Make the hot water readings exactly the given plan rows (apartment, start, end)."""
+        wanted = {row.apartment.pk: row for row in rows}
+        self.hot_water_readings.exclude(apartment_id__in=list(wanted)).delete()
+        existing = {reading.apartment_id: reading for reading in self.hot_water_readings.all()}
+        for apartment_id, row in wanted.items():
+            reading = existing.get(apartment_id)
+            if reading is None:
+                HotWaterReading.objects.create(service=self, apartment=row.apartment, start_value=row.start, end_value=row.end)
+            elif reading.start_value != row.start or reading.end_value != row.end:
+                reading.start_value = row.start
+                reading.end_value = row.end
+                reading.save(update_fields=["start_value", "end_value", "consumption", "updated_at"])
 
     def calculate(self):
         self.full_clean()
@@ -867,12 +878,26 @@ class Expense(models.Model):
         help_text="Agar uyda seksiyalar bo'lsa (masalan 66-uy: A1, A5)",
     )
     service_type = models.CharField(max_length=20, choices=SERVICE_CHOICES, verbose_name="Xizmat turi")
+    boiler_room = models.ForeignKey(
+        BoilerRoom,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="expenses",
+        verbose_name="Qozonxona",
+        help_text="Isitish xarajati uchun, agar uyda bir nechta qozonxona bo'lsa.",
+    )
     name = models.CharField(max_length=255, verbose_name="Xarajat nomi", help_text="Masalan: Qozonxona xizmati, Gaz sarfi...")
     amount = models.DecimalField(max_digits=16, decimal_places=2, verbose_name="Summa (so'm)")
 
     class Meta:
         verbose_name = "Xarajat"
         verbose_name_plural = "Xarajatlar"
+
+    def clean(self):
+        super().clean()
+        if self.boiler_room_id and self.building_id and self.boiler_room.building_id != self.building_id:
+            raise ValidationError({"boiler_room": "Qozonxona boshqa uyga tegishli."})
 
     def __str__(self):
         return f"{self.name} — {self.amount} so'm ({self.building})"
@@ -883,7 +908,23 @@ class GasMeterReading(models.Model):
     building = models.ForeignKey(Building, on_delete=models.CASCADE, related_name="gas_meter_readings", verbose_name="Uy")
     section = models.ForeignKey(BuildingSection, on_delete=models.SET_NULL, null=True, blank=True, related_name="gas_meter_readings", verbose_name="Seksiya")
     service_type = models.CharField(max_length=20, choices=SERVICE_CHOICES, verbose_name="Xizmat turi", help_text="Isitish uchun yoki GVS uchun gazh")
-    start_reading = models.DecimalField(max_digits=12, decimal_places=2, verbose_name="Boshlang'ich ko'rsatkich (kub)")
+    boiler_room = models.ForeignKey(
+        BoilerRoom,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="gas_meter_readings",
+        verbose_name="Qozonxona",
+        help_text="Isitish gazi uchun, agar uyda bir nechta qozonxona bo'lsa.",
+    )
+    start_reading = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        verbose_name="Boshlang'ich ko'rsatkich (kub)",
+        help_text="Bo'sh qolsa, o'tgan oydagi oxirgi ko'rsatkich olinadi.",
+    )
     end_reading = models.DecimalField(max_digits=12, decimal_places=2, verbose_name="Oxirgi ko'rsatkich (kub)")
     price_per_m3 = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="1 kub narxi (so'm)")
 
@@ -891,11 +932,36 @@ class GasMeterReading(models.Model):
         verbose_name = "Gaz hisoblagich ko'rsatkichi"
         verbose_name_plural = "Gaz hisoblagich ko'rsatkichlari"
 
+    def clean(self):
+        super().clean()
+        if self.boiler_room_id and self.building_id and self.boiler_room.building_id != self.building_id:
+            raise ValidationError({"boiler_room": "Qozonxona boshqa uyga tegishli."})
+
+    def previous_end_reading(self):
+        """The same meter's end reading in the latest earlier period (same house, boiler room and service)."""
+        if not self.period_id or not self.building_id:
+            return None
+        return (
+            GasMeterReading.objects.filter(
+                building_id=self.building_id,
+                boiler_room_id=self.boiler_room_id,
+                service_type=self.service_type,
+                period__start_date__lt=self.period.start_date,
+            )
+            .order_by("-period__start_date", "-pk")
+            .values_list("end_reading", flat=True)
+            .first()
+        )
+
+    def effective_start_reading(self):
+        return self.start_reading if self.start_reading is not None else self.previous_end_reading()
+
     @property
     def consumption(self):
-        if self.start_reading is None or self.end_reading is None:
+        start = self.effective_start_reading()
+        if start is None or self.end_reading is None:
             return Decimal("0")
-        return max(Decimal("0"), self.end_reading - self.start_reading)
+        return max(Decimal("0"), self.end_reading - start)
 
     @property
     def total_gas_cost(self):
@@ -943,7 +1009,8 @@ class HeatingRecord(models.Model):
 
     @property
     def heated_days(self):
-        return self.period.total_days - len(self.excluded_dates)
+        """Heated days of a connected apartment: from its connection day, minus the dates heating was off."""
+        return heated_days(self.apartment, self.period, self.excluded_dates)
 
     @property
     def heated_area(self):
@@ -971,7 +1038,7 @@ class HeatingRecord(models.Model):
 class HotWaterMeterReading(models.Model):
     period = models.ForeignKey(BillingPeriod, on_delete=models.CASCADE, related_name="hot_water_readings", verbose_name="Davr")
     apartment = models.ForeignKey(Apartment, on_delete=models.CASCADE, related_name="hot_water_readings", verbose_name="Kvartira")
-    start_reading = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, verbose_name="Boshlang'ich ko'rsatkich (kub)", help_text="Davr boshidagi hisoblagich ko'rsatkichi")
+    start_reading = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, verbose_name="Boshlang'ich ko'rsatkich (kub)", help_text="Bo'sh qolsa, o'tgan oydagi oxirgi ko'rsatkich olinadi.")
     end_reading = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, verbose_name="Oxirgi ko'rsatkich (kub)", help_text="Davr oxiridagi hisoblagich ko'rsatkichi")
 
     class Meta:
@@ -979,13 +1046,23 @@ class HotWaterMeterReading(models.Model):
         verbose_name_plural = "GVS hisoblagich ko'rsatkichlari"
         unique_together = ("period", "apartment")
 
+    def effective_start_reading(self):
+        """The entered start reading, else the apartment's last reading in an earlier period."""
+        if self.start_reading is not None:
+            return self.start_reading
+        if not self.apartment_id or not self.period_id:
+            return None
+        return previous_hot_water_readings([self.apartment_id], self.period).get(self.apartment_id)
+
     @property
     def consumption(self):
-        if self.start_reading is not None and self.end_reading is not None:
-            return max(Decimal("0"), self.end_reading - self.start_reading)
-        if self.start_reading is None and self.end_reading is not None:
-            return self.end_reading
-        return Decimal("0")
+        """end − start; nothing without an end reading or any start (it is not billed then)."""
+        if self.end_reading is None:
+            return Decimal("0")
+        start = self.effective_start_reading()
+        if start is None:
+            return Decimal("0")
+        return max(Decimal("0"), self.end_reading - start)
 
     def __str__(self):
         return f"GVS Kv.{self.apartment.number} — {self.period.title} ({self.consumption} kub)"
