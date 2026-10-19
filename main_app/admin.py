@@ -336,10 +336,9 @@ class ApartmentAdmin(admin.ModelAdmin):
         return ("balance", "created_at") if obj else ()
 
     def get_fields(self, request, obj=None):
-        # The section decides which boiler room heats the apartment in a house with several.
         if obj:
-            return ("number", "building", "section", "area", "balance", "created_at")
-        return ("number", "building", "section", "area")
+            return ("number", "building", "area", "balance", "created_at")
+        return ("number", "building", "area")
 
     def save_model(self, request, obj, form, change):
         if not obj.author:
