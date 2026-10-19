@@ -28,7 +28,7 @@ PORTAL_PAGES = [
     "portal:dashboard",
     "portal:residential",
     "portal:billing",
-    "portal:billing_period_create",
+    "portal:billing_periods",
     "portal:analytics",
 ]
 
@@ -784,87 +784,224 @@ class PortalBillingNoticeTests(TestCase):
         self.assertEqual(response.status_code, 404)
 
 
-class PortalBillingPeriodLifecycleTests(TestCase):
-    """The portal status form can always move a period forward and never strands posted charges."""
+class PortalBillingPeriodPagesTests(TestCase):
+    """/billing/periods: the period list with its Create window, and a period's Excel-like house sheets."""
 
     @classmethod
     def setUpTestData(cls):
         cls.user = get_user_model().objects.create_user(username="operator", password="unused-password")
         complex_obj = Complex.objects.create(title="Mirabad Avenue", address="", author="test")
-        cls.building = Building.objects.create(number="64", complex=complex_obj, author="test")
-        cls.apartment = Apartment.objects.create(number="1", area=Decimal("50.00"), building=cls.building, author="test")
-        cls.owner = Owner.objects.create(fio="Heated Owner", phone="+998901234567", apartment=cls.apartment)
+        cls.house_60 = Building.objects.create(number="60", complex=complex_obj, author="test")
+        cls.house_60v = Building.objects.create(number="60V", complex=complex_obj, author="test")
+        cls.first = Apartment.objects.create(number="1", area=Decimal("171.94"), building=cls.house_60, author="test")
+        cls.rest = Apartment.objects.create(number="2", area=Decimal("173021.18"), building=cls.house_60, author="test")
+        cls.other = Apartment.objects.create(number="1", area=Decimal("50.00"), building=cls.house_60v, author="test")
+        Owner.objects.create(fio="Aliyev Jasur", phone="+998901234567", apartment=cls.first)
+        Owner.objects.create(fio="Karimova Dilnoza", phone="+998901234568", apartment=cls.rest)
 
     def setUp(self):
         self.client.force_login(self.user)
-        self.period = BillingPeriod.objects.create(name="April 2026", start_date=date(2026, 4, 1), end_date=date(2026, 4, 30))
-        self.period.buildings.add(self.building.pk)
-        HeatingRecord.objects.create(period=self.period, apartment_id=self.apartment.pk, heated_from=date(2026, 4, 1))
-        self.expense = Expense.objects.create(
-            period=self.period, building_id=self.building.pk, service_type="heating", name="Boiler", amount=Decimal("3000")
+
+    def _create(self, name="2025-Dekabr", start="2025-12-01", end="2025-12-31", follow=False):
+        return self.client.post(
+            reverse("portal:billing_periods"), {"name": name, "start_date": start, "end_date": end}, follow=follow
         )
 
-    def _post(self, **data):
-        data.setdefault("period_id", self.period.id)
-        data.setdefault("building_id", self.building.id)
-        return self.client.post(reverse("portal:billing_period_create"), data, follow=True)
+    def _sheet(self, period, **data):
+        data.setdefault("building", self.house_60.pk)
+        data.setdefault("sheet", "heating")
+        return self.client.post(reverse("portal:billing_period_sheet", args=[period.pk]), data, follow=True)
 
     def _messages(self, response):
         return [str(message) for message in response.context["messages"]]
 
-    def test_reopened_period_is_recalculated_when_closed_again(self):
-        self._post(action="update_status", status="closed")
-        self.owner.refresh_from_db()
-        self.assertEqual(self.owner.balance, Decimal("-3000.00"))
-
-        self._post(action="update_status", status="reopened")
-        Expense.objects.filter(pk=self.expense.pk).update(amount=Decimal("1500"))
-        self._post(action="update_status", status="closed", reason="Boiler invoice corrected")
-
-        self.period.refresh_from_db()
-        self.owner.refresh_from_db()
-        self.assertEqual(self.period.status, BillingPeriod.STATUS_CLOSED)
-        self.assertEqual(self.owner.balance, Decimal("-1500.00"))
-        self.assertEqual(RecalculationLog.objects.get(period=self.period).author, self.user)
-
-    def test_billed_period_cannot_go_back_to_draft(self):
-        self._post(action="update_status", status="closed")
-        response = self._post(action="update_status", status="draft")
-        self.period.refresh_from_db()
-        self.assertEqual(self.period.status, BillingPeriod.STATUS_CLOSED)
-        self.assertTrue(any("draft" in message for message in self._messages(response)))
-
-    def test_closed_period_inputs_are_read_only(self):
-        self._post(action="update_status", status="closed")
-        self._post(action="add_expense", service_type="heating", name="Late", amount="10")
-        self._post(action="update_heating_record", apartment_id=self.apartment.id, excluded_dates="2026-04-02")
-        self.assertEqual(Expense.objects.filter(period=self.period).count(), 1)
-        self.assertEqual(HeatingRecord.objects.get(period=self.period, apartment=self.apartment).excluded_dates, [])
-
-    def test_heating_dates_are_saved_for_the_period(self):
-        self._post(
-            action="update_heating_record", apartment_id=self.apartment.id,
-            heated_from="2026-04-11", heated_until="2026-04-20", excluded_dates="2026-04-15",
+    def _house_60_december(self):
+        """The operators' example: house 60, December; apartment 1 heated 30 of 31 days."""
+        self._create()
+        period = BillingPeriod.objects.get(name="2025-Dekabr")
+        first_heating = HeatingRecord.objects.get(period=period, apartment=self.first)
+        rest_heating = HeatingRecord.objects.get(period=period, apartment=self.rest)
+        other_heating = HeatingRecord.objects.get(period=period, apartment=self.other)
+        self._sheet(
+            period, action="save_heating", row=[first_heating.pk, rest_heating.pk],
+            **{
+                f"from-{first_heating.pk}": "2025-12-01", f"until-{first_heating.pk}": "2025-12-31", f"days-{first_heating.pk}": "30",
+                f"from-{rest_heating.pk}": "2025-12-01", f"until-{rest_heating.pk}": "2025-12-31", f"days-{rest_heating.pk}": "1",
+            },
         )
-        record = HeatingRecord.objects.get(period=self.period, apartment=self.apartment)
-        self.assertEqual((record.heated_from, record.heated_until, record.heated_days), (date(2026, 4, 11), date(2026, 4, 20), 9))
+        self._sheet(
+            period, building=self.house_60v.pk, action="save_heating", row=[other_heating.pk],
+            **{f"from-{other_heating.pk}": "", f"until-{other_heating.pk}": "", f"days-{other_heating.pk}": ""},
+        )
+        self._sheet(
+            period, action="save_expenses",
+            new_name=["Обслуживание котельной", "Холодная вода"], new_amount=["5 967 950", "1 060 800"],
+        )
+        self._sheet(period, action="save_gas", new_gstart=["579 702,44"], new_gend=["601 719,18"], new_gprice=["1 000"])
+        self._sheet(
+            period, sheet="hot_water", action="save_expenses",
+            new_name=["Обслуживание котельной", "Электроэнергия"], new_amount=["5967950", "1500000"],
+        )
+        self._sheet(period, sheet="hot_water", action="save_gas", new_gstart=["1000"], new_gend=["5893"], new_gprice=["1000"])
+        readings = {
+            reading.apartment_id: reading.pk
+            for reading in HotWaterMeterReading.objects.filter(period=period, apartment__building=self.house_60)
+        }
+        self._sheet(
+            period, sheet="hot_water", action="save_hot_water", row=list(readings.values()),
+            **{
+                f"start-{readings[self.first.pk]}": "89,1", f"end-{readings[self.first.pk]}": "100",
+                f"start-{readings[self.rest.pk]}": "0", f"end-{readings[self.rest.pk]}": "214,3",
+            },
+        )
+        return period
 
-        response = self._post(action="update_heating_record", apartment_id=self.apartment.id, heated_from="2026-05-01")
-        self.assertTrue(any("davr oralig'idan tashqarida" in message for message in self._messages(response)))
-        record.refresh_from_db()
-        self.assertEqual(record.heated_from, date(2026, 4, 11))
+    def test_create_makes_an_open_period_with_both_tables_for_every_house(self):
+        response = self._create(follow=True)
 
-    def test_impossible_excluded_date_is_reported_not_a_server_error(self):
-        response = self._post(action="update_heating_record", apartment_id=self.apartment.id, excluded_dates="2026-02-30")
+        period = BillingPeriod.objects.get(name="2025-Dekabr")
+        self.assertRedirects(response, reverse("portal:billing_periods"))
+        self.assertEqual(period.status, BillingPeriod.STATUS_DRAFT)
+        self.assertEqual(set(period.buildings.all()), {self.house_60, self.house_60v})
+        heating = HeatingRecord.objects.filter(period=period)
+        self.assertEqual({row.apartment_id for row in heating}, {self.first.pk, self.rest.pk, self.other.pk})
+        self.assertEqual({(row.heated_from, row.heated_until) for row in heating}, {(date(2025, 12, 1), None)})
+        self.assertEqual(HotWaterMeterReading.objects.filter(period=period).count(), 3)
+        self.assertTrue(AuditEvent.objects.filter(title="Billing period created").exists())
+        self.assertContains(response, "2025-Dekabr")
+
+    def test_create_refuses_overlapping_or_reversed_dates(self):
+        self._create()
+        overlapping = self._create(name="Again", start="2025-12-20", end="2026-01-19")
+        reversed_dates = self._create(name="Backwards", start="2026-02-10", end="2026-02-01")
+
+        self.assertEqual(BillingPeriod.objects.count(), 1)
+        self.assertContains(overlapping, "boshqa davr bilan kesishadi")
+        self.assertContains(reversed_dates, "boshlanish sanasidan oldin")
+        self.assertTrue(reversed_dates.context["open_create"])  # the window stays open with what was typed
+
+    def test_list_shows_periods_in_order_and_opens_on_the_latest(self):
+        for month in range(1, 13):
+            BillingPeriod.objects.create(name=f"2026-{month:02d}", start_date=date(2026, month, 1), end_date=date(2026, month, 1))
+
+        latest = self.client.get(reverse("portal:billing_periods"))
+        first_page = self.client.get(reverse("portal:billing_periods"), {"page": 1})
+
+        self.assertEqual([row["period"].name for row in latest.context["rows"]], ["2026-11", "2026-12"])
+        self.assertEqual([row["period"].name for row in first_page.context["rows"]][:3], ["2026-01", "2026-02", "2026-03"])
+        self.assertContains(latest, reverse("portal:billing_period_sheet", args=[BillingPeriod.objects.get(name="2026-12").pk]))
+
+    def test_old_address_opens_the_periods_page(self):
+        response = self.client.get("/billing/periods/create")
+        self.assertRedirects(response, reverse("portal:billing_periods"))
+
+    def test_house_60_december_matches_the_excel_sheets(self):
+        period = self._house_60_december()
+
+        heating = self.client.get(reverse("portal:billing_period_sheet", args=[period.pk]), {"building": self.house_60.pk})
+        rows = {row["apt"]: row for row in heating.context["rows"]}
+        self.assertEqual((rows["1"]["range_days"], rows["1"]["days"], rows["1"]["heated_area"]), (31, "30", "5 158,2"))
+        self.assertEqual(rows["1"]["amount"], "840 851,77")
+        self.assertEqual(heating.context["total_cost"], "29 045 490")  # gas 22 016 740 + boiler 5 967 950 + cold water 1 060 800
+        self.assertEqual(heating.context["total_volume"], "178 179,38")
+        self.assertEqual(heating.context["tariff"], "163,0126")
+
+        hot_water = self.client.get(
+            reverse("portal:billing_period_sheet", args=[period.pk]), {"building": self.house_60.pk, "sheet": "hot_water"}
+        )
+        rows = {row["apt"]: row for row in hot_water.context["rows"]}
+        self.assertEqual((rows["1"]["consumption"], rows["1"]["amount"]), ("10,9", "598 287,54"))
+        self.assertEqual((hot_water.context["total_volume"], hot_water.context["total_cost"]), ("225,2", "12 360 950"))
+
+        response = self._sheet(period, action="set_status", status="closed")
+        period.refresh_from_db()
+        self.first.refresh_from_db()
+        self.assertEqual(period.status, BillingPeriod.STATUS_CLOSED)
+        self.assertEqual(self.first.balance, Decimal("-1439139.31"))
+        self.assertTrue(any("yopildi" in message for message in self._messages(response)))
+
+    def test_heating_errors_keep_what_was_typed(self):
+        self._create()
+        period = BillingPeriod.objects.get()
+        record = HeatingRecord.objects.get(period=period, apartment=self.first)
+
+        response = self._sheet(
+            period, action="save_heating", row=[record.pk],
+            **{f"from-{record.pk}": "2025-12-11", f"until-{record.pk}": "", f"days-{record.pk}": "25"},
+        )
+
         self.assertEqual(response.status_code, 200)
-        self.assertTrue(any("2026-02-30" in message for message in self._messages(response)))
+        self.assertTrue(any("kv 1" in message and "ko'p" in message for message in self._messages(response)))
+        self.assertEqual({row["apt"]: row["days"] for row in response.context["rows"]}["1"], "25")
+        record.refresh_from_db()
+        self.assertEqual((record.heated_from, record.days_given), (date(2025, 12, 1), None))
 
-    def test_period_page_counts_charges_per_house(self):
-        self._post(action="update_status", status="closed")
-        response = self.client.get(reverse("portal:billing_period_create"))
-        row = response.context["building_period_cards"][0]["periods"][0]
-        self.assertEqual((row["charges_count"], row["invoices_count"]), (1, 1))
-        self.assertEqual(Charge.objects.count(), 1)
+    def test_closed_period_is_read_only_until_reopened_and_closed_again(self):
+        period = self._house_60_december()
+        self._sheet(period, action="set_status", status="closed")
+        record = HeatingRecord.objects.get(period=period, apartment=self.first)
+        days_31 = {f"from-{record.pk}": "2025-12-01", f"until-{record.pk}": "", f"days-{record.pk}": "31"}
+
+        refused = self._sheet(period, action="save_heating", row=[record.pk], **days_31)
+        self.assertTrue(any("yopilgan" in message for message in self._messages(refused)))
+        record.refresh_from_db()
+        self.assertEqual(record.days_given, 30)
+
+        self._sheet(period, action="set_status", status="open")
+        period.refresh_from_db()
+        self.assertEqual(period.status, BillingPeriod.STATUS_REOPENED)
+        self._sheet(period, action="save_heating", row=[record.pk], **days_31)
+        self._sheet(period, action="set_status", status="closed")
+
+        period.refresh_from_db()
+        self.assertEqual(period.status, BillingPeriod.STATUS_CLOSED)
+        self.assertTrue(RecalculationLog.objects.filter(period=period).exists())
+        heating = Charge.objects.get(period=period, apartment=self.first, charge_type="heating", is_cancelled=False)
+        self.assertGreater(heating.amount, Decimal("840851.77"))  # 31 days now instead of 30
+
+    def test_delete_removes_an_open_period_but_never_a_billed_one(self):
+        billed = self._house_60_december()
+        self._sheet(billed, action="set_status", status="closed")
+        self._create(name="2026-Yanvar", start="2026-01-01", end="2026-01-31")
+        draft = BillingPeriod.objects.get(name="2026-Yanvar")
+
+        refused = self._sheet(billed, action="delete")
+        deleted = self._sheet(draft, action="delete")
+
+        self.assertTrue(BillingPeriod.objects.filter(pk=billed.pk).exists())
+        self.assertTrue(any("o'chirib bo'lmaydi" in message for message in self._messages(refused)))
+        self.assertFalse(BillingPeriod.objects.filter(pk=draft.pk).exists())
+        self.assertFalse(HeatingRecord.objects.filter(period_id=draft.pk).exists())
+        self.assertRedirects(deleted, reverse("portal:billing_periods"))
+
+    def test_refresh_adds_apartments_and_houses_created_after_the_period(self):
+        self._create()
+        period = BillingPeriod.objects.get()
+        new_apartment = Apartment.objects.create(number="3", area=Decimal("60.00"), building=self.house_60, author="test")
+        new_house = Building.objects.create(number="62", complex=self.house_60.complex, author="test")
+        Apartment.objects.create(number="1", area=Decimal("70.00"), building=new_house, author="test")
+
+        self._sheet(period, action="refresh")
+
+        self.assertIn(new_house.pk, period.buildings.values_list("pk", flat=True))
+        self.assertTrue(HeatingRecord.objects.filter(period=period, apartment=new_apartment, heated_from=date(2025, 12, 1)).exists())
+        self.assertEqual(HotWaterMeterReading.objects.filter(period=period).count(), 5)
+
+    def test_export_has_a_heating_and_a_hot_water_sheet_per_house(self):
+        period = self._house_60_december()
+
+        response = self.client.get(reverse("portal:billing_period_export", args=[period.pk]), {"lang": "ru"})
+
+        self.assertEqual(response.status_code, 200)
+        workbook = load_workbook(io.BytesIO(response.content))
+        self.assertEqual(workbook.sheetnames, ["60 Отопление", "60 ГВС", "60V Отопление", "60V ГВС"])
+        numbers = [
+            Decimal(str(cell))
+            for row in workbook["60 Отопление"].iter_rows(values_only=True)
+            for cell in row
+            if isinstance(cell, (int, float, Decimal)) and not isinstance(cell, bool)
+        ]
+        self.assertIn(Decimal("840851.77"), numbers)
 
 
 class PortalInputValidationTests(TestCase):
@@ -1024,32 +1161,36 @@ class OperatorActivityLogTests(TestCase):
         from billing.models import BillingPeriod
 
         self.client.force_login(self.operator)
-        period = BillingPeriod.objects.create(name="Aprel", start_date=date(2026, 4, 1), end_date=date(2026, 4, 30))
-        url = reverse("portal:billing_period_create")
-        base = {"period_id": period.id, "building_id": self.building.id}
-        self.client.post(url, {**base, "action": "add_expense", "service_type": "heating", "name": "Qozonxona", "amount": "1500"})
+        self.client.post(reverse("portal:billing_periods"), {"name": "Aprel", "start_date": "2026-04-01", "end_date": "2026-04-30"})
+        period = BillingPeriod.objects.get(name="Aprel")
+        url = reverse("portal:billing_period_sheet", args=[period.pk])
+        base = {"building": self.building.id, "sheet": "heating"}
+        self.client.post(url, {**base, "action": "save_expenses", "new_name": "Qozonxona", "new_amount": "1500"})
+        record = period.heating_records.get(apartment=self.apartment)
         self.client.post(url, {
-            **base, "action": "update_heating_record", "apartment_id": self.apartment.id,
-            "heated_from": "2026-04-01", "excluded_dates": "2026-04-02",
+            **base, "action": "save_heating", "row": record.pk,
+            f"from-{record.pk}": "2026-04-01", f"until-{record.pk}": "", f"days-{record.pk}": "29",
         })
-        self.client.post(url, {**base, "action": "update_status", "status": "closed"})
-        self.client.post(url, {**base, "action": "update_status", "status": "reopened"})
+        self.client.post(url, {**base, "action": "set_status", "status": "closed"})
+        self.client.post(url, {**base, "action": "set_status", "status": "open"})
 
         events = AuditEvent.objects.filter(event_type=AuditEvent.TYPE_BILLING).order_by("id")
         self.assertEqual(
             [event.title for event in events],
-            ["Expense added", "Heating days updated", "Billing period closed", "Billing period reopened"],
+            ["Billing period created", "Expenses saved", "Heating table saved", "Billing period closed", "Billing period reopened"],
         )
         self.assertTrue(all(event.user == self.operator for event in events))
-        self.assertEqual(events[1].owner_id, self.owner.id)
+        self.assertEqual(events[2].building_id, self.building.id)
 
     def test_failed_billing_action_leaves_no_log_entry(self):
         from billing.models import BillingPeriod
 
         self.client.force_login(self.operator)
         period = BillingPeriod.objects.create(name="Bo'sh", start_date=date(2026, 4, 1), end_date=date(2026, 4, 30))
-        # No buildings/services: closing fails, so nothing happened and nothing is logged.
-        self.client.post(reverse("portal:billing_period_create"), {"period_id": period.id, "action": "update_status", "status": "closed"})
+        # No buildings or costs: closing fails, so nothing happened and nothing is logged.
+        self.client.post(reverse("portal:billing_period_sheet", args=[period.pk]), {"action": "set_status", "status": "closed"})
+        period.refresh_from_db()
+        self.assertEqual(period.status, BillingPeriod.STATUS_DRAFT)
         self.assertFalse(AuditEvent.objects.filter(event_type=AuditEvent.TYPE_BILLING).exists())
 
     def test_operators_cannot_read_the_log(self):

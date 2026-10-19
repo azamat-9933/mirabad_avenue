@@ -168,17 +168,16 @@ class HotWaterMeterReadingInline(ClosedPeriodReadOnlyInline, admin.TabularInline
 
 
 class HeatingRecordInline(ClosedPeriodReadOnlyInline, admin.TabularInline):
-    """Which apartments are heated in the period and from/until which day, one row per apartment of its houses.
+    """Which apartments are heated in the period: from/until which day and for how many days.
 
-    Heating changes from month to month, so it is entered for every period. A new period's rows start
-    as the previous period ended: an apartment heated to its last day is heated from the first day.
-    Days without heating are entered on the row's own page (the change link).
+    Heating changes from month to month, so it is entered for every period. A new period's rows cover
+    the whole period; the same rows are the portal period sheet's "Isitish" table.
     """
     model = HeatingRecord
     extra = 0
     can_delete = False
     show_change_link = True
-    fields = ("apartment_label", "previous_heating_display", "heated_from", "heated_until", "days_display")
+    fields = ("apartment_label", "previous_heating_display", "heated_from", "heated_until", "days_given", "days_display")
     readonly_fields = ("apartment_label", "previous_heating_display", "days_display")
     verbose_name = "Isitish sanalari"
     verbose_name_plural = "Isitish sanalari"
@@ -728,6 +727,7 @@ class HeatingRecordAdmin(admin.ModelAdmin):
                 "fields": (
                     "heated_from",
                     "heated_until",
+                    "days_given",
                     "excluded_dates",
                     "heated_days_display",
                     "excluded_days_count",

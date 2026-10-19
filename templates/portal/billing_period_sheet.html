@@ -1,0 +1,347 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}{{ page_title }}{% endblock %}
+{% block extra_head %}<link href="{% static 'css/billing_periods.css' %}?v=periods-20261019-5" rel="stylesheet"/>{% endblock %}
+{% block page_body %}
+{# A period laid out like its Excel file: houses on the left, the heating / hot water tables as sheet tabs below. #}
+<main class="app-main min-h-screen pt-16">
+  <div class="app-page py-6 bp-page" data-stat-synced="true" data-bp-page data-bp-sheet-page>
+    {% if messages %}
+      <div class="bp-messages">
+        {% for message in messages %}<p class="bp-message bp-message--{{ message.tags|default:'info' }}">{{ message }}</p>{% endfor %}
+      </div>
+    {% endif %}
+
+    <div class="bp-sheet">
+      <div class="bp-sheet__corner" aria-hidden="true"><span data-pt="period_house">Period / House</span></div>
+
+      <div class="bp-sheet__toolbar">
+        <div class="bp-sheet__toolbar-left">
+          <a class="bp-btn" href="{{ list_url }}" title="All periods" data-pt-title="back">
+            <span class="material-symbols-outlined" aria-hidden="true">arrow_back</span>
+          </a>
+          <a class="bp-btn" data-bp-export href="{{ export_url }}">
+            <span class="material-symbols-outlined" aria-hidden="true">download</span>
+            <span data-pt="export">Export</span>
+          </a>
+        </div>
+        <h1 class="bp-sheet__title">
+          {{ period.name }}
+          <small>{{ period.start_date|date:"d.m.Y" }} – {{ period.end_date|date:"d.m.Y" }} · {{ period.total_days }} <span data-pt="days">Days</span>
+            · {% if closed %}<span class="bp-status is-closed" data-pt="status_closed">Closed</span>{% else %}<span class="bp-status is-open" data-pt="status_open">Open</span>{% endif %}</small>
+        </h1>
+        {% if building %}
+          <div class="bp-sheet__toolbar-right">
+            <button class="bp-btn" data-modal-open="bp-gas-modal" type="button">
+              <span class="material-symbols-outlined" aria-hidden="true">gas_meter</span>
+              <span data-pt="gas_meter">Gas meter</span>
+            </button>
+            <button class="bp-btn" data-modal-open="bp-expenses-modal" type="button">
+              <span class="material-symbols-outlined" aria-hidden="true">receipt_long</span>
+              <span data-pt="expenses">Expenses</span>
+            </button>
+          </div>
+        {% endif %}
+      </div>
+
+      <nav class="bp-sheet__houses" aria-label="Houses">
+        {% for link in house_links %}
+          <a class="bp-house{% if link.active %} is-active{% endif %}" data-bp-leave href="{{ link.url }}"{% if link.active %} aria-current="page"{% endif %}>{{ link.building.number }}</a>
+        {% endfor %}
+      </nav>
+
+      <section class="bp-sheet__main">
+        {% if not building %}
+          <p class="bp-empty" data-pt="no_houses">No houses yet.</p>
+        {% else %}
+          {% if closed %}<p class="bp-message bp-message--info" data-pt="closed_note">The period is closed and billed.</p>{% endif %}
+          {% if sheet.errors %}
+            <div class="bp-message bp-message--error">
+              <strong data-pt="must_fix">Fix before closing:</strong>
+              <ul>{% for note in sheet.errors %}<li>{{ note }}</li>{% endfor %}</ul>
+            </div>
+          {% endif %}
+          {% if sheet.warnings %}
+            <div class="bp-message bp-message--warning">
+              <strong data-pt="note">Note:</strong>
+              <ul>{% for note in sheet.warnings %}<li>{{ note }}</li>{% endfor %}</ul>
+            </div>
+          {% endif %}
+
+          <div class="bp-costs">
+            {% for title, amount in costs %}<span class="bp-cost">{{ title }}: <b>{{ amount }}</b></span>{% endfor %}
+            <span class="bp-cost bp-cost--total"><span data-pt="total_cost">Total expenses</span>: <b>{{ total_cost }}</b></span>
+            {% if tariff %}<span class="bp-cost bp-cost--total"><span data-pt="{% if sheet.is_heating %}tariff_heating{% else %}tariff_hot_water{% endif %}">Rate</span>: <b>{{ tariff }}</b></span>{% endif %}
+          </div>
+
+          <form class="bp-table-wrap" data-bp-sheet-form id="bp-sheet-form" method="post">
+            {% csrf_token %}
+            <input name="action" type="hidden" value="{% if sheet.is_heating %}save_heating{% else %}save_hot_water{% endif %}"/>
+            <input name="building" type="hidden" value="{{ building.pk }}"/>
+            <input name="sheet" type="hidden" value="{{ sheet_type }}"/>
+            {% if sheet.is_heating %}
+              <table data-skip-base-table-enhance="true" data-table-own-style class="bp-table bp-table--sheet" data-bp-heating data-period-start="{{ period.start_date|date:'Y-m-d' }}" data-period-end="{{ period.end_date|date:'Y-m-d' }}">
+                <thead>
+                  <tr>
+                    <th class="bp-num" data-pt="no">No.</th>
+                    <th data-pt="full_name">Full name</th>
+                    <th data-pt="apt">Apt</th>
+                    <th class="bp-num" data-pt="area">Area</th>
+                    <th data-pt="heated_from">Start date</th>
+                    <th data-pt="heated_until">End date</th>
+                    <th class="bp-num" data-pt="range_days">Days</th>
+                    <th class="bp-num" data-pt="days_given">Days heated</th>
+                    <th class="bp-num" data-pt="heated_area">Heated area</th>
+                    <th class="bp-num" data-pt="amount">Amount</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for row in rows %}
+                    <tr data-bp-row data-area="{{ row.area_raw }}">
+                      <td class="bp-num">{{ row.no }}<input name="row" type="hidden" value="{{ row.pk }}"/></td>
+                      <td class="bp-name">{{ row.owner|default:"—" }}</td>
+                      <td class="bp-strong">{{ row.apt }}</td>
+                      <td class="bp-num">{{ row.area }}</td>
+                      <td><input class="bp-input bp-input--date" data-bp-from name="from-{{ row.pk }}" type="date" value="{{ row.from }}" min="{{ period.start_date|date:'Y-m-d' }}" max="{{ period.end_date|date:'Y-m-d' }}"{% if closed %} disabled{% endif %}/></td>
+                      <td><input class="bp-input bp-input--date" data-bp-until name="until-{{ row.pk }}" type="date" value="{{ row.until }}" min="{{ period.start_date|date:'Y-m-d' }}" max="{{ period.end_date|date:'Y-m-d' }}"{% if closed %} disabled{% endif %}/></td>
+                      <td class="bp-num" data-bp-range>{{ row.range_days }}</td>
+                      <td class="bp-num"><input class="bp-input bp-input--days" data-bp-days-given inputmode="numeric" name="days-{{ row.pk }}" type="text" value="{{ row.days }}"{% if closed %} disabled{% endif %}/></td>
+                      <td class="bp-num" data-bp-heated-area>{{ row.heated_area }}</td>
+                      <td class="bp-num bp-strong">{{ row.amount }}</td>
+                    </tr>
+                  {% empty %}
+                    <tr><td class="bp-empty" colspan="10" data-pt="no_apartments">No apartments in this house.</td></tr>
+                  {% endfor %}
+                </tbody>
+                <tfoot>
+                  <tr>
+                    <td colspan="8" data-pt="total">Total</td>
+                    <td class="bp-num">{{ total_volume }}</td>
+                    <td class="bp-num">{{ total_amount }}</td>
+                  </tr>
+                </tfoot>
+              </table>
+            {% else %}
+              <table data-skip-base-table-enhance="true" data-table-own-style class="bp-table bp-table--sheet" data-bp-hot-water>
+                <thead>
+                  <tr>
+                    <th class="bp-num" data-pt="no">No.</th>
+                    <th data-pt="full_name">Full name</th>
+                    <th data-pt="apt">Apt</th>
+                    <th class="bp-num" data-pt="start_reading">Start reading</th>
+                    <th class="bp-num" data-pt="end_reading">End reading</th>
+                    <th class="bp-num" data-pt="consumption">Used</th>
+                    <th class="bp-num" data-pt="amount">Amount</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for row in rows %}
+                    <tr data-bp-row>
+                      <td class="bp-num">{{ row.no }}<input name="row" type="hidden" value="{{ row.pk }}"/></td>
+                      <td class="bp-name">{{ row.owner|default:"—" }}</td>
+                      <td class="bp-strong">{{ row.apt }}</td>
+                      <td class="bp-num"><input class="bp-input bp-input--number" data-bp-start-reading inputmode="decimal" name="start-{{ row.pk }}" placeholder="{{ row.previous }}" title="Empty: last month's end reading" data-pt-title="previous_hint" type="text" value="{{ row.start }}"{% if closed %} disabled{% endif %}/></td>
+                      <td class="bp-num"><input class="bp-input bp-input--number" data-bp-end-reading inputmode="decimal" name="end-{{ row.pk }}" type="text" value="{{ row.end }}"{% if closed %} disabled{% endif %}/></td>
+                      <td class="bp-num" data-bp-consumption>{{ row.consumption }}</td>
+                      <td class="bp-num bp-strong">{{ row.amount }}</td>
+                    </tr>
+                  {% empty %}
+                    <tr><td class="bp-empty" colspan="7" data-pt="no_apartments">No apartments in this house.</td></tr>
+                  {% endfor %}
+                </tbody>
+                <tfoot>
+                  <tr>
+                    <td colspan="5" data-pt="total">Total</td>
+                    <td class="bp-num">{{ total_volume }}</td>
+                    <td class="bp-num">{{ total_amount }}</td>
+                  </tr>
+                </tfoot>
+              </table>
+            {% endif %}
+          </form>
+        {% endif %}
+      </section>
+
+      <div class="bp-sheet__bottom">
+      <div class="bp-sheet__tabs" role="tablist">
+        <a class="bp-tab{% if sheet_type == 'heating' %} is-active{% endif %}" data-bp-leave href="{{ heating_url }}" role="tab" data-pt="heating">Heating</a>
+        <a class="bp-tab{% if sheet_type == 'hot_water' %} is-active{% endif %}" data-bp-leave href="{{ hot_water_url }}" role="tab" data-pt="hot_water">Hot water</a>
+      </div>
+
+      <div class="bp-sheet__actions">
+        <form class="bp-inline" data-bp-status-form method="post">
+          {% csrf_token %}
+          <input name="action" type="hidden" value="set_status"/>
+          <input name="building" type="hidden" value="{{ building.pk|default:'' }}"/>
+          <input name="sheet" type="hidden" value="{{ sheet_type }}"/>
+          <label class="bp-inline__label" data-pt="status" for="bp-status">Status</label>
+          <select class="bp-input" id="bp-status" name="status">
+            <option data-pt="status_open" value="open"{% if not closed %} selected{% endif %}>Open</option>
+            <option data-pt="status_closed" value="closed"{% if closed %} selected{% endif %}>Closed</option>
+          </select>
+          <button class="bp-btn" data-pt="apply" type="submit">Apply</button>
+        </form>
+        {% if not closed %}
+          <form data-bp-confirm="delete_confirm" method="post">
+            {% csrf_token %}
+            <input name="action" type="hidden" value="delete"/>
+            <input name="building" type="hidden" value="{{ building.pk|default:'' }}"/>
+            <input name="sheet" type="hidden" value="{{ sheet_type }}"/>
+            <button class="bp-btn bp-btn--danger" type="submit">
+              <span class="material-symbols-outlined" aria-hidden="true">delete</span>
+              <span data-pt="delete">Delete</span>
+            </button>
+          </form>
+          {% if building %}
+            <button class="bp-btn bp-btn--primary" form="bp-sheet-form" type="submit">
+              <span class="material-symbols-outlined" aria-hidden="true">save</span>
+              <span data-pt="save">Save</span>
+            </button>
+          {% endif %}
+        {% endif %}
+        <form method="post">
+          {% csrf_token %}
+          <input name="action" type="hidden" value="refresh"/>
+          <input name="building" type="hidden" value="{{ building.pk|default:'' }}"/>
+          <input name="sheet" type="hidden" value="{{ sheet_type }}"/>
+          <button class="bp-btn" type="submit">
+            <span class="material-symbols-outlined" aria-hidden="true">refresh</span>
+            <span data-pt="refresh">Refresh</span>
+          </button>
+        </form>
+      </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+{% if building %}
+<div aria-hidden="true" aria-labelledby="bp-expenses-title" class="app-modal fixed inset-0 z-[84] hidden items-center justify-center p-4 sm:p-6" data-stat-synced="true" id="bp-expenses-modal" role="dialog">
+  <form class="modal-panel bp-modal bp-modal--wide" data-bp-rows-form method="post">
+    {% csrf_token %}
+    <input name="action" type="hidden" value="save_expenses"/>
+    <input name="building" type="hidden" value="{{ building.pk }}"/>
+    <input name="sheet" type="hidden" value="{{ sheet_type }}"/>
+    <header class="bp-modal__head">
+      <h2 id="bp-expenses-title"><span data-pt="expenses">Expenses</span> — {{ building.number }} · <span data-pt="{{ sheet_type }}">{{ sheet_type }}</span></h2>
+      <button aria-label="Close" class="profile-drawer-close" data-close-overlay type="button"><span class="material-symbols-outlined">close</span></button>
+    </header>
+    <div class="bp-modal__body">
+      <table data-skip-base-table-enhance="true" data-table-own-style class="bp-table bp-table--rows">
+        <thead>
+          <tr>
+            <th class="bp-col-wide" data-pt="expense_name">Expense</th>
+            {% if boiler_rooms %}<th data-pt="boiler_room">Boiler room</th>{% endif %}
+            <th class="bp-num" data-pt="amount">Amount</th>
+            {% if not closed %}<th><span class="sr-only" data-pt="remove">Remove</span></th>{% endif %}
+          </tr>
+        </thead>
+        <tbody data-bp-rows>
+          {% for expense in expenses %}
+            <tr>
+              <td class="bp-col-wide"><input class="bp-input" name="name-{{ expense.pk }}" type="text" value="{{ expense.name }}" maxlength="255"{% if closed %} disabled{% endif %}/></td>
+              {% if boiler_rooms %}
+                <td><select class="bp-input" name="room-{{ expense.pk }}"{% if closed %} disabled{% endif %}><option value="">—</option>{% for room in boiler_rooms %}<option value="{{ room.pk }}"{% if room.pk == expense.room %} selected{% endif %}>{{ room.name }}</option>{% endfor %}</select></td>
+              {% endif %}
+              <td class="bp-num"><input class="bp-input bp-input--number" inputmode="decimal" name="amount-{{ expense.pk }}" type="text" value="{{ expense.amount }}"{% if closed %} disabled{% endif %}/></td>
+              {% if not closed %}<td class="bp-remove"><label title="Remove" data-pt-title="remove"><input name="delete-{{ expense.pk }}" type="checkbox" value="1" data-bp-remove/><span class="material-symbols-outlined" aria-hidden="true">delete</span></label></td>{% endif %}
+            </tr>
+          {% empty %}
+            <tr data-bp-empty-row><td class="bp-empty" colspan="4" data-pt="no_expenses">No expenses entered.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <template data-bp-row-template>
+        <tr>
+          <td class="bp-col-wide"><input class="bp-input" name="new_name" type="text" maxlength="255"/></td>
+          {% if boiler_rooms %}<td><select class="bp-input" name="new_room"><option value="">—</option>{% for room in boiler_rooms %}<option value="{{ room.pk }}">{{ room.name }}</option>{% endfor %}</select></td>{% endif %}
+          <td class="bp-num"><input class="bp-input bp-input--number" inputmode="decimal" name="new_amount" type="text"/></td>
+          <td class="bp-remove"><button class="bp-icon-btn" data-bp-drop-row type="button" title="Remove" data-pt-title="remove"><span class="material-symbols-outlined" aria-hidden="true">close</span></button></td>
+        </tr>
+      </template>
+    </div>
+    <footer class="bp-modal__foot">
+      {% if not closed %}
+        <button class="bp-btn" data-bp-add-row type="button"><span class="material-symbols-outlined" aria-hidden="true">add</span><span data-pt="add_row">Add row</span></button>
+        <span class="bp-grow"></span>
+        <button class="bp-btn" data-close-overlay data-pt="cancel" type="button">Cancel</button>
+        <button class="bp-btn bp-btn--primary" data-pt="save" type="submit">Save</button>
+      {% else %}
+        <span class="bp-grow"></span>
+        <button class="bp-btn" data-close-overlay data-pt="cancel" type="button">Cancel</button>
+      {% endif %}
+    </footer>
+  </form>
+</div>
+
+<div aria-hidden="true" aria-labelledby="bp-gas-title" class="app-modal fixed inset-0 z-[84] hidden items-center justify-center p-4 sm:p-6" data-stat-synced="true" id="bp-gas-modal" role="dialog">
+  <form class="modal-panel bp-modal bp-modal--wide" data-bp-rows-form method="post">
+    {% csrf_token %}
+    <input name="action" type="hidden" value="save_gas"/>
+    <input name="building" type="hidden" value="{{ building.pk }}"/>
+    <input name="sheet" type="hidden" value="{{ sheet_type }}"/>
+    <header class="bp-modal__head">
+      <h2 id="bp-gas-title"><span data-pt="gas_meter">Gas meter</span> — {{ building.number }} · <span data-pt="{{ sheet_type }}">{{ sheet_type }}</span></h2>
+      <button aria-label="Close" class="profile-drawer-close" data-close-overlay type="button"><span class="material-symbols-outlined">close</span></button>
+    </header>
+    <div class="bp-modal__body">
+      <table data-skip-base-table-enhance="true" data-table-own-style class="bp-table bp-table--rows">
+        <thead>
+          <tr>
+            {% if boiler_rooms %}<th data-pt="boiler_room">Boiler room</th>{% endif %}
+            <th class="bp-num" data-pt="gas_start">Start reading</th>
+            <th class="bp-num" data-pt="gas_end">End reading</th>
+            <th class="bp-num" data-pt="consumption">Used</th>
+            <th class="bp-num" data-pt="gas_price">Price per m³</th>
+            <th class="bp-num" data-pt="gas_cost">Cost</th>
+            {% if not closed %}<th><span class="sr-only" data-pt="remove">Remove</span></th>{% endif %}
+          </tr>
+        </thead>
+        <tbody data-bp-rows>
+          {% for gas in gas_rows %}
+            <tr data-bp-gas-row>
+              {% if boiler_rooms %}
+                <td><select class="bp-input" name="groom-{{ gas.pk }}"{% if closed %} disabled{% endif %}><option value="">—</option>{% for room in boiler_rooms %}<option value="{{ room.pk }}"{% if room.pk == gas.room %} selected{% endif %}>{{ room.name }}</option>{% endfor %}</select></td>
+              {% endif %}
+              <td class="bp-num"><input class="bp-input bp-input--number" data-bp-gas-start inputmode="decimal" name="gstart-{{ gas.pk }}" placeholder="{{ gas.previous }}" title="Empty: last month's end reading" data-pt-title="previous_hint" type="text" value="{{ gas.start }}"{% if closed %} disabled{% endif %}/></td>
+              <td class="bp-num"><input class="bp-input bp-input--number" data-bp-gas-end inputmode="decimal" name="gend-{{ gas.pk }}" type="text" value="{{ gas.end }}"{% if closed %} disabled{% endif %}/></td>
+              <td class="bp-num" data-bp-gas-used>{{ gas.used }}</td>
+              <td class="bp-num"><input class="bp-input bp-input--number" data-bp-gas-price inputmode="decimal" name="gprice-{{ gas.pk }}" type="text" value="{{ gas.price }}"{% if closed %} disabled{% endif %}/></td>
+              <td class="bp-num bp-strong" data-bp-gas-cost>{{ gas.cost }}</td>
+              {% if not closed %}<td class="bp-remove"><label title="Remove" data-pt-title="remove"><input name="gdelete-{{ gas.pk }}" type="checkbox" value="1" data-bp-remove/><span class="material-symbols-outlined" aria-hidden="true">delete</span></label></td>{% endif %}
+            </tr>
+          {% empty %}
+            <tr data-bp-empty-row><td class="bp-empty" colspan="7" data-pt="no_gas">No gas meter entered.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <template data-bp-row-template>
+        <tr data-bp-gas-row>
+          {% if boiler_rooms %}<td><select class="bp-input" name="new_groom"><option value="">—</option>{% for room in boiler_rooms %}<option value="{{ room.pk }}">{{ room.name }}</option>{% endfor %}</select></td>{% endif %}
+          <td class="bp-num"><input class="bp-input bp-input--number" data-bp-gas-start inputmode="decimal" name="new_gstart" placeholder="{{ gas_previous_default }}" type="text"/></td>
+          <td class="bp-num"><input class="bp-input bp-input--number" data-bp-gas-end inputmode="decimal" name="new_gend" type="text"/></td>
+          <td class="bp-num" data-bp-gas-used>—</td>
+          <td class="bp-num"><input class="bp-input bp-input--number" data-bp-gas-price inputmode="decimal" name="new_gprice" type="text" value="{{ gas_price_default }}"/></td>
+          <td class="bp-num bp-strong" data-bp-gas-cost>—</td>
+          <td class="bp-remove"><button class="bp-icon-btn" data-bp-drop-row type="button" title="Remove" data-pt-title="remove"><span class="material-symbols-outlined" aria-hidden="true">close</span></button></td>
+        </tr>
+      </template>
+    </div>
+    <footer class="bp-modal__foot">
+      {% if not closed %}
+        <button class="bp-btn" data-bp-add-row type="button"><span class="material-symbols-outlined" aria-hidden="true">add</span><span data-pt="add_row">Add row</span></button>
+        <span class="bp-grow"></span>
+        <button class="bp-btn" data-close-overlay data-pt="cancel" type="button">Cancel</button>
+        <button class="bp-btn bp-btn--primary" data-pt="save" type="submit">Save</button>
+      {% else %}
+        <span class="bp-grow"></span>
+        <button class="bp-btn" data-close-overlay data-pt="cancel" type="button">Cancel</button>
+      {% endif %}
+    </footer>
+  </form>
+</div>
+{% endif %}
+
+<script id="bp-labels" type="application/json">{{ labels_json }}</script>
+<script defer src="{% static 'js/billing_periods.js' %}?v=periods-20261019-5"></script>
+{% endblock %}

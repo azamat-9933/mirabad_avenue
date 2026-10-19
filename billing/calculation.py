@@ -40,20 +40,37 @@ def _parse_day(value):
         return None
 
 
-def heated_days(period, heated_from, heated_until=None, excluded_dates=()) -> int:
-    """Days of the period an apartment was heated.
-
-    From heated_from to heated_until (both inclusive; no end means to the period's end), within the
-    period, minus the dates heating was off. Without heated_from the apartment was not heated.
-    """
+def _heated_range(period, heated_from, heated_until):
+    """(first, last) heated day within the period, or None when there is none."""
     if not heated_from or not period.start_date or not period.end_date:
-        return 0
+        return None
     first = max(period.start_date, heated_from)
     last = min(period.end_date, heated_until) if heated_until else period.end_date
-    if last < first:
+    return (first, last) if first <= last else None
+
+
+def heating_range_days(period, heated_from, heated_until=None) -> int:
+    """Days from heated_from to heated_until (both inclusive; no end means the period's end) within the period."""
+    heated = _heated_range(period, heated_from, heated_until)
+    return (heated[1] - heated[0]).days + 1 if heated else 0
+
+
+def heated_days(period, heated_from, heated_until=None, excluded_dates=(), days_given=None) -> int:
+    """Days of the period an apartment was heated.
+
+    The operator's days_given when entered (never more than the range), otherwise the days from
+    heated_from to heated_until minus the dates heating was off. Without heated_from the apartment
+    was not heated.
+    """
+    heated = _heated_range(period, heated_from, heated_until)
+    if not heated:
         return 0
+    first, last = heated
+    range_days = (last - first).days + 1
+    if days_given is not None:
+        return max(0, min(int(days_given), range_days))
     off = {day for day in map(_parse_day, excluded_dates or ()) if day and first <= day <= last}
-    return (last - first).days + 1 - len(off)
+    return range_days - len(off)
 
 
 def previous_heating(apartment_ids, period) -> dict:
@@ -69,14 +86,6 @@ def previous_heating(apartment_ids, period) -> dict:
     for apartment_id, heated_from, heated_until, period_end in rows:
         result.setdefault(apartment_id, (heated_from, heated_until, period_end))
     return result
-
-
-def heated_to_period_end(previous) -> bool:
-    """Whether a previous_heating() entry was still heated on the last day of its period."""
-    if not previous:
-        return False
-    heated_from, heated_until, period_end = previous
-    return bool(heated_from) and (heated_until is None or heated_until >= period_end)
 
 
 def previous_hot_water_readings(apartment_ids, period) -> dict:
@@ -283,7 +292,7 @@ def build_plan(period) -> Plan:
         unassigned = []
         for apartment in apartments:
             record = heating.get(apartment.pk)
-            days = heated_days(period, record.heated_from, record.heated_until, record.excluded_dates) if record else 0
+            days = record.heated_days_in(period) if record else 0
             if days <= 0:
                 continue
             if len(rooms) > 1:
@@ -301,7 +310,7 @@ def build_plan(period) -> Plan:
             if zone.billable and zone.total_volume <= 0:
                 zone.errors.append(
                     f"{zone.label}: xarajat {group_thousands(zone.total_cost)} so'm, lekin bu davrda isitilgan kvartira yo'q. "
-                    "Davr sahifasidagi «Isitish sanalari»ga kvartiralarning isitish boshlangan sanasini kiriting."
+                    "Davrning «Isitish» jadvalida kvartiralarga sanalar va berilgan kunlarni kiriting."
                 )
             zones.append(zone)
         if unassigned and any(zone.billable for zone in heating_zones.values()):

@@ -100,8 +100,10 @@ class BillingCoreModelTests(TestCase):
         self.assertEqual(created["hot_water_created"], 2)
         self.assertEqual(HeatingRecord.objects.filter(period=self.period).count(), 2)
         self.assertEqual(HotWaterMeterReading.objects.filter(period=self.period).count(), 2)
-        # Nothing to carry over from an earlier period: heating dates are still to be entered.
-        self.assertFalse(HeatingRecord.objects.filter(period=self.period, heated_from__isnull=False).exists())
+        # Like a new month's Excel sheet: every apartment is heated for the whole period until changed.
+        rows = HeatingRecord.objects.filter(period=self.period)
+        self.assertEqual({(row.heated_from, row.heated_until, row.days_given) for row in rows}, {(date(2026, 4, 1), None, None)})
+        self.assertEqual({row.heated_days for row in rows}, {30})
 
         # Sync is idempotent and doesn't duplicate rows.
         created_again = self.period.sync_default_records()
@@ -337,22 +339,21 @@ class BillingCoreModelTests(TestCase):
         record.full_clean()
         self.assertEqual(record.heated_days, 10)
 
-    def test_new_period_starts_heated_where_the_previous_one_ended(self):
-        # April: apartment 1 is heated to the last day, apartment 2 only until 20 April.
-        HeatingRecord.objects.create(period=self.period, apartment=self.apartment_1, heated_from=date(2026, 4, 15))
-        HeatingRecord.objects.create(
-            period=self.period, apartment=self.apartment_2, heated_from=date(2026, 4, 1), heated_until=date(2026, 4, 20)
-        )
-        may = BillingPeriod.objects.create(name="May 2026", start_date=date(2026, 5, 1), end_date=date(2026, 5, 31))
-        may.buildings.add(self.building)
+    def test_days_given_count_instead_of_the_whole_range(self):
+        # 30 days in April, heating given for 28 of them.
+        record = HeatingRecord(period=self.period, apartment=self.apartment_1, heated_from=date(2026, 4, 1), days_given=28)
+        record.full_clean()
+        self.assertEqual((record.range_days_in(self.period), record.heated_days), (30, 28))
 
-        may.sync_default_records()
+        record.heated_from = date(2026, 4, 11)  # 20 days left: more days than that cannot be given
+        with self.assertRaises(ValidationError) as caught:
+            record.full_clean()
+        self.assertIn("days_given", caught.exception.message_dict)
 
-        records = {record.apartment_id: record for record in HeatingRecord.objects.filter(period=may)}
-        self.assertEqual((records[self.apartment_1.pk].heated_from, records[self.apartment_1.pk].heated_until), (date(2026, 5, 1), None))
-        self.assertEqual(records[self.apartment_1.pk].heated_days, 31)
-        self.assertIsNone(records[self.apartment_2.pk].heated_from)
-        self.assertEqual(records[self.apartment_2.pk].heated_days, 0)
+        record.heated_from, record.days_given = None, 5
+        with self.assertRaises(ValidationError) as caught:
+            record.full_clean()
+        self.assertIn("heated_from", caught.exception.message_dict)
 
     def test_payment_apply_updates_balance_and_cannot_apply_twice(self):
         payment = Payment.objects.create(owner=self.owner_1, amount=Decimal("250.00"), method=Payment.METHOD_MANUAL)
@@ -694,16 +695,15 @@ class BillingCalculationRulesTests(TestCase):
         self.april = BillingPeriod.objects.create(name="April 2026", start_date=date(2026, 4, 1), end_date=date(2026, 4, 30))
         self.april.buildings.add(self.building)
 
-    def flat(self, number, area="50.00", heated_from=None, heated_until=None, section=None):
-        """An apartment of house 60, heated in April from heated_from to heated_until when given."""
+    def flat(self, number, area="50.00", heated_from=None, heated_until=None, section=None, days_given=None):
+        """An apartment of house 60 with its April heating row: heated from heated_from, or not heated."""
         apartment = Apartment.objects.create(
             number=number, area=Decimal(area), building=self.building, author="test", section=section,
         )
         Owner.objects.create(fio=f"Owner {number}", phone=f"+9989000{number:0>5}", apartment=apartment)
-        if heated_from:
-            HeatingRecord.objects.create(
-                period=self.april, apartment=apartment, heated_from=heated_from, heated_until=heated_until
-            )
+        HeatingRecord.objects.create(
+            period=self.april, apartment=apartment, heated_from=heated_from, heated_until=heated_until, days_given=days_given
+        )
         return apartment
 
     def cost(self, service_type, amount, period=None, room=None):
@@ -741,6 +741,44 @@ class BillingCalculationRulesTests(TestCase):
         usages = dict(HeatingApartmentUsage.objects.values_list("apartment__number", "days_provided"))
         self.assertEqual(usages, {"1": 9, "2": 30})
         self.assertEqual(self.charged(), {"1": Decimal("900.00"), "2": Decimal("3000.00")})
+
+    def test_house_60_december_as_in_the_excel_sheets(self):
+        """The operators' own example: house 60, December, apartment 1 of 171.94 m² heated 30 of 31 days."""
+        december = BillingPeriod.objects.create(name="2025-Dekabr", start_date=date(2025, 12, 1), end_date=date(2025, 12, 31))
+        december.buildings.add(self.building)
+        first = self.flat("1", area="171.94")
+        rest = self.flat("2", area="173021.18")  # the other apartments: 178 179.38 m²·days in all
+        HeatingRecord.objects.filter(apartment__in=[first, rest]).delete()
+        HeatingRecord.objects.create(period=december, apartment=first, heated_from=date(2025, 12, 1), days_given=30)
+        HeatingRecord.objects.create(period=december, apartment=rest, heated_from=date(2025, 12, 1), days_given=1)
+        for service_type, name, amount in [
+            ("heating", "Обслуживание котельной", "5967950"),
+            ("heating", "Холодная вода", "1060800"),
+            ("hot_water", "Обслуживание котельной", "5967950"),
+            ("hot_water", "Электроэнергия", "1500000"),
+        ]:
+            Expense.objects.create(period=december, building=self.building, service_type=service_type, name=name, amount=Decimal(amount))
+        GasMeterReading.objects.create(
+            period=december, building=self.building, service_type="heating",
+            start_reading=Decimal("579702.44"), end_reading=Decimal("601719.18"), price_per_m3=Decimal("1000"),
+        )
+        GasMeterReading.objects.create(
+            period=december, building=self.building, service_type="hot_water",
+            start_reading=Decimal("1000"), end_reading=Decimal("5893"), price_per_m3=Decimal("1000"),
+        )
+        HotWaterMeterReading.objects.create(period=december, apartment=first, start_reading=Decimal("89.1"), end_reading=Decimal("100"))
+        HotWaterMeterReading.objects.create(period=december, apartment=rest, start_reading=Decimal("0"), end_reading=Decimal("214.3"))
+
+        december.close_period()
+
+        heating = BuildingService.objects.get(period=december, service_type="heating")
+        hot_water = BuildingService.objects.get(period=december, service_type="hot_water")
+        self.assertEqual(heating.calculate_total_expense(), Decimal("29045490.00"))  # gas 22 016 740 + 5 967 950 + 1 060 800
+        self.assertEqual(hot_water.calculate_total_expense(), Decimal("12360950.00"))  # 5 967 950 + 1 500 000 + gas 4 893 000
+        first_charges = dict(Charge.objects.filter(period=december, apartment=first).values_list("charge_type", "amount"))
+        self.assertEqual(first_charges, {"heating": Decimal("840851.77"), "hot_water": Decimal("598287.54")})
+        first.refresh_from_db()
+        self.assertEqual(first.balance, Decimal("-1439139.31"))
 
     def test_each_boiler_room_spreads_its_own_costs_over_its_sections(self):
         from billing.models import BoilerRoom

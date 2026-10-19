@@ -500,7 +500,8 @@
         document.documentElement.classList.add("symbols-ready");
     }
 
-    document.querySelectorAll("table").forEach((table) => table.classList.add("table-stable"));
+    // Tables with their own look (the billing period sheets) opt out with data-table-own-style.
+    document.querySelectorAll("table:not([data-table-own-style])").forEach((table) => table.classList.add("table-stable"));
 
     const barObserver = "IntersectionObserver" in window ? new IntersectionObserver((entries) => {
         entries.forEach((entry) => {

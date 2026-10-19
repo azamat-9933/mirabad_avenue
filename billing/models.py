@@ -13,13 +13,7 @@ from django.utils.dateparse import parse_date
 
 from properties.models import Apartment, Building, BuildingSection, Owner
 
-from .calculation import (
-    group_thousands,
-    heated_days,
-    heated_to_period_end,
-    previous_heating,
-    previous_hot_water_readings,
-)
+from .calculation import group_thousands, heated_days, heating_range_days, previous_hot_water_readings
 
 
 MONEY_PLACES = Decimal("0.01")
@@ -156,9 +150,9 @@ class BillingPeriod(models.Model):
         """
         Ensure default per-apartment records exist for selected buildings.
 
-        A new heating row carries the previous period over: an apartment heated to the end of its
-        previous period is heated from this period's first day, any other is not heated until its
-        dates are entered. Hot-water rows are created as placeholders for meter inputs.
+        Like a new month's Excel sheet: every apartment of the period's houses gets a heating row for
+        the whole period (the operator changes its dates or days given) and a hot water row whose start
+        reading is the previous month's end until a value is typed.
         """
         if not self.pk:
             return {"heating_created": 0, "hot_water_created": 0}
@@ -177,15 +171,10 @@ class BillingPeriod(models.Model):
                 apartment_id__in=apartment_ids,
             ).values_list("apartment_id", flat=True)
         )
-        missing_heating_ids = [apartment_id for apartment_id in apartment_ids if apartment_id not in existing_heating_ids]
-        previous = previous_heating(missing_heating_ids, self)
         heating_rows = [
-            HeatingRecord(
-                period_id=self.pk,
-                apartment_id=apartment_id,
-                heated_from=self.start_date if heated_to_period_end(previous.get(apartment_id)) else None,
-            )
-            for apartment_id in missing_heating_ids
+            HeatingRecord(period_id=self.pk, apartment_id=apartment_id, heated_from=self.start_date)
+            for apartment_id in apartment_ids
+            if apartment_id not in existing_heating_ids
         ]
         if heating_rows:
             HeatingRecord.objects.bulk_create(heating_rows, ignore_conflicts=True)
@@ -1005,6 +994,13 @@ class HeatingRecord(models.Model):
         verbose_name="Isitish tugagan sana",
         help_text="Isitilgan oxirgi kun. Bo'sh — davr oxirigacha.",
     )
+    # As in the Excel sheets: 31 days in December, heating given for 30.
+    days_given = models.PositiveSmallIntegerField(
+        null=True,
+        blank=True,
+        verbose_name="Berilgan kunlar",
+        help_text="Isitish berilgan kunlar soni. Bo'sh — boshlanish va tugash sanalari orasidagi kunlar.",
+    )
     # Usually empty: only the dates heating was off.
     excluded_dates = models.JSONField(
         default=list, blank=True, verbose_name="Qizdirilmagan kunlar", help_text='Masalan: ["2025-12-10", "2025-12-25"]'
@@ -1033,6 +1029,12 @@ class HeatingRecord(models.Model):
                     )
         if self.heated_from and self.heated_until and self.heated_until < self.heated_from:
             errors.setdefault("heated_until", "Tugash sanasi boshlanish sanasidan oldin bo'lishi mumkin emas.")
+        if self.days_given and not self.heated_from:
+            errors.setdefault("heated_from", "Berilgan kunlar bor, boshlanish sanasi kiritilmagan.")
+        elif self.days_given is not None and period and not errors:
+            range_days = heating_range_days(period, self.heated_from, self.heated_until)
+            if self.days_given > range_days:
+                errors["days_given"] = f"Berilgan kunlar ({self.days_given}) sanalar orasidagi kunlardan ({range_days}) ko'p."
         normalized = set()
         for token in self.excluded_dates:
             try:
@@ -1053,8 +1055,16 @@ class HeatingRecord(models.Model):
 
     @property
     def heated_days(self):
-        """Days heated in the period: from heated_from to heated_until, minus the dates heating was off."""
-        return heated_days(self.period, self.heated_from, self.heated_until, self.excluded_dates)
+        """Days heated in the period: the days given, else from heated_from to heated_until minus days off."""
+        return self.heated_days_in(self.period)
+
+    def heated_days_in(self, period):
+        """heated_days for an already loaded period (no query for self.period)."""
+        return heated_days(period, self.heated_from, self.heated_until, self.excluded_dates, self.days_given)
+
+    def range_days_in(self, period):
+        """Days from heated_from to heated_until within the period (the sheet's "Сутки")."""
+        return heating_range_days(period, self.heated_from, self.heated_until)
 
     @property
     def heated_area(self):

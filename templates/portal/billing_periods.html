@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}{{ page_title }}{% endblock %}
+{% block extra_head %}<link href="{% static 'css/billing_periods.css' %}?v=periods-20261019-5" rel="stylesheet"/>{% endblock %}
+{% block page_body %}
+{# Translated by billing_periods.js from the labels below; data-stat-synced keeps app.js from translating it too. #}
+<main class="app-main min-h-screen pt-16">
+  <div class="app-page py-8 bp-page" data-stat-synced="true" data-bp-page{% if open_create %} data-open-create="1"{% endif %}>
+    <header class="bp-head">
+      <div>
+        <p class="bp-kicker" data-pt="billing">Billing</p>
+        <h1 class="bp-title" data-pt="periods_title">House Billing Periods</h1>
+      </div>
+      <button class="bp-btn bp-btn--primary" data-modal-open="bp-create-modal" type="button">
+        <span class="material-symbols-outlined" aria-hidden="true">add</span>
+        <span data-pt="create">Create</span>
+      </button>
+    </header>
+
+    {% if messages %}
+      <div class="bp-messages">
+        {% for message in messages %}<p class="bp-message bp-message--{{ message.tags|default:'info' }}">{{ message }}</p>{% endfor %}
+      </div>
+    {% endif %}
+
+    <div class="bp-card">
+      <table data-skip-base-table-enhance="true" data-table-own-style class="bp-table bp-table--periods">
+        <thead>
+          <tr>
+            <th data-pt="id">ID</th>
+            <th data-pt="name">Name</th>
+            <th data-pt="start">Start</th>
+            <th data-pt="end">End</th>
+            <th data-pt="status">Status</th>
+            <th><span class="sr-only" data-pt="edit">Edit</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in rows %}
+            <tr>
+              <td class="bp-num">{{ row.period.pk }}</td>
+              <td class="bp-strong">{{ row.period.name }}</td>
+              <td>{{ row.period.start_date|date:"d.m.Y" }}</td>
+              <td>{{ row.period.end_date|date:"d.m.Y" }}</td>
+              <td>
+                {% if row.closed %}
+                  <span class="bp-status is-closed" data-pt="status_closed">Closed</span>
+                {% else %}
+                  <span class="bp-status is-open" data-pt="status_open">Open</span>
+                {% endif %}
+              </td>
+              <td class="bp-action-cell">
+                <a class="bp-btn" href="{% url 'portal:billing_period_sheet' row.period.pk %}">
+                  <span class="material-symbols-outlined" aria-hidden="true">table_view</span>
+                  <span data-pt="edit">Edit</span>
+                </a>
+              </td>
+            </tr>
+          {% empty %}
+            <tr><td class="bp-empty" colspan="6" data-pt="no_periods">No billing periods yet. Press Create.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {% if page.paginator.num_pages > 1 %}
+      <nav class="bp-pager" aria-label="Pages">
+        <span class="bp-pager__info"><span data-pt="page">Page</span> {{ page.number }} / {{ page.paginator.num_pages }}</span>
+        {% if page.has_previous %}
+          <a class="bp-btn" href="?page={{ page.previous_page_number }}" data-pt="prev">Prev</a>
+        {% else %}
+          <span class="bp-btn is-disabled" data-pt="prev">Prev</span>
+        {% endif %}
+        {% if page.has_next %}
+          <a class="bp-btn" href="?page={{ page.next_page_number }}" data-pt="next">Next</a>
+        {% else %}
+          <span class="bp-btn is-disabled" data-pt="next">Next</span>
+        {% endif %}
+      </nav>
+    {% endif %}
+  </div>
+</main>
+
+<div aria-hidden="true" aria-labelledby="bp-create-title" class="app-modal fixed inset-0 z-[84] hidden items-center justify-center p-4 sm:p-6" data-stat-synced="true" id="bp-create-modal" role="dialog">
+  <form class="modal-panel bp-modal" data-bp-create-form method="post">
+    {% csrf_token %}
+    <header class="bp-modal__head">
+      <h2 data-pt="new_period" id="bp-create-title">New billing period</h2>
+      <button aria-label="Close" class="profile-drawer-close" data-close-overlay type="button"><span class="material-symbols-outlined">close</span></button>
+    </header>
+    <div class="bp-modal__body">
+      <label class="bp-field">
+        <span data-pt="name">Name</span>
+        <input data-bp-name maxlength="100" name="name" required type="text" value="{{ form.name }}"/>
+      </label>
+      <div class="bp-field-row">
+        <label class="bp-field">
+          <span data-pt="start_date">Start date</span>
+          <input data-bp-start name="start_date" required type="date" value="{{ form.start_date }}"/>
+        </label>
+        <label class="bp-field">
+          <span data-pt="end_date">End date</span>
+          <input data-bp-end name="end_date" required type="date" value="{{ form.end_date }}"/>
+        </label>
+        <div class="bp-field bp-field--narrow">
+          <span data-pt="days">Days</span>
+          <output class="bp-days" data-bp-days>—</output>
+        </div>
+      </div>
+      <label class="bp-field">
+        <span data-pt="status">Status</span>
+        <select disabled><option data-pt="status_open" selected>Open</option></select>
+      </label>
+      <div class="bp-field">
+        <span data-pt="houses">Houses</span>
+        <p class="bp-chips">
+          {% for house in houses %}<span class="bp-chip">{{ house.number }}</span>{% empty %}<span data-pt="no_houses">No houses yet.</span>{% endfor %}
+        </p>
+        <small class="bp-hint" data-pt="all_houses_note">Created for every house, with a heating and a hot water table per house.</small>
+      </div>
+    </div>
+    <footer class="bp-modal__foot">
+      <button class="bp-btn" data-close-overlay data-pt="cancel" type="button">Cancel</button>
+      <button class="bp-btn bp-btn--primary" data-pt="create" type="submit">Create</button>
+    </footer>
+  </form>
+</div>
+
+<script id="bp-labels" type="application/json">{{ labels_json }}</script>
+<script defer src="{% static 'js/billing_periods.js' %}?v=periods-20261019-5"></script>
+{% endblock %}

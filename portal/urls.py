@@ -2,7 +2,7 @@ from django.contrib.auth import views as auth_views
 from django.urls import path
 from django.views.generic.base import RedirectView
 
-from . import views
+from . import period_views, views
 
 app_name = "portal"
 
@@ -15,8 +15,13 @@ urlpatterns = [
     path("", views.DashboardView.as_view(), name="dashboard"),
     path("residential/", views.ResidentialView.as_view(), name="residential"),
     path("billing/", views.BillingView.as_view(), name="billing"),
-    path("billing/periods/create", views.BillingPeriodCreateView.as_view(), name="billing_period_create"),
-    path("billing/periods/create/", views.BillingPeriodCreateView.as_view(), name="billing_period_create_slash"),
+    path("billing/periods/", period_views.BillingPeriodListView.as_view(), name="billing_periods"),
+    path("billing/periods", period_views.BillingPeriodListView.as_view(), name="billing_periods_no_slash"),
+    path("billing/periods/<int:pk>/", period_views.BillingPeriodSheetView.as_view(), name="billing_period_sheet"),
+    path("billing/periods/<int:pk>/export/", period_views.billing_period_export, name="billing_period_export"),
+    # The old address of the periods page.
+    path("billing/periods/create", RedirectView.as_view(pattern_name="portal:billing_periods", permanent=False)),
+    path("billing/periods/create/", RedirectView.as_view(pattern_name="portal:billing_periods", permanent=False)),
     path("analytics/", views.AnalyticsView.as_view(), name="analytics"),
     path("api", RedirectView.as_view(url="/api/", permanent=False), name="api_root_redirect"),
     path("api/", views.api_root, name="api_root"),
