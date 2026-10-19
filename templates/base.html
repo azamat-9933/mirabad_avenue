@@ -17,8 +17,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
 <link href="{% static 'img/favicon.svg' %}" rel="icon" type="image/svg+xml"/>
-<link href="{% static 'css/app.css' %}?v=notice-list-20261017-2" rel="stylesheet"/>
-<link href="{% static 'css/responsive.css' %}?v=notice-list-20261017-2" rel="stylesheet"/>
+<link href="{% static 'css/app.css' %}?v=operators-review-20261019-2" rel="stylesheet"/>
+<link href="{% static 'css/responsive.css' %}?v=operators-review-20261019-2" rel="stylesheet"/>
 <script id="tailwind-config">
         tailwind.config = {
             darkMode: "class",
@@ -557,17 +557,22 @@
         const body = table.querySelector("tbody");
         if (!headRow || !body) return;
         table.dataset.enhanced = "true";
+        // A table drops tools it has no use for: data-select-tool, data-export-tool, data-reminders-tool,
+        // data-status-tool set to "off".
+        const toolOn = (name) => table.dataset[name] !== "off";
 
-        const selectHead = document.createElement("th");
-        selectHead.className = "px-4 py-4";
-        selectHead.innerHTML = '<input aria-label="Select all rows" data-select-all type="checkbox">';
-        headRow.prepend(selectHead);
-        Array.from(body.rows).forEach((row) => {
-            const cell = document.createElement("td");
-            cell.className = "px-4 py-4";
-            cell.innerHTML = '<input aria-label="Select row" data-row-select type="checkbox">';
-            row.prepend(cell);
-        });
+        if (toolOn("selectTool")) {
+            const selectHead = document.createElement("th");
+            selectHead.className = "px-4 py-4";
+            selectHead.innerHTML = '<input aria-label="Select all rows" data-select-all type="checkbox">';
+            headRow.prepend(selectHead);
+            Array.from(body.rows).forEach((row) => {
+                const cell = document.createElement("td");
+                cell.className = "px-4 py-4";
+                cell.innerHTML = '<input aria-label="Select row" data-row-select type="checkbox">';
+                row.prepend(cell);
+            });
+        }
 
         const rows = Array.from(body.rows);
         const originalRows = rows.slice();
@@ -580,19 +585,19 @@
                 <span class="material-symbols-outlined" aria-hidden="true">search</span>
                 <input class="table-search" aria-label="Search table" placeholder="Search inside table..." type="search">
             </label>
-            <button class="table-tool-button" data-table-action="export" type="button">
+            ${toolOn("exportTool") ? `<button class="table-tool-button" data-table-action="export" type="button">
                 <span class="material-symbols-outlined" aria-hidden="true">upload</span>
                 <span data-i18n-key="Export">Export</span>
-            </button>
-            <button class="table-tool-button" data-table-action="reminders" type="button">
+            </button>` : ""}
+            ${toolOn("remindersTool") ? `<button class="table-tool-button" data-table-action="reminders" type="button">
                 <span class="material-symbols-outlined" aria-hidden="true">notifications</span>
                 <span data-i18n-key="Send reminders">Send reminders</span>
-            </button>
-            ${table.dataset.statusTool === "off" ? "" : `<button class="table-tool-button" data-table-action="status" type="button">
+            </button>` : ""}
+            ${toolOn("statusTool") ? `<button class="table-tool-button" data-table-action="status" type="button">
                 <span class="material-symbols-outlined" aria-hidden="true">sell</span>
                 <span data-i18n-key="Assign status">Assign status</span>
-            </button>`}
-            <span class="table-selected-counter" data-selected-count data-count="0" data-i18n-key="0 selected">0 selected</span>
+            </button>` : ""}
+            ${toolOn("selectTool") ? '<span class="table-selected-counter" data-selected-count data-count="0" data-i18n-key="0 selected">0 selected</span>' : ""}
         `;
         host.parentNode.insertBefore(tools, host);
 
@@ -630,6 +635,7 @@
         const updateSelection = () => {
             const selected = table.querySelectorAll("[data-row-select]:checked").length;
             const selectedLabel = tools.querySelector("[data-selected-count]");
+            if (!selectedLabel) return;
             selectedLabel.dataset.count = selected;
             selectedLabel.textContent = `${selected} selected`;
             window.HydroFlowSyncLocale?.();
@@ -649,10 +655,10 @@
                 }
             });
         });
-        table.querySelector("[data-select-all]").addEventListener("change", (event) => {
+        table.querySelector("[data-select-all]")?.addEventListener("change", (event) => {
             rows.forEach((row) => {
                 const checkbox = row.querySelector("[data-row-select]");
-                if (!row.classList.contains("hidden")) checkbox.checked = event.target.checked;
+                if (checkbox && !row.classList.contains("hidden")) checkbox.checked = event.target.checked;
             });
             updateSelection();
         });
@@ -899,7 +905,7 @@
 <script>
     window.HydroFlowBackendData = JSON.parse(document.getElementById("hydroflow-backend-data").textContent);
 </script>
-<script src="{% static 'js/app.js' %}?v=notice-list-20261017-2"></script>
+<script src="{% static 'js/app.js' %}?v=operators-review-20261019-2"></script>
 </body>
 </html>
 

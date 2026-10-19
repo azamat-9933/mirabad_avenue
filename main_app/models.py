@@ -1,5 +1,6 @@
 from decimal import Decimal
 
+from django.conf import settings
 from django.db import models
 
 
@@ -34,6 +35,16 @@ class Building(models.Model):
         on_delete=models.CASCADE,
         related_name="buildings",
         verbose_name="Turar joy majmuasi",
+    )
+    # Each house is looked after by one operator; statistics show what its residents paid.
+    operator = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="operated_buildings",
+        verbose_name="Operator",
+        help_text="Shu uy abonentlari bilan ishlaydigan operator.",
     )
     created_at = models.DateTimeField(auto_now_add=True)
     author = models.CharField(max_length=255, verbose_name="Yaratuvchi")

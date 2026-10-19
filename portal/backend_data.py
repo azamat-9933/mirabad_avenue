@@ -416,7 +416,7 @@ def serialize_notification(item: PortalNotification, alert_backend_id="") -> dic
         "buildingId": _slug("building", item.building_id) if item.building_id else "",
         "ownerId": _slug("owner", item.owner_id) if item.owner_id else "",
         "status": item.status,
-        "adminUrl": f"/admin/portal/portalnotification/{item.id}/change/",
+        "adminUrl": "",
     }
 
 
@@ -443,7 +443,7 @@ def serialize_audit_event(event: AuditEvent) -> dict:
         "buildingName": event.building.number if event.building_id else "",
         "apartmentNumber": event.apartment.number if event.apartment_id else "",
         "ownerName": event.owner.fio if event.owner_id else "",
-        "adminUrl": f"/admin/portal/auditevent/{event.id}/change/",
+        "adminUrl": "",
     }
 
 
@@ -570,6 +570,9 @@ def serialize_complex(complex_obj, owner_for, payment_totals_for, override_maps,
             "collected": building_collected,
             "debtorResidents": building_debtors,
             "paidResidents": building_paid,
+            # The operator looking after the house (statistics: what its residents paid).
+            "operatorId": building.operator_id,
+            "operatorName": _display_name(building.operator) if building.operator_id else "",
             "risk": building_risk,
             "health": _health_from_split(building_debtors, building_paid),
             "tone": _residential_status_to_tone(building_risk),
@@ -1005,7 +1008,7 @@ def build_portal_data(user=None) -> dict:
     payment_type_labels = _payment_type_labels()
     payment_totals = account_payment_totals()
 
-    buildings_qs = Building.objects.prefetch_related(
+    buildings_qs = Building.objects.select_related("operator").prefetch_related(
         Prefetch(
             "apartments",
             queryset=Apartment.objects.select_related("section").order_by("number"),

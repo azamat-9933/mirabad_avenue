@@ -885,6 +885,45 @@ aside[data-sidebar] .sidebar-brand-rail-mark {
     }
 }
 
+/* Wide enough for a table: it fits the card without sideways scrolling. The filter glyph goes
+   (the sort arrow stays), cells are tighter and date, operator and method may wrap. */
+@container billing-tx (min-width: 640px) {
+    .billing-transactions-table .table-filter-heading-icon {
+        display: none !important;
+    }
+
+    .billing-transactions-table .table-filter-heading-inner {
+        gap: 3px !important;
+        padding: 0 6px !important;
+    }
+
+    .billing-transactions-table .table-filter-heading-text {
+        letter-spacing: 0.04em !important;
+    }
+
+    .billing-transactions-table th,
+    .billing-transactions-table td {
+        padding-left: 8px !important;
+        padding-right: 8px !important;
+    }
+
+    .billing-transactions-table th:first-child,
+    .billing-transactions-table td:first-child {
+        width: 3.25rem !important;
+        min-width: 3.25rem;
+    }
+
+    .billing-transactions-table td:nth-child(2) {
+        min-width: 120px;
+    }
+
+    .billing-transactions-table td:nth-child(3),
+    .billing-transactions-table td:nth-child(4),
+    .billing-transactions-table td:nth-child(5) {
+        white-space: normal;
+    }
+}
+
 /* Phones and narrow columns: each transaction becomes a small card. */
 @container billing-tx (max-width: 639.98px) {
     .billing-transactions-table thead {

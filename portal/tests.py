@@ -943,7 +943,7 @@ class PortalBillingPeriodPagesTests(TestCase):
         days_31 = {f"from-{record.pk}": "2025-12-01", f"until-{record.pk}": "", f"days-{record.pk}": "31"}
 
         refused = self._sheet(period, action="save_heating", row=[record.pk], **days_31)
-        self.assertTrue(any("yopilgan" in message for message in self._messages(refused)))
+        self.assertTrue(any("yopiq" in message for message in self._messages(refused)))
         record.refresh_from_db()
         self.assertEqual(record.days_given, 30)
 
@@ -958,6 +958,50 @@ class PortalBillingPeriodPagesTests(TestCase):
         self.assertTrue(RecalculationLog.objects.filter(period=period).exists())
         heating = Charge.objects.get(period=period, apartment=self.first, charge_type="heating", is_cancelled=False)
         self.assertGreater(heating.amount, Decimal("840851.77"))  # 31 days now instead of 30
+
+    def test_save_with_status_closed_closes_the_period_and_charges_the_accounts(self):
+        period = self._house_60_december()
+        record = HeatingRecord.objects.get(period=period, apartment=self.first)
+        self.rest.refresh_from_db()
+        rest_before = self.rest.balance
+
+        response = self._sheet(
+            period, action="save_heating", row=[record.pk], status="closed",
+            **{f"from-{record.pk}": "2025-12-01", f"until-{record.pk}": "", f"days-{record.pk}": "30"},
+        )
+
+        period.refresh_from_db()
+        self.first.refresh_from_db()
+        self.rest.refresh_from_db()
+        self.assertEqual(period.status, BillingPeriod.STATUS_CLOSED)
+        self.assertEqual(self.first.balance, Decimal("-1439139.31"))  # nothing paid before: all of it is debt
+        self.assertLess(self.rest.balance, rest_before)
+        self.assertTrue(any("yopildi" in message for message in self._messages(response)))
+
+    def test_save_with_status_closed_keeps_the_table_when_the_period_cannot_close(self):
+        self._create()
+        period = BillingPeriod.objects.get()
+        record = HeatingRecord.objects.get(period=period, apartment=self.first)
+
+        response = self._sheet(
+            period, action="save_heating", row=[record.pk], status="closed",
+            **{f"from-{record.pk}": "2025-12-01", f"until-{record.pk}": "", f"days-{record.pk}": "28"},
+        )
+
+        period.refresh_from_db()
+        record.refresh_from_db()
+        self.assertEqual(period.status, BillingPeriod.STATUS_DRAFT)  # no costs entered yet
+        self.assertEqual(record.days_given, 28)
+        self.assertTrue(any("Davr yopilmadi" in message for message in self._messages(response)))
+
+    def test_paid_ahead_balance_covers_the_charge(self):
+        period = self._house_60_december()
+        apply_account_change(self.first.pk, Decimal("2000000"), Transaction.TYPE_CASH, description="Paid ahead")
+
+        self._sheet(period, action="set_status", status="closed")
+
+        self.first.refresh_from_db()
+        self.assertEqual(self.first.balance, Decimal("560860.69"))  # 2 000 000 − 1 439 139.31: still in credit
 
     def test_delete_removes_an_open_period_but_never_a_billed_one(self):
         billed = self._house_60_december()
@@ -1216,13 +1260,12 @@ class OperatorActivityLogTests(TestCase):
         self.assertEqual([(row["actor"], row["actorName"]) for row in rows], [("kassir1", "Ali Valiyev")])
         self.assertIn("100", rows[0]["message"])
 
-    def test_log_is_read_only_in_admin_even_for_the_head_admin(self):
+    def test_log_is_not_in_the_admin_so_nobody_can_edit_it(self):
         self.client.force_login(self.operator)
         self._post_json("portal:api_audit_note", {"message": "test"})
         event = AuditEvent.objects.get(event_type=AuditEvent.TYPE_NOTE)
         self.client.force_login(self.head_admin)
-        self.assertEqual(self.client.get("/admin/portal/auditevent/").status_code, 200)
-        self.assertEqual(self.client.get("/admin/portal/auditevent/add/").status_code, 403)
+        self.assertEqual(self.client.get("/admin/portal/auditevent/").status_code, 404)
         self.client.post(f"/admin/portal/auditevent/{event.id}/change/", {"title": "edited"})
         self.client.post(f"/admin/portal/auditevent/{event.id}/delete/", {"post": "yes"})
         event.refresh_from_db()
@@ -1234,3 +1277,58 @@ class OperatorActivityLogTests(TestCase):
         self.other_operator.delete()
         event = AuditEvent.objects.get(message="keep me")
         self.assertEqual((event.user_id, event.actor), (None, "kassir2"))
+
+
+class PortalPagesAfterOperatorsReviewTests(TestCase):
+    """The operators' review of 2026-10-19: pages trimmed, operators per house, a Reports page, a small admin."""
+
+    @classmethod
+    def setUpTestData(cls):
+        User = get_user_model()
+        cls.head_admin = User.objects.create_superuser(username="boss", password="unused-password")
+        cls.operator = User.objects.create_user(username="kassir1", password="unused-password", first_name="Azamat")
+        complex_obj = Complex.objects.create(title="Mirabad Avenue", address="", author="test")
+        cls.building = Building.objects.create(number="64", complex=complex_obj, author="test", operator=cls.operator)
+        Building.objects.create(number="64A", complex=complex_obj, author="test")
+
+    def setUp(self):
+        self.client.force_login(self.head_admin)
+
+    def test_every_house_carries_its_operator(self):
+        houses = {house["number"]: house for house in build_portal_data(self.head_admin)["complexes"][0]["buildingItems"]}
+        self.assertEqual((houses["64"]["operatorId"], houses["64"]["operatorName"]), (self.operator.pk, "Azamat"))
+        self.assertEqual((houses["64A"]["operatorId"], houses["64A"]["operatorName"]), (None, ""))
+        page = self.client.get(reverse("portal:analytics")).content.decode()
+        self.assertIn("data-analytics-operator-list", page)
+
+    def test_pages_lost_the_tools_the_operators_crossed_out(self):
+        payments = self.client.get(reverse("portal:billing")).content.decode()
+        self.assertNotIn("Sector Revenue vs Debt", payments)
+        self.assertIn("data-total-outstanding", payments)
+        houses = self.client.get(reverse("portal:residential")).content.decode()
+        self.assertNotIn("Export CSV", houses)
+        self.assertIn('data-export-tool="off" data-reminders-tool="off" data-select-tool="off"', houses)
+        residents = self.client.get(reverse("portal:dashboard")).content.decode()
+        self.assertIn('data-stat-card="total-debtors" data-debtors-list-open', residents)
+        self.assertNotIn("Generate Usage Report", residents)
+
+    def test_reports_page_is_in_the_sidebar(self):
+        page = self.client.get(reverse("portal:reports"))
+        self.assertEqual(page.status_code, 200)
+        self.assertContains(page, reverse("portal:reports"))
+        self.assertContains(page, 'data-export-context="usage-report"')
+
+    def test_admin_keeps_only_what_the_portal_cannot_manage(self):
+        from django.contrib import admin
+
+        registered = {f"{model._meta.app_label}.{model.__name__}" for model in admin.site._registry}
+        self.assertEqual(
+            registered,
+            {
+                "auth.Group", "auth.User", "billing.BoilerRoom", "main_app.Apartment", "main_app.Building",
+                "main_app.Complex", "main_app.Owner", "payments.PaymeTransaction", "portal.WorkspaceProfile",
+            },
+        )
+        page = self.client.get(reverse("admin:main_app_building_change", args=[self.building.pk]))
+        self.assertContains(page, 'name="operator"')
+

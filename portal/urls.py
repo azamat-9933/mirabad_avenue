@@ -23,6 +23,7 @@ urlpatterns = [
     path("billing/periods/create", RedirectView.as_view(pattern_name="portal:billing_periods", permanent=False)),
     path("billing/periods/create/", RedirectView.as_view(pattern_name="portal:billing_periods", permanent=False)),
     path("analytics/", views.AnalyticsView.as_view(), name="analytics"),
+    path("reports/", views.ReportsView.as_view(), name="reports"),
     path("api", RedirectView.as_view(url="/api/", permanent=False), name="api_root_redirect"),
     path("api/", views.api_root, name="api_root"),
     path("api/health/", views.api_health, name="api_health"),

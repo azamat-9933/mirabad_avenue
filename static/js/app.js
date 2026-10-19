@@ -12,7 +12,25 @@
         "Payments": { ru: "Платежи и долги", uz: "To'lovlar va qarzlar" },
         "Billing Period": { ru: "Расчётный период", uz: "Hisob davri" },
         "Analytics": { ru: "Аналитика", uz: "Tahlil" },
-        "Reports": { ru: "Статистика", uz: "Statistika" },
+        "Statistics": { ru: "Статистика", uz: "Statistika" },
+        "Reports": { ru: "Отчёты", uz: "Hisobotlar" },
+        "Debt reports": { ru: "Отчёты по долгам", uz: "Qarz hisobotlari" },
+        "Usage reports": { ru: "Отчёты по потреблению", uz: "Iste'mol hisobotlari" },
+        "General overview, debtors list and payment history of the residents.": {
+            ru: "Общий обзор, список должников и история платежей абонентов.",
+            uz: "Umumiy ko'rinish, qarzdorlar ro'yxati va abonentlar to'lovlari tarixi.",
+        },
+        "Hot water, heating and payments by house and month.": {
+            ru: "ГВС, отопление и платежи по домам и месяцам.",
+            uz: "Issiq suv, isitish va to'lovlar uylar va oylar bo'yicha.",
+        },
+        "Billing period workbooks": { ru: "Файлы расчётных периодов", uz: "Hisob davri fayllari" },
+        "Each billing period downloads as an Excel file: a heating and a hot water sheet per house.": {
+            ru: "Каждый расчётный период выгружается в Excel: листы отопления и ГВС по каждому дому.",
+            uz: "Har bir hisob davri Excel faylga yuklanadi: har uy uchun isitish va issiq suv listlari.",
+        },
+        "Create report": { ru: "Сформировать отчёт", uz: "Hisobot yaratish" },
+        "Open billing periods": { ru: "Открыть расчётные периоды", uz: "Hisob davrlarini ochish" },
         "Settings": { ru: "Настройки", uz: "Sozlamalar" },
         "Recent requests": { ru: "Недавние запросы", uz: "So'nggi so'rovlar" },
         "No results": { ru: "Ничего не найдено", uz: "Natija topilmadi" },
@@ -715,6 +733,14 @@
         "Current outstanding debt of residents in each house.": { ru: "Текущий долг жильцов каждого дома.", uz: "Har bir uydagi abonentlarning joriy qarzi." },
         "No debt": { ru: "Нет долга", uz: "Qarz yo'q" },
         "No houses yet": { ru: "Домов пока нет", uz: "Hozircha uylar yo'q" },
+        "Collected by operator": { ru: "Сбор по операторам", uz: "Operatorlar yig'imi" },
+        "No operator": { ru: "Без оператора", uz: "Operatorsiz" },
+        "Houses:": { ru: "Дома:", uz: "Uylar:" },
+        "payments made": { ru: "платежей", uz: "ta to'lov" },
+        "Assign an operator to each house on its admin page.": {
+            ru: "Назначьте оператора каждому дому на его странице в админке.",
+            uz: "Har bir uyga admin paneldagi sahifasida operator biriktiring.",
+        },
         "All residential systems are synced with current local data.": { ru: "Все жилые системы синхронизированы с текущими локальными данными.", uz: "Barcha turar joy tizimlari joriy lokal ma'lumotlar bilan sinxronlangan." },
         "No transactions for selected filters": { ru: "Нет данных по выбранным фильтрам", uz: "Tanlangan filtrlarda ma'lumot topilmadi" },
         "Try another search term or reset filters. Backend data will refresh on retry.": { ru: "Попробуйте другой поисковый запрос или сбросьте фильтры. При повторе данные backend обновятся.", uz: "Boshqa qidiruv so'rovini kiriting yoki filtrlarni tiklang. Qayta urinishda backend ma'lumotlari yangilanadi." },
@@ -1587,6 +1613,28 @@
             debt: sumBy(monthBalanceRows.filter((row) => String(row.buildingBackendId ?? "") === String(building.backendId || "")), (row) => row.debt),
         })).sort((left, right) => right.debt - left.debt);
 
+        // What the residents of each operator's houses paid in the selected month (houses without an
+        // operator together, last).
+        const buildingByBackendId = new Map(buildings.map((building) => [String(building.backendId || ""), building]));
+        const operatorKey = (building) => (building.operatorId ? `operator-${building.operatorId}` : "none");
+        const operatorTotals = new Map();
+        selectedBuildings.forEach((building) => {
+            const key = operatorKey(building);
+            if (!operatorTotals.has(key)) {
+                operatorTotals.set(key, { name: building.operatorName || "", unassigned: !building.operatorId, houses: [], amount: 0, payments: 0 });
+            }
+            operatorTotals.get(key).houses.push(building.number || building.name || "");
+        });
+        selectedMonthRows.forEach((row) => {
+            const building = buildingByBackendId.get(String(row.buildingBackendId ?? ""));
+            const entry = building && operatorTotals.get(operatorKey(building));
+            if (!entry) return;
+            entry.amount += Number(row.amount || 0);
+            entry.payments += Number(row.residents || 0);
+        });
+        const operatorRows = [...operatorTotals.values()]
+            .sort((left, right) => (left.unassigned - right.unassigned) || (right.amount - left.amount));
+
         setText('[data-analytics-value="paid-this-month"]', formatBillingUzs(monthPaid));
         setText('[data-analytics-value="total-debt"]', formatBillingUzs(debtTotal));
         setText('[data-analytics-value="overpayment"]', formatBillingUzs(overpaymentTotal));
@@ -1659,6 +1707,33 @@
                     </li>
                 `).join("")
                 : `<li class="analytics-house-debt-empty">${escapeHtml(t("No houses yet"))}</li>`;
+        }
+
+        const operatorList = document.querySelector("[data-analytics-operator-list]");
+        if (operatorList) {
+            const maxCollected = Math.max(0, ...operatorRows.map((row) => row.amount));
+            const initials = (name) => String(name || "?").split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]).join("").toUpperCase();
+            const unassignedIcon = '<span class="material-symbols-outlined">person_off</span>';
+            operatorList.innerHTML = operatorRows.length
+                ? operatorRows.map((row) => {
+                    const name = row.unassigned ? t("No operator") : row.name;
+                    const width = row.amount && maxCollected ? Math.max(2, (row.amount / maxCollected) * 100) : 0;
+                    return `
+                    <li class="analytics-operator-row ${row.unassigned ? "is-unassigned" : ""} ${row.amount ? "" : "is-empty"}">
+                        <span class="analytics-operator-avatar" aria-hidden="true">${row.unassigned ? unassignedIcon : escapeHtml(initials(name))}</span>
+                        <span class="analytics-operator-copy">
+                            <strong>${escapeHtml(name)}</strong>
+                            <small>${escapeHtml(`${t("Houses:")} ${row.houses.join(", ")}`)}</small>
+                        </span>
+                        <span class="analytics-operator-bar" aria-hidden="true"><i style="width:${width}%"></i></span>
+                        <span class="analytics-operator-amount">
+                            <strong>${escapeHtml(formatSpacedUzs(row.amount))}</strong>
+                            <small>${escapeHtml(`${moneyFormatter.format(row.payments)} ${t("payments made")}`)}</small>
+                        </span>
+                    </li>`;
+                }).join("")
+                : `<li class="analytics-house-debt-empty">${escapeHtml(t("No houses yet"))}</li>`;
+            document.querySelector("[data-analytics-operator-hint]")?.classList.toggle("hidden", !operatorRows.some((row) => row.unassigned));
         }
 
         const channelList = document.querySelector("[data-analytics-channel-list]");
@@ -2960,7 +3035,13 @@
         setStat("Total YTD Payments", formatBillingUzs(stats.totalCollected));
         setStat("Total Debt Burden", formatBillingUzs(stats.totalDebt));
         setStat("Active Debtors", moneyFormatter.format(stats.detailedDebtors));
-        setStat("Total Outstanding", formatBillingUzs(stats.detailedDebt));
+        // A debt: shown in red with a minus sign, as balances are.
+        const outstandingDebt = Number(stats.detailedDebt) || 0;
+        setStat("Total Outstanding", outstandingDebt > 0 ? `-${formatBillingUzs(outstandingDebt)}` : formatBillingUzs(0));
+        document.querySelectorAll("[data-total-outstanding]").forEach((node) => {
+            node.classList.toggle("text-error", outstandingDebt > 0);
+            node.classList.toggle("text-on-surface", outstandingDebt <= 0);
+        });
         setStat("Payments this month", moneyFormatter.format(paymentsThisMonth));
         document.querySelectorAll("[data-payments-this-month]").forEach((node) => {
             node.textContent = moneyFormatter.format(paymentsThisMonth);
@@ -5230,7 +5311,7 @@
             modal.querySelector("[data-building-summary-paid]").textContent = moneyFormatter.format(paid);
             modal.querySelector("[data-building-summary-debt]").textContent = formatBillingUzs(debt);
             if (periodsLink) {
-                periodsLink.href = "/admin/billing/billingperiod/";
+                periodsLink.href = "/billing/periods/";
                 periodsLink.dataset.buildingBackendId = trigger.dataset.buildingBackendId || "";
             }
             window.HydroFlowSyncLocale?.();

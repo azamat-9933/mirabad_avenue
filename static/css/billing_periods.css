@@ -320,20 +320,37 @@ html.dark .bp-modal .bp-table th {
     overflow: hidden;
 }
 
+/* The Excel corner cell: "Period" above the diagonal (it heads the toolbar), "House" below (it heads the houses). */
 .bp-sheet__corner {
     grid-area: corner;
-    display: flex;
-    align-items: flex-end;
-    padding: 8px;
+    position: relative;
+    min-height: 64px;
     border-right: 1px solid var(--bp-line);
     border-bottom: 1px solid var(--bp-line);
     background:
-        linear-gradient(to top right, transparent calc(50% - 0.5px), var(--bp-line) 50%, transparent calc(50% + 0.5px)),
-        var(--bp-head);
-    color: var(--bp-muted);
+        linear-gradient(to top right, transparent calc(50% - 0.75px), color-mix(in srgb, var(--bp-primary) 35%, transparent) 50%, transparent calc(50% + 0.75px)),
+        linear-gradient(135deg, var(--bp-primary-soft), var(--bp-head));
+    overflow: hidden;
+}
+
+.bp-sheet__corner span {
+    position: absolute;
+    color: var(--bp-primary);
     font-size: 10px;
-    font-weight: 800;
-    line-height: 1.2;
+    font-weight: 900;
+    letter-spacing: 0.06em;
+    line-height: 1;
+    text-transform: uppercase;
+}
+
+.bp-sheet__corner-top {
+    top: 9px;
+    right: 8px;
+}
+
+.bp-sheet__corner-bottom {
+    bottom: 9px;
+    left: 8px;
 }
 
 .bp-sheet__toolbar {
@@ -574,6 +591,74 @@ html.dark .bp-modal .bp-table th {
 
 .bp-sheet__actions form {
     margin: 0;
+}
+
+/* Status: two segments, Open (green) and Closed; the choice is saved with the table. */
+.bp-status-switch {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px;
+    border: 1px solid var(--bp-line);
+    border-radius: 999px;
+    background: var(--bp-bg);
+}
+
+.bp-status-switch__label {
+    padding: 0 8px 0 10px;
+    color: var(--bp-muted);
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.bp-status-switch__option {
+    position: relative;
+    margin: 0;
+    cursor: pointer;
+}
+
+.bp-status-switch__option input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.bp-status-switch__option > span {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    min-height: 30px;
+    padding: 5px 13px;
+    border-radius: 999px;
+    color: var(--bp-muted);
+    font-size: 13px;
+    font-weight: 800;
+    line-height: 1;
+    transition: background 0.15s, color 0.15s;
+}
+
+.bp-status-switch__option .material-symbols-outlined {
+    font-size: 16px;
+}
+
+.bp-status-switch__option:hover > span {
+    background: var(--bp-head);
+    color: var(--bp-text);
+}
+
+.bp-status-switch__option.is-open input:checked + span {
+    background: color-mix(in srgb, var(--bp-ok) 16%, transparent);
+    color: var(--bp-ok);
+}
+
+.bp-status-switch__option.is-closed input:checked + span {
+    background: var(--bp-text);
+    color: var(--bp-bg);
+}
+
+.bp-status-switch__option input:focus-visible + span {
+    outline: 2px solid var(--bp-primary);
+    outline-offset: 1px;
 }
 
 .bp-inline {

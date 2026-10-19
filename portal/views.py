@@ -136,8 +136,14 @@ class BillingView(PortalPageView):
 
 class AnalyticsView(PortalPageView):
     template_name = "portal/analytics.html"
-    page_title = "Utility Manager | Reports"
+    page_title = "Utility Manager | Statistics"
     active_page = "analytics"
+
+
+class ReportsView(PortalPageView):
+    template_name = "portal/reports.html"
+    page_title = "Utility Manager | Reports"
+    active_page = "reports"
 
 
 @extend_schema(responses=OpenApiTypes.OBJECT)
@@ -611,9 +617,9 @@ def api_export_audit(request):
     language = str(payload.get("language") or "en").strip().lower()
     lang = language if language in {"en", "ru", "uz"} else "en"
     headers = {
-        "en": ["Audit ID", "Date and time", "Event type", "Title", "Message", "Actor", "IP address", "Sector", "House", "Apartment", "Resident", "Admin link"],
-        "ru": ["ID аудита", "Дата и время", "Тип события", "Заголовок", "Сообщение", "Исполнитель", "IP-адрес", "Сектор", "Дом", "Квартира", "Абонент", "Ссылка admin"],
-        "uz": ["Audit ID", "Sana va vaqt", "Hodisa turi", "Sarlavha", "Xabar", "Ijrochi", "IP manzil", "Sektor", "Uy", "Xonadon", "Abonent", "Admin havolasi"],
+        "en": ["Audit ID", "Date and time", "Event type", "Title", "Message", "Actor", "IP address", "Sector", "House", "Apartment", "Resident"],
+        "ru": ["ID аудита", "Дата и время", "Тип события", "Заголовок", "Сообщение", "Исполнитель", "IP-адрес", "Сектор", "Дом", "Квартира", "Абонент"],
+        "uz": ["Audit ID", "Sana va vaqt", "Hodisa turi", "Sarlavha", "Xabar", "Ijrochi", "IP manzil", "Sektor", "Uy", "Xonadon", "Abonent"],
     }
     title = {"en": "Audit Log", "ru": "Журнал аудита", "uz": "Audit jurnali"}[lang]
     search = str(payload.get("search") or "").strip()
@@ -655,7 +661,6 @@ def api_export_audit(request):
                 event.building.number if event.building_id and event.building else "",
                 event.apartment.number if event.apartment_id and event.apartment else "",
                 event.owner.fio if event.owner_id and event.owner else "",
-                f"/admin/portal/auditevent/{event.id}/change/",
             ])
     except (DatabaseError, OperationalError):
         rows = []
@@ -680,7 +685,7 @@ def api_list_complexes(request):
     district_value = _query_param(request, "district", "")
     ordering_raw = _query_param(request, "ordering", "complex")
     apartment_queryset = Apartment.objects.select_related("section", "owner").order_by("number")
-    building_queryset = Building.objects.prefetch_related(
+    building_queryset = Building.objects.select_related("operator").prefetch_related(
         Prefetch("apartments", queryset=apartment_queryset),
         "sections",
     ).order_by("number")
@@ -1826,7 +1831,7 @@ def api_system_alerts_configure(request):
         return portal_response(
             {
                 "notificationId": notification.id,
-                "adminUrl": f"/admin/portal/portalnotification/{notification.id}/change/",
+                "adminUrl": "",
             }
         )
 

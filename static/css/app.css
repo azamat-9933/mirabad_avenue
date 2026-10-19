@@ -22325,3 +22325,279 @@ html.dark .billing-notice-debtor-unit,
 [data-theme="dark"] .billing-notice-debtor-unit {
     color: #94A3B8;
 }
+
+/* Residents page: the Total Debtors card opens the debtors list. */
+.dashboard-kpi-clickable {
+    cursor: pointer;
+    transition: box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.dashboard-kpi-clickable:hover {
+    border-color: rgba(220, 38, 38, 0.35);
+    box-shadow: 0 10px 24px rgba(220, 38, 38, 0.1);
+}
+
+.dashboard-kpi-clickable:focus-visible {
+    outline: 2px solid rgba(220, 38, 38, 0.5);
+    outline-offset: 2px;
+}
+
+.dashboard-kpi-clickable > div:first-child > p:first-child::after {
+    content: " ›";
+    letter-spacing: 0;
+}
+
+/* Statistics: the left column stacks "Debt by house" and "Collected by operator". */
+.analytics-v2-stack {
+    display: grid;
+    gap: 18px;
+    align-content: start;
+    min-width: 0;
+}
+
+.analytics-operator-list {
+    display: grid;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.analytics-operator-row {
+    display: grid;
+    grid-template-columns: 40px minmax(120px, 200px) minmax(0, 1fr) 170px;
+    align-items: center;
+    gap: 14px;
+    padding: 10px 14px;
+    border-radius: 14px;
+    border: 1px solid rgba(174, 194, 220, 0.24);
+    background: rgba(255, 255, 255, 0.78);
+}
+
+.analytics-operator-avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #0A5F7A, #17B26A);
+    color: #FFFFFF;
+    font-size: 14px;
+    font-weight: 900;
+}
+
+.analytics-operator-row.is-unassigned .analytics-operator-avatar {
+    background: rgba(148, 163, 184, 0.22);
+    color: #64748B;
+}
+
+.analytics-operator-avatar .material-symbols-outlined {
+    font-size: 20px;
+}
+
+.analytics-operator-copy {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+}
+
+.analytics-operator-copy strong {
+    overflow: hidden;
+    color: #1A2535;
+    font-size: 15px;
+    font-weight: 900;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.analytics-operator-copy small,
+.analytics-operator-amount small {
+    color: #64748B;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.analytics-operator-bar {
+    height: 8px;
+    border-radius: 999px;
+    background: rgba(23, 178, 106, 0.12);
+    overflow: hidden;
+}
+
+.analytics-operator-bar i {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, #0A5F7A, #17B26A);
+}
+
+.analytics-operator-amount {
+    display: grid;
+    gap: 2px;
+    text-align: right;
+}
+
+.analytics-operator-amount strong {
+    color: #0F7A45;
+    font-size: 17px;
+    font-weight: 900;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.analytics-operator-row.is-empty .analytics-operator-amount strong {
+    color: #64748B;
+}
+
+.analytics-operator-hint {
+    margin: 10px 2px 0;
+    color: #64748B;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+html.dark .analytics-operator-row,
+[data-theme="dark"] .analytics-operator-row {
+    border-color: rgba(116, 139, 170, 0.18);
+    background: rgba(255, 255, 255, 0.04);
+}
+
+html.dark .analytics-operator-copy strong,
+[data-theme="dark"] .analytics-operator-copy strong {
+    color: #E2E8F0;
+}
+
+html.dark .analytics-operator-amount strong,
+[data-theme="dark"] .analytics-operator-amount strong {
+    color: #6FD6A0;
+}
+
+@media (max-width: 640px) {
+    .analytics-operator-row {
+        grid-template-columns: 40px minmax(0, 1fr) auto;
+    }
+
+    .analytics-operator-bar {
+        grid-column: 1 / -1;
+        grid-row: 2;
+    }
+}
+
+/* Reports page: one card per kind of download. */
+.reports-head {
+    margin-bottom: 22px;
+}
+
+.reports-kicker {
+    margin: 0;
+    color: #004354;
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+}
+
+.reports-title {
+    margin: 4px 0 0;
+    font-size: 28px;
+    font-weight: 900;
+}
+
+.reports-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 18px;
+}
+
+.reports-card {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 22px;
+    border: 1px solid rgba(174, 194, 220, 0.4);
+    border-radius: 18px;
+    background: #FFFFFF;
+    box-shadow: 0 12px 30px rgba(0, 67, 84, 0.06);
+}
+
+.reports-card h2 {
+    margin: 4px 0 0;
+    font-size: 18px;
+    font-weight: 900;
+}
+
+.reports-card p {
+    flex: 1;
+    margin: 0;
+    color: #55636A;
+    font-size: 14px;
+    line-height: 1.45;
+}
+
+.reports-card__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 46px;
+    height: 46px;
+    border-radius: 14px;
+    font-size: 24px;
+}
+
+.reports-card__icon--debt {
+    background: rgba(220, 38, 38, 0.1);
+    color: #DC2626;
+}
+
+.reports-card__icon--usage {
+    background: rgba(14, 165, 233, 0.12);
+    color: #0284C7;
+}
+
+.reports-card__icon--period {
+    background: rgba(23, 178, 106, 0.12);
+    color: #0F7A45;
+}
+
+.reports-card__action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    align-self: flex-start;
+    margin-top: 6px;
+    padding: 10px 16px;
+    border-radius: 12px;
+    background: #004354;
+    color: #FFFFFF;
+    font-size: 13px;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.reports-card__action:hover {
+    filter: brightness(1.12);
+}
+
+.reports-card__action .material-symbols-outlined {
+    font-size: 18px;
+}
+
+html.dark .reports-card {
+    border-color: rgba(116, 139, 170, 0.2);
+    background: #151B22;
+}
+
+html.dark .reports-card p {
+    color: #9FB0B8;
+}
+
+html.dark .reports-kicker {
+    color: #8DD0E9;
+}
+
+html.dark .reports-card__action {
+    background: #8DD0E9;
+    color: #06222C;
+}

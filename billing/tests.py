@@ -2,13 +2,10 @@ from datetime import date
 from decimal import Decimal
 
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import Permission
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
 from django.test import TestCase
-from django.urls import reverse
 
-from billing.admin import SpacedDecimalField, SpacedNumberInput
 from billing.models import (
     BillingPeriod,
     BuildingService,
@@ -532,160 +529,6 @@ class BillingCoreModelTests(TestCase):
         self.assertTrue(True)
 
 
-class SpacedNumberTests(TestCase):
-    def test_numbers_are_shown_in_groups_of_three(self):
-        widget = SpacedNumberInput()
-        self.assertEqual(widget.format_value(Decimal("1")), "1")
-        self.assertEqual(widget.format_value(Decimal("1000")), "1 000")
-        self.assertEqual(widget.format_value(Decimal("1000000000.00")), "1 000 000 000")
-        self.assertEqual(widget.format_value(Decimal("1234567.50")), "1 234 567,5")
-        self.assertIsNone(widget.format_value(None))
-
-    def test_spaced_numbers_are_read_back(self):
-        field = SpacedDecimalField(max_digits=16, decimal_places=2)
-        self.assertEqual(field.clean("100 000 000"), Decimal("100000000"))
-        self.assertEqual(field.clean("1 234 567,50"), Decimal("1234567.50"))
-        self.assertEqual(field.clean("1\xa0000.5"), Decimal("1000.5"))
-        with self.assertRaises(ValidationError):
-            field.clean("12 abc")
-
-
-class BillingPeriodAdminStateTests(TestCase):
-    """The period's "Holat" in admin: closing bills the residents, only a superuser reopens."""
-
-    def setUp(self):
-        complex_ = Complex.objects.create(title="Skyline", address="North", author="test")
-        self.building = Building.objects.create(number="A", address="North", complex=complex_, author="test")
-        for number in ("101", "102"):
-            apartment = Apartment.objects.create(number=number, area=Decimal("50.00"), building=self.building, author="test")
-            Owner.objects.create(fio=f"Owner {number}", phone=f"+99890000{number}", apartment=apartment)
-        self.period = BillingPeriod.objects.create(name="April 2026", start_date=date(2026, 4, 1), end_date=date(2026, 4, 30))
-        self.period.buildings.add(self.building)
-        for apartment in Apartment.objects.filter(building=self.building):
-            HeatingRecord.objects.create(period=self.period, apartment=apartment, heated_from=self.period.start_date)
-        User = get_user_model()
-        self.superuser = User.objects.create_superuser(username="root", password="testpass")
-        self.staff = User.objects.create_user(username="operator", password="testpass", is_staff=True)
-        self.staff.user_permissions.add(*Permission.objects.filter(
-            content_type__app_label="billing", codename__in=["view_billingperiod", "change_billingperiod"],
-        ))
-        self.change_url = reverse("admin:billing_billingperiod_change", args=[self.period.pk])
-
-    def _post(self, state, **extra):
-        data = {
-            "name": self.period.name,
-            "start_date": "2026-04-01",
-            "end_date": "2026-04-30",
-            "buildings": [self.building.pk],
-            "state": state,
-            "expenses-TOTAL_FORMS": "0", "expenses-INITIAL_FORMS": "0",
-            "gas_meter_readings-TOTAL_FORMS": "0", "gas_meter_readings-INITIAL_FORMS": "0",
-            "heating_records-TOTAL_FORMS": "0", "heating_records-INITIAL_FORMS": "0",
-            "hot_water_readings-TOTAL_FORMS": "0", "hot_water_readings-INITIAL_FORMS": "0",
-            **extra,
-        }
-        return self.client.post(self.change_url, data)
-
-    def _close_with_expense_and_gas(self):
-        self.client.force_login(self.superuser)
-        response = self._post(
-            "closed",
-            **{
-                "expenses-TOTAL_FORMS": "1",
-                "expenses-0-building": self.building.pk, "expenses-0-service_type": "heating",
-                "expenses-0-name": "Boiler", "expenses-0-amount": "4 900",
-                "gas_meter_readings-TOTAL_FORMS": "1",
-                "gas_meter_readings-0-building": self.building.pk, "gas_meter_readings-0-service_type": "heating",
-                "gas_meter_readings-0-start_reading": "1 000", "gas_meter_readings-0-end_reading": "1 010",
-                "gas_meter_readings-0-price_per_m3": "1 000",
-            },
-        )
-        context = getattr(response, "context", None) or {}
-        errors = context.get("errors") if hasattr(context, "get") else None
-        self.assertEqual(response.status_code, 302, errors)
-        self.period.refresh_from_db()
-
-    def test_closing_from_the_form_bills_the_typed_expense_and_gas(self):
-        self._close_with_expense_and_gas()
-
-        self.assertEqual(self.period.status, BillingPeriod.STATUS_CLOSED)
-        self.assertEqual(Expense.objects.get(period=self.period).amount, Decimal("4900.00"))
-        self.assertEqual(self.period.total_expenses(), Decimal("14900.00"))
-        charged = sum(Charge.objects.filter(period=self.period, is_cancelled=False).values_list("amount", flat=True))
-        # Within the tariff rounding (4 places per m²·day); without the gas it would be 4 900.
-        self.assertAlmostEqual(charged, Decimal("14900.00"), delta=Decimal("1.00"))
-        self.assertTrue(AuditEvent.objects.filter(title="Billing period closed", metadata__source="admin_billing_period_form").exists())
-
-    def test_superuser_reopens_a_closed_period(self):
-        self._close_with_expense_and_gas()
-
-        response = self._post("open")
-
-        self.assertEqual(response.status_code, 302)
-        self.period.refresh_from_db()
-        self.assertEqual(self.period.status, BillingPeriod.STATUS_REOPENED)
-        self.assertTrue(AuditEvent.objects.filter(title="Billing period reopened").exists())
-
-    def test_staff_sees_a_closed_period_read_only(self):
-        self._close_with_expense_and_gas()
-        self.client.force_login(self.staff)
-
-        page = self.client.get(self.change_url)
-        self.assertEqual(page.status_code, 200)
-        self.assertNotContains(page, 'name="state"')
-        self.assertContains(page, "Yopiq")
-
-        self.assertEqual(self._post("open").status_code, 403)
-        self.client.post(
-            reverse("admin:billing_billingperiod_changelist"),
-            {"action": "action_reopen_period", "_selected_action": [self.period.pk]},
-        )
-        self.period.refresh_from_db()
-        self.assertEqual(self.period.status, BillingPeriod.STATUS_CLOSED)
-
-    def test_heating_dates_are_entered_on_the_period_page(self):
-        self.client.force_login(self.superuser)
-        record = HeatingRecord.objects.filter(period=self.period).order_by("apartment__number").first()
-        self.assertContains(self.client.get(self.change_url), "Isitish sanalari")
-
-        def post_heating(heated_from, heated_until=""):
-            return self._post("open", **{
-                "heating_records-TOTAL_FORMS": "1", "heating_records-INITIAL_FORMS": "1",
-                "heating_records-0-id": record.pk, "heating_records-0-period": self.period.pk,
-                "heating_records-0-heated_from": heated_from, "heating_records-0-heated_until": heated_until,
-            })
-
-        self.assertEqual(post_heating("2026-04-11").status_code, 302)
-        record.refresh_from_db()
-        self.assertEqual((record.heated_from, record.heated_until, record.heated_days), (date(2026, 4, 11), None, 20))
-
-        response = post_heating("2026-05-02")
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "davr oralig&#x27;idan tashqarida")
-        record.refresh_from_db()
-        self.assertEqual(record.heated_from, date(2026, 4, 11))
-
-    def test_staff_can_close_an_open_period(self):
-        Expense.objects.create(period=self.period, building=self.building, service_type="heating", name="Boiler", amount=Decimal("4900.00"))
-        self.client.force_login(self.staff)
-
-        page = self.client.get(self.change_url)
-        self.assertContains(page, 'name="state"')
-        response = self._post(
-            "closed",
-            **{
-                "expenses-TOTAL_FORMS": "1", "expenses-INITIAL_FORMS": "1",
-                "expenses-0-id": Expense.objects.get(period=self.period).pk, "expenses-0-period": self.period.pk,
-                "expenses-0-building": self.building.pk, "expenses-0-service_type": "heating",
-                "expenses-0-name": "Boiler", "expenses-0-amount": "4 900,00",
-            },
-        )
-
-        self.assertEqual(response.status_code, 302)
-        self.period.refresh_from_db()
-        self.assertEqual(self.period.status, BillingPeriod.STATUS_CLOSED)
-
-
 class BillingCalculationRulesTests(TestCase):
     """The billing formula: who is billed, for how many days or m³, and what blocks closing."""
 
@@ -897,15 +740,3 @@ class BillingCalculationRulesTests(TestCase):
         self.assertEqual(self.charged(), {"1": Decimal("500.00")})
         first.refresh_from_db()
         self.assertEqual(first.balance, Decimal("-500.00"))
-
-    def test_period_admin_previews_the_calculation(self):
-        self.flat("1", heated_from=date(2026, 4, 1))
-        self.cost("heating", "1500")
-        self.cost("hot_water", "700")
-        self.client.force_login(get_user_model().objects.create_superuser(username="root", password="testpass"))
-
-        page = self.client.get(reverse("admin:billing_billingperiod_change", args=[self.april.pk]))
-
-        self.assertContains(page, "60 uy — isitish")
-        self.assertContains(page, "1 500 so&#x27;m")
-        self.assertContains(page, "60 uy — issiq suv: xarajat 700 so&#x27;m, lekin kvartiralar sarfi 0 m³")

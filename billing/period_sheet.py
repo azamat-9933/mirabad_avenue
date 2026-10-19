@@ -58,7 +58,7 @@ LABELS = {
     },
     "cancel": {"en": "Cancel", "ru": "Отмена", "uz": "Bekor qilish"},
     "export": {"en": "Export", "ru": "Экспорт", "uz": "Eksport"},
-    "period_house": {"en": "Period / House", "ru": "Период / Дом", "uz": "Davr / Uy"},
+    "period": {"en": "Period", "ru": "Период", "uz": "Davr"},
     "back": {"en": "All periods", "ru": "Все периоды", "uz": "Barcha davrlar"},
     "heating": {"en": "Heating", "ru": "Отопление", "uz": "Isitish"},
     "hot_water": {"en": "Hot water", "ru": "ГВС", "uz": "Issiq suv"},

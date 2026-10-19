@@ -1,6 +1,7 @@
 from django import forms
 from django.contrib import admin
 from django.contrib.admin.options import IS_POPUP_VAR
+from django.contrib.auth import get_user_model
 from django.db.models import Count, Q, Sum
 from django.http import HttpResponseRedirect
 from django.urls import reverse
@@ -236,7 +237,7 @@ class ComplexAdmin(admin.ModelAdmin):
 @admin.register(Building)
 class BuildingAdmin(admin.ModelAdmin):
     list_display  = (
-        "house_name", "address",
+        "house_name", "address", "operator",
         "apartments_count", "total_area_display", "created_at",
     )
     search_fields = ("number", "address", "complex__title")
@@ -253,6 +254,9 @@ class BuildingAdmin(admin.ModelAdmin):
             queryset = Complex.objects.filter(pk=sector.pk)
             kwargs.setdefault("initial", sector.pk)
             kwargs["queryset"] = queryset
+        if db_field.name == "operator":
+            # The operator looking after the house: any active portal account.
+            kwargs["queryset"] = get_user_model().objects.filter(is_active=True).order_by("username")
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
     def save_model(self, request, obj, form, change):
@@ -282,7 +286,7 @@ class BuildingAdmin(admin.ModelAdmin):
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
-        return qs.select_related("complex").annotate(
+        return qs.select_related("complex", "operator").annotate(
             _apt_count=Count("apartments")
         )
 

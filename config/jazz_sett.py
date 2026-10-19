@@ -35,22 +35,11 @@ JAZZ_SETTINGS = {
         "main_app.Owner",
         "main_app.Apartment",
         "main_app.Building",
+        "billing",
         "payments",
         "portal",
-        "billing",
         "auth",
     ],
-
-    "custom_links": {
-        "main_app": [
-            {
-                "name": "Sector",
-                "url": "/admin/main_app/sector/",
-                "icon": "fas fa-map-signs",
-                "permissions": ["main_app.change_complex"],
-            },
-        ],
-    },
 
     # Ikonkalar (Font Awesome 5)
     "icons": {
@@ -62,18 +51,13 @@ JAZZ_SETTINGS = {
         "main_app.owner":           "fas fa-user-circle",
 
         # billing
-        "billing.billingperiod":             "fas fa-calendar-alt",
-        "billing.expense":                   "fas fa-receipt",
-        "billing.gasmeterreading":           "fas fa-fire",
-        "billing.heatingrecord":             "fas fa-thermometer-half",
-        "billing.hotwatermeterreading":      "fas fa-tint",
-        "billing.invoice":                   "fas fa-file-invoice-dollar",
-        "billing.heatingcalculationsummary": "fas fa-chart-bar",
-        "billing.hotwatercalculationsummary":"fas fa-chart-pie",
+        "billing.boilerroom": "fas fa-fire",
 
         # payments
-        "payments.transaction":      "fas fa-exchange-alt",
         "payments.paymetransaction": "fas fa-credit-card",
+
+        # portal
+        "portal.workspaceprofile": "fas fa-id-badge",
 
         # auth
         "auth.user":  "fas fa-user",

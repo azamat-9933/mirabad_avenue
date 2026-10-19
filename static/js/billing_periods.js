@@ -160,9 +160,15 @@
         });
     }
 
-    // Leaving the sheet with typed, unsaved values asks first.
-    document.querySelector("[data-bp-sheet-form]")?.addEventListener("submit", () => {
-        dirty = false;
+    // Save also opens or closes the period as Status says; closing charges every resident, so it asks first.
+    const statusSwitch = document.querySelector("[data-bp-status-switch]");
+    document.querySelector("[data-bp-sheet-form]")?.addEventListener("submit", (event) => {
+        const target = statusSwitch?.querySelector("input[name='status']:checked")?.value;
+        if (target === "closed" && statusSwitch.dataset.initial !== "closed" && !window.confirm(t("close_confirm"))) {
+            event.preventDefault();
+            return;
+        }
+        dirty = false;  // leaving the sheet with typed, unsaved values asks first; saving does not
     });
     window.addEventListener("beforeunload", (event) => {
         if (!dirty) return;
@@ -206,15 +212,10 @@
         });
     });
 
-    // Deleting a period, or closing it (which charges every resident), asks first.
+    // Deleting a period asks first.
     document.querySelectorAll("[data-bp-confirm]").forEach((form) => {
         form.addEventListener("submit", (event) => {
             if (!window.confirm(t(form.dataset.bpConfirm))) event.preventDefault();
         });
-    });
-    document.querySelector("[data-bp-status-form]")?.addEventListener("submit", (event) => {
-        const select = event.currentTarget.querySelector("select[name='status']");
-        const wasClosed = select?.querySelector("option[selected]")?.value === "closed";
-        if (select?.value === "closed" && !wasClosed && !window.confirm(t("close_confirm"))) event.preventDefault();
     });
 })();

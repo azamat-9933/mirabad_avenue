@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
 {% block title %}{{ page_title }}{% endblock %}
-{% block extra_head %}<link href="{% static 'css/billing_periods.css' %}?v=periods-20261019-5" rel="stylesheet"/>{% endblock %}
+{% block extra_head %}<link href="{% static 'css/billing_periods.css' %}?v=periods-20261019-6" rel="stylesheet"/>{% endblock %}
 {% block page_body %}
 {# A period laid out like its Excel file: houses on the left, the heating / hot water tables as sheet tabs below. #}
 <main class="app-main min-h-screen pt-16">
@@ -13,7 +13,10 @@
     {% endif %}
 
     <div class="bp-sheet">
-      <div class="bp-sheet__corner" aria-hidden="true"><span data-pt="period_house">Period / House</span></div>
+      <div class="bp-sheet__corner" aria-hidden="true">
+        <span class="bp-sheet__corner-top" data-pt="period">Period</span>
+        <span class="bp-sheet__corner-bottom" data-pt="house">House</span>
+      </div>
 
       <div class="bp-sheet__toolbar">
         <div class="bp-sheet__toolbar-left">
@@ -169,18 +172,20 @@
       </div>
 
       <div class="bp-sheet__actions">
-        <form class="bp-inline" data-bp-status-form method="post">
-          {% csrf_token %}
-          <input name="action" type="hidden" value="set_status"/>
-          <input name="building" type="hidden" value="{{ building.pk|default:'' }}"/>
-          <input name="sheet" type="hidden" value="{{ sheet_type }}"/>
-          <label class="bp-inline__label" data-pt="status" for="bp-status">Status</label>
-          <select class="bp-input" id="bp-status" name="status">
-            <option data-pt="status_open" value="open"{% if not closed %} selected{% endif %}>Open</option>
-            <option data-pt="status_closed" value="closed"{% if closed %} selected{% endif %}>Closed</option>
-          </select>
-          <button class="bp-btn" data-pt="apply" type="submit">Apply</button>
-        </form>
+        {% if building %}
+          {# Part of the sheet form: Save stores the table, then opens or closes the period. #}
+          <div class="bp-status-switch" data-bp-status-switch data-initial="{% if closed %}closed{% else %}open{% endif %}" role="radiogroup" aria-labelledby="bp-status-label">
+            <span class="bp-status-switch__label" data-pt="status" id="bp-status-label">Status</span>
+            <label class="bp-status-switch__option is-open">
+              <input form="bp-sheet-form" name="status" type="radio" value="open"{% if not closed %} checked{% endif %}/>
+              <span><span class="material-symbols-outlined" aria-hidden="true">lock_open</span><span data-pt="status_open">Open</span></span>
+            </label>
+            <label class="bp-status-switch__option is-closed">
+              <input form="bp-sheet-form" name="status" type="radio" value="closed"{% if closed %} checked{% endif %}/>
+              <span><span class="material-symbols-outlined" aria-hidden="true">lock</span><span data-pt="status_closed">Closed</span></span>
+            </label>
+          </div>
+        {% endif %}
         {% if not closed %}
           <form data-bp-confirm="delete_confirm" method="post">
             {% csrf_token %}
@@ -192,12 +197,12 @@
               <span data-pt="delete">Delete</span>
             </button>
           </form>
-          {% if building %}
-            <button class="bp-btn bp-btn--primary" form="bp-sheet-form" type="submit">
-              <span class="material-symbols-outlined" aria-hidden="true">save</span>
-              <span data-pt="save">Save</span>
-            </button>
-          {% endif %}
+        {% endif %}
+        {% if building %}
+          <button class="bp-btn bp-btn--primary" form="bp-sheet-form" type="submit">
+            <span class="material-symbols-outlined" aria-hidden="true">save</span>
+            <span data-pt="save">Save</span>
+          </button>
         {% endif %}
         <form method="post">
           {% csrf_token %}
@@ -343,5 +348,5 @@
 {% endif %}
 
 <script id="bp-labels" type="application/json">{{ labels_json }}</script>
-<script defer src="{% static 'js/billing_periods.js' %}?v=periods-20261019-5"></script>
+<script defer src="{% static 'js/billing_periods.js' %}?v=periods-20261019-6"></script>
 {% endblock %}

@@ -23,7 +23,7 @@
 </div>
 <div>
 <p class="text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-1">Total Outstanding</p>
-<p class="text-3xl font-black text-on-surface tracking-tight">0 UZS</p>
+<p class="text-3xl font-black text-on-surface tracking-tight" data-total-outstanding>0 UZS</p>
 </div>
 <div>
 <p class="text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-1" data-i18n-key="Payments this month">Payments this month</p>
@@ -196,42 +196,6 @@
 </div>
 </div>
 
-<!-- Revenue vs Debt: Top 5 Card -->
-<div class="revenue-debt-card bg-white p-6 rounded-xl shadow-sm border border-outline-variant/30">
-<h4 class="font-bold text-on-surface mb-6 uppercase tracking-wider text-xs" data-i18n-key="Sector Revenue vs Debt">Sector Revenue vs Debt</h4>
-<div class="revenue-debt-sector space-y-4" data-sector-revenue-health>
-<div class="flex items-start justify-between gap-4">
-<div>
-<p class="text-sm font-black text-on-surface" data-sector-revenue-name>Mirabad Avenue</p>
-<p class="text-[11px] font-bold uppercase tracking-[0.16em] text-on-surface-variant" data-i18n-key="Entire sector">Entire sector</p>
-</div>
-<span class="resident-debt-split is-healthy" data-sector-revenue-pill>
-<span><b data-sector-revenue-debtors>0</b><small data-i18n-key="Debt">Debt</small></span>
-<span><b data-sector-revenue-paid>0</b><small data-i18n-key="Paid">Paid</small></span>
-</span>
-</div>
-<div class="percent-meter percent-meter-blue" data-sector-revenue-meter style="--progress: 0%; --remainder: 100%;" data-value="0%">
-<span class="percent-meter-track"><span class="percent-meter-fill"></span><span class="percent-meter-remainder"></span></span>
-</div>
-<div class="grid grid-cols-2 gap-3 revenue-debt-sector-metrics">
-<div class="rounded-2xl border border-outline-variant/10 bg-surface-container-low px-4 py-3">
-<p class="text-[10px] font-black uppercase tracking-[0.16em] text-on-surface-variant" data-i18n-key="Collected">Collected</p>
-<p class="mt-1 text-sm font-black text-primary" data-sector-revenue-collected>0 UZS</p>
-</div>
-<div class="rounded-2xl border border-outline-variant/10 bg-surface-container-low px-4 py-3">
-<p class="text-[10px] font-black uppercase tracking-[0.16em] text-on-surface-variant" data-i18n-key="Debt">Debt</p>
-<p class="mt-1 text-sm font-black text-error" data-sector-revenue-debt>0 UZS</p>
-</div>
-</div>
-</div>
-<div class="mt-6 pt-4 border-t border-outline-variant/10">
-<div class="flex items-center justify-between gap-3 mb-4">
-<p class="text-[11px] font-black uppercase tracking-[0.18em] text-on-surface-variant" data-i18n-key="Top 5 Houses by Debt">Top 5 Houses by Debt</p>
-<p class="text-[11px] font-bold text-on-surface-variant" data-sector-top-caption></p>
-</div>
-<div class="space-y-2" data-sector-top-houses></div>
-</div>
-</div>
 </div>
 </div>
 </main>

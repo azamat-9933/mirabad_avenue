@@ -391,6 +391,8 @@ class BillingPeriodSheetView(PortalPageView):
         if handler is None:
             messages.error(request, "Noma'lum amal.")
             return redirect(self._sheet_url(building, sheet_type))
+        if action in ("save_heating", "save_hot_water"):
+            return self._save_sheet(request, handler, building, sheet_type)
         try:
             # The change and its activity-log entry commit together or not at all.
             with transaction.atomic():
@@ -398,11 +400,36 @@ class BillingPeriodSheetView(PortalPageView):
         except ValidationError as exc:
             for problem in exc.messages:
                 messages.error(request, problem)
-            if action in ("save_heating", "save_hot_water"):
-                # Keep what was typed so it can be corrected instead of typed again.
-                return self.render_to_response(self.get_context_data(source=request.POST, typed=request.POST))
         if action == "delete" and not BillingPeriod.objects.filter(pk=self.period.pk).exists():
             return redirect("portal:billing_periods")
+        return redirect(self._sheet_url(building, sheet_type))
+
+    def _save_sheet(self, request, handler, building, sheet_type):
+        """Save: store the table (an open period's), then open or close the period as its Status says.
+
+        The table is stored first and on its own, so a period that cannot be closed yet (no costs,
+        missing readings) keeps what was typed and reports why it stayed open.
+        """
+        if not is_closed(self.period):
+            try:
+                with transaction.atomic():
+                    handler(request, building, sheet_type)
+            except ValidationError as exc:
+                for problem in exc.messages:
+                    messages.error(request, problem)
+                # Keep what was typed so it can be corrected instead of typed again.
+                return self.render_to_response(self.get_context_data(source=request.POST, typed=request.POST))
+        target = str(request.POST.get("status") or "")
+        if target in ("open", "closed") and target != ("closed" if is_closed(self.period) else "open"):
+            try:
+                with transaction.atomic():
+                    set_status(request, self.period, target)
+            except ValidationError as exc:
+                messages.error(request, "Davr yopilmadi:")
+                for problem in exc.messages:
+                    messages.error(request, problem)
+        elif is_closed(self.period):
+            messages.info(request, "Davr yopiq: jadvallarni o'zgartirish uchun holatni «Ochiq» qilib saqlang.")
         return redirect(self._sheet_url(building, sheet_type))
 
     def _ensure_editable(self, building):

@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}{{ page_title }}{% endblock %}
+{% block body_class %}bg-background text-on-surface{% endblock %}
+{% block page_body %}
+{# Reports: the downloads the portal can make, in one place. Each card opens the export window. #}
+<main class="app-main min-h-screen pt-16">
+  <div class="app-page py-8 reports-page">
+    <header class="reports-head">
+      <h1 class="reports-title" data-i18n-key="Reports">Reports</h1>
+    </header>
+    <div class="reports-grid">
+      <article class="reports-card">
+        <span class="reports-card__icon reports-card__icon--debt material-symbols-outlined" aria-hidden="true">receipt_long</span>
+        <h2 data-i18n-key="Debt reports">Debt reports</h2>
+        <p data-i18n-key="General overview, debtors list and payment history of the residents.">General overview, debtors list and payment history of the residents.</p>
+        <button class="reports-card__action" data-export-open data-export-source="Reports" type="button">
+          <span class="material-symbols-outlined" aria-hidden="true">download</span>
+          <span data-i18n-key="Create report">Create report</span>
+        </button>
+      </article>
+      <article class="reports-card">
+        <span class="reports-card__icon reports-card__icon--usage material-symbols-outlined" aria-hidden="true">water_drop</span>
+        <h2 data-i18n-key="Usage reports">Usage reports</h2>
+        <p data-i18n-key="Hot water, heating and payments by house and month.">Hot water, heating and payments by house and month.</p>
+        <button class="reports-card__action" data-export-context="usage-report" data-export-open data-export-source="Usage Report" type="button">
+          <span class="material-symbols-outlined" aria-hidden="true">download</span>
+          <span data-i18n-key="Create report">Create report</span>
+        </button>
+      </article>
+      <article class="reports-card">
+        <span class="reports-card__icon reports-card__icon--period material-symbols-outlined" aria-hidden="true">table_view</span>
+        <h2 data-i18n-key="Billing period workbooks">Billing period workbooks</h2>
+        <p data-i18n-key="Each billing period downloads as an Excel file: a heating and a hot water sheet per house.">Each billing period downloads as an Excel file: a heating and a hot water sheet per house.</p>
+        <a class="reports-card__action" href="{% url 'portal:billing_periods' %}">
+          <span class="material-symbols-outlined" aria-hidden="true">calendar_month</span>
+          <span data-i18n-key="Open billing periods">Open billing periods</span>
+        </a>
+      </article>
+    </div>
+  </div>
+</main>
+{% endblock %}

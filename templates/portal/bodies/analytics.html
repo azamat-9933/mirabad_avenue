@@ -3,7 +3,7 @@
     <div class="analytics-v2-page flex-1">
         <section class="analytics-v2-hero">
             <div class="analytics-v2-hero__copy">
-                <p class="analytics-v2-eyebrow" data-i18n-key="Reports">Reports</p>
+                <p class="analytics-v2-eyebrow" data-i18n-key="Statistics">Statistics</p>
                 <h1 data-i18n-key="Analytics dashboard">Analytics dashboard</h1>
             </div>
             <div class="analytics-v2-toolbar">
@@ -52,12 +52,23 @@
         </section>
 
         <section class="analytics-v2-grid analytics-v2-grid--top">
-            <article class="analytics-v2-panel">
-                <header class="analytics-v2-panel__head">
-                    <h2 data-i18n-key="Debt by house">Debt by house</h2>
-                </header>
-                <ol class="analytics-house-debt-list" data-analytics-house-debt-list></ol>
-            </article>
+            <div class="analytics-v2-stack">
+                <article class="analytics-v2-panel">
+                    <header class="analytics-v2-panel__head">
+                        <h2 data-i18n-key="Debt by house">Debt by house</h2>
+                    </header>
+                    <ol class="analytics-house-debt-list" data-analytics-house-debt-list></ol>
+                </article>
+
+                <!-- What the residents of each operator's houses paid in the selected month. -->
+                <article class="analytics-v2-panel">
+                    <header class="analytics-v2-panel__head">
+                        <h2 data-i18n-key="Collected by operator">Collected by operator</h2>
+                    </header>
+                    <ol class="analytics-operator-list" data-analytics-operator-list></ol>
+                    <p class="analytics-operator-hint hidden" data-analytics-operator-hint data-i18n-key="Assign an operator to each house on its admin page.">Assign an operator to each house on its admin page.</p>
+                </article>
+            </div>
 
             <article class="analytics-v2-panel analytics-v2-panel--side">
                 <header class="analytics-v2-panel__head">
