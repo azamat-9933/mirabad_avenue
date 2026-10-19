@@ -190,6 +190,24 @@ class BillingPeriodCreateView(PortalPageView):
         if period.status == BillingPeriod.STATUS_CLOSED:
             raise ValidationError("Davr yopilgan. O'zgartirish uchun avval davrni qayta oching (Reopened).")
 
+    def _parse_heating_date(self, raw_value):
+        raw = str(raw_value or "").strip()
+        if not raw:
+            return None
+        try:
+            value = parse_date(raw)
+        except ValueError:  # well-formed but impossible, e.g. 2026-02-30
+            value = None
+        if not value:
+            raise ValidationError(f"Noto'g'ri sana formati: {raw}. Format YYYY-MM-DD.")
+        return value
+
+    @staticmethod
+    def _heating_range(heated_from, heated_until):
+        if not heated_from:
+            return "not heated"
+        return f"{heated_from.isoformat()}..{heated_until.isoformat() if heated_until else 'period end'}"
+
     def _parse_excluded_dates(self, raw_value, period):
         raw = str(raw_value or "").strip()
         if not raw:
@@ -389,19 +407,28 @@ class BillingPeriodCreateView(PortalPageView):
         self._ensure_editable(period)
         apartment = Apartment.objects.select_related("building", "building__complex", "owner").get(pk=apartment_id)
         excluded_dates = self._parse_excluded_dates(request.POST.get("excluded_dates", ""), period)
+        heated_from = self._parse_heating_date(request.POST.get("heated_from"))
+        heated_until = self._parse_heating_date(request.POST.get("heated_until"))
 
         record, _ = HeatingRecord.objects.get_or_create(period=period, apartment=apartment)
         previous_dates = list(record.excluded_dates or [])
+        previous_range = self._heating_range(record.heated_from, record.heated_until)
+        record.heated_from = heated_from
+        record.heated_until = heated_until
         record.excluded_dates = excluded_dates
-        record.save(update_fields=["excluded_dates"])
+        record.clean()
+        record.save(update_fields=["heated_from", "heated_until", "excluded_dates"])
         self._audit(
             request,
             period,
             "Heating days updated",
-            f"Apt {apartment.number}, house {apartment.building.number}: not-heated dates "
+            f"Apt {apartment.number}, house {apartment.building.number}: heated "
+            f"{previous_range} -> {self._heating_range(heated_from, heated_until)}, not-heated dates "
             f"{', '.join(previous_dates) or 'none'} -> {', '.join(excluded_dates) or 'none'} "
             f"({record.heated_days} heated days).",
             apartment=apartment,
+            heatedFrom=heated_from.isoformat() if heated_from else None,
+            heatedUntil=heated_until.isoformat() if heated_until else None,
             previousExcludedDates=previous_dates,
             excludedDates=excluded_dates,
             heatedDays=record.heated_days,
@@ -513,16 +540,19 @@ class BillingPeriodCreateView(PortalPageView):
                 for record in HeatingRecord.objects.filter(
                     period=selected_period,
                     apartment__building=selected_building,
-                ).select_related("apartment")
+                ).select_related("apartment", "period")
             }
             for apartment in apartment_queryset:
                 record = record_map.get(apartment.id)
-                heated_days = record.heated_days if record else selected_period.total_days
+                # Without a record (or its start day) the apartment is not heated in this period.
+                heated_days = record.heated_days if record else 0
                 not_heated = len(record.excluded_dates) if record else 0
                 apartment_rows.append(
                     {
                         "apartment": apartment,
                         "owner": getattr(apartment, "owner", None),
+                        "heated_from": record.heated_from.isoformat() if record and record.heated_from else "",
+                        "heated_until": record.heated_until.isoformat() if record and record.heated_until else "",
                         "heated_days": heated_days,
                         "not_heated_days": not_heated,
                         "excluded_dates": ", ".join(record.excluded_dates) if record else "",

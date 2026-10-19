@@ -792,15 +792,14 @@ class PortalBillingPeriodLifecycleTests(TestCase):
         cls.user = get_user_model().objects.create_user(username="operator", password="unused-password")
         complex_obj = Complex.objects.create(title="Mirabad Avenue", address="", author="test")
         cls.building = Building.objects.create(number="64", complex=complex_obj, author="test")
-        cls.apartment = Apartment.objects.create(
-            number="1", area=Decimal("50.00"), building=cls.building, author="test", heating_connected_on=date(2026, 4, 1)
-        )
+        cls.apartment = Apartment.objects.create(number="1", area=Decimal("50.00"), building=cls.building, author="test")
         cls.owner = Owner.objects.create(fio="Heated Owner", phone="+998901234567", apartment=cls.apartment)
 
     def setUp(self):
         self.client.force_login(self.user)
         self.period = BillingPeriod.objects.create(name="April 2026", start_date=date(2026, 4, 1), end_date=date(2026, 4, 30))
         self.period.buildings.add(self.building.pk)
+        HeatingRecord.objects.create(period=self.period, apartment_id=self.apartment.pk, heated_from=date(2026, 4, 1))
         self.expense = Expense.objects.create(
             period=self.period, building_id=self.building.pk, service_type="heating", name="Boiler", amount=Decimal("3000")
         )
@@ -841,6 +840,19 @@ class PortalBillingPeriodLifecycleTests(TestCase):
         self._post(action="update_heating_record", apartment_id=self.apartment.id, excluded_dates="2026-04-02")
         self.assertEqual(Expense.objects.filter(period=self.period).count(), 1)
         self.assertEqual(HeatingRecord.objects.get(period=self.period, apartment=self.apartment).excluded_dates, [])
+
+    def test_heating_dates_are_saved_for_the_period(self):
+        self._post(
+            action="update_heating_record", apartment_id=self.apartment.id,
+            heated_from="2026-04-11", heated_until="2026-04-20", excluded_dates="2026-04-15",
+        )
+        record = HeatingRecord.objects.get(period=self.period, apartment=self.apartment)
+        self.assertEqual((record.heated_from, record.heated_until, record.heated_days), (date(2026, 4, 11), date(2026, 4, 20), 9))
+
+        response = self._post(action="update_heating_record", apartment_id=self.apartment.id, heated_from="2026-05-01")
+        self.assertTrue(any("davr oralig'idan tashqarida" in message for message in self._messages(response)))
+        record.refresh_from_db()
+        self.assertEqual(record.heated_from, date(2026, 4, 11))
 
     def test_impossible_excluded_date_is_reported_not_a_server_error(self):
         response = self._post(action="update_heating_record", apartment_id=self.apartment.id, excluded_dates="2026-02-30")
@@ -922,9 +934,7 @@ class OperatorActivityLogTests(TestCase):
         cls.head_admin = User.objects.create_superuser(username="boss", password=cls.password)
         complex_obj = Complex.objects.create(title="Mirabad Avenue", address="", author="test")
         cls.building = Building.objects.create(number="64", complex=complex_obj, author="test")
-        cls.apartment = Apartment.objects.create(
-            number="5", area=Decimal("50.00"), building=cls.building, author="test", heating_connected_on=date(2026, 4, 1)
-        )
+        cls.apartment = Apartment.objects.create(number="5", area=Decimal("50.00"), building=cls.building, author="test")
         cls.owner = Owner.objects.create(fio="Mijoz", phone="+998901234567", apartment=cls.apartment)
 
     def _post_json(self, name, payload, **extra):
@@ -1018,7 +1028,10 @@ class OperatorActivityLogTests(TestCase):
         url = reverse("portal:billing_period_create")
         base = {"period_id": period.id, "building_id": self.building.id}
         self.client.post(url, {**base, "action": "add_expense", "service_type": "heating", "name": "Qozonxona", "amount": "1500"})
-        self.client.post(url, {**base, "action": "update_heating_record", "apartment_id": self.apartment.id, "excluded_dates": "2026-04-02"})
+        self.client.post(url, {
+            **base, "action": "update_heating_record", "apartment_id": self.apartment.id,
+            "heated_from": "2026-04-01", "excluded_dates": "2026-04-02",
+        })
         self.client.post(url, {**base, "action": "update_status", "status": "closed"})
         self.client.post(url, {**base, "action": "update_status", "status": "reopened"})
 

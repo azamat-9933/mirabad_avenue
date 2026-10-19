@@ -13,7 +13,13 @@ from django.utils.dateparse import parse_date
 
 from properties.models import Apartment, Building, BuildingSection, Owner
 
-from .calculation import group_thousands, heated_days, previous_hot_water_readings
+from .calculation import (
+    group_thousands,
+    heated_days,
+    heated_to_period_end,
+    previous_heating,
+    previous_hot_water_readings,
+)
 
 
 MONEY_PLACES = Decimal("0.01")
@@ -150,8 +156,9 @@ class BillingPeriod(models.Model):
         """
         Ensure default per-apartment records exist for selected buildings.
 
-        Heating defaults to full period coverage (empty excluded_dates),
-        and hot-water rows are created as placeholders for meter inputs.
+        A new heating row carries the previous period over: an apartment heated to the end of its
+        previous period is heated from this period's first day, any other is not heated until its
+        dates are entered. Hot-water rows are created as placeholders for meter inputs.
         """
         if not self.pk:
             return {"heating_created": 0, "hot_water_created": 0}
@@ -170,10 +177,15 @@ class BillingPeriod(models.Model):
                 apartment_id__in=apartment_ids,
             ).values_list("apartment_id", flat=True)
         )
+        missing_heating_ids = [apartment_id for apartment_id in apartment_ids if apartment_id not in existing_heating_ids]
+        previous = previous_heating(missing_heating_ids, self)
         heating_rows = [
-            HeatingRecord(period_id=self.pk, apartment_id=apartment_id)
-            for apartment_id in apartment_ids
-            if apartment_id not in existing_heating_ids
+            HeatingRecord(
+                period_id=self.pk,
+                apartment_id=apartment_id,
+                heated_from=self.start_date if heated_to_period_end(previous.get(apartment_id)) else None,
+            )
+            for apartment_id in missing_heating_ids
         ]
         if heating_rows:
             HeatingRecord.objects.bulk_create(heating_rows, ignore_conflicts=True)
@@ -977,9 +989,26 @@ class GasMeterReading(models.Model):
 
 
 class HeatingRecord(models.Model):
+    """An apartment's heating in one billing period: it changes from month to month."""
+
     period = models.ForeignKey(BillingPeriod, on_delete=models.CASCADE, related_name="heating_records", verbose_name="Davr")
     apartment = models.ForeignKey(Apartment, on_delete=models.CASCADE, related_name="heating_records", verbose_name="Kvartira")
-    excluded_dates = models.JSONField(default=list, verbose_name="Qizdirilmagan kunlar", help_text='Masalan: ["2025-12-10", "2025-12-25"]')
+    heated_from = models.DateField(
+        null=True,
+        blank=True,
+        verbose_name="Isitish boshlangan sana",
+        help_text="Shu kundan boshlab isitish hisoblanadi. Bo'sh — bu davrda isitilmagan.",
+    )
+    heated_until = models.DateField(
+        null=True,
+        blank=True,
+        verbose_name="Isitish tugagan sana",
+        help_text="Isitilgan oxirgi kun. Bo'sh — davr oxirigacha.",
+    )
+    # Usually empty: only the dates heating was off.
+    excluded_dates = models.JSONField(
+        default=list, blank=True, verbose_name="Qizdirilmagan kunlar", help_text='Masalan: ["2025-12-10", "2025-12-25"]'
+    )
 
     class Meta:
         verbose_name = "Isitish hisobi"
@@ -991,6 +1020,19 @@ class HeatingRecord(models.Model):
         if not isinstance(self.excluded_dates, list):
             raise ValidationError({"excluded_dates": 'Sanalar ro\'yxat bo\'lishi kerak: ["YYYY-MM-DD", ...].'})
         period = self.period if self.period_id else None
+        errors = {}
+        if self.heated_until and not self.heated_from:
+            errors["heated_from"] = "Tugash sanasi bor, boshlanish sanasi kiritilmagan."
+        if period:
+            for name in ("heated_from", "heated_until"):
+                value = getattr(self, name)
+                if value and not (period.start_date <= value <= period.end_date):
+                    errors[name] = (
+                        f"Sana davr oralig'idan tashqarida: {value:%d.%m.%Y} "
+                        f"({period.start_date:%d.%m.%Y} – {period.end_date:%d.%m.%Y})."
+                    )
+        if self.heated_from and self.heated_until and self.heated_until < self.heated_from:
+            errors.setdefault("heated_until", "Tugash sanasi boshlanish sanasidan oldin bo'lishi mumkin emas.")
         normalized = set()
         for token in self.excluded_dates:
             try:
@@ -998,19 +1040,21 @@ class HeatingRecord(models.Model):
             except ValueError:  # well-formed but impossible, e.g. 2026-02-30
                 date_value = None
             if date_value is None:
-                raise ValidationError({"excluded_dates": f"Noto'g'ri sana: {token}. Format YYYY-MM-DD."})
+                errors["excluded_dates"] = f"Noto'g'ri sana: {token}. Format YYYY-MM-DD."
+                break
             if period and not (period.start_date <= date_value <= period.end_date):
-                raise ValidationError(
-                    {"excluded_dates": f"Sana davr oralig'idan tashqarida: {token} ({period.start_date} - {period.end_date})."}
-                )
+                errors["excluded_dates"] = f"Sana davr oralig'idan tashqarida: {token} ({period.start_date} - {period.end_date})."
+                break
             normalized.add(date_value.isoformat())
+        if errors:
+            raise ValidationError(errors)
         # Duplicates would be subtracted twice from the heated days.
         self.excluded_dates = sorted(normalized)
 
     @property
     def heated_days(self):
-        """Heated days of a connected apartment: from its connection day, minus the dates heating was off."""
-        return heated_days(self.apartment, self.period, self.excluded_dates)
+        """Days heated in the period: from heated_from to heated_until, minus the dates heating was off."""
+        return heated_days(self.period, self.heated_from, self.heated_until, self.excluded_dates)
 
     @property
     def heated_area(self):

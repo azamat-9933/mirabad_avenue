@@ -1,7 +1,8 @@
 """What a billing period charges, worked out from what operators enter for it.
 
 Heating: the costs of a boiler room (or of the whole building when it has no boiler rooms) are
-spread over area × heated days of the apartments connected to heating. Hot water: the costs of a
+spread over area × heated days of the apartments heated in the period (HeatingRecord dates, entered
+for every period since heating changes from month to month). Hot water: the costs of a
 building are spread over its apartments' meter consumption. A meter's start reading defaults to its
 reading at the end of the previous period. The admin preview and closing use the same plan, so the
 preview shows exactly what closing posts; errors name the house and apartment to fix.
@@ -11,7 +12,7 @@ from __future__ import annotations
 import re
 from collections import defaultdict
 from dataclasses import dataclass, field
-from datetime import date, timedelta
+from datetime import date
 from decimal import Decimal
 
 ZERO = Decimal("0")
@@ -39,24 +40,43 @@ def _parse_day(value):
         return None
 
 
-def heated_days(apartment, period, excluded_dates=()) -> int:
-    """Days of the period the apartment was heated.
+def heated_days(period, heated_from, heated_until=None, excluded_dates=()) -> int:
+    """Days of the period an apartment was heated.
 
-    From its connection day (inclusive) to the day before it was disconnected, within the period,
-    minus the dates heating was off. An apartment that is not connected has no heated days.
+    From heated_from to heated_until (both inclusive; no end means to the period's end), within the
+    period, minus the dates heating was off. Without heated_from the apartment was not heated.
     """
-    connected = getattr(apartment, "heating_connected_on", None)
-    if not connected or not period.start_date or not period.end_date:
+    if not heated_from or not period.start_date or not period.end_date:
         return 0
-    first = max(period.start_date, connected)
-    last = period.end_date
-    disconnected = getattr(apartment, "heating_disconnected_on", None)
-    if disconnected:
-        last = min(last, disconnected - timedelta(days=1))
+    first = max(period.start_date, heated_from)
+    last = min(period.end_date, heated_until) if heated_until else period.end_date
     if last < first:
         return 0
     off = {day for day in map(_parse_day, excluded_dates or ()) if day and first <= day <= last}
     return (last - first).days + 1 - len(off)
+
+
+def previous_heating(apartment_ids, period) -> dict:
+    """Each apartment's heating in its latest period before this one: (heated_from, heated_until, period end)."""
+    from .models import HeatingRecord
+
+    rows = (
+        HeatingRecord.objects.filter(apartment_id__in=list(apartment_ids), period__start_date__lt=period.start_date)
+        .order_by("apartment_id", "-period__start_date", "-pk")
+        .values_list("apartment_id", "heated_from", "heated_until", "period__end_date")
+    )
+    result = {}
+    for apartment_id, heated_from, heated_until, period_end in rows:
+        result.setdefault(apartment_id, (heated_from, heated_until, period_end))
+    return result
+
+
+def heated_to_period_end(previous) -> bool:
+    """Whether a previous_heating() entry was still heated on the last day of its period."""
+    if not previous:
+        return False
+    heated_from, heated_until, period_end = previous
+    return bool(heated_from) and (heated_until is None or heated_until >= period_end)
 
 
 def previous_hot_water_readings(apartment_ids, period) -> dict:
@@ -242,7 +262,7 @@ def build_plan(period) -> Plan:
             costs[key].append(line)
 
     zones = []
-    excluded = dict(HeatingRecord.objects.filter(period=period).values_list("apartment_id", "excluded_dates"))
+    heating = {record.apartment_id: record for record in HeatingRecord.objects.filter(period=period)}
     readings = {
         reading.apartment_id: reading
         for reading in HotWaterMeterReading.objects.filter(period=period, apartment__building_id__in=building_ids)
@@ -253,7 +273,7 @@ def build_plan(period) -> Plan:
     for building in buildings:
         apartments = apartments_by_building.get(building.pk, [])
 
-        # ── Heating: per boiler room over connected apartments' area × days ──
+        # ── Heating: per boiler room over the heated apartments' area × days ──
         rooms = rooms_by_building.get(building.pk, [])
         heating_zones = {
             room.pk if room else None: Zone(SERVICE_HEATING, building, room)
@@ -262,7 +282,8 @@ def build_plan(period) -> Plan:
         room_by_section = {section.pk: room for room in rooms for section in room.sections.all()}
         unassigned = []
         for apartment in apartments:
-            days = heated_days(apartment, period, excluded.get(apartment.pk))
+            record = heating.get(apartment.pk)
+            days = heated_days(period, record.heated_from, record.heated_until, record.excluded_dates) if record else 0
             if days <= 0:
                 continue
             if len(rooms) > 1:
@@ -279,8 +300,8 @@ def build_plan(period) -> Plan:
             zone.has_inputs = zone.key in has_inputs
             if zone.billable and zone.total_volume <= 0:
                 zone.errors.append(
-                    f"{zone.label}: xarajat {group_thousands(zone.total_cost)} so'm, lekin isitishga ulangan kvartira yo'q. "
-                    "Kvartiralarga «Isitishga ulangan sana»ni kiriting."
+                    f"{zone.label}: xarajat {group_thousands(zone.total_cost)} so'm, lekin bu davrda isitilgan kvartira yo'q. "
+                    "Davr sahifasidagi «Isitish sanalari»ga kvartiralarning isitish boshlangan sanasini kiriting."
                 )
             zones.append(zone)
         if unassigned and any(zone.billable for zone in heating_zones.values()):

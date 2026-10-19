@@ -198,7 +198,7 @@
                 <th class="px-4 py-3 text-left font-bold">Area</th>
                 <th class="px-4 py-3 text-left font-bold">Heated days</th>
                 <th class="px-4 py-3 text-left font-bold">No heating days</th>
-                <th class="px-4 py-3 text-left font-bold">Not heated dates (YYYY-MM-DD, comma)</th>
+                <th class="px-4 py-3 text-left font-bold">Heating this period: from, until, not heated dates (YYYY-MM-DD, comma)</th>
                 <th class="px-4 py-3 text-left font-bold">Actions</th>
               </tr>
             </thead>
@@ -210,14 +210,16 @@
                   <td class="px-4 py-3 text-on-surface" data-label="Area">{{ row.apartment.area }}</td>
                   <td class="px-4 py-3 font-semibold text-emerald-700" data-label="Heated days">{{ row.heated_days }}</td>
                   <td class="px-4 py-3 font-semibold text-red-700" data-label="No heating days">{{ row.not_heated_days }}</td>
-                  <td class="px-4 py-3 min-w-[280px] stack-full" data-label="Not heated dates">
-                    <form method="post" class="flex items-center gap-2">
+                  <td class="px-4 py-3 min-w-[420px] stack-full" data-label="Heating this period">
+                    <form method="post" class="flex flex-wrap items-center gap-2">
                       {% csrf_token %}
                       <input type="hidden" name="action" value="update_heating_record"/>
                       <input type="hidden" name="period_id" value="{{ selected_period.id }}"/>
                       <input type="hidden" name="building_id" value="{{ selected_building.id }}"/>
                       <input type="hidden" name="apartment_id" value="{{ row.apartment.id }}"/>
-                      <input name="excluded_dates" value="{{ row.excluded_dates }}" class="w-full rounded-lg border border-outline-variant/40 px-2 py-2 text-xs text-on-surface" placeholder="2026-01-04, 2026-01-05"/>
+                      <input type="date" name="heated_from" value="{{ row.heated_from }}" min="{{ selected_period.start_date|date:'Y-m-d' }}" max="{{ selected_period.end_date|date:'Y-m-d' }}" title="Heated from (empty: not heated this period)" class="rounded-lg border border-outline-variant/40 px-2 py-2 text-xs text-on-surface"/>
+                      <input type="date" name="heated_until" value="{{ row.heated_until }}" min="{{ selected_period.start_date|date:'Y-m-d' }}" max="{{ selected_period.end_date|date:'Y-m-d' }}" title="Heated until (empty: to the period end)" class="rounded-lg border border-outline-variant/40 px-2 py-2 text-xs text-on-surface"/>
+                      <input name="excluded_dates" value="{{ row.excluded_dates }}" class="min-w-[140px] flex-1 rounded-lg border border-outline-variant/40 px-2 py-2 text-xs text-on-surface" placeholder="2026-01-04, 2026-01-05"/>
                       <button type="submit" class="rounded-lg bg-primary px-3 py-2 text-xs font-bold text-white hover:opacity-90">Save</button>
                     </form>
                   </td>

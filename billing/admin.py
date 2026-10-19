@@ -11,7 +11,7 @@ from django.utils.safestring import mark_safe
 from portal.audit import record_event
 from portal.models import AuditEvent
 
-from .calculation import build_plan, group_thousands, previous_hot_water_readings
+from .calculation import build_plan, group_thousands, previous_heating, previous_hot_water_readings
 from .models import (
     BillingPeriod,
     BoilerRoom,
@@ -167,6 +167,57 @@ class HotWaterMeterReadingInline(ClosedPeriodReadOnlyInline, admin.TabularInline
         return group_thousands(obj.end_reading - start)
 
 
+class HeatingRecordInline(ClosedPeriodReadOnlyInline, admin.TabularInline):
+    """Which apartments are heated in the period and from/until which day, one row per apartment of its houses.
+
+    Heating changes from month to month, so it is entered for every period. A new period's rows start
+    as the previous period ended: an apartment heated to its last day is heated from the first day.
+    Days without heating are entered on the row's own page (the change link).
+    """
+    model = HeatingRecord
+    extra = 0
+    can_delete = False
+    show_change_link = True
+    fields = ("apartment_label", "previous_heating_display", "heated_from", "heated_until", "days_display")
+    readonly_fields = ("apartment_label", "previous_heating_display", "days_display")
+    verbose_name = "Isitish sanalari"
+    verbose_name_plural = "Isitish sanalari"
+
+    def has_add_permission(self, request, obj=None):
+        return False  # rows are created for every apartment of the period's houses
+
+    def get_queryset(self, request):
+        return (
+            super()
+            .get_queryset(request)
+            .select_related("period", "apartment", "apartment__building")
+            .order_by("apartment__building__number", "apartment_id")
+        )
+
+    def get_formset(self, request, obj=None, **kwargs):
+        # One query for every row's previous period instead of one per row.
+        self._previous = {}
+        if obj is not None and obj.pk:
+            self._previous = previous_heating(obj.heating_records.values_list("apartment_id", flat=True), obj)
+        return super().get_formset(request, obj, **kwargs)
+
+    @admin.display(description="Kvartira")
+    def apartment_label(self, obj):
+        return f"{obj.apartment.building.number} — kv {obj.apartment.number}"
+
+    @admin.display(description="O'tgan oy")
+    def previous_heating_display(self, obj):
+        previous = getattr(self, "_previous", {}).get(obj.apartment_id)
+        if not previous or not previous[0]:
+            return "—"
+        heated_from, heated_until, period_end = previous
+        return f"{heated_from:%d.%m} – {(heated_until or period_end):%d.%m}"
+
+    @admin.display(description="Kun")
+    def days_display(self, obj):
+        return obj.heated_days if obj.heated_from else "—"
+
+
 def render_plan(plan):
     """The period's calculation as tables: what closing will charge, and what must be fixed first."""
     parts = []
@@ -265,7 +316,7 @@ class BillingPeriodAdmin(admin.ModelAdmin):
     # The status is set through "Holat" (open/closed), which closes or reopens the period properly;
     # the raw status field would mark a period closed without posting its charges.
     readonly_fields   = ("created_at", "closed_at", "total_days", "state_display", "calculation_preview")
-    inlines           = [ExpenseInline, GasMeterReadingInline, HotWaterMeterReadingInline]
+    inlines           = [ExpenseInline, GasMeterReadingInline, HeatingRecordInline, HotWaterMeterReadingInline]
     actions           = ["action_close_period", "action_reopen_period"]
 
     fieldsets = (
@@ -291,7 +342,7 @@ class BillingPeriodAdmin(admin.ModelAdmin):
                 "fields": ("calculation_preview",),
                 "description": (
                     "Kiritilgan xarajatlar va ko'rsatkichlar bo'yicha davr yopilganda qo'yiladigan hisoblar. "
-                    "Isitish faqat isitishga ulangan kvartiralarga, ulangan kundan boshlab hisoblanadi."
+                    "Isitish faqat shu davrda isitilgan kvartiralarga, «Isitish sanalari»dagi kunlar bo'yicha hisoblanadi."
                 ),
             },
         ),
@@ -645,6 +696,8 @@ class HeatingRecordAdmin(admin.ModelAdmin):
     list_display  = (
         "apartment_info",
         "period",
+        "heated_from",
+        "heated_until",
         "heated_days_display",
         "excluded_days_count",
         "heated_area_display",
@@ -673,14 +726,16 @@ class HeatingRecordAdmin(admin.ModelAdmin):
             "Isitish kunlari",
             {
                 "fields": (
+                    "heated_from",
+                    "heated_until",
                     "excluded_dates",
                     "heated_days_display",
                     "excluded_days_count",
                 ),
                 "description": (
-                    'excluded_dates ga ko\'rsatkich kunlarni kiriting. '
-                    'Format: ["2025-12-10", "2025-12-11"] '
-                    '— isitish berilmagan kunlar.'
+                    "Boshlanish sanasi bo'sh — kvartira bu davrda isitilmagan. "
+                    'Qizdirilmagan kunlar: ["2025-12-10", "2025-12-11"] '
+                    "— isitish berilmagan kunlar."
                 ),
             },
         ),
