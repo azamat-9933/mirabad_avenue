@@ -278,6 +278,10 @@ def _complete(held, payload, *, click_error=None):
     held.complete_payload = payload
     held.save(update_fields=["state", "transaction", "confirmed_at", "complete_payload"])
     _audit(held, ledger)
+    # Imported here: the bot's modules import this one (masked_name).
+    from telegram_bot.notifications import notify_payment_later
+
+    notify_payment_later(ledger.pk)
     return SUCCESS, held
 
 

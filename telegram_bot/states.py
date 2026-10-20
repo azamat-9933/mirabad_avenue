@@ -3,9 +3,10 @@ from aiogram.fsm.state import State, StatesGroup
 
 class RegistrationStatesGroup(StatesGroup):
     wait_language = State()
-    wait_full_name = State()
-    wait_phone_number = State()
-    wait_for_submit = State()
+    # A personal account number (or, before registering, the user's own contact).
+    wait_account = State()
+    # The apartment found by the number, shown for the user to confirm.
+    wait_account_confirm = State()
 
 
 class ChangeLanguageStatesGroup(StatesGroup):

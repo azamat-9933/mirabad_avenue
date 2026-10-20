@@ -1,3 +1,4 @@
+import json
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from unittest.mock import patch
@@ -8,10 +9,12 @@ from aiogram.methods import SendMessage
 from aiogram.types import Chat, Contact, Message, Update, User
 from asgiref.sync import async_to_sync
 from django.contrib.auth import get_user_model
+from django.core.cache import cache
 from django.test import TestCase, override_settings
 from django.urls import reverse
 
 from main_app.models import Apartment, Building, Complex, Owner
+from payments import click
 from payments.models import Transaction
 from payments.services import apply_account_change
 from django.utils import timezone
@@ -19,7 +22,7 @@ from django.utils import timezone
 from portal.backend_data import build_portal_data
 from portal.models import AuditEvent, PortalNotification, WorkspaceProfile
 
-from . import operators, services
+from . import notifications, operators, services
 from portal.billing_notice import build_debt_notice, notice_telegram_text
 from .runner import create_bot, create_dispatcher
 from .texts import BUTTON_ACTIONS, CHOOSE_LANGUAGE, LANGUAGE_BUTTONS, MESSAGES, format_accounts, format_amount, t
@@ -30,7 +33,9 @@ class ResidentsMixin:
     def setUpTestData(cls):
         cls.complex = Complex.objects.create(title="Mirabad Avenue", address="", author="test")
         cls.building = Building.objects.create(number="64", complex=cls.complex, author="test")
-        cls.apartment = Apartment.objects.create(number="1", area=Decimal("50"), building=cls.building, author="test")
+        cls.apartment = Apartment.objects.create(
+            number="1", area=Decimal("50"), building=cls.building, personal_account="1383637891", author="test"
+        )
         cls.owner = Owner.objects.create(fio="Aziz Karimov", phone="+998 90 111-22-33", apartment=cls.apartment)
 
 
@@ -48,9 +53,15 @@ class TextsTests(TestCase):
     def test_amounts_and_user_text_are_formatted_for_html(self):
         self.assertEqual(format_amount(Decimal("-150000")), "150 000")
         self.assertEqual(format_amount(Decimal("1234.5")), "1 234.50")
-        self.assertIn("&lt;b&gt;", t("en", "confirm_data", full_name="<b>", phone="+1"))
-        accounts = [services.Account(house="64<", apartment="1", balance=Decimal("-150000"))]
-        self.assertEqual(format_accounts(accounts, "ru"), "Ваши квартиры:\n• Дом 64&lt;, кв. 1 — долг 150 000 сум")
+        self.assertIn("&lt;b&gt;", t("en", "account_not_found", account="<b>"))
+        accounts = [
+            services.Account(house="64<", apartment="1", balance=Decimal("-150000")),
+            services.Account(house="64", apartment="2", balance=Decimal("0"), account="1383305531"),
+        ]
+        self.assertEqual(
+            format_accounts(accounts, "ru"),
+            "Ваши лицевые счета:\n• Дом 64&lt;, кв. 1 — долг 150 000 сум\n• Дом 64, кв. 2 (л/с 1383305531) — долга нет",
+        )
 
 
 class LinkServiceTests(ResidentsMixin, TestCase):
@@ -72,7 +83,7 @@ class LinkServiceTests(ResidentsMixin, TestCase):
         self.assertEqual(
             accounts,
             [
-                services.Account(house="64", apartment="1", balance=Decimal("-150000")),
+                services.Account(house="64", apartment="1", balance=Decimal("-150000"), account="1383637891"),
                 services.Account(house="64", apartment="2", balance=Decimal("0")),
             ],
         )
@@ -131,19 +142,21 @@ class BotConversationTests(ResidentsMixin, TestCase):
     USER_ID = 555
 
     def setUp(self):
+        cache.clear()  # the account lookup limit lives in the cache
         self.session = RecordingSession()
         self.bot = create_bot("123456:TEST-TOKEN", session=self.session)
         self.dispatcher = create_dispatcher()
         self.update_id = 0
 
-    def send(self, text=None, contact=None):
+    def send(self, text=None, contact=None, user_id=None):
         """Feed one user message to the bot and return the texts it answered with."""
         self.update_id += 1
+        user_id = user_id or self.USER_ID
         message = Message(
             message_id=self.update_id,
             date=datetime.now(UTC),
-            chat=Chat(id=self.USER_ID, type="private"),
-            from_user=User(id=self.USER_ID, is_bot=False, first_name="Aziz", username="aziz_k"),
+            chat=Chat(id=user_id, type="private"),
+            from_user=User(id=user_id, is_bot=False, first_name="Aziz", last_name="Karimov", username="aziz_k"),
             text=text,
             contact=contact,
         )
@@ -154,74 +167,215 @@ class BotConversationTests(ResidentsMixin, TestCase):
     def own_contact(self, phone="998901112233"):
         return Contact(phone_number=phone, first_name="Aziz", user_id=self.USER_ID)
 
-    def register_until_confirmation(self, language_button="🇷🇺 Русский"):
+    def until_account_question(self, language_button="🇷🇺 Русский", language="ru"):
         self.assertEqual(self.send("/start"), [f"<b>{CHOOSE_LANGUAGE}</b>"])
-        self.assertEqual(self.send(language_button)[-1], f"<b>{t('ru', 'ask_full_name')}</b>")
-        self.assertEqual(self.send("  Азиз   Каримов ")[-1], f"<b>{t('ru', 'ask_phone')}</b>")
-        return self.send(contact=self.own_contact())
+        answers = self.send(language_button)
+        self.assertEqual(answers[-1], f"<b>{t(language, 'ask_account')}</b>")
 
-    def test_confirmed_registration_connects_the_resident(self):
+    def confirmation(self, account="1383637891", name="Aziz K.", house="64", apartment="1", language="ru"):
+        return f"<b>{t(language, 'account_confirm', account=account, name=name, house=house, apartment=apartment)}</b>"
+
+    def test_personal_account_links_the_apartment_resident(self):
         apply_account_change(self.apartment.pk, Decimal("-150000"), Transaction.TYPE_MANUAL)
+        self.until_account_question()
 
-        confirmation = self.register_until_confirmation()
-        self.assertEqual(
-            confirmation,
-            [f"<b>{t('ru', 'confirm_data', full_name='Азиз Каримов', phone='+998901112233')}</b>"],
-        )
+        self.assertEqual(self.send(" 1383 637 891 "), [self.confirmation()])
         answers = self.send(MESSAGES["ru"]["button_confirm"])
 
-        self.assertEqual(answers[0], f"<b>{t('ru', 'registered')}</b>")
-        self.assertIn("• Дом 64, кв. 1 — долг 150 000 сум", answers[1])
+        self.assertEqual(answers[0], f"<b>{t('ru', 'account_linked')}</b>")
+        self.assertIn("• Дом 64, кв. 1 (л/с 1383637891) — долг 150 000 сум", answers[1])
         self.owner.refresh_from_db()
         self.assertEqual(
             (self.owner.telegram_id, self.owner.telegram_user, self.owner.telegram_status, self.owner.telegram_language),
             ("555", "aziz_k", Owner.TELEGRAM_CONNECTED, "ru"),
         )
+        event = AuditEvent.objects.get(title="Telegram connected")
+        self.assertIn("personal account 1383637891", event.message)
 
-    def test_rejected_details_start_the_registration_over(self):
-        self.register_until_confirmation()
+    def test_rejecting_the_apartment_asks_for_the_number_again(self):
+        self.until_account_question()
+        self.send("1383637891")
 
         answers = self.send(MESSAGES["ru"]["button_reject"])
 
-        self.assertEqual(answers, [f"<b>{t('ru', 'rejected')}</b>", f"<b>{t('ru', 'ask_full_name')}</b>"])
+        self.assertEqual(answers, [t("ru", "account_rejected"), f"<b>{t('ru', 'ask_account')}</b>"])
         self.owner.refresh_from_db()
         self.assertEqual(self.owner.telegram_status, Owner.TELEGRAM_NOT_CONNECTED)
 
-    def test_only_the_users_own_contact_is_accepted(self):
-        self.send("/start")
-        self.send("🇬🇧 English")
-        self.send("Aziz Karimov")
+    def test_wrong_or_unknown_numbers_are_explained(self):
+        self.until_account_question("🇺🇿 O'zbekcha", "uz")
 
-        self.assertEqual(self.send("+998901112233"), [t("en", "phone_use_button")])
+        self.assertEqual(self.send("hisob raqam"), [t("uz", "account_invalid")])
+        self.assertEqual(self.send("1000000000"), [t("uz", "account_not_found", account="1000000000")])
+        self.owner.refresh_from_db()
+        self.assertEqual(self.owner.telegram_status, Owner.TELEGRAM_NOT_CONNECTED)
+
+    def test_an_account_followed_by_someone_else_is_not_taken_over(self):
+        Owner.objects.filter(pk=self.owner.pk).update(telegram_id="777", telegram_status=Owner.TELEGRAM_CONNECTED)
+        self.until_account_question("🇬🇧 English", "en")
+
+        self.assertEqual(self.send("1383637891"), [t("en", "account_taken")])
+        self.owner.refresh_from_db()
+        self.assertEqual(self.owner.telegram_id, "777")
+
+    def test_one_user_follows_several_apartments_each_with_its_own_balance(self):
+        second_apartment = Apartment.objects.create(
+            number="2", area=Decimal("40"), building=self.building, personal_account="1383305531", author="t"
+        )
+        Owner.objects.create(fio="Aziz Karimov", phone="", apartment=second_apartment)
+        apply_account_change(second_apartment.pk, Decimal("75000"), Transaction.TYPE_CASH)
+        self.until_account_question()
+        self.send("1383637891")
+        self.send(MESSAGES["ru"]["button_confirm"])
+
+        self.assertEqual(self.send(MESSAGES["ru"]["button_add_account"]), [f"<b>{t('ru', 'ask_another_account')}</b>"])
+        self.assertEqual(self.send("1383637891"), [t("ru", "account_already_yours")])
+        self.assertEqual(self.send("1383305531"), [self.confirmation(account="1383305531", apartment="2")])
+        menu = self.send(MESSAGES["ru"]["button_confirm"])[1]
+
+        self.assertIn("• Дом 64, кв. 1 (л/с 1383637891) — долга нет", menu)
+        self.assertIn("• Дом 64, кв. 2 (л/с 1383305531) — переплата 75 000 сум", menu)
+        self.assertEqual(Owner.objects.filter(telegram_id="555").count(), 2)
+
+    def test_back_leaves_adding_an_account(self):
+        Owner.objects.filter(pk=self.owner.pk).update(
+            telegram_id=str(self.USER_ID), telegram_status=Owner.TELEGRAM_CONNECTED, telegram_language="uz"
+        )
+        self.send(MESSAGES["uz"]["button_add_account"])
+
+        answers = self.send(MESSAGES["uz"]["button_back"])
+
+        self.assertIn("• Uy 64, kvartira 1 (hisob 1383637891) — qarz yo'q", answers[0])
+
+    def test_payment_history_lists_the_latest_entries_of_each_account(self):
+        Owner.objects.filter(pk=self.owner.pk).update(
+            telegram_id=str(self.USER_ID), telegram_status=Owner.TELEGRAM_CONNECTED, telegram_language="ru"
+        )
+        apply_account_change(self.apartment.pk, Decimal("-150000"), Transaction.TYPE_CHARGE, description="December")
+        apply_account_change(self.apartment.pk, Decimal("200000"), Transaction.TYPE_CLICK, external_id="click:1")
+        today = timezone.localdate().strftime("%d.%m.%Y")
+
+        answers = self.send(MESSAGES["ru"]["button_history"])
+
+        self.assertEqual(
+            answers,
+            [
+                "📜 Дом 64, кв. 1 (л/с 1383637891)\n"
+                f"{today} — Оплата через Click: +200 000 сум. Баланс: переплата 50 000 сум\n"
+                f"{today} — Начисление: −150 000 сум. Баланс: долг 150 000 сум"
+            ],
+        )
+
+    def test_lookups_are_limited(self):
+        self.until_account_question("🇬🇧 English", "en")
+        for _ in range(services.ACCOUNT_LOOKUPS_PER_WINDOW):
+            self.send("1000000000")
+
+        self.assertEqual(self.send("1383637891"), [t("en", "too_many_attempts")])
+
+    def test_own_contact_links_residents_whose_phone_is_on_file(self):
+        self.until_account_question()
+
+        answers = self.send(contact=self.own_contact())
+
+        self.assertEqual(answers[0], f"<b>{t('ru', 'registered')}</b>")
+        self.assertIn("• Дом 64, кв. 1 (л/с 1383637891) — долга нет", answers[1])
+        self.owner.refresh_from_db()
+        self.assertEqual(self.owner.telegram_status, Owner.TELEGRAM_CONNECTED)
+
+    def test_only_the_users_own_contact_is_accepted(self):
+        self.until_account_question("🇬🇧 English", "en")
         someone_else = Contact(phone_number="998901112233", first_name="Other", user_id=999)
+
         self.assertEqual(self.send(contact=someone_else), [t("en", "phone_use_button")])
         self.owner.refresh_from_db()
         self.assertEqual(self.owner.telegram_status, Owner.TELEGRAM_NOT_CONNECTED)
 
-    def test_unknown_phone_offers_to_try_again(self):
-        self.send("/start")
-        self.send("🇺🇿 O'zbekcha")
-        self.send("Aziz Karimov")
-        self.send(contact=self.own_contact(phone="998935550000"))
+    def test_unknown_phone_points_to_the_personal_account(self):
+        self.until_account_question("🇺🇿 O'zbekcha", "uz")
 
-        answers = self.send(MESSAGES["uz"]["button_confirm"])
-
-        self.assertEqual(answers, [f"<b>{t('uz', 'not_found', phone='+998935550000')}</b>"])
-        self.assertEqual(self.send(MESSAGES["uz"]["button_retry"]), [f"<b>{t('uz', 'ask_full_name')}</b>"])
+        self.assertEqual(
+            self.send(contact=self.own_contact(phone="998935550000")),
+            [t("uz", "phone_not_found", phone="+998935550000")],
+        )
+        self.assertEqual(self.send("1383637891"), [self.confirmation(language="uz")])
 
     def test_registered_user_gets_the_main_menu_and_can_change_language(self):
         Owner.objects.filter(pk=self.owner.pk).update(
             telegram_id=str(self.USER_ID), telegram_status=Owner.TELEGRAM_CONNECTED, telegram_language="en"
         )
 
-        self.assertIn("• House 64, apt 1 — no debt", self.send("/start")[0])
+        self.assertIn("• House 64, apt 1 (acc. 1383637891) — no debt", self.send("/start")[0])
         self.assertEqual(self.send(MESSAGES["en"]["button_language"]), [f"<b>{CHOOSE_LANGUAGE}</b>"])
         answers = self.send("🇺🇿 O'zbekcha")
 
         self.assertEqual(answers[0], t("uz", "language_saved"))
-        self.assertIn("• Uy 64, kvartira 1 — qarz yo'q", answers[1])
+        self.assertIn("• Uy 64, kvartira 1 (hisob 1383637891) — qarz yo'q", answers[1])
         self.owner.refresh_from_db()
         self.assertEqual(self.owner.telegram_language, "uz")
+
+    def test_unregistered_user_is_sent_to_start(self):
+        self.assertEqual(self.send("salom"), [t("uz", "start_hint")])
+
+
+@override_settings(TELEGRAM_BOT_TOKEN="123456:TEST-TOKEN", CLICK_SECRET_KEY="test-secret", CLICK_SERVICE_ID="31")
+class PaymentReceiptTests(ResidentsMixin, TestCase):
+    """A resident following the apartment in Telegram hears about a Click payment."""
+
+    def setUp(self):
+        self.session = RecordingSession()
+        patcher = patch("telegram_bot.notifications.create_bot", lambda token: create_bot(token, session=self.session))
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def connect(self, language="uz"):
+        Owner.objects.filter(pk=self.owner.pk).update(
+            telegram_id="555", telegram_status=Owner.TELEGRAM_CONNECTED, telegram_language=language
+        )
+
+    def test_receipt_in_the_residents_language(self):
+        self.connect("ru")
+        apply_account_change(self.apartment.pk, Decimal("-150000"), Transaction.TYPE_CHARGE)
+        ledger = apply_account_change(self.apartment.pk, Decimal("200000"), Transaction.TYPE_CLICK)
+
+        self.assertTrue(notifications.notify_payment(ledger.pk))
+
+        sent = self.session.sent[0]
+        self.assertEqual(sent.chat_id, "555")
+        self.assertEqual(
+            sent.text,
+            "✅ Оплата получена\n🏠 Дом 64, кв. 1 (л/с 1383637891)\nСумма: +200 000 сум (Click)\nБаланс: переплата 50 000 сум",
+        )
+
+    def test_nobody_to_tell(self):
+        ledger = apply_account_change(self.apartment.pk, Decimal("200000"), Transaction.TYPE_CLICK)
+
+        self.assertFalse(notifications.notify_payment(ledger.pk))
+        self.assertEqual(self.session.sent, [])
+
+    def test_a_confirmed_click_payment_is_announced_after_commit(self):
+        self.connect()
+        params = {"account": "1383637891", "amount": 50000}
+
+        def signed(action, **fields):
+            payload = {
+                "action": action, "click_paydoc_id": 7, "attempt_trans_id": 1, "service_id": 31,
+                "sign_time": "2026-10-20 12:00:00", "params": params, **fields,
+            }
+            payload["sign_string"] = click.signature(7, 1, 31, "test-secret", *params.values(), action, "2026-10-20 12:00:00")
+            return self.client.post(
+                reverse("payments:click_advanced"), data=json.dumps(payload), content_type="application/json"
+            ).json()
+
+        prepared = signed(1)
+        with patch("telegram_bot.notifications._in_background", lambda func, *args: func(*args)):
+            with self.captureOnCommitCallbacks(execute=True):
+                completed = signed(2, merchant_prepare_id=prepared["merchant_prepare_id"])
+
+        self.assertEqual(completed["error"], 0, completed)
+        self.assertEqual(len(self.session.sent), 1)
+        self.assertIn("+50 000 so'm (Click)", self.session.sent[0].text)
+        self.assertIn("Balans: ortiqcha to'lov 50 000 so'm", self.session.sent[0].text)
 
 
 class BlockedBotSession(RecordingSession):
