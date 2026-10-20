@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
 {% block title %}{{ page_title }}{% endblock %}
-{% block extra_head %}<link href="{% static 'css/billing_periods.css' %}?v=periods-20261019-6" rel="stylesheet"/>{% endblock %}
+{% block extra_head %}<link href="{% static 'css/billing_periods.css' %}?v=periods-20261020-1" rel="stylesheet"/>{% endblock %}
 {% block page_body %}
 {# Translated by billing_periods.js from the labels below; data-stat-synced keeps app.js from translating it too. #}
 <main class="app-main min-h-screen pt-16">
@@ -127,5 +127,5 @@
 </div>
 
 <script id="bp-labels" type="application/json">{{ labels_json }}</script>
-<script defer src="{% static 'js/billing_periods.js' %}?v=periods-20261019-6"></script>
+<script defer src="{% static 'js/billing_periods.js' %}?v=periods-20261020-1"></script>
 {% endblock %}

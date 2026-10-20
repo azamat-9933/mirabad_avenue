@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
 {% block title %}{{ page_title }}{% endblock %}
-{% block extra_head %}<link href="{% static 'css/billing_periods.css' %}?v=periods-20261019-6" rel="stylesheet"/>{% endblock %}
+{% block extra_head %}<link href="{% static 'css/billing_periods.css' %}?v=periods-20261020-1" rel="stylesheet"/>{% endblock %}
 {% block page_body %}
 {# A period laid out like its Excel file: houses on the left, the heating / hot water tables as sheet tabs below. #}
 <main class="app-main min-h-screen pt-16">
@@ -88,6 +88,7 @@
                   <tr>
                     <th class="bp-num" data-pt="no">No.</th>
                     <th data-pt="full_name">Full name</th>
+                    <th data-pt="personal_account">Personal account</th>
                     <th data-pt="apt">Apt</th>
                     <th class="bp-num" data-pt="area">Area</th>
                     <th data-pt="heated_from">Start date</th>
@@ -103,6 +104,7 @@
                     <tr data-bp-row data-area="{{ row.area_raw }}">
                       <td class="bp-num">{{ row.no }}<input name="row" type="hidden" value="{{ row.pk }}"/></td>
                       <td class="bp-name">{{ row.owner|default:"—" }}</td>
+                      <td class="bp-account">{{ row.account|default:"—" }}</td>
                       <td class="bp-strong">{{ row.apt }}</td>
                       <td class="bp-num">{{ row.area }}</td>
                       <td><input class="bp-input bp-input--date" data-bp-from name="from-{{ row.pk }}" type="date" value="{{ row.from }}" min="{{ period.start_date|date:'Y-m-d' }}" max="{{ period.end_date|date:'Y-m-d' }}"{% if closed %} disabled{% endif %}/></td>
@@ -113,12 +115,12 @@
                       <td class="bp-num bp-strong">{{ row.amount }}</td>
                     </tr>
                   {% empty %}
-                    <tr><td class="bp-empty" colspan="10" data-pt="no_apartments">No apartments in this house.</td></tr>
+                    <tr><td class="bp-empty" colspan="11" data-pt="no_apartments">No apartments in this house.</td></tr>
                   {% endfor %}
                 </tbody>
                 <tfoot>
                   <tr>
-                    <td colspan="8" data-pt="total">Total</td>
+                    <td colspan="9" data-pt="total">Total</td>
                     <td class="bp-num">{{ total_volume }}</td>
                     <td class="bp-num">{{ total_amount }}</td>
                   </tr>
@@ -130,6 +132,7 @@
                   <tr>
                     <th class="bp-num" data-pt="no">No.</th>
                     <th data-pt="full_name">Full name</th>
+                    <th data-pt="personal_account">Personal account</th>
                     <th data-pt="apt">Apt</th>
                     <th class="bp-num" data-pt="start_reading">Start reading</th>
                     <th class="bp-num" data-pt="end_reading">End reading</th>
@@ -142,6 +145,7 @@
                     <tr data-bp-row>
                       <td class="bp-num">{{ row.no }}<input name="row" type="hidden" value="{{ row.pk }}"/></td>
                       <td class="bp-name">{{ row.owner|default:"—" }}</td>
+                      <td class="bp-account">{{ row.account|default:"—" }}</td>
                       <td class="bp-strong">{{ row.apt }}</td>
                       <td class="bp-num"><input class="bp-input bp-input--number" data-bp-start-reading inputmode="decimal" name="start-{{ row.pk }}" placeholder="{{ row.previous }}" title="Empty: last month's end reading" data-pt-title="previous_hint" type="text" value="{{ row.start }}"{% if closed %} disabled{% endif %}/></td>
                       <td class="bp-num"><input class="bp-input bp-input--number" data-bp-end-reading inputmode="decimal" name="end-{{ row.pk }}" type="text" value="{{ row.end }}"{% if closed %} disabled{% endif %}/></td>
@@ -149,12 +153,12 @@
                       <td class="bp-num bp-strong">{{ row.amount }}</td>
                     </tr>
                   {% empty %}
-                    <tr><td class="bp-empty" colspan="7" data-pt="no_apartments">No apartments in this house.</td></tr>
+                    <tr><td class="bp-empty" colspan="8" data-pt="no_apartments">No apartments in this house.</td></tr>
                   {% endfor %}
                 </tbody>
                 <tfoot>
                   <tr>
-                    <td colspan="5" data-pt="total">Total</td>
+                    <td colspan="6" data-pt="total">Total</td>
                     <td class="bp-num">{{ total_volume }}</td>
                     <td class="bp-num">{{ total_amount }}</td>
                   </tr>
@@ -348,5 +352,5 @@
 {% endif %}
 
 <script id="bp-labels" type="application/json">{{ labels_json }}</script>
-<script defer src="{% static 'js/billing_periods.js' %}?v=periods-20261019-6"></script>
+<script defer src="{% static 'js/billing_periods.js' %}?v=periods-20261020-1"></script>
 {% endblock %}

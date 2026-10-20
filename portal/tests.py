@@ -613,8 +613,12 @@ class PortalResidentSearchTests(TestCase):
         cls.user = get_user_model().objects.create_user(username="operator", password="unused-password")
         complex_obj = Complex.objects.create(title="Mirabad Avenue", address="", author="test")
         building = Building.objects.create(number="64A", complex=complex_obj, author="test")
-        first = Apartment.objects.create(number="1", area=Decimal("50"), building=building, author="test")
-        second = Apartment.objects.create(number="2", area=Decimal("50"), building=building, author="test")
+        first = Apartment.objects.create(
+            number="1", area=Decimal("50"), building=building, personal_account="1391677280", author="test"
+        )
+        second = Apartment.objects.create(
+            number="2", area=Decimal("50"), building=building, personal_account="1383000001", author="test"
+        )
         cls.azamat = Owner.objects.create(fio="Azamat Yaxyoyev", phone="+998901139933", apartment=first)
         cls.muhammad = Owner.objects.create(fio="Muhammad Yaxyoyev", phone="+998773487001", apartment=second)
 
@@ -636,6 +640,15 @@ class PortalResidentSearchTests(TestCase):
 
     def test_search_with_no_match_returns_nothing(self):
         self.assertEqual(self.search("Zzz"), [])
+
+    def test_search_and_sort_by_personal_account(self):
+        self.assertEqual(self.search("1391677280"), ["Azamat Yaxyoyev"])
+        self.assertEqual(self.search("677280"), ["Azamat Yaxyoyev"])
+
+        response = self.client.get(reverse("portal:api_list_residents"), {"ordering": "personal_account"})
+
+        rows = response.json()["results"]
+        self.assertEqual([row["personalAccount"] for row in rows], ["1383000001", "1391677280"])
 
 
 class PortalBoundedSnapshotTests(TestCase):
@@ -736,7 +749,9 @@ class PortalBillingNoticeTests(TestCase):
         )
         complex_obj = Complex.objects.create(title="Mirabad Avenue", address="", author="test")
         building = Building.objects.create(number="64A", complex=complex_obj, author="test")
-        cls.apartment = Apartment.objects.create(number="12", area=Decimal("50"), building=building, author="test")
+        cls.apartment = Apartment.objects.create(
+            number="12", area=Decimal("50"), building=building, personal_account="1383364304", author="test"
+        )
         cls.owner = Owner.objects.create(fio="Aziz Karimov", phone="+998901112233", apartment=cls.apartment)
 
     def setUp(self):
@@ -757,6 +772,7 @@ class PortalBillingNoticeTests(TestCase):
             ("Mirabad Avenue", "64A", "12", "Aziz Karimov", "+998901112233", "150 000 so'm"),
         )
         self.assertEqual(facts["date"], timezone.localdate().strftime("%d.%m.%Y"))
+        self.assertEqual(facts["account"], "1383364304")
         text = " ".join(notice["paragraphs"])
         for reference in ("132-moddasi", "134-moddasiga", "O'RQ-581", "236 va 237-moddalariga", "140 va 141-moddalariga"):
             self.assertIn(reference, text)
@@ -793,7 +809,9 @@ class PortalBillingPeriodPagesTests(TestCase):
         complex_obj = Complex.objects.create(title="Mirabad Avenue", address="", author="test")
         cls.house_60 = Building.objects.create(number="60", complex=complex_obj, author="test")
         cls.house_60v = Building.objects.create(number="60V", complex=complex_obj, author="test")
-        cls.first = Apartment.objects.create(number="1", area=Decimal("171.94"), building=cls.house_60, author="test")
+        cls.first = Apartment.objects.create(
+            number="1", area=Decimal("171.94"), building=cls.house_60, personal_account="1391677280", author="test"
+        )
         cls.rest = Apartment.objects.create(number="2", area=Decimal("173021.18"), building=cls.house_60, author="test")
         cls.other = Apartment.objects.create(number="1", area=Decimal("50.00"), building=cls.house_60v, author="test")
         Owner.objects.create(fio="Aliyev Jasur", phone="+998901234567", apartment=cls.first)
@@ -1046,6 +1064,20 @@ class PortalBillingPeriodPagesTests(TestCase):
             if isinstance(cell, (int, float, Decimal)) and not isinstance(cell, bool)
         ]
         self.assertIn(Decimal("840851.77"), numbers)
+        for title in ("60 Отопление", "60 ГВС"):
+            rows = list(workbook[title].iter_rows(values_only=True))
+            self.assertEqual(rows[3][:4], ("№", "Ф.И.О.", "Лицевой счет", "Кв"))
+            self.assertEqual(rows[4][2], "1391677280")
+
+    def test_sheet_shows_the_personal_account(self):
+        period = self._house_60_december()
+
+        for sheet in ("heating", "hot_water"):
+            response = self.client.get(
+                reverse("portal:billing_period_sheet", args=[period.pk]), {"building": self.house_60.pk, "sheet": sheet}
+            )
+            self.assertContains(response, 'data-pt="personal_account"')
+            self.assertContains(response, '<td class="bp-account">1391677280</td>', html=False)
 
 
 class PortalInputValidationTests(TestCase):

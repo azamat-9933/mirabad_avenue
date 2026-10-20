@@ -64,6 +64,7 @@ LABELS = {
     "hot_water": {"en": "Hot water", "ru": "ГВС", "uz": "Issiq suv"},
     "no": {"en": "No.", "ru": "№", "uz": "№"},
     "full_name": {"en": "Full name", "ru": "Ф.И.О.", "uz": "F.I.O."},
+    "personal_account": {"en": "Personal account", "ru": "Лицевой счет", "uz": "Abonent raqami"},
     "apt": {"en": "Apt", "ru": "Кв", "uz": "Kv"},
     "area": {"en": "Area, m²", "ru": "Площадь, м²", "uz": "Maydon, m²"},
     "heated_from": {"en": "Start date", "ru": "Дата начала", "uz": "Boshlanish"},
@@ -341,13 +342,13 @@ def period_workbook(period, lang: str = "ru") -> bytes:
             sheet.cell(row=1, column=1, value=title).font = Font(bold=True, size=13)
             sheet.cell(row=2, column=1, value=f"{period.start_date:%d.%m.%Y} – {period.end_date:%d.%m.%Y}")
             if data.is_heating:
-                headers = ["no", "full_name", "apt", "area", "heated_from", "heated_until", "range_days", "days_given", "heated_area", "amount"]
-                widths = [6, 34, 8, 12, 13, 13, 9, 15, 15, 16]
-                volume_column = 9
+                headers = ["no", "full_name", "personal_account", "apt", "area", "heated_from", "heated_until", "range_days", "days_given", "heated_area", "amount"]
+                widths = [6, 34, 14, 8, 12, 13, 13, 9, 15, 15, 16]
+                volume_column = 10
             else:
-                headers = ["no", "full_name", "apt", "start_reading", "end_reading", "consumption", "amount"]
-                widths = [6, 34, 8, 18, 18, 13, 16]
-                volume_column = 6
+                headers = ["no", "full_name", "personal_account", "apt", "start_reading", "end_reading", "consumption", "amount"]
+                widths = [6, 34, 14, 8, 18, 18, 13, 16]
+                volume_column = 7
             header_row = 4
             for column, key in enumerate(headers, start=1):
                 cell = put(sheet, header_row, column, label(key, lang), font=bold, fill=header_fill)
@@ -358,16 +359,16 @@ def period_workbook(period, lang: str = "ru") -> bytes:
                 row_index += 1
                 if data.is_heating:
                     values = [
-                        number, row.owner_name, str(row.apartment.number), row.apartment.area,
+                        number, row.owner_name, row.apartment.personal_account, str(row.apartment.number), row.apartment.area,
                         row.heated_from, row.heated_until, row.range_days, row.days, row.heated_area, row.amount,
                     ]
-                    formats = [None, None, None, "#,##0.00", "DD.MM.YYYY", "DD.MM.YYYY", None, None, "#,##0.00", amount_format]
+                    formats = [None, None, "@", None, "#,##0.00", "DD.MM.YYYY", "DD.MM.YYYY", None, None, "#,##0.00", amount_format]
                 else:
                     values = [
-                        number, row.owner_name, str(row.apartment.number), row.start, row.end_reading,
-                        row.consumption, row.amount,
+                        number, row.owner_name, row.apartment.personal_account, str(row.apartment.number), row.start,
+                        row.end_reading, row.consumption, row.amount,
                     ]
-                    formats = [None, None, None, "#,##0.00", "#,##0.00", "#,##0.00", amount_format]
+                    formats = [None, None, "@", None, "#,##0.00", "#,##0.00", "#,##0.00", amount_format]
                 for column, (value, number_format) in enumerate(zip(values, formats), start=1):
                     put(sheet, row_index, column, value, number_format)
             row_index += 1

@@ -6,19 +6,9 @@
                 <p class="analytics-v2-eyebrow" data-i18n-key="Statistics">Statistics</p>
                 <h1 data-i18n-key="Analytics dashboard">Analytics dashboard</h1>
             </div>
-            <div class="analytics-v2-toolbar">
-                <label class="analytics-v2-select-wrap">
-                    <span data-i18n-key="House">House</span>
-                    <select data-analytics-building-select></select>
-                </label>
-                <label class="analytics-v2-select-wrap">
-                    <span data-i18n-key="Month">Month</span>
-                    <select data-analytics-month-select></select>
-                </label>
-            </div>
         </section>
 
-        <!-- Balances are as of the end of the selected month (now, for the current month). -->
+        <!-- Every house, the current month; balances as they stand now. -->
         <section class="analytics-v2-kpi-grid" data-analytics-dashboard>
             <article class="analytics-v2-kpi analytics-v2-kpi--blue">
                 <div class="analytics-v2-kpi__label-row">
@@ -41,7 +31,7 @@
                 </div>
                 <strong data-analytics-value="overpayment">0 UZS</strong>
             </article>
-            <!-- Opens the debtors list of the selected house and month. -->
+            <!-- Opens the debtors list: every house, right now. -->
             <article class="analytics-v2-kpi analytics-v2-kpi--amber is-clickable" data-analytics-debtors-open role="button" tabindex="0">
                 <div class="analytics-v2-kpi__label-row">
                     <span data-i18n-key="Debtors">Debtors</span>
@@ -60,7 +50,7 @@
                     <ol class="analytics-house-debt-list" data-analytics-house-debt-list></ol>
                 </article>
 
-                <!-- What the residents of each operator's houses paid in the selected month. -->
+                <!-- What the residents of each operator's houses paid this month. -->
                 <article class="analytics-v2-panel">
                     <header class="analytics-v2-panel__head">
                         <h2 data-i18n-key="Collected by operator">Collected by operator</h2>

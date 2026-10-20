@@ -496,6 +496,11 @@ html.dark .bp-modal .bp-table th {
     min-width: 170px;
 }
 
+.bp-account {
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+
 .bp-page .bp-input,
 .bp-modal .bp-input {
     width: 100%;

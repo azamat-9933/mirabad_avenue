@@ -141,8 +141,8 @@ def build_debt_notice(owner, language, operator, as_of=None) -> dict:
         ("house", values["house"]),
         ("apartment", values["apartment"]),
         ("resident", owner.fio),
-        ("phone", owner.phone),
-        ("account", f"ACC-{owner.pk}"),
+        ("phone", owner.phone or "—"),
+        ("account", apartment.personal_account or "—"),
         ("date", date),
         ("debt", amount),
     ]

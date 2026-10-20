@@ -6861,7 +6861,11 @@ html.dark table thead th[data-sort-direction]::after,
 }
 
 :root {
-    --resident-directory-columns: 80px minmax(0, 2.45fr) minmax(0, 1.08fr) minmax(0, 0.84fr) minmax(0, 0.76fr) minmax(0, 2.55fr);
+    --resident-directory-columns: 80px minmax(0, 2.1fr) minmax(0, 0.9fr) minmax(0, 1fr) minmax(0, 0.8fr) minmax(0, 0.76fr) minmax(0, 2.2fr);
+}
+
+.resident-list-account strong {
+    font-variant-numeric: tabular-nums;
 }
 
 .resident-column-sorts {
@@ -14630,6 +14634,11 @@ html.dark .command-item-icon,
     min-height: 72px;
 }
 
+/* The ninth field (personal account) takes the whole last row of the two-column grid. */
+.resident-command-profile-field.is-wide {
+    grid-column: 1 / -1;
+}
+
 .resident-command-profile-field > span:first-child {
     display: block;
     font-size: 10px;
@@ -19399,6 +19408,19 @@ html.dark .notification-group-label[data-notification-group="pinned"],
 .residential-apartment-row > td {
     padding-top: 0.7rem !important;
     padding-bottom: 0.7rem !important;
+}
+
+/* House rows are compact so every house fits on one screen. */
+.residential-building-row > td {
+    padding-top: 0.45rem !important;
+    padding-bottom: 0.45rem !important;
+}
+
+.residential-debt-inline {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 10px;
 }
 
 .residential-building-row .residential-building-trigger p,

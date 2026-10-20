@@ -313,6 +313,7 @@ def api_list_residents(request):
     allowed_ordering = {
         "id": "id",
         "name": "fio",
+        "personal_account": "apartment__personal_account",
         "phone": "phone",
         "telegram_user": "telegram_user",
         "telegram_status": "telegram_status",

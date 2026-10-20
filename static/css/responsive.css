@@ -443,13 +443,14 @@ aside[data-sidebar] .sidebar-brand-rail-mark {
     /* Set on the children: a container query never styles the container itself. */
     .resident-directory-panel > * {
         /* Header and rows are separate grids, so every column needs a size that does not depend on
-           its content: the last one is fixed and fits "Payment" + "History" in all three languages. */
-        --resident-directory-columns: 64px minmax(190px, 2.2fr) minmax(110px, 1.1fr) 104px minmax(104px, 0.6fr) minmax(150px, 1.25fr) 212px;
+           its content: the last one is fixed and fits "Payment" over "History" in all three languages. */
+        --resident-directory-columns: 64px minmax(150px, 1.5fr) minmax(130px, 0.8fr) minmax(96px, 1fr) 96px minmax(100px, 0.6fr) minmax(150px, 1.3fr) 112px;
     }
 
     .resident-directory-panel .resident-column-sorts,
     .resident-directory-panel .resident-list-row {
         grid-template-columns: var(--resident-directory-columns);
+        column-gap: 10px;
     }
 
     /* Rows sit inside the list's 1px border with 14px padding; the header gets the same inset so
@@ -459,7 +460,7 @@ aside[data-sidebar] .sidebar-brand-rail-mark {
     }
 
     .resident-directory-panel .resident-sort-balance {
-        grid-column: 6 / -1;
+        grid-column: 7 / -1;
         padding-left: 0;
     }
 
@@ -489,7 +490,27 @@ aside[data-sidebar] .sidebar-brand-rail-mark {
         text-align: right;
     }
 
+    /* Payment over History: the narrow column leaves room for the personal account. */
     .resident-directory-panel .resident-list-actions {
+        flex-direction: column;
+        align-items: stretch;
+        justify-content: center;
+        gap: 5px;
+    }
+
+    .resident-directory-panel .resident-list-action {
+        width: 100%;
+        min-width: 0;
+        height: 24px;
+    }
+}
+
+/* Too narrow for the filters above the balance and actions columns: they get a line of their own
+   above the column headers. */
+@container residents (min-width: 1000px) and (max-width: 1459.98px) {
+    .resident-directory-panel .resident-sort-balance {
+        grid-column: 1 / -1;
+        grid-row: 1;
         justify-content: flex-end;
     }
 }
@@ -537,10 +558,10 @@ aside[data-sidebar] .sidebar-brand-rail-mark {
     }
 
     .resident-directory-panel .resident-list-row {
-        grid-template-columns: 56px repeat(3, minmax(0, 1fr)) minmax(150px, auto);
+        grid-template-columns: 56px repeat(4, minmax(0, 1fr)) minmax(150px, auto);
         grid-template-areas:
-            "id person person person balance"
-            "id tg contract apt actions";
+            "id person person person person balance"
+            "id account tg contract apt actions";
         gap: 10px 14px;
         align-items: start;
         padding: 14px;
@@ -562,15 +583,19 @@ aside[data-sidebar] .sidebar-brand-rail-mark {
         grid-area: person;
     }
 
-    .resident-directory-panel .resident-list-row > .resident-list-cell:nth-child(3) {
-        grid-area: tg;
+    .resident-directory-panel .resident-list-row > .resident-list-account {
+        grid-area: account;
     }
 
     .resident-directory-panel .resident-list-row > .resident-list-cell:nth-child(4) {
-        grid-area: contract;
+        grid-area: tg;
     }
 
     .resident-directory-panel .resident-list-row > .resident-list-cell:nth-child(5) {
+        grid-area: contract;
+    }
+
+    .resident-directory-panel .resident-list-row > .resident-list-cell:nth-child(6) {
         grid-area: apt;
     }
 
@@ -635,7 +660,8 @@ aside[data-sidebar] .sidebar-brand-rail-mark {
         grid-template-columns: 44px repeat(3, minmax(0, 1fr));
         grid-template-areas:
             "id person person person"
-            "tg tg contract apt"
+            "account account tg tg"
+            "contract contract apt apt"
             "balance balance balance actions";
         gap: 10px;
         padding: 12px;
@@ -1558,6 +1584,7 @@ aside[data-sidebar] .sidebar-brand-rail-mark {
     .resident-directory-panel .resident-list-row {
         grid-template-areas:
             "id person person person"
+            "account account account account"
             "tg tg contract contract"
             "apt apt . ."
             "balance balance balance actions";

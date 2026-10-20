@@ -474,7 +474,7 @@
         "Other": { ru: "Прочее", uz: "Boshqa" },
         // Payment notice window: the debtor search and the chosen debtor.
         "Choose a debtor":{ ru: "Выберите должника", uz: "Qarzdorni tanlang" },
-        "Search by name, house, apartment or phone, then pick the debtor.": { ru: "Найдите по имени, дому, квартире или телефону и выберите должника.", uz: "Ism, uy, kvartira yoki telefon bo'yicha qidiring va qarzdorni tanlang." },
+        "Search by name, house, apartment, phone or personal account, then pick the debtor.": { ru: "Найдите по имени, дому, квартире, телефону или лицевому счёту и выберите должника.", uz: "Ism, uy, kvartira, telefon yoki abonent raqami bo'yicha qidiring va qarzdorni tanlang." },
         "No debtor found": { ru: "Должник не найден", uz: "Qarzdor topilmadi" },
         "The notice appears here once a debtor is chosen.": { ru: "Уведомление появится здесь, когда будет выбран должник.", uz: "Qarzdor tanlangach, xabarnoma shu yerda ko'rinadi." },
         // Statistics: the debtors list behind the "Debtors" card.
@@ -1765,10 +1765,9 @@
         return true;
     };
 
-    // The debtors list, largest debt first. The statistics "Debtors" card shows the selected house at
-    // the end of the selected month ([data-analytics-debtors-open]); other cards such as "Active
-    // debtors" on the payments page show every house right now ([data-debtors-list-open]). A row
-    // opens the resident's profile; a vacant apartment has nobody to open.
+    // The debtors list, largest debt first. The statistics "Debtors" card ([data-analytics-debtors-open])
+    // and cards such as "Active debtors" on the payments page ([data-debtors-list-open]) show every
+    // house right now. A row opens the resident's profile; a vacant apartment has nobody to open.
     const setupAnalyticsDebtorsList = () => {
         const modal = document.getElementById("debtors-list-modal");
         if (!modal || modal.dataset.debtorsReady === "true") return;
@@ -1780,13 +1779,14 @@
         const tr = (key) => translateValue(key, currentInterfaceLang());
         let debtors = null;
         let fromStatistics = false;
-        const scopeText = () => (fromStatistics
-            ? [
-                document.querySelector("[data-analytics-building-select]")?.selectedOptions[0]?.textContent,
-                document.querySelector("[data-analytics-month-select]")?.selectedOptions[0]?.textContent,
-            ]
-            : [tr("All houses"), new Date().toLocaleDateString("ru-RU")]
-        ).filter(Boolean).join(" · ");
+        // The statistics page has no house or month picker any more: both lists cover every house now.
+        const scopeText = () => {
+            const pick = (selector) => (fromStatistics ? document.querySelector(selector)?.selectedOptions[0]?.textContent : "");
+            return [
+                pick("[data-analytics-building-select]") || tr("All houses"),
+                pick("[data-analytics-month-select]") || new Date().toLocaleDateString("ru-RU"),
+            ].join(" · ");
+        };
         const render = () => {
             if (scopeNode) scopeNode.textContent = scopeText();
             if (!rowsNode) return;
@@ -3273,6 +3273,10 @@
                             <p>${escapeHtml(resident.complex || "-")}</p>
                         </div>
                     </div>
+                    <div class="resident-list-cell resident-list-account">
+                        <span data-i18n-key="Personal account">Personal account</span>
+                        <strong>${escapeHtml(resident.personalAccount || "—")}</strong>
+                    </div>
                     <div class="resident-list-cell">
                         <span data-i18n-key="TG user">TG user</span>
                         ${telegramHandleMarkup(resident, "resident-list-telegram")}
@@ -3665,6 +3669,7 @@
         const residentSortDirections = {
             id: "desc",
             name: "asc",
+            personal_account: "asc",
             phone: "asc",
             telegram_user: "asc",
             telegram_status: "desc",
@@ -4331,7 +4336,8 @@
             const isResidentialHouseTable = table.classList.contains("residential-performance-table");
             table.dataset.billingControlsReady = "true";
             let page = 1;
-            const pageSize = 6;
+            // The houses table shows every house on one page: the sector has only a handful.
+            const pageSize = isResidentialHouseTable ? 50 : 6;
             let filteredRows = [];
             const currentRows = () => Array.from(body.querySelectorAll("tr")).filter((row) => {
                 if (row.dataset.smartEmpty) return false;
@@ -4367,6 +4373,8 @@
                     pageLabel.dataset.pageTotal = maxPage;
                     pageLabel.textContent = `Page ${page} of ${maxPage}`;
                 }
+                // One page of houses needs no page switcher.
+                if (isResidentialHouseTable) pagination?.classList.toggle("hidden", maxPage <= 1);
                 updateSelection();
             };
             ensureCheckboxes();
@@ -5415,14 +5423,13 @@
                     </p>
                 </td>
                 <td class="px-6 py-4">
-                    <div class="space-y-1">
-                        <p class="text-sm font-bold text-on-surface">${formatAreaM2(totalArea)}</p>
-                        <p class="text-xs text-on-surface-variant" data-i18n-key="Area (m²)">Area (m²)</p>
-                    </div>
+                    <p class="text-sm font-bold text-on-surface">${formatAreaM2(totalArea)}</p>
                 </td>
                 <td class="px-6 py-4">
-                    <p class="text-sm font-bold ${healthIssue ? "text-error" : "text-on-surface"}">${formatUzs(debt)}</p>
-                    <span class="residential-risk-pill ${buildingRiskClass}" data-i18n-key="${buildingRisk}">${buildingRisk}</span>
+                    <div class="residential-debt-inline">
+                        <p class="text-sm font-bold ${healthIssue ? "text-error" : "text-on-surface"}">${formatUzs(debt)}</p>
+                        <span class="residential-risk-pill ${buildingRiskClass}" data-i18n-key="${buildingRisk}">${buildingRisk}</span>
+                    </div>
                 </td>
                 <td class="px-6 py-4 text-right">
                     <div class="residential-action-cell">
@@ -6911,6 +6918,7 @@
             const phoneDigits = /^[\d\s+()-]+$/.test(query) ? query.replace(/\D/g, "") : "";
             return sortNoticeResidents(getNoticeResidents().filter((resident) => {
                 if (phoneDigits.length >= 3 && String(resident.phone || "").replace(/\D/g, "").includes(phoneDigits)) return true;
+                if (phoneDigits.length >= 3 && String(resident.personalAccount || "").includes(phoneDigits)) return true;
                 return words.every((word) => residentMatchesWord(resident, word));
             }));
         };
@@ -6926,7 +6934,7 @@
                     <div class="billing-notice-selected-empty">
                         <span class="material-symbols-outlined" aria-hidden="true">${loading ? "hourglass_top" : "person_search"}</span>
                         <p>${escapeHtml(t(loading ? "Loading residents..." : "Choose a debtor"))}</p>
-                        ${loading ? "" : `<small>${escapeHtml(t("Search by name, house, apartment or phone, then pick the debtor."))}</small>`}
+                        ${loading ? "" : `<small>${escapeHtml(t("Search by name, house, apartment, phone or personal account, then pick the debtor."))}</small>`}
                     </div>
                 `;
                 return;
@@ -6936,6 +6944,7 @@
                     <div class="min-w-0">
                         <p class="text-sm font-black text-on-surface">${escapeHtml(resident.name || "-")}</p>
                         <p class="text-xs text-on-surface-variant mt-1">${escapeHtml([resident.building, resident.apartment].filter(Boolean).join(" • ") || "-")}</p>
+                        ${resident.personalAccount ? `<p class="text-xs text-on-surface-variant mt-1">${escapeHtml(`${t("Personal account")}: ${resident.personalAccount}`)}</p>` : ""}
                         <p class="text-xs text-on-surface-variant mt-2">${escapeHtml(resident.phone || "-")}</p>
                         ${resident.telegramConnected ? `<p class="text-[11px] font-bold text-primary mt-1">${escapeHtml(t("Telegram connected"))}</p>` : ""}
                     </div>
@@ -6995,7 +7004,7 @@
                             <span class="billing-notice-result-icon material-symbols-outlined" aria-hidden="true">person</span>
                             <span class="billing-notice-result-copy">
                                 <strong>${escapeHtml(resident.name || "-")}</strong>
-                                <small>ID ${escapeHtml(residentId)} · ${escapeHtml(t("House"))} ${escapeHtml(resident.building || "-")} · ${escapeHtml(t("Apartment"))} ${escapeHtml(resident.apartment || "-")}</small>
+                                <small>ID ${escapeHtml(residentId)} · ${escapeHtml(t("House"))} ${escapeHtml(resident.building || "-")} · ${escapeHtml(t("Apartment"))} ${escapeHtml(resident.apartment || "-")}${resident.personalAccount ? ` · ${escapeHtml(t("Personal account"))} ${escapeHtml(resident.personalAccount)}` : ""}</small>
                             </span>
                             <span class="billing-notice-result-debt">${escapeHtml(formatBillingUzs(debtValue(resident)))}</span>
                         </button>
@@ -7963,6 +7972,7 @@
             const search = [
                 title,
                 resident.phone,
+                resident.personalAccount,
                 apartmentLabel,
                 buildingLabel,
                 complex?.name,
@@ -7973,6 +7983,7 @@
                 type: "resident",
                 title,
                 meta: [apartmentLabel, buildingLabel || complex?.name].filter(Boolean).join(" · "),
+                account: resident.personalAccount || "",
                 search: normalizeCommandSearch(search),
                 residentId: resident.id,
                 ownerBackendId: resident.ownerBackendId || resident.backendId || resident.displayId || "",
@@ -8005,8 +8016,10 @@
                 type: "apartment",
                 title: `Apartment ${unit}`.trim(),
                 meta: [buildingName, ownerName].filter(Boolean).join(" · "),
+                account: apartment.personalAccount || "",
                 search: normalizeCommandSearch([
                     unit,
+                    apartment.personalAccount,
                     ownerName,
                     apartment.owner?.phone,
                     complex?.name,
@@ -8026,6 +8039,7 @@
                     unit,
                     rooms: apartment.rooms || "Apartment",
                     area: apartment.area || "",
+                    personalAccount: apartment.personalAccount || "",
                     meter: apartment.meter || "",
                     charge: apartment.charge || "",
                     occupancy: apartment.occupancy || "Resident",
@@ -8071,6 +8085,7 @@
                 <span class="command-item-copy">
                     <span class="command-item-title" data-command-title>${escapeHtml(entry.title)}</span>
                     ${entry.meta ? `<small class="command-item-meta" data-command-meta>${escapeHtml(entry.meta)}</small>` : ""}
+                    ${entry.account ? `<small class="command-item-meta command-item-account" data-command-meta>${escapeHtml(`${t("Personal account")}: ${entry.account}`)}</small>` : ""}
                 </span>
                 <span class="command-item-type">${token.label}</span>
             </button>
@@ -8105,9 +8120,11 @@
             type: "resident",
             title: resident.name || "Resident",
             meta: [resident.apartment, resident.building || resident.complex, resident.phone].filter(Boolean).join(" · "),
+            account: resident.personalAccount || "",
             search: normalizeCommandSearch([
                 resident.name,
                 resident.phone,
+                resident.personalAccount,
                 resident.apartment,
                 resident.building,
                 resident.complex,
@@ -8136,6 +8153,7 @@
         contract: residentProfileModal.querySelector("[data-resident-profile-contract]"),
         house: residentProfileModal.querySelector("[data-resident-profile-house]"),
         apartment: residentProfileModal.querySelector("[data-resident-profile-apartment]"),
+        account: residentProfileModal.querySelector("[data-resident-profile-account]"),
         copyButtons: residentProfileModal.querySelectorAll("[data-resident-profile-copy]"),
         photo: residentProfileModal.querySelector("[data-resident-profile-photo]"),
         fallback: residentProfileModal.querySelector("[data-resident-profile-fallback]"),
@@ -8181,6 +8199,7 @@
         residentProfileNodes.phone.textContent = fallback?.phone || "+998 00 000-0000";
         residentProfileNodes.house.textContent = fallback?.building || "House";
         residentProfileNodes.apartment.textContent = String(fallback?.apartmentNumber || fallback?.apartment || "000");
+        if (residentProfileNodes.account) residentProfileNodes.account.textContent = fallback?.personalAccount || "--";
         residentProfileNodes.balance.textContent = formatBillingUzs(Number(fallback?.balance || 0));
         residentProfileNodes.balanceIcon.textContent = "hourglass_top";
         residentProfileNodes.balanceWrap.classList.remove("is-negative");
@@ -8217,6 +8236,7 @@
         const phone = resident.phone || "--";
         const house = resident.building || "--";
         const apartment = resident.apartmentNumber || resident.apartment || "--";
+        const account = resident.personalAccount || "--";
         const balanceValue = Number(resident.balance || 0);
         const isPositiveBalance = balanceValue >= 0;
         const telegramUser = formatTelegramHandle(resident.telegramUser);
@@ -8232,9 +8252,10 @@
         residentProfileNodes.phone.textContent = phone;
         residentProfileNodes.house.textContent = house;
         residentProfileNodes.apartment.textContent = String(apartment);
+        if (residentProfileNodes.account) residentProfileNodes.account.textContent = account;
         residentProfileNodes.copyButtons.forEach((button) => {
             const type = button.dataset.residentProfileCopy;
-            const value = type === "telegram" ? telegramUser : type === "house" ? house : String(apartment);
+            const value = type === "telegram" ? telegramUser : type === "house" ? house : type === "account" ? account : String(apartment);
             button.dataset.copyValue = value && value !== "--" ? value : "";
             button.disabled = !button.dataset.copyValue;
             button.setAttribute("aria-label", `${t("Copy")} ${t(button.dataset.copyLabel || "")}`.trim());
