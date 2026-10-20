@@ -259,3 +259,16 @@ TELEGRAM_BOT_USERNAME = os.getenv('TELEGRAM_BOT_USERNAME', '').strip()
 # Payment (debt) notice: the company and the director signing it (portal/billing_notice.py).
 BILLING_NOTICE_COMPANY = os.getenv('BILLING_NOTICE_COMPANY', 'MIRABAD AVENUE SERVICE MCHJ').strip()
 BILLING_NOTICE_DIRECTOR = os.getenv('BILLING_NOTICE_DIRECTOR', "ERGASHEV DILSHOD TURAVOY O'G'LI").strip()
+
+# Click (payments/click.py): the keys come from merchant.click.uz. While CLICK_SECRET_KEY is empty
+# every signed request from Click is refused, so nothing can be paid before the keys are set.
+CLICK_SERVICE_ID = os.getenv('CLICK_SERVICE_ID', '').strip()
+CLICK_MERCHANT_ID = os.getenv('CLICK_MERCHANT_ID', '').strip()
+CLICK_MERCHANT_USER_ID = os.getenv('CLICK_MERCHANT_USER_ID', '').strip()
+CLICK_SECRET_KEY = os.getenv('CLICK_SECRET_KEY', '').strip()
+# The key of the payment form field that holds the personal account (Лицевой счет).
+CLICK_ACCOUNT_PARAM = os.getenv('CLICK_ACCOUNT_PARAM', '').strip() or 'account'
+# Click's servers; when set, requests from any other address are refused (Compare is not signed).
+CLICK_ALLOWED_IPS = env_list('CLICK_ALLOWED_IPS', [])
+CLICK_MIN_AMOUNT = os.getenv('CLICK_MIN_AMOUNT', '').strip() or '1000'
+CLICK_MAX_AMOUNT = os.getenv('CLICK_MAX_AMOUNT', '').strip() or '100000000'

@@ -313,6 +313,16 @@ Proxy-модели (`Complex`, `Building`, `BuildingSection`, `Apartment`, `Owne
 ### `PaymeTransaction`
 Хранение callback/технических данных Payme.
 
+### `ClickTransaction` и приём платежей Click (`payments/click.py`)
+Одна попытка оплаты Click: `prepared` → `confirmed` (деньги на счёте квартиры через `apply_account_change`, `Transaction.TYPE_CLICK`, `external_id=click:<click_paydoc_id>`) или `cancelled`. Поля: протокол, `click_trans_id` (SHOP API) / `attempt_trans_id` (Advanced), `click_paydoc_id`, `service_id`, введённый лицевой счёт, квартира (PROTECT), сумма, ссылка на запись журнала, запросы Prepare/Complete. В админке — только просмотр.
+
+- `POST /backend-payments/click/` — Advanced Shop (JSON): `action` 0 getInfo (кто владелец — фамилия и инициалы, дом, квартира, `balance`, `debt`), 1 Prepare, 2 Complete, 3 Check (`status` 0/1/2), 4 Compare (реестр подтверждённых платежей за период).
+- `POST /backend-payments/click/shop/` — SHOP API (form): `action` 0 Prepare, 1 Complete; `merchant_trans_id` = лицевой счёт. Через него идёт платёжная ссылка `my.click.uz/services/pay?...&transaction_param=<лицевой счёт>`.
+- Подпись MD5 по формулам docs.click.uz с `CLICK_SECRET_KEY`; без ключа любой подписанный запрос отклоняется (-1). Квартира ищется по `personal_account` (поле `CLICK_ACCOUNT_PARAM`, по умолчанию `account`) или по `house_num` + `apart_num`.
+- Один платёж Click зачисляется один раз: повторный Complete и новая попытка оплаченного платежа — `-4`; отрицательная ошибка от Click в Complete отменяет попытку (`-9`). Сумма — от `CLICK_MIN_AMOUNT` до `CLICK_MAX_AMOUNT`, не более двух знаков после запятой (`-2`).
+- getInfo и Compare по документации не подписаны: в продакшене `CLICK_ALLOWED_IPS` (адреса серверов Click) обязателен.
+- Каждое зачисление пишет событие журнала «Click payment received»; платёж виден на «Платежах» (канал Click).
+
 ## 7.5 `portal` (операционный слой)
 
 Модели:
@@ -352,7 +362,7 @@ Proxy-модели (`Complex`, `Building`, `BuildingSection`, `Apartment`, `Owne
 Миграции по приложениям:
 - `main_app`: `0001_initial`, `0002_apartment_accounts`, `0003_normalize_telegram_status`, `0004_owner_telegram_fields`, `0005_apartment_heating_connection`, `0006_remove_apartment_heating_connection`, `0007_building_operator`, `0008_apartment_personal_account`
 - `billing`: `0001_initial`, `0002_apartment_accounts`, `0003_boiler_rooms`, `0004_heating_record_dates`, `0005_heatingrecord_days_given`
-- `payments`: `0001_initial`, `0002_apartment_accounts`
+- `payments`: `0001_initial`, `0002_apartment_accounts`, `0003_click_transactions`
 - `properties`: `0001_initial`
 - `portal`: `0001_initial`, `0002_alter_workspaceprofile_organization_and_more`, `0003_remove_system_health`, `0004_audit_operator`, `0005_operator_alerts`
 

@@ -1358,7 +1358,8 @@ class PortalPagesAfterOperatorsReviewTests(TestCase):
             registered,
             {
                 "auth.Group", "auth.User", "billing.BoilerRoom", "main_app.Apartment", "main_app.Building",
-                "main_app.Complex", "main_app.Owner", "payments.PaymeTransaction", "portal.WorkspaceProfile",
+                "main_app.Complex", "main_app.Owner", "payments.ClickTransaction", "payments.PaymeTransaction",
+                "portal.WorkspaceProfile",
             },
         )
         page = self.client.get(reverse("admin:main_app_building_change", args=[self.building.pk]))

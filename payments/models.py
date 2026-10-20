@@ -148,3 +148,66 @@ class PaymeTransaction(models.Model):
     class Meta:
         verbose_name = _("Payme transaction")
         verbose_name_plural = _("Payme transactions")
+
+
+class ClickTransaction(models.Model):
+    """One Click payment attempt: prepared, then confirmed (money on the apartment account) or cancelled.
+
+    The money itself is the ``transaction`` ledger row, written once per Click payment
+    (``click_paydoc_id``) however many attempts Click makes.
+    """
+
+    PROTOCOL_SHOP = "shop"            # SHOP API: Prepare / Complete, form-encoded
+    PROTOCOL_ADVANCED = "advanced"    # Advanced Shop: getInfo / Prepare / Complete / Check / Compare, JSON
+    PROTOCOL_CHOICES = [
+        (PROTOCOL_SHOP, "SHOP API"),
+        (PROTOCOL_ADVANCED, "Advanced Shop"),
+    ]
+    STATE_PREPARED = "prepared"
+    STATE_CONFIRMED = "confirmed"
+    STATE_CANCELLED = "cancelled"
+    STATE_CHOICES = [
+        (STATE_PREPARED, _("Prepared")),
+        (STATE_CONFIRMED, _("Confirmed")),
+        (STATE_CANCELLED, _("Cancelled")),
+    ]
+
+    protocol = models.CharField(max_length=10, choices=PROTOCOL_CHOICES)
+    # SHOP API: click_trans_id; Advanced Shop: attempt_trans_id.
+    click_trans_id = models.BigIntegerField(verbose_name=_("Click attempt ID"))
+    click_paydoc_id = models.BigIntegerField(db_index=True, verbose_name=_("Click payment ID"))
+    service_id = models.BigIntegerField(verbose_name=_("Click service ID"))
+    account = models.CharField(max_length=64, verbose_name=_("Account entered in Click"))
+    apartment = models.ForeignKey(
+        Apartment,
+        on_delete=models.PROTECT,
+        related_name="click_transactions",
+        verbose_name=_("Apartment"),
+    )
+    amount = models.DecimalField(max_digits=14, decimal_places=2, verbose_name=_("Amount (UZS)"))
+    state = models.CharField(max_length=12, choices=STATE_CHOICES, default=STATE_PREPARED, verbose_name=_("State"))
+    transaction = models.OneToOneField(
+        Transaction,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="click_data",
+        verbose_name=_("Ledger entry"),
+    )
+    error_note = models.CharField(max_length=255, blank=True, verbose_name=_("Click error note"))
+    prepare_payload = models.JSONField(default=dict, verbose_name=_("Prepare request"))
+    complete_payload = models.JSONField(default=dict, verbose_name=_("Complete request"))
+    created_at = models.DateTimeField(auto_now_add=True)
+    confirmed_at = models.DateTimeField(null=True, blank=True)
+    cancelled_at = models.DateTimeField(null=True, blank=True)
+
+    def __str__(self):
+        return f"Click {self.click_paydoc_id} ({self.account}, {self.amount} UZS)"
+
+    class Meta:
+        verbose_name = _("Click transaction")
+        verbose_name_plural = _("Click transactions")
+        ordering = ["-created_at"]
+        constraints = [
+            models.UniqueConstraint(fields=["protocol", "click_trans_id"], name="click_transaction_attempt_unique"),
+        ]
