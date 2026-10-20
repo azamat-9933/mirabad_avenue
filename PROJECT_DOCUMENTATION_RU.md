@@ -136,6 +136,16 @@ OpenAPI-схема в репозитории не хранится: она ге�
 
 Тесты: `python manage.py test` (нужен `.env` из шага 4 либо `DEBUG=True` или `SECRET_KEY` в окружении).
 
+### 5.7 Импорт реестра абонентов
+`python manage.py import_abonents <папка> [--dry-run]` загружает дома, квартиры, лицевые счета, площади и владельцев. В папке — по одному файлу на дом, имя файла = номер дома (`60.xlsx`, `60V.xlsx`, `62.xlsx`, `64.xlsx`, `64V.xlsx`, `66.xlsx`, `66V.xlsx`), колонки `Abonent turi`, `Abonent raqami`, `F.I.O.`, `Manzil`, `Kadastr raqami`, `Umumiy maydon`.
+
+- Номер квартиры берётся из адреса (`кв. 24a` → `24A`, `137A-xonadon` → `137A`, `64-V, 12` → `12`); нежилые — `неж3` из `неж3`, `неж` если в доме одно ненумерованное, иначе `неж1`, `неж2`, ... по порядку строк.
+- Квартира ищется по лицевому счёту, затем по дому и номеру, поэтому повторный запуск обновляет данные на месте. Балансы, телефоны, Telegram и расчётные данные не меняются.
+- Любая проблема (повтор лицевого счёта, адрес без номера, нет площади) останавливает импорт целиком; `--dry-run` только проверяет файлы и печатает замечания.
+- Кадастровый номер и тип абонента не сохраняются (в моделях нет таких полей).
+
+Первичная загрузка 2026-10-20: 7 домов, 953 помещения (938 квартир и 15 нежилых), 953 владельца.
+
 ### 5.6 Аутентификация
 Портал и API закрыты: без сессии работают только `/login/`, `/admin/login/` и `/api/health/`.
 - Страницы портала (не-DRF views): `LoginRequiredMiddleware` перенаправляет на `/login/?next=...`. Чтобы открыть view публично — декоратор `@login_not_required`.
@@ -189,13 +199,19 @@ Portal page routes:
 Поля: `building(FK)`, `name`; `unique_together(building, name)`.
 
 ### `Apartment`
-Поля: `number`, `area`, `building(FK)`, `section(FK nullable)`, `balance`, `created_at`, `author`.
+Поля: `number`, `area`, `building(FK)`, `section(FK nullable)`, `personal_account`, `balance`, `created_at`, `author`.
 
-`balance` — лицевой счет квартиры. Счет принадлежит квартире, а не владельцу: начисления идут на него, даже если владельца нет, и долг остается за квартирой.
+`personal_account` — номер лицевого счёта (абонентский номер поставщика, например `1391677280`). Пустой, пока неизвестен; непустой номер уникален среди всех квартир (`apartment_personal_account_unique`). Показывается в админке (страница дома, список квартир, поиск), в карточке квартиры портала и ищется в списках жильцов и платежей.
+
+`balance` — баланс счёта квартиры. Счёт принадлежит квартире, а не владельцу: начисления идут на него, даже если владельца нет, и долг остается за квартирой.
+
+Нежилые помещения хранятся как квартиры с номером `неж`, `неж1`, `неж2`, ... (см. `import_abonents` в 5.7).
 
 ### `Owner`
 Поля: `fio`, `phone`, `apartment(OneToOne)`, `balance`, `has_contract`,
 `telegram_id`, `telegram_status`, `telegram_user`, `telegram_language`, `created_at`.
+
+`phone` необязателен: в реестре абонентов телефонов нет, и такого владельца можно сохранить в админке; бот не связывает владельца с пустым телефоном.
 
 Telegram-поля заполняет бот (13.1): `telegram_status` — `connected` (Подключён) или `not_linked` (Не подключён, по умолчанию при создании); `telegram_language` — язык бота (`uz`/`ru`/`en`).
 
@@ -334,7 +350,7 @@ Proxy-модели (`Complex`, `Building`, `BuildingSection`, `Apartment`, `Owne
 ## 8. Миграции и эволюция схемы
 
 Миграции по приложениям:
-- `main_app`: `0001_initial`, `0002_apartment_accounts`, `0003_normalize_telegram_status`, `0004_owner_telegram_fields`, `0005_apartment_heating_connection`, `0006_remove_apartment_heating_connection`, `0007_building_operator`
+- `main_app`: `0001_initial`, `0002_apartment_accounts`, `0003_normalize_telegram_status`, `0004_owner_telegram_fields`, `0005_apartment_heating_connection`, `0006_remove_apartment_heating_connection`, `0007_building_operator`, `0008_apartment_personal_account`
 - `billing`: `0001_initial`, `0002_apartment_accounts`, `0003_boiler_rooms`, `0004_heating_record_dates`, `0005_heatingrecord_days_given`
 - `payments`: `0001_initial`, `0002_apartment_accounts`
 - `properties`: `0001_initial`

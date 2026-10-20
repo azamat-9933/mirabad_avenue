@@ -75,7 +75,7 @@ class ApartmentInlineForm(forms.ModelForm):
 
     class Meta:
         model = Apartment
-        fields = ("number", "area")
+        fields = ("number", "personal_account", "area")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -91,14 +91,12 @@ class ApartmentInlineForm(forms.ModelForm):
         fio = (cleaned.get("owner_fio") or "").strip()
         phone = (cleaned.get("owner_phone") or "").strip()
         cleaned["owner_fio"], cleaned["owner_phone"] = fio, phone
-        if self.owner and not (fio and phone):
+        if self.owner and not fio:
             # Emptying the columns must not silently delete a resident with their Telegram link.
             raise forms.ValidationError("The owner can't be removed here. To remove them, open the resident's page.")
-        if fio or phone or cleaned.get("owner_has_contract"):
-            if not fio:
-                self.add_error("owner_fio", "Enter the owner's full name.")
-            if not phone:
-                self.add_error("owner_phone", "Enter the owner's phone.")
+        # The phone is optional: the abonent registry lists owners without one.
+        if (phone or cleaned.get("owner_has_contract")) and not fio:
+            self.add_error("owner_fio", "Enter the owner's full name.")
         return cleaned
 
     def save_owner(self):
@@ -129,7 +127,7 @@ class ApartmentInline(admin.TabularInline):
     """Uy ichidagi kvartiralar va ularning egalari — bitta jadvalda"""
     model = Apartment
     form = ApartmentInlineForm
-    fields = ("number", "area", "owner_fio", "owner_phone", "owner_has_contract", "account_balance")
+    fields = ("number", "personal_account", "area", "owner_fio", "owner_phone", "owner_has_contract", "account_balance")
     readonly_fields = ("account_balance",)
     show_change_link = True
     verbose_name = "Kvartira"
@@ -319,13 +317,14 @@ class ApartmentAdmin(admin.ModelAdmin):
     # Heating is not set here: it changes every month, so its dates are entered on the billing
     # period page ("Isitish sanalari").
     list_display  = (
-        "number", "building", "area",
+        "number", "building", "personal_account", "area",
         "owner_link", "balance", "created_at",
     )
     list_display_links = ("number",)
     list_filter   = ("building__complex", "building")
     search_fields = (
         "number",
+        "personal_account",
         "building__number",
         "owner__fio",
         "owner__phone",
@@ -341,8 +340,8 @@ class ApartmentAdmin(admin.ModelAdmin):
 
     def get_fields(self, request, obj=None):
         if obj:
-            return ("number", "building", "area", "balance", "created_at")
-        return ("number", "building", "area")
+            return ("number", "building", "personal_account", "area", "balance", "created_at")
+        return ("number", "building", "personal_account", "area")
 
     def save_model(self, request, obj, form, change):
         if not obj.author:
@@ -504,7 +503,7 @@ class OwnerAdmin(admin.ModelAdmin):
     )
     list_display_links = ("fio",)
     list_filter   = ("apartment__building__complex", "apartment__building", "telegram_status")
-    search_fields = ("fio", "phone", "telegram_user", "apartment__number")
+    search_fields = ("fio", "phone", "telegram_user", "apartment__number", "apartment__personal_account")
     actions = ("disconnect_telegram",)
     readonly_fields = (
         "created_at",

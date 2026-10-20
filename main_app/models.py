@@ -102,6 +102,14 @@ class Apartment(models.Model):
         related_name="apartments",
         verbose_name="Seksiya",
     )
+    # The utility's abonent number for the unit; one per apartment, empty until it is known.
+    personal_account = models.CharField(
+        max_length=20,
+        blank=True,
+        default="",
+        verbose_name="Лицевой счет",
+        help_text="Abonent raqami, masalan: 1391677280",
+    )
     # The billing account belongs to the apartment: charges are posted here even while it has
     # no owner, and an owner always sees this balance. Changed only through payments.services.
     balance = models.DecimalField(
@@ -116,9 +124,22 @@ class Apartment(models.Model):
     def __str__(self):
         return f"Kv. {self.number} ({self.building})"
 
+    def save(self, *args, **kwargs):
+        self.personal_account = (self.personal_account or "").strip()
+        super().save(*args, **kwargs)
+
     class Meta:
         verbose_name = "Apartment"
         verbose_name_plural = "Apartments"
+        constraints = [
+            # Two apartments never share an abonent number; any number of them may still lack one.
+            models.UniqueConstraint(
+                fields=["personal_account"],
+                condition=~models.Q(personal_account=""),
+                name="apartment_personal_account_unique",
+                violation_error_message="Bu лицевой счет boshqa kvartiraga berilgan.",
+            ),
+        ]
 
 
 class Owner(models.Model):
@@ -141,7 +162,8 @@ class Owner(models.Model):
     ]
 
     fio = models.CharField(max_length=255, verbose_name="FIO")
-    phone = models.CharField(max_length=20, verbose_name="Telefon")
+    # The abonent registry has no phones, so a resident may be saved without one until it is known.
+    phone = models.CharField(max_length=20, blank=True, verbose_name="Telefon")
     apartment = models.OneToOneField(
         Apartment,
         on_delete=models.CASCADE,

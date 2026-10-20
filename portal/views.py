@@ -339,10 +339,12 @@ def api_list_residents(request):
         if owner_id_digits:
             queryset = queryset.filter(id=int(owner_id_digits))
     if search_value:
-        # The fields the command search matches on the page: name, phone, apartment, house, sector.
+        # The fields the command search matches on the page: name, phone, personal account,
+        # apartment, house, sector.
         queryset = queryset.filter(
             Q(fio__icontains=search_value)
             | Q(phone__icontains=search_value)
+            | Q(apartment__personal_account__icontains=search_value)
             | Q(apartment__number__icontains=search_value)
             | Q(apartment__building__number__icontains=search_value)
             | Q(apartment__building__complex__title__icontains=search_value)
@@ -439,6 +441,7 @@ def api_list_transactions(request):
         queryset = queryset.filter(
             Q(apartment__owner__fio__icontains=search)
             | Q(apartment__owner__phone__icontains=search)
+            | Q(apartment__personal_account__icontains=search)
             | Q(description__icontains=search)
             | Q(external_id__icontains=search)
             | Q(apartment__number__icontains=search)

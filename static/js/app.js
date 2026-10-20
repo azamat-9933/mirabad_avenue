@@ -890,6 +890,7 @@
     "Infra": { ru: "Инфра", uz: "Infra" },
     "Systems": { ru: "Системы", uz: "Tizim" },
     "Area": { ru: "Площадь", uz: "Maydon" },
+    "Personal account": { ru: "Лицевой счет", uz: "Abonent raqami" },
     "Finance": { ru: "Финансы", uz: "Moliya" },
         "Actions": { ru: "Действия", uz: "Amal" },
         "House": { ru: "Дом", uz: "Uy" },
@@ -5266,6 +5267,7 @@
                     status: realApartment.status || "Paid",
                     rooms: realApartment.rooms || "Apartment",
                     area: realApartment.area || "",
+                    personalAccount: realApartment.personalAccount || "",
                     charge: realApartment.charge ? String(realApartment.charge) : "",
                     meter: realApartment.meter || "",
                     contract: realApartment.contract || "",
@@ -5463,6 +5465,7 @@
                         data-status="${attr(apartment.status)}"
                         data-unit="${attr(apartment.unit)}"
                         data-area="${attr(apartment.area)}"
+                        data-personal-account="${attr(apartment.personalAccount)}"
                         data-contract="${attr(apartment.contract)}"
                         data-payment="${attr(apartment.lastPayment)}"
                         data-owner-backend-id="${attr(apartment.ownerBackendId || "")}"
@@ -5786,6 +5789,7 @@
             set("[data-apartment-status]", data.status);
             set("[data-apartment-unit]", data.unit);
             set("[data-apartment-area]", data.area);
+            set("[data-apartment-account]", data.personalAccount || localizedEmpty());
             set("[data-apartment-phone]", data.phone || localizedEmpty());
             set("[data-apartment-contract]", contractValue || localizedEmpty());
             // Same wording as the resident list: @username, "Not found" (connected without a username),

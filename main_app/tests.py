@@ -1,10 +1,16 @@
 from decimal import Decimal
 from importlib import import_module
+from io import StringIO
+from pathlib import Path
+from tempfile import TemporaryDirectory
 
 from django.apps import apps as django_apps
 from django.contrib.auth import get_user_model
+from django.core.management import call_command
+from django.core.management.base import CommandError
 from django.test import TestCase
 from django.urls import reverse
+from openpyxl import Workbook
 
 from payments.models import Transaction
 from payments.services import apply_account_change
@@ -175,17 +181,63 @@ class BuildingApartmentOwnerInlineTests(TestCase):
         owner.refresh_from_db()
         self.assertEqual((owner.phone, owner.has_contract), ("+998935556677", True))
 
-    def test_owner_needs_both_name_and_phone(self):
+    def test_owner_phone_is_optional(self):
+        # The abonent registry lists owners without phones.
         response = self._post_house(
             reverse("admin:main_app_building_add"),
-            [{"number": "1", "area": "50", "owner_fio": "Aziz Karimov"}],
+            [{"number": "1", "personal_account": "1391677280", "area": "50", "owner_fio": "Aziz Karimov"}],
+        )
+
+        self.assertEqual(response.status_code, 302)
+        owner = Owner.objects.get()
+        self.assertEqual((owner.fio, owner.phone, owner.apartment.personal_account), ("Aziz Karimov", "", "1391677280"))
+
+    def test_owner_needs_a_name(self):
+        response = self._post_house(
+            reverse("admin:main_app_building_add"),
+            [{"number": "1", "area": "50", "owner_phone": "+998901112233"}],
         )
 
         self.assertEqual(response.status_code, 200)
         row_errors = response.context["inline_admin_formsets"][0].formset.errors[0]
-        self.assertEqual(row_errors["owner_phone"], ["Enter the owner's phone."])
+        self.assertEqual(row_errors["owner_fio"], ["Enter the owner's full name."])
         self.assertFalse(Building.objects.exists())
-        self.assertFalse(Owner.objects.exists())
+
+    def test_house_page_saves_with_owners_imported_without_phones(self):
+        building, apartment = self._house_with_apartment()
+        Owner.objects.create(fio="Aziz Karimov", phone="", apartment=apartment)
+
+        response = self._post_house(
+            reverse("admin:main_app_building_change", args=[building.pk]),
+            [self._existing_row(apartment, personal_account="1391677280", owner_fio="Aziz Karimov", owner_phone="")],
+            initial_rows=1,
+        )
+
+        self.assertEqual(response.status_code, 302)
+        apartment.refresh_from_db()
+        self.assertEqual(apartment.personal_account, "1391677280")
+
+    def test_personal_account_belongs_to_one_apartment(self):
+        building, apartment = self._house_with_apartment()
+        apartment.personal_account = " 1391677280 "
+        apartment.save()
+        self.assertEqual(Apartment.objects.get(pk=apartment.pk).personal_account, "1391677280")
+
+        response = self._post_house(
+            reverse("admin:main_app_building_change", args=[building.pk]),
+            [
+                self._existing_row(apartment, personal_account="1391677280"),
+                {"number": "2", "personal_account": "1391677280", "area": "40"},
+            ],
+            initial_rows=1,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(Apartment.objects.count(), 1)
+        # Apartments without an account do not clash with each other.
+        Apartment.objects.create(number="3", area=Decimal("40"), building=building, author="test")
+        Apartment.objects.create(number="4", area=Decimal("40"), building=building, author="test")
+        self.assertEqual(Apartment.objects.filter(personal_account="").count(), 2)
 
     def test_clearing_the_owner_columns_does_not_remove_the_owner(self):
         building, apartment = self._house_with_apartment()
@@ -277,3 +329,118 @@ class OwnerTelegramAdminTests(TestCase):
             (owner.telegram_id, owner.telegram_user, owner.telegram_language, owner.telegram_status),
             (None, None, "", Owner.TELEGRAM_NOT_CONNECTED),
         )
+
+
+class ImportAbonentsCommandTests(TestCase):
+    """manage.py import_abonents: one workbook per house, matched by personal account."""
+
+    HEADER = ["Abonent turi", "Abonent raqami", "F.I.O.", "Manzil", "Kadastr raqami", "Umumiy maydon"]
+
+    def setUp(self):
+        self.folder = Path(self.enterContext(TemporaryDirectory()))
+
+    def _workbook(self, house, rows, header=None):
+        workbook = Workbook()
+        sheet = workbook.active
+        sheet.append(header or self.HEADER)
+        sheet.append([None, None, None, None, None, 999])  # the total line under the header
+        for row in rows:
+            sheet.append(row)
+        workbook.save(self.folder / f"{house}.xlsx")
+
+    def _run(self, *args):
+        out = StringIO()
+        call_command("import_abonents", str(self.folder), *args, stdout=out)
+        return out.getvalue()
+
+    def _registry(self):
+        self._workbook("60", [
+            ["Turarjoy", "1391677280", "TO‘RAYEV LAZIZBEK", "ул. Миробод,  дом 60,  кв. 1", "10:05:1", 171.94],
+            ["Turarjoy", "1391677278", "TO‘RAYEVA MADINA", "Hamid Sulaymon MFY, Mirobod ko'chasi, 60-uy, 2-xonadon", "10:05:2", 220.81],
+            ["Noturar joy", "1391201893", "RAXIMBAYEVA LOLA", "ул. Миробод,  дом 60, неж3", "10:05:3", 296.06],
+            ["Noturar joy", "1391731291", "PARPIYEV DILMURADJON", "ул. Миробод,  дом 60, неж", "10:05:4", 963.12],
+        ])
+        self._workbook("64V", [
+            ["Noturar joy", "1383144691", "RAZAKOV MURODILLA", "ул. Миробод, 64-V, неж", "10:05:5", 341.99],
+            ["Turarjoy", "1383118502", "TASHMUXAMEDOV DAVRONBEK", "ул. Миробод, 64-V, 1", "10:11:1", 94.23],
+            ["Turarjoy", "1383533487", "SHADIBAYEV TIMUR", "Mirobod MFY, MIrobod ko'chasi, 64-V-uy, 21-xonadon", "10:11:2", 57.21],
+            ["Noturar joy", "1383316244", "OSMANOVA DIANA", "ул. Миробод, 64-V, нежелой", "10:11:3", 614.53],
+        ])
+        self._workbook("62", [
+            ["Turarjoy", "1391864577", "KAMOLOVA GULCHIROY", "ул. Миробод, дом 62, кв. 24а", "10:05:6", 126.41],
+        ])
+
+    def test_imports_houses_apartments_accounts_and_owners(self):
+        self._registry()
+
+        output = self._run()
+
+        self.assertIn("apartments_created: 9", output)
+        self.assertEqual(
+            sorted(Building.objects.values_list("number", flat=True)), ["60", "62", "64V"]
+        )
+        units = {
+            (apartment.building.number, apartment.number): (apartment.personal_account, apartment.area)
+            for apartment in Apartment.objects.select_related("building")
+        }
+        self.assertEqual(units, {
+            ("60", "1"): ("1391677280", Decimal("171.94")),
+            ("60", "2"): ("1391677278", Decimal("220.81")),
+            ("60", "неж3"): ("1391201893", Decimal("296.06")),
+            # The only non-residential unit the address does not number.
+            ("60", "неж"): ("1391731291", Decimal("963.12")),
+            # Several unnumbered ones are numbered in the order of the file.
+            ("64V", "неж1"): ("1383144691", Decimal("341.99")),
+            ("64V", "неж2"): ("1383316244", Decimal("614.53")),
+            ("64V", "1"): ("1383118502", Decimal("94.23")),
+            ("64V", "21"): ("1383533487", Decimal("57.21")),
+            ("62", "24A"): ("1391864577", Decimal("126.41")),
+        })
+        owner = Owner.objects.get(apartment__personal_account="1391677280")
+        self.assertEqual((owner.fio, owner.phone, owner.balance), ("TO‘RAYEV LAZIZBEK", "", Decimal("0")))
+        self.assertEqual(Building.objects.get(number="60").address, "ул. Миробод, дом 60")
+
+    def test_running_again_updates_in_place_and_keeps_balances(self):
+        self._registry()
+        self._run()
+        apartment = Apartment.objects.get(personal_account="1391677280")
+        apply_account_change(apartment.pk, Decimal("-50000"), Transaction.TYPE_MANUAL, description="debt")
+        Owner.objects.filter(apartment=apartment).update(phone="+998901112233")
+
+        self._workbook("60", [
+            ["Turarjoy", "1391677280", "NEW OWNER", "ул. Миробод,  дом 60,  кв. 1", "10:05:1", 172.5],
+        ])
+        output = self._run()
+
+        self.assertIn("apartments_created: 0", output)
+        self.assertEqual(Apartment.objects.count(), 9)
+        apartment.refresh_from_db()
+        owner = Owner.objects.get(apartment=apartment)
+        self.assertEqual(apartment.area, Decimal("172.50"))
+        self.assertEqual(apartment.balance, Decimal("-50000"))
+        self.assertEqual((owner.fio, owner.phone, owner.balance), ("NEW OWNER", "+998901112233", Decimal("-50000")))
+
+    def test_dry_run_writes_nothing(self):
+        self._registry()
+
+        output = self._run("--dry-run")
+
+        self.assertIn("House 60: 4 units (2 apartments, 2 non-residential), area 1651.93 m²", output)
+        self.assertFalse(Building.objects.exists())
+        self.assertFalse(Apartment.objects.exists())
+
+    def test_problems_stop_the_whole_import(self):
+        self._registry()
+        self._workbook("66", [
+            # The same account as in 60.xlsx, and an address without an apartment number.
+            ["", "1391677280", "SOMEONE", "ул. Миробод, дом 66, кв. 5", "", 50],
+            ["", "1383364304", "OTHER", "ул. Миробод, дом 66", "", 50],
+        ], header=["№", "Abonent raqami", "F.I.O.", "Manzil", "Kadastr raqami", "Umumiy maydon"])
+
+        with self.assertRaisesMessage(CommandError, "nothing was imported") as caught:
+            self._run()
+
+        message = str(caught.exception)
+        self.assertIn("personal account 1391677280 is on 60.xlsx row 3 and 66.xlsx row 3", message)
+        self.assertIn("66.xlsx row 4: no apartment number", message)
+        self.assertFalse(Apartment.objects.exists())
