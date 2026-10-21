@@ -1292,14 +1292,17 @@ class OperatorActivityLogTests(TestCase):
         self.assertEqual([(row["actor"], row["actorName"]) for row in rows], [("kassir1", "Ali Valiyev")])
         self.assertIn("100", rows[0]["message"])
 
-    def test_log_is_not_in_the_admin_so_nobody_can_edit_it(self):
+    def test_log_is_read_only_in_the_admin(self):
         self.client.force_login(self.operator)
         self._post_json("portal:api_audit_note", {"message": "test"})
         event = AuditEvent.objects.get(event_type=AuditEvent.TYPE_NOTE)
+        # Not staff: the admin sends them to its sign-in page.
+        self.assertEqual(self.client.get("/admin/portal/auditevent/").status_code, 302)
         self.client.force_login(self.head_admin)
-        self.assertEqual(self.client.get("/admin/portal/auditevent/").status_code, 404)
-        self.client.post(f"/admin/portal/auditevent/{event.id}/change/", {"title": "edited"})
-        self.client.post(f"/admin/portal/auditevent/{event.id}/delete/", {"post": "yes"})
+        self.assertContains(self.client.get("/admin/portal/auditevent/"), "Audit note")
+        edit = self.client.post(f"/admin/portal/auditevent/{event.id}/change/", {"title": "edited"})
+        delete = self.client.post(f"/admin/portal/auditevent/{event.id}/delete/", {"post": "yes"})
+        self.assertEqual((edit.status_code, delete.status_code), (403, 403))
         event.refresh_from_db()
         self.assertEqual(event.title, "Audit note")
 
@@ -1359,7 +1362,7 @@ class PortalPagesAfterOperatorsReviewTests(TestCase):
             {
                 "auth.Group", "auth.User", "main_app.Apartment", "main_app.Building",
                 "main_app.Complex", "main_app.Owner", "payments.ClickTransaction", "payments.PaymeTransaction",
-                "portal.WorkspaceProfile",
+                "payments.Transaction", "portal.AuditEvent", "portal.WorkspaceProfile",
             },
         )
         page = self.client.get(reverse("admin:main_app_building_change", args=[self.building.pk]))

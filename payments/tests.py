@@ -109,12 +109,13 @@ class BalanceLedgerTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertFalse(Transaction.objects.filter(owner_id=response.json()["ownerId"]).exists())
 
-    def test_admin_resident_form_has_no_balance_input(self):
+    def test_admin_balance_input_only_for_an_existing_resident(self):
         owner_admin = admin.site._registry[Owner]
         request = RequestFactory().get("/")
         request.user = self.user
 
-        self.assertNotIn("balance", owner_admin.get_form(request, self.owner).base_fields)
+        # Temporary balance entry (main_app.admin.post_balance_entry); a new resident takes over the account.
+        self.assertIn("balance", owner_admin.get_form(request, self.owner).base_fields)
         self.assertNotIn("balance", owner_admin.get_form(request, None).base_fields)
 
     def test_admin_new_resident_takes_over_the_apartment_account(self):

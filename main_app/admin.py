@@ -1,11 +1,19 @@
+from decimal import Decimal
+
 from django import forms
-from django.contrib import admin
+from django.contrib import admin, messages
 from django.contrib.admin.options import IS_POPUP_VAR
 from django.contrib.auth import get_user_model
+from django.db import transaction
 from django.db.models import Count, Q, Sum
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.utils.html import format_html
+
+from payments.models import Transaction
+from payments.services import OPENING_BALANCE_TAG, apply_account_change
+from portal.audit import record_event
+from portal.models import AuditEvent
 
 from .models import DEFAULT_SECTOR_NAME, Apartment, Building, Complex, Owner
 
@@ -16,6 +24,92 @@ def admin_number(value, places=0):
 
 def actor_username(request):
     return request.user.get_username() or "Admin"
+
+
+# ── Balance entry (temporary) ────────────────────────────
+# October 2026: operators type the balance each account carried over from the old books before the
+# first billing period is closed. The owner will say when to remove this. An entry never writes the
+# balance itself: the difference from the balance the operator saw goes through the ledger as an
+# opening-balance adjustment under the operator's name (not counted as money received), so a payment
+# that lands meanwhile is kept, and the Transactions and Audit events logs show who entered what.
+
+BALANCE_HELP = "Debt with a minus sign (-150000), credit without it (50000). Saved in the transactions log under your name."
+
+
+class BalanceEntryField(forms.DecimalField):
+    """The account balance as the operator saw it (kept in a hidden field) and as they typed it."""
+
+    def __init__(self, **kwargs):
+        kwargs.setdefault("label", "Balance (UZS)")
+        kwargs.setdefault("help_text", BALANCE_HELP)
+        kwargs.setdefault("widget", forms.NumberInput(attrs={"step": "0.01", "style": "width: 10em"}))
+        super().__init__(max_digits=14, decimal_places=2, required=False, show_hidden_initial=True, **kwargs)
+
+    def has_changed(self, initial, data):
+        # Left empty (or not sent) means "keep the balance".
+        return data not in (None, "") and super().has_changed(initial, data)
+
+
+def typed_balance(form, name="balance"):
+    """(shown, typed) when the operator changed the balance field of a valid form, else None."""
+    field = form.fields.get(name)
+    if not isinstance(field, BalanceEntryField) or name not in form.changed_data:
+        return None
+    typed = form.cleaned_data.get(name)
+    if typed is None:
+        return None
+    raw = field.hidden_widget().value_from_datadict(form.data, form.files, form[name].html_initial_name)
+    try:
+        shown = field.to_python(raw)
+    except forms.ValidationError:
+        shown = None
+    if shown is None:
+        shown = form.initial.get(name) or Decimal("0")
+    return Decimal(shown), typed
+
+
+def post_balance_entry(request, apartment, form, name="balance"):
+    """Post the operator's balance entry for the apartment's account; None when nothing changed."""
+    entry = typed_balance(form, name)
+    if entry is None:
+        return None
+    shown, typed = entry
+    if typed == shown:
+        return None
+    building = apartment.building
+    with transaction.atomic():
+        row = apply_account_change(
+            apartment.pk,
+            typed - shown,
+            Transaction.TYPE_MANUAL,
+            description=f"{OPENING_BALANCE_TAG} Balance entered in admin: {shown} → {typed} UZS.",
+            created_by=actor_username(request),
+        )
+        owner = row.owner
+        record_event(
+            request,
+            event_type=AuditEvent.TYPE_BALANCE,
+            title="Balance entered in admin",
+            message=(
+                f"{owner.fio if owner else 'Vacant apartment'}, house {building.number}, apartment {apartment.number}"
+                f"{f', account {apartment.personal_account}' if apartment.personal_account else ''}: "
+                f"balance {row.balance_before} → {row.balance_after} UZS."
+            ),
+            complex=building.complex,
+            building=building,
+            apartment=apartment,
+            owner=owner,
+            metadata={
+                "source": "admin_balance_entry",
+                "transaction_id": row.pk,
+                "shown": str(shown),
+                "typed": str(typed),
+                "amount": str(row.amount),
+                "balance_before": str(row.balance_before),
+                "balance_after": str(row.balance_after),
+            },
+        )
+    return row
 
 
 def get_or_create_default_complex(request):
@@ -56,7 +150,7 @@ class ApartmentInlineForm(forms.ModelForm):
 
     Filling the owner columns creates the resident (or updates the existing one), so a new house
     can be set up from one page. Owner columns left empty keep the apartment vacant; its account is
-    still billed. The balance is shown read-only: it changes only through ledger transactions.
+    still billed. A balance typed here is posted to the ledger (see post_balance_entry), never written.
     """
 
     owner_fio = forms.CharField(
@@ -72,6 +166,8 @@ class ApartmentInlineForm(forms.ModelForm):
         widget=forms.TextInput(attrs={"class": "vTextField", "placeholder": "+998"}),
     )
     owner_has_contract = forms.BooleanField(label="Has contract", required=False)
+    # Never saved as typed: the apartment is saved without it, then the entry is posted (save_formset).
+    balance = BalanceEntryField()
 
     class Meta:
         model = Apartment
@@ -80,6 +176,7 @@ class ApartmentInlineForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.is_new_apartment = self.instance._state.adding
+        self.initial.setdefault("balance", Decimal("0") if self.is_new_apartment else self.instance.balance)
         self.owner = None if self.is_new_apartment else getattr(self.instance, "owner", None)
         if self.owner:
             self.fields["owner_fio"].initial = self.owner.fio
@@ -119,16 +216,11 @@ class ApartmentInlineForm(forms.ModelForm):
             self.owner = Owner.objects.create(apartment=apartment, **values)
 
 
-def balance_text(balance):
-    return f"{admin_number(balance)} UZS"
-
-
 class ApartmentInline(admin.TabularInline):
     """Uy ichidagi kvartiralar va ularning egalari — bitta jadvalda"""
     model = Apartment
     form = ApartmentInlineForm
-    fields = ("number", "personal_account", "area", "owner_fio", "owner_phone", "owner_has_contract", "account_balance")
-    readonly_fields = ("account_balance",)
+    fields = ("number", "personal_account", "area", "owner_fio", "owner_phone", "owner_has_contract", "balance")
     show_change_link = True
     verbose_name = "Kvartira"
     verbose_name_plural = "Kvartiralar"
@@ -139,11 +231,6 @@ class ApartmentInline(admin.TabularInline):
 
     def get_queryset(self, request):
         return super().get_queryset(request).select_related("owner").order_by("pk")
-
-    @admin.display(description="Balans (so'm)")
-    def account_balance(self, obj):
-        # Read-only: the account changes only through ledger transactions (payments, billing).
-        return balance_text(obj.balance) if obj and obj.pk else "—"
 
 
 class OwnerInline(admin.TabularInline):
@@ -270,6 +357,9 @@ class BuildingAdmin(admin.ModelAdmin):
             if isinstance(instance, Apartment):
                 if not instance.author:
                     instance.author = actor
+                if instance._state.adding:
+                    # A new account starts at zero; the typed balance is posted to the ledger below.
+                    instance.balance = Decimal("0")
                 save_apartment(instance)
             else:
                 instance.save()
@@ -281,6 +371,8 @@ class BuildingAdmin(admin.ModelAdmin):
         for row in formset.forms:
             if isinstance(row, ApartmentInlineForm) and row.instance.pk and row.has_changed() and row not in deleted:
                 row.save_owner()
+                # After the owner, so the ledger entry names the resident who holds the account.
+                post_balance_entry(request, row.instance, row)
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
@@ -321,6 +413,10 @@ class ApartmentAdmin(admin.ModelAdmin):
         "owner_link", "balance", "created_at",
     )
     list_display_links = ("number",)
+    # Balances are typed right in the list (filter by house, or search by personal account or name).
+    list_editable = ("balance",)
+    list_per_page = 200
+    ordering = ("building__number", "pk")
     list_filter   = ("building__complex", "building")
     search_fields = (
         "number",
@@ -334,19 +430,26 @@ class ApartmentAdmin(admin.ModelAdmin):
     # The resident is entered right on the apartment page, as on the house page.
     inlines = [OwnerInline]
 
+    def formfield_for_dbfield(self, db_field, request, **kwargs):
+        if db_field.name == "balance":
+            return BalanceEntryField()
+        return super().formfield_for_dbfield(db_field, request, **kwargs)
+
     def get_readonly_fields(self, request, obj=None):
-        # The account balance changes only through the Transaction ledger.
-        return ("balance", "created_at") if obj else ()
+        return ("created_at",) if obj else ()
 
     def get_fields(self, request, obj=None):
         if obj:
             return ("number", "building", "personal_account", "area", "balance", "created_at")
+        # A new apartment starts at zero; its balance is entered once it exists.
         return ("number", "building", "personal_account", "area")
 
     def save_model(self, request, obj, form, change):
         if not obj.author:
             obj.author = actor_username(request)
         save_apartment(obj)
+        if change and form is not None:
+            post_balance_entry(request, obj, form)
 
     def get_queryset(self, request):
         return (
@@ -497,11 +600,14 @@ class OwnerAdmin(admin.ModelAdmin):
         "id", "fio", "phone",
         "apartment_link",
         "has_contract",
-        "balance_display",
+        "balance",
         "telegram_status",
         "created_at",
     )
     list_display_links = ("fio",)
+    # The account balance can be typed right in the list (see post_balance_entry).
+    list_editable = ("balance",)
+    list_per_page = 200
     list_filter   = ("apartment__building__complex", "apartment__building", "telegram_status")
     search_fields = ("fio", "phone", "telegram_user", "apartment__number", "apartment__personal_account")
     actions = ("disconnect_telegram",)
@@ -543,10 +649,30 @@ class OwnerAdmin(admin.ModelAdmin):
         ),
     )
 
+    def formfield_for_dbfield(self, db_field, request, **kwargs):
+        if db_field.name == "balance":
+            return BalanceEntryField()
+        return super().formfield_for_dbfield(db_field, request, **kwargs)
+
     def get_readonly_fields(self, request, obj=None):
-        # After creation the balance changes only through the Transaction ledger.
-        fields = ("created_at", "balance", "balance_display") if obj else ("created_at_note", "balance_display")
+        fields = ("created_at", "balance_display") if obj else ("created_at_note", "balance_display")
         return fields + self.TELEGRAM_FIELDS
+
+    def save_model(self, request, obj, form, change):
+        moved = change and form is not None and "apartment" in form.changed_data
+        if moved and typed_balance(form) is not None:
+            # The balance the operator saw belongs to the old apartment; enter it again on the new one.
+            self.message_user(
+                request,
+                "The balance was not changed because the apartment changed. Open the resident again to enter it.",
+                messages.WARNING,
+            )
+            super().save_model(request, obj, form, change)
+            return
+        # Owner.save copies the apartment account's balance, so the typed value is never written.
+        super().save_model(request, obj, form, change)
+        if change and form is not None:
+            post_balance_entry(request, obj.apartment, form)
 
     @admin.action(description="Disconnect Telegram")
     def disconnect_telegram(self, request, queryset):
@@ -559,8 +685,16 @@ class OwnerAdmin(admin.ModelAdmin):
         self.message_user(request, "Telegram was disconnected for the selected residents.")
 
     def get_fieldsets(self, request, obj=None):
-        # No balance input, not even when adding: the resident takes over their apartment's account,
-        # which changes only through ledger transactions (payments and adjustments in the portal).
+        # A new resident takes over their apartment's account as it is; an existing one's balance can be
+        # typed (posted to the ledger, see post_balance_entry).
+        balance_fields = ("balance", "balance_display") if obj else ("balance_display",)
+        balance_note = (
+            "Positive balance means credit. Negative balance means debt. "
+            "A new balance is saved in the transactions log under your name."
+            if obj
+            else "Positive balance means credit. Negative balance means debt. "
+            "The resident takes over the apartment's balance; it can be changed after saving."
+        )
         fieldsets = [
             (
                 "Personal data",
@@ -576,16 +710,7 @@ class OwnerAdmin(admin.ModelAdmin):
                     "description": "Use complex and building as helpers, then select the exact apartment.",
                 },
             ),
-            (
-                "Balance",
-                {
-                    "fields": ("balance_display",),
-                    "description": (
-                        "Positive balance means credit. Negative balance means debt. "
-                        "To change the balance, add a payment or adjustment in the portal (Add payment)."
-                    ),
-                },
-            ),
+            ("Balance", {"fields": balance_fields, "description": balance_note}),
             (
                 "Telegram",
                 {

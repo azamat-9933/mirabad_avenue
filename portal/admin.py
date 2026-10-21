@@ -3,7 +3,7 @@ from functools import wraps
 from django.contrib import admin
 from django.contrib.admin.actions import delete_selected as django_delete_selected
 
-from .models import WorkspaceProfile
+from .models import AuditEvent, WorkspaceProfile
 from .signals import deletion_entry, deletions_logged_by_action, record_admin_deletion
 
 
@@ -25,6 +25,55 @@ def delete_selected(modeladmin, request, queryset):
 
 
 admin.site.add_action(delete_selected, "delete_selected")
+
+
+# The operators' activity log, read-only: balance changes, payments, billing periods, exports,
+# sign-ins and admin edits — who, when, from which address.
+@admin.register(AuditEvent)
+class AuditEventAdmin(admin.ModelAdmin):
+    list_display = ("created_at", "actor", "event_type", "title", "short_message", "place", "ip_address")
+    list_filter = ("event_type", ("user", admin.RelatedOnlyFieldListFilter), "building")
+    search_fields = ("title", "message", "actor", "owner__fio", "apartment__personal_account", "apartment__number")
+    date_hierarchy = "created_at"
+    list_select_related = ("building", "apartment")
+    list_per_page = 100
+    ordering = ("-created_at", "-id")
+    fields = (
+        "created_at",
+        "actor",
+        "user",
+        "ip_address",
+        "event_type",
+        "title",
+        "message",
+        "building",
+        "apartment",
+        "owner",
+        "metadata",
+    )
+
+    def get_readonly_fields(self, request, obj=None):
+        return self.fields
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    @admin.display(description="Message")
+    def short_message(self, obj):
+        text = obj.message or ""
+        return text if len(text) <= 140 else f"{text[:139]}…"
+
+    @admin.display(description="House / apartment")
+    def place(self, obj):
+        if obj.apartment_id:
+            return f"{obj.building.number if obj.building_id else '?'} / {obj.apartment.number}"
+        return obj.building.number if obj.building_id else "—"
 
 
 @admin.register(WorkspaceProfile)

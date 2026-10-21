@@ -13,7 +13,8 @@ from django.urls import reverse
 from openpyxl import Workbook
 
 from payments.models import Transaction
-from payments.services import apply_account_change
+from payments.services import OPENING_BALANCE_TAG, apply_account_change, is_incoming_payment
+from portal.models import AuditEvent
 
 from .admin import save_apartment
 from .models import Apartment, Building, Complex, Owner
@@ -66,10 +67,8 @@ class BuildingApartmentOwnerInlineTests(TestCase):
         response = self.client.get(reverse("admin:main_app_building_add"))
 
         self.assertEqual(response.status_code, 200)
-        for name in ("number", "area", "owner_fio", "owner_phone", "owner_has_contract"):
+        for name in ("number", "area", "owner_fio", "owner_phone", "owner_has_contract", "balance"):
             self.assertContains(response, f'name="apartments-0-{name}"')
-        # The balance is shown, never typed in: it changes only through ledger transactions.
-        self.assertNotContains(response, 'name="apartments-0-opening_balance"')
 
     def test_new_house_creates_apartments_and_owners_without_touching_balances(self):
         response = self._post_house(
@@ -329,6 +328,149 @@ class OwnerTelegramAdminTests(TestCase):
             (owner.telegram_id, owner.telegram_user, owner.telegram_language, owner.telegram_status),
             (None, None, "", Owner.TELEGRAM_NOT_CONNECTED),
         )
+
+
+class AdminBalanceEntryTests(TestCase):
+    """Temporary (October 2026): operators type the balances carried over from the old books."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = get_user_model().objects.create_superuser(username="kassir1", password="unused-password")
+        cls.complex = Complex.objects.create(title="Mirabad Avenue", address="", author="test")
+        cls.building = Building.objects.create(number="64", complex=cls.complex, author="test")
+        cls.apartment = Apartment.objects.create(
+            number="1", area=Decimal("50.00"), building=cls.building, personal_account="1391677280", author="test"
+        )
+        cls.owner = Owner.objects.create(fio="Aziz Karimov", phone="", apartment=cls.apartment)
+
+    def setUp(self):
+        self.client.force_login(self.user)
+
+    def _list_entry(self, url_name, pk, typed, shown="0.00"):
+        """Save one row of an admin list with an editable balance column."""
+        return self.client.post(
+            reverse(url_name),
+            {
+                "form-TOTAL_FORMS": "1",
+                "form-INITIAL_FORMS": "1",
+                "form-MIN_NUM_FORMS": "0",
+                "form-MAX_NUM_FORMS": "1000",
+                "form-0-id": str(pk),
+                "form-0-balance": typed,
+                "initial-form-0-balance": shown,
+                "_save": "Save",
+            },
+        )
+
+    def _resident_page(self, apartment, typed, shown):
+        return self.client.post(
+            reverse("admin:main_app_owner_change", args=[self.owner.pk]),
+            {"fio": "Aziz Karimov", "phone": "", "apartment": str(apartment.pk), "balance": typed, "initial-balance": shown, "_save": "Save"},
+        )
+
+    def test_apartment_list_entry_goes_through_the_ledger_under_the_operator(self):
+        response = self._list_entry("admin:main_app_apartment_changelist", self.apartment.pk, "-150000")
+
+        self.assertEqual(response.status_code, 302)
+        self.apartment.refresh_from_db()
+        self.owner.refresh_from_db()
+        self.assertEqual((self.apartment.balance, self.owner.balance), (Decimal("-150000"), Decimal("-150000")))
+        row = Transaction.objects.get()
+        self.assertEqual(
+            (row.payment_type, row.amount, row.created_by, row.owner),
+            (Transaction.TYPE_MANUAL, Decimal("-150000"), "kassir1", self.owner),
+        )
+        # A carried-over balance, not money received.
+        self.assertIn(OPENING_BALANCE_TAG, row.description)
+        self.assertFalse(is_incoming_payment(row))
+        event = AuditEvent.objects.get(title="Balance entered in admin")
+        self.assertEqual((event.actor, event.owner, event.metadata["transaction_id"]), ("kassir1", self.owner, row.pk))
+        self.assertIn("1391677280", event.message)
+
+    def test_a_payment_that_lands_meanwhile_is_kept(self):
+        # The operator saw 0 and typed the carried-over debt; a Click payment came in before they saved.
+        apply_account_change(self.apartment.pk, Decimal("50000"), Transaction.TYPE_CLICK, external_id="click:1")
+
+        self._list_entry("admin:main_app_apartment_changelist", self.apartment.pk, "-150000", shown="0.00")
+
+        self.apartment.refresh_from_db()
+        self.assertEqual(self.apartment.balance, Decimal("-100000"))
+
+    def test_an_untouched_or_empty_balance_posts_nothing(self):
+        apply_account_change(self.apartment.pk, Decimal("-20000"), Transaction.TYPE_MANUAL)
+
+        self._list_entry("admin:main_app_apartment_changelist", self.apartment.pk, "-20000", shown="-20000.00")
+        self._list_entry("admin:main_app_apartment_changelist", self.apartment.pk, "", shown="-20000.00")
+
+        self.assertEqual(Transaction.objects.count(), 1)
+        self.assertFalse(AuditEvent.objects.filter(title="Balance entered in admin").exists())
+
+    def test_resident_list_and_page_enter_the_balance_too(self):
+        self._list_entry("admin:main_app_owner_changelist", self.owner.pk, "25000")
+        response = self._resident_page(self.apartment, "-5000", shown="25000.00")
+
+        self.assertEqual(response.status_code, 302)
+        self.apartment.refresh_from_db()
+        self.assertEqual(self.apartment.balance, Decimal("-5000"))
+        self.assertEqual([row.amount for row in Transaction.objects.order_by("id")], [Decimal("25000"), Decimal("-30000")])
+
+    def test_moving_the_resident_does_not_enter_the_old_apartments_balance(self):
+        other = Apartment.objects.create(number="2", area=Decimal("40"), building=self.building, author="test")
+
+        response = self._resident_page(other, "-5000", shown="0.00")
+
+        self.assertEqual(response.status_code, 302)
+        self.owner.refresh_from_db()
+        self.assertEqual(self.owner.apartment, other)
+        self.assertFalse(Transaction.objects.exists())
+
+    def test_house_page_enters_balances_of_existing_and_new_apartments(self):
+        response = self.client.post(
+            reverse("admin:main_app_building_change", args=[self.building.pk]),
+            {
+                "number": "64",
+                "address": "",
+                "apartments-TOTAL_FORMS": "2",
+                "apartments-INITIAL_FORMS": "1",
+                "apartments-MIN_NUM_FORMS": "0",
+                "apartments-MAX_NUM_FORMS": "1000",
+                "apartments-0-id": str(self.apartment.pk),
+                "apartments-0-building": str(self.building.pk),
+                "apartments-0-number": "1",
+                "apartments-0-personal_account": "1391677280",
+                "apartments-0-area": "50.00",
+                "apartments-0-owner_fio": "Aziz Karimov",
+                "apartments-0-balance": "-150000",
+                "initial-apartments-0-balance": "0.00",
+                "apartments-1-building": str(self.building.pk),
+                "apartments-1-number": "2",
+                "apartments-1-area": "40",
+                "apartments-1-owner_fio": "Laylo Karimova",
+                "apartments-1-balance": "30000",
+                "initial-apartments-1-balance": "0",
+                "_continue": "Save",
+            },
+        )
+
+        self.assertEqual(response.status_code, 302)
+        new = Apartment.objects.get(building=self.building, number="2")
+        self.assertEqual(Apartment.objects.get(pk=self.apartment.pk).balance, Decimal("-150000"))
+        self.assertEqual((new.balance, Owner.objects.get(apartment=new).balance), (Decimal("30000"), Decimal("30000")))
+        # Posted after the owner was created, so the entry names them.
+        self.assertEqual(Transaction.objects.get(apartment=new).owner.fio, "Laylo Karimova")
+
+    def test_logs_show_who_entered_what_and_cannot_be_edited(self):
+        self._list_entry("admin:main_app_apartment_changelist", self.apartment.pk, "-150000")
+        row = Transaction.objects.get()
+
+        ledger = self.client.get(reverse("admin:payments_transaction_changelist"), {"operator": "kassir1"})
+        for text in ("1391677280", "Aziz Karimov", "Opening balance", "-150,000", "kassir1"):
+            self.assertContains(ledger, text)
+        payments_only = self.client.get(reverse("admin:payments_transaction_changelist"), {"kind": "payments"})
+        self.assertNotContains(payments_only, "1391677280")
+        self.assertEqual(self.client.get(reverse("admin:payments_transaction_change", args=[row.pk])).status_code, 200)
+        self.assertEqual(self.client.get(reverse("admin:payments_transaction_add")).status_code, 403)
+        self.assertContains(self.client.get(reverse("admin:portal_auditevent_changelist")), "Balance entered in admin")
 
 
 class ImportAbonentsCommandTests(TestCase):

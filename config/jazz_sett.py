@@ -34,7 +34,9 @@ JAZZ_SETTINGS = {
         "main_app.Apartment",
         "main_app.Building",
         "payments",
+        "payments.Transaction",
         "portal",
+        "portal.AuditEvent",
         "auth",
     ],
 
@@ -47,10 +49,12 @@ JAZZ_SETTINGS = {
         "main_app.owner":           "fas fa-user-circle",
 
         # payments
+        "payments.transaction": "fas fa-receipt",
         "payments.paymetransaction": "fas fa-credit-card",
 
         # portal
         "portal.workspaceprofile": "fas fa-id-badge",
+        "portal.auditevent": "fas fa-history",
 
         # auth
         "auth.user":  "fas fa-user",
