@@ -11,7 +11,9 @@ from pathlib import Path
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
+from django.db import connection
 from django.test import Client, TestCase
+from django.test.utils import CaptureQueriesContext
 from django.urls import reverse
 from django.utils import timezone
 from openpyxl import load_workbook
@@ -291,6 +293,25 @@ class PortalSnapshotTests(TestCase):
         # Edits that leave no ledger or log row are seen too.
         Owner.objects.filter(pk=self.owner.pk).update(phone="+998900000000")
         self.assertNotEqual(self.client.get(url).json()["version"], after_payment)
+
+    def test_snapshot_is_reused_until_the_data_changes(self):
+        first = build_portal_data(self.user)
+        with CaptureQueriesContext(connection) as queries:
+            again = build_portal_data(self.user)
+        # Only the version, the profile and the audit rows are read again.
+        self.assertLess(len(queries), 30)
+        self.assertEqual(again["residents"], first["residents"])
+
+        apply_balance_change(self.owner.id, Decimal("1000"), Transaction.TYPE_CASH)
+        self.assertEqual(build_portal_data(self.user)["residents"][0]["balance"], 1000.0)
+
+    def test_dashboard_lists_residents_a_page_at_a_time_with_a_search(self):
+        page = self.client.get(reverse("portal:dashboard")).content.decode("utf-8")
+        self.assertIn('data-resident-paged="true"', page)
+        self.assertIn('data-resident-page-size="50"', page)
+        self.assertIn("data-resident-pager", page)
+        self.assertIn("data-resident-search", page)
+        self.assertNotIn('data-resident-fetch-all="true"', page)
 
     def test_responses_are_gzipped_when_the_client_accepts_it(self):
         response = self.client.get(reverse("portal:api_portal_data"), HTTP_ACCEPT_ENCODING="gzip")

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import re
+import threading
 from collections import defaultdict
 from datetime import datetime, timedelta
 from decimal import Decimal
@@ -990,6 +991,8 @@ def portal_data_version() -> str:
     portal shows. A few cheap queries instead of the ~90 of the snapshot.
     """
     digest = hashlib.sha1()
+    # The snapshot also depends on the day (this month's payments, "today" in the notifications).
+    digest.update(timezone.localdate().isoformat().encode())
 
     def feed(rows):
         for row in rows:
@@ -1008,11 +1011,21 @@ def portal_data_version() -> str:
     feed(PortalNotification.objects.order_by("pk").values_list("pk", "status", "pinned", "action_state"))
     feed(SystemAlert.objects.order_by("pk").values_list("pk", "status", "assigned_to", "resolved_at"))
     feed(ChecklistItem.objects.order_by("pk").values_list("pk", "done", "is_active", "title"))
-    for model in (Transaction, AuditEvent, HotWaterMeterReading):
+    for model in (Transaction, AuditEvent):
         feed([tuple(model.objects.aggregate(count=Count("pk"), last=Max("pk")).values())])
+    # Readings are edited in place: their totals change when a value is typed.
+    feed([tuple(HotWaterMeterReading.objects.aggregate(
+        count=Count("pk"), last=Max("pk"), start=Sum("start_reading"), end=Sum("end_reading")
+    ).values())])
     for model in (ChecklistNote, SupportTicket, PortalStatusOverride, WorkspaceProfile):
         feed([tuple(model.objects.aggregate(count=Count("pk"), changed=Max("updated_at")).values())])
     return digest.hexdigest()[:16]
+
+
+# The snapshot rows every operator sees, built once per data version in this process: a page or a
+# POST answered while nothing changed reuses them instead of ~90 queries.
+_shared_snapshot = {"version": None, "data": None}
+_shared_snapshot_lock = threading.Lock()
 
 
 def build_portal_data(user=None) -> dict:
@@ -1020,9 +1033,20 @@ def build_portal_data(user=None) -> dict:
 
     The source of truth is the Mirabad Avenue backend schema copied into this
     project: Complex, Building, Apartment, Owner, Invoice and Transaction.
-    No static demo rows are produced here.
+    No static demo rows are produced here. The shared rows come from the cache
+    while portal_data_version is unchanged; the user's profile and audit rows
+    are read for every request. Callers must not modify the returned rows.
     """
     data_version = portal_data_version()
+    with _shared_snapshot_lock:
+        if _shared_snapshot["version"] != data_version:
+            _shared_snapshot.update(version=data_version, data=_build_shared_portal_data(data_version))
+        shared = _shared_snapshot["data"]
+    return {**shared, "profile": _serialize_profile(user), "auditEvents": _serialize_audit_events(user)}
+
+
+def _build_shared_portal_data(data_version) -> dict:
+    """The snapshot rows that do not depend on who asks."""
     owners = list(
         Owner.objects.select_related(
             "apartment",
@@ -1089,7 +1113,6 @@ def build_portal_data(user=None) -> dict:
         "generatedAt": timezone.localtime().isoformat(),
         # Taken before the rows above were read: a change made meanwhile shows on the next poll.
         "dataVersion": data_version,
-        "profile": _serialize_profile(user),
         "adminUsers": _serialize_admin_users(),
         "operators": _serialize_operators(),
         "complexes": complex_rows,
@@ -1100,7 +1123,6 @@ def build_portal_data(user=None) -> dict:
         "balanceSummary": balance_summary(apartments_by_id, payments["months"]),
         "notifications": _serialize_notifications(),
         "systemAlerts": _serialize_system_alerts(),
-        "auditEvents": _serialize_audit_events(user),
         "checklistItems": _serialize_checklist_items(),
         "checklistNotes": _serialize_checklist_notes(),
         "supportTickets": _serialize_support_tickets(),

@@ -8308,6 +8308,17 @@ html.dark .resident-search-shell:focus-within {
     font-size: 16px !important;
 }
 
+/* Dashboard residents: the search over every page of the list, above the column headers. */
+.resident-directory-toolbar {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.resident-directory-search,
+.resident-directory-search:focus-within {
+    width: min(440px, 100%);
+}
+
 .resident-search-shell.has-value .resident-search-clear {
     opacity: 1;
     pointer-events: auto;

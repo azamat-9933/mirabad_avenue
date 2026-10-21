@@ -331,6 +331,7 @@
         "Select a resident": { ru: "Выберите абонента", uz: "Abonentni tanlang" },
         "Choose a resident on the left to prepare a real payment operation.": { ru: "Выберите абонента слева, чтобы подготовить реальную платёжную операцию.", uz: "Haqiqiy to'lov amalini tayyorlash uchun chapdan abonentni tanlang." },
         "Search by name, phone, Telegram, house, apartment or personal account...": { ru: "Поиск по имени, телефону, Telegram, дому, квартире или лицевому счёту...", uz: "Ism, telefon, Telegram, uy, kvartira yoki abonent raqami bo'yicha qidirish..." },
+        "Search by name, phone, house, apartment or personal account...": { ru: "Поиск по имени, телефону, дому, квартире или лицевому счёту...", uz: "Ism, telefon, uy, kvartira yoki abonent raqami bo'yicha qidirish..." },
         "Syncing backend data...": { ru: "Синхронизация backend-данных...", uz: "Backend ma'lumotlari sinxronlanmoqda..." },
         "Saving payment...": { ru: "Сохранение платежа...", uz: "To'lov saqlanmoqda..." },
         "Resident ID could not be resolved.": { ru: "Не удалось определить ID абонента.", uz: "Abonent ID aniqlanmadi." },
@@ -943,6 +944,7 @@
         "Search audit events...": { ru: "Поиск событий аудита...", uz: "Audit hodisalarini qidirish..." },
         "Search residents...": { ru: "Поиск жильцов...", uz: "Yashovchilarni qidirish..." },
         "Search by name, phone, Telegram, house, apartment or personal account...": { ru: "Поиск по имени, телефону, Telegram, дому, квартире или лицевому счёту...", uz: "Ism, telefon, Telegram, uy, kvartira yoki abonent raqami bo'yicha qidirish..." },
+        "Search by name, phone, house, apartment or personal account...": { ru: "Поиск по имени, телефону, дому, квартире или лицевому счёту...", uz: "Ism, telefon, uy, kvartira yoki abonent raqami bo'yicha qidirish..." },
         "Search district, house, apartment, resident...": { ru: "Поиск района, дома, квартиры, жильца...", uz: "Hudud, uy, xonadon, yashovchi..." },
         "Search residents, reports, alerts, actions...": { ru: "Поиск жителей, отчетов, уведомлений, действий...", uz: "Rezidentlar, hisobotlar, xabarlar, amallar..." },
         "Pressure drop detected, payment sync delayed...": { ru: "Падение давления, задержка синхронизации платежей...", uz: "Bosim pasaydi, to'lov sinxronizatsiyasi kechikdi..." },
@@ -3656,15 +3658,22 @@
         const residentLayout = residentsGrid?.dataset.residentLayout || "card";
         const residentExpandButton = document.querySelector("[data-resident-expand]");
         const residentFetchAll = residentsGrid?.dataset.residentFetchAll === "true";
+        // Paged: one page of cards at a time with Previous / Next; search and filters still cover every resident.
+        const residentPaged = residentsGrid?.dataset.residentPaged === "true";
+        const residentPager = residentPaged ? document.querySelector("[data-resident-pager]") : null;
         const residentPageSize = Number(residentsGrid?.dataset.residentPageSize || residentsGrid?.dataset.residentLimit || 8) || 8;
         const residentCollapsedSize = residentFetchAll ? residentPageSize : Number(residentsGrid?.dataset.residentCollapsedSize || 10) || 10;
-        let residentExpanded = residentFetchAll;
+        let residentExpanded = residentFetchAll || residentPaged;
         let residentFilterSortState = { filter: "all", direction: "" };
         const residentFilterDefaults = {
             page: "1",
             status: "all",
             ordering: "",
+            search: "",
         };
+        // The list shows one page at a time, so finding a resident goes through the server, over every page.
+        const residentSearch = document.querySelector("[data-resident-search]");
+        const residentSearchClear = document.querySelector("[data-resident-search-clear]");
         const residentLegacyFilterKeys = ["telegram", "contract", "owner_id", "name", "phone", "telegram_user", "building", "apartment"];
         const residentSortDirections = {
             id: "desc",
@@ -3776,7 +3785,7 @@
         };
         const updateResidentExpandButton = (total, shown) => {
             if (!residentExpandButton) return;
-            if (residentFetchAll) {
+            if (residentFetchAll || residentPaged) {
                 residentExpandButton.classList.add("hidden");
                 residentExpandButton.setAttribute("aria-hidden", "true");
                 return;
@@ -3784,6 +3793,38 @@
             const canExpand = !residentExpanded && Number(total || 0) > Number(shown || 0);
             residentExpandButton.classList.toggle("hidden", !canExpand);
             residentExpandButton.setAttribute("aria-hidden", canExpand ? "false" : "true");
+        };
+        const syncResidentPager = (payload) => {
+            if (!residentPager) return;
+            const pages = Math.max(1, Number(payload.pages || 1));
+            const page = Math.min(pages, Math.max(1, Number(payload.page || 1)));
+            // Filters can shrink the list below the page in the address: keep the page the server showed.
+            if (String(readListUrlState("residents", residentFilterDefaults).page || "1") !== String(page)) {
+                writeListUrlState("residents", { page });
+            }
+            residentPager.dataset.totalPages = String(pages);
+            residentPager.classList.toggle("hidden", pages <= 1);
+            const label = residentPager.querySelector("[data-page-label]");
+            if (label) {
+                // The language switcher rewrites the label from these numbers.
+                label.dataset.pageCurrent = String(page);
+                label.dataset.pageTotal = String(pages);
+                label.textContent = `Page ${page} of ${pages}`;
+            }
+            const prev = residentPager.querySelector("[data-prev-page]");
+            const next = residentPager.querySelector("[data-next-page]");
+            if (prev) prev.disabled = page <= 1;
+            if (next) next.disabled = page >= pages;
+        };
+        const goToResidentPage = async (step) => {
+            const state = readListUrlState("residents", residentFilterDefaults);
+            const pages = Number(residentPager?.dataset.totalPages || 1);
+            const page = Math.min(pages, Math.max(1, Number(state.page || 1) + step));
+            writeListUrlState("residents", { page });
+            await loadResidents();
+            // The new page starts at the top of the list, not where the old one was scrolled to.
+            const top = residentsGrid.getBoundingClientRect().top;
+            if (top < 0) residentsGrid.scrollIntoView({ block: "start", behavior: "smooth" });
         };
         const fetchResidentList = async (params, pageSize) => {
             const firstPage = await fetchServerList("/api/lists/residents/", {
@@ -3832,8 +3873,11 @@
                 page: state.page,
                 status: scopedStatus,
                 ordering: state.ordering,
+                search: state.search,
             }, effectivePageSize);
             residentsGrid.innerHTML = payload.results.map((resident) => renderResidentCardMarkup(resident, residentLayout)).join("");
+            if (residentSearch && document.activeElement !== residentSearch) residentSearch.value = state.search || "";
+            residentSearch?.closest(".resident-search-shell")?.classList.toggle("has-value", Boolean(state.search));
             residentButtons.forEach((button) => {
                 const active = (button.dataset.residentFilter || "all") === scopedStatus;
                 button.classList.toggle("is-active", active);
@@ -3844,6 +3888,7 @@
             syncResidentMetaLabels(payload.total);
             residentEmpty?.classList.toggle("hidden", payload.results.length > 0);
             updateResidentExpandButton(payload.total, payload.results.length);
+            syncResidentPager(payload);
             window.HydroFlowSyncLocale?.();
         };
         if (residentsGrid) {
@@ -3876,6 +3921,24 @@
                     playSound("soft-click");
                     toggleResidentOrdering(button.dataset.residentSort || "");
                 });
+            });
+            const searchResidents = (value) => {
+                writeListUrlState("residents", { search: String(value || "").trim(), page: 1 });
+                loadResidents();
+            };
+            residentSearch?.addEventListener("input", debounce(() => searchResidents(residentSearch.value), 300));
+            residentSearchClear?.addEventListener("click", () => {
+                if (residentSearch) residentSearch.value = "";
+                searchResidents("");
+                residentSearch?.focus();
+            });
+            residentPager?.querySelector("[data-prev-page]")?.addEventListener("click", () => {
+                playSound("soft-click");
+                goToResidentPage(-1);
+            });
+            residentPager?.querySelector("[data-next-page]")?.addEventListener("click", () => {
+                playSound("soft-click");
+                goToResidentPage(1);
             });
             residentExpandButton?.addEventListener("click", () => {
                 playSound("soft-click");

@@ -60,6 +60,15 @@
 <div class="grid grid-cols-1 gap-8">
 <div>
 <section class="resident-directory-panel bg-surface-container-lowest p-8 pt-6 rounded-xl shadow-sm border border-outline-variant/10 space-y-4">
+<div class="resident-directory-toolbar">
+<label class="resident-search-shell resident-directory-search">
+<span class="material-symbols-outlined" aria-hidden="true">search</span>
+<input aria-label="Search residents" data-resident-search data-i18n-placeholder="Search by name, phone, house, apartment or personal account..." placeholder="Search by name, phone, house, apartment or personal account..." type="search"/>
+<button aria-label="Clear resident search" class="resident-search-clear" data-resident-search-clear type="button">
+<span class="material-symbols-outlined" aria-hidden="true">close</span>
+</button>
+</label>
+</div>
 <div class="resident-column-sorts" data-resident-column-sorts>
 <button aria-label="Sort by ID" class="resident-sort-button" data-resident-sort="id" type="button">
 <span data-i18n-key="ID">ID</span>
@@ -94,7 +103,14 @@
 </div>
 </div>
 </div>
-<div class="resident-flat-list" data-resident-grid data-resident-layout="flat" data-resident-fetch-all="true" data-resident-limit="100" data-resident-page-size="100" data-resident-collapsed-size="100"></div>
+<div class="resident-flat-list" data-resident-grid data-resident-layout="flat" data-resident-paged="true" data-resident-limit="50" data-resident-page-size="50" data-resident-collapsed-size="50"></div>
+<div class="table-pagination mt-4 hidden" data-resident-pager>
+<span class="text-xs font-bold text-on-surface-variant" data-page-label>Page 1 of 1</span>
+<div class="flex gap-2">
+<button class="table-tool-button" data-prev-page data-i18n-key="Previous" type="button">Previous</button>
+<button class="table-tool-button" data-next-page data-i18n-key="Next" type="button">Next</button>
+</div>
+</div>
 <div class="mt-4 flex justify-center">
 <button class="resident-view-all-button hidden" data-resident-expand type="button">
 <span class="material-symbols-outlined" aria-hidden="true">unfold_more</span>
