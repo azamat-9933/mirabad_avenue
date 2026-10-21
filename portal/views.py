@@ -50,6 +50,7 @@ from .backend_data import (
     account_payment_totals,
     build_portal_data,
     debtors_at,
+    portal_data_version,
     hot_water_totals_by_complex,
     residential_override_maps,
     serialize_audit_event,
@@ -171,6 +172,13 @@ def api_root(request):
 @api_view(["GET"])
 def api_portal_data(request):
     return JsonResponse(safe_portal_data(request))
+
+
+@extend_schema(responses=OpenApiTypes.OBJECT)
+@api_view(["GET"])
+def api_portal_data_version(request):
+    """A short code that changes whenever /api/portal-data/ would: open pages poll this, not the snapshot."""
+    return JsonResponse({"version": portal_data_version()})
 
 
 LIST_DEFAULT_PAGE_SIZE = 25

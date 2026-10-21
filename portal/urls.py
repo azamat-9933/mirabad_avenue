@@ -28,6 +28,7 @@ urlpatterns = [
     path("api/", views.api_root, name="api_root"),
     path("api/health/", views.api_health, name="api_health"),
     path("api/portal-data/", views.api_portal_data, name="api_portal_data"),
+    path("api/portal-data/version/", views.api_portal_data_version, name="api_portal_data_version"),
     path("api/lists/residents/", views.api_list_residents, name="api_list_residents"),
     path("api/lists/transactions/", views.api_list_transactions, name="api_list_transactions"),
     path("api/lists/alerts/", views.api_list_alerts, name="api_list_alerts"),

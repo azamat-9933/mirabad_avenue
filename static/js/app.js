@@ -1128,6 +1128,7 @@
         billingData.profile =payload.profile && typeof payload.profile === "object" ? payload.profile : {};
         billingData.source = payload.source || "backend";
         billingData.generatedAt = payload.generatedAt || "";
+        billingData.dataVersion = payload.dataVersion || "";
         return true;
     };
 
@@ -6020,12 +6021,35 @@
             document.body.dataset.backendRefreshRunning = "false";
         }
     };
-    const refreshBackendDataIfActive = () => {
+    // The snapshot is large and slow to build, so the page polls a short version code and downloads
+    // the snapshot only when it changed (or at the latest every 5 minutes, as a safety net).
+    const FULL_REFRESH_EVERY_MS = 5 * 60 * 1000;
+    let lastFullRefreshAt = Date.now();
+    document.addEventListener("hydroflow:backend-refreshed", () => {
+        lastFullRefreshAt = Date.now();
+    });
+    const backendDataChanged = async () => {
+        if (Date.now() - lastFullRefreshAt >= FULL_REFRESH_EVERY_MS) return true;
+        try {
+            const response = await fetch("/api/portal-data/version/", {
+                cache: "no-store",
+                credentials: "same-origin",
+                headers: { Accept: "application/json" },
+            });
+            if (redirectToLoginIfUnauthorized(response)) return false;
+            if (!response.ok) return true;
+            const payload = await response.json().catch(() => ({}));
+            return !payload.version || payload.version !== billingData.dataVersion;
+        } catch {
+            return false;
+        }
+    };
+    const refreshBackendDataIfActive = async () => {
         if (!liveStatsEnabledForCurrentPage()) return;
         if (document.hidden) return;
         if (typeof document.hasFocus === "function" && !document.hasFocus()) return;
         if (!claimLiveStatsLock()) return;
-        refreshBackendData();
+        if (await backendDataChanged()) refreshBackendData();
     };
     if (!document.body.dataset.liveStatsTimer && liveStatsEnabledForCurrentPage()) {
         document.body.dataset.liveStatsTimer = "true";

@@ -1,0 +1,13 @@
+{
+  "name": "mirabad-billing-assets",
+  "private": true,
+  "description": "Builds static/css/tailwind.css, the portal's Tailwind utilities, from the templates and scripts.",
+  "scripts": {
+    "build:css": "tailwindcss -c tailwind.config.js -i tailwind.input.css -o ../static/css/tailwind.css --minify"
+  },
+  "devDependencies": {
+    "@tailwindcss/container-queries": "0.1.1",
+    "@tailwindcss/forms": "0.5.10",
+    "tailwindcss": "3.4.17"
+  }
+}

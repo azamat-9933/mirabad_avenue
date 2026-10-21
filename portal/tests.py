@@ -62,6 +62,7 @@ class PortalAuthenticationTests(TestCase):
         for name in [
             "portal:api_root",
             "portal:api_portal_data",
+            "portal:api_portal_data_version",
             "portal:api_list_residents",
             "portal:api_list_transactions",
             "portal:api_list_audit",
@@ -225,6 +226,29 @@ class PortalAuthenticationTests(TestCase):
         )
 
 
+class PortalAssetTests(TestCase):
+    """The page loads built CSS and only the icon glyphs it uses, not the Tailwind Play CDN."""
+
+    def test_base_template_uses_the_built_tailwind_css(self):
+        base = (Path(settings.BASE_DIR) / "templates" / "base.html").read_text(encoding="utf-8")
+        self.assertNotIn("cdn.tailwindcss.com", base)
+        self.assertIn("css/tailwind.css", base)
+        self.assertTrue((Path(settings.BASE_DIR) / "static" / "css" / "tailwind.css").is_file())
+
+    def test_every_icon_written_in_templates_and_scripts_is_in_the_icon_font(self):
+        root = Path(settings.BASE_DIR)
+        base = (root / "templates" / "base.html").read_text(encoding="utf-8")
+        names = re.search(r"icon_names=([a-z0-9_,]+)", base).group(1).split(",")
+        self.assertEqual(names, sorted(names))  # Google Fonts wants them in order
+        used = set()
+        sources = list((root / "templates").glob("**/*.html")) + list((root / "static" / "js").glob("*.js"))
+        for path in sources:
+            text = path.read_text(encoding="utf-8")
+            used.update(re.findall(r'material-symbols-outlined[^"]*"[^>]*>\s*([a-z][a-z0-9_]*)\s*<', text))
+        self.assertTrue(used)
+        self.assertEqual(sorted(used - set(names)), [])
+
+
 class PortalSnapshotTests(TestCase):
     @classmethod
     def setUpTestData(cls):
@@ -254,6 +278,19 @@ class PortalSnapshotTests(TestCase):
         self.assertIn("Иванов", raw)  # non-ASCII stays readable instead of \u-escaped
         data = json.loads(raw)
         self.assertEqual(data["residents"][0]["name"], self.owner.fio)
+
+    def test_pages_poll_a_version_that_changes_with_the_data(self):
+        url = reverse("portal:api_portal_data_version")
+        version = self.client.get(url).json()["version"]
+        self.assertEqual(self.client.get(reverse("portal:api_portal_data")).json()["dataVersion"], version)
+        self.assertEqual(self.client.get(url).json()["version"], version)  # nothing changed
+
+        apply_balance_change(self.owner.id, Decimal("1000"), Transaction.TYPE_CASH)
+        after_payment = self.client.get(url).json()["version"]
+        self.assertNotEqual(after_payment, version)
+        # Edits that leave no ledger or log row are seen too.
+        Owner.objects.filter(pk=self.owner.pk).update(phone="+998900000000")
+        self.assertNotEqual(self.client.get(url).json()["version"], after_payment)
 
     def test_responses_are_gzipped_when_the_client_accepts_it(self):
         response = self.client.get(reverse("portal:api_portal_data"), HTTP_ACCEPT_ENCODING="gzip")

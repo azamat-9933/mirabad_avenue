@@ -12,83 +12,15 @@
         window.setTimeout(() => document.documentElement.classList.remove("backend-hydrating"), 1600);
     })();
 </script>
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300..900&amp;display=swap" rel="stylesheet"/>
+{% comment %}Only the icons the portal uses (icon_names, alphabetical): about 80 KB instead of 1.1 MB. An icon
+missing here shows its name as text; portal.tests checks the icons written in templates and scripts.{% endcomment %}
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;icon_names=abc,account_balance_wallet,account_circle,ad,add,add_alert,add_card,add_notes,adjust,admin_panel_settings,analytics,anchor,animation,apartment,api,apps,arrow_back,arrow_downward,arrow_upward,article,assignment,attachment,badge,balance,block,box,bubbles,bug_report,build,calculate,calendar_month,call,cancel,capture,cards,category,chat,check,check_circle,checklist,chevron_left,chevron_right,chips,circle,class,clear,close,code,collections,colors,commit,compare,construction,content_copy,contract,conversation,cookie,create,credit_card,css,csv,dark_mode,dashboard,database,dataset,delete,description,desk,details,device_thermostat,difference,docs,domain,done,done_all,door_front,download,downloading,draft,dropdown,dry,edit,edit_note,eject,email,ent,equal,error,event,event_note,expand,expand_more,eyebrow,fact_check,feed,feedback,files,filter,filter_list,finance,fingerprint,first_page,flag,folder,folder_managed,function,functions,gas_meter,glyphs,gpp_bad,gradient,group,groups,height,help,highlight,history,home_work,host,hourglass_top,house,html,http,https,hub,image,info,input,ios_share,iso,join,keep,keep_off,key,keyboard,keyboard_arrow_down,label,lan,landscape,language,lda,light,light_mode,link,link_off,list,lists,living,location_city,lock,lock_open,login,logout,mail,manage_search,map,margin,memory,menu,merge,message,mobile,mode,money,monitoring,more,more_horiz,mouse,move,navigation,north,north_east,note,notes,notifications,notifications_active,notifications_off,numbers,opacity,output,overview,pace,package,padding,pages,paid,palette,password,pattern,payment,payment_card,payments,pending,people,percent,person,person_off,person_search,phone,photo,pill,pin,place,poll,pool,post,preview,priority,priority_high,problem,queue,radio,receipt_long,refresh,reminder,remove,repeat,reply,report,resize,restart_alt,restore,resume,router,routine,rule,save,savings,scale,schedule,schema,script,search,search_off,security,select,sell,send,serif,settings,settings_suggest,shadow,share,shield,shop,signature,skeleton,sort,source,south,south_west,speed,spellcheck,square_foot,stack,stacks,start,step,stop,storage,store,stream,style,summarize,support,support_agent,swap_vert,switch,sync,sync_alt,tab,table,table_rows,table_view,tabs,tag,target,task,task_alt,terminal,timeline,timer,title,toast,today,token,toolbar,tooltip,transform,translate,travel_explore,try,tune,unfold_more,upcoming,update,upload,uppercase,verified,verified_user,visibility,volume_off,volume_up,warning,water,water_drop,weight,width,window,work,workflow,wrap_text&amp;display=block" rel="stylesheet"/>
 <link href="{% static 'img/favicon.svg' %}" rel="icon" type="image/svg+xml"/>
 <link href="{% static 'css/app.css' %}?v=profile-payment-20261021-1" rel="stylesheet"/>
 <link href="{% static 'css/responsive.css' %}?v=abonent-registry-20261020-3" rel="stylesheet"/>
-<script id="tailwind-config">
-        tailwind.config = {
-            darkMode: "class",
-            theme: {
-                extend: {
-                    colors: {
-                        "primary-fixed": "#b7eaff",
-                        "surface-dim": "#d5dbde",
-                        "primary-container": "#005c72",
-                        "surface-tint": "#18667d",
-                        "on-tertiary-fixed": "#001356",
-                        "on-error": "#ffffff",
-                        "on-background": "#171c1f",
-                        "on-primary-fixed-variant": "#004e61",
-                        "outline-variant": "#bfc8cc",
-                        "surface-variant": "#dee3e7",
-                        "on-secondary-container": "#3a6c71",
-                        "on-secondary": "#ffffff",
-                        "inverse-primary": "#8dd0e9",
-                        "secondary-container": "#b8ecf1",
-                        "tertiary-fixed-dim": "#b8c3ff",
-                        "on-tertiary-container": "#bbc5ff",
-                        "on-primary-fixed": "#001f28",
-                        "on-primary": "#ffffff",
-                        "secondary-fixed": "#b8ecf1",
-                        "outline": "#70787d",
-                        "on-surface-variant": "#3f484c",
-                        "surface-container": "#e9eff2",
-                        "on-tertiary": "#ffffff",
-                        "tertiary": "#002da6",
-                        "on-surface": "#171c1f",
-                        "secondary": "#33666b",
-                        "primary-fixed-dim": "#8dd0e9",
-                        "surface-container-low": "#eff4f8",
-                        "surface-container-high": "#e3e9ec",
-                        "on-secondary-fixed": "#002022",
-                        "inverse-on-surface": "#ecf1f5",
-                        "surface-bright": "#f5fafe",
-                        "secondary-fixed-dim": "#9ccfd5",
-                        "inverse-surface": "#2b3134",
-                        "on-primary-container": "#8fd2ec",
-                        "primary": "#004354",
-                        "on-secondary-fixed-variant": "#184e53",
-                        "surface": "#f5fafe",
-                        "error": "#ba1a1a",
-                        "error-container": "#ffdad6",
-                        "on-error-container": "#93000a",
-                        "surface-container-lowest": "#ffffff",
-                        "on-tertiary-fixed-variant": "#0035be",
-                        "tertiary-container": "#003fde",
-                        "tertiary-fixed": "#dde1ff",
-                        "background": "#f5fafe",
-                        "surface-container-highest": "#dee3e7"
-                    },
-                    borderRadius: {
-                        DEFAULT: "0.5rem",
-                        lg: "1rem",
-                        xl: "1.25rem",
-                        full: "9999px"
-                    },
-                    fontFamily: {
-                        headline: ["Inter", "sans-serif"],
-                        body: ["Inter", "sans-serif"],
-                        label: ["Inter", "sans-serif"],
-                        inter: ["Inter", "sans-serif"]
-                    }
-                },
-            },
-        }
-    </script>
 <style>
         body { font-family: 'Inter', sans-serif; }
         .material-symbols-outlined {
@@ -99,7 +31,8 @@
             font-size: 24px;
             line-height: 1;
             letter-spacing: normal;
-            text-transform: none;
+            /* The icon font has lowercase names only: an icon inside an uppercase label must stay lowercase. */
+            text-transform: none !important;
             display: inline-flex;
             align-items: center;
             justify-content: center;
@@ -456,6 +389,9 @@
         }
     </style>
 {% block extra_head %}{% endblock %}
+{% comment %}Built from frontend/ (npm run build:css). Last in the head, where the Play CDN put its styles,
+so Tailwind utilities still win over app.css as before.{% endcomment %}
+<link href="{% static 'css/tailwind.css' %}?v=tailwind-build-20261021-1" rel="stylesheet"/>
 </head>
 <body class="{% block body_class %}bg-surface text-on-surface antialiased{% endblock %}" data-active-page="{{ active_page|default:'' }}">
 {% include "partials/sidebar.html" %}
@@ -883,7 +819,8 @@
 <script>
     window.HydroFlowBackendData = JSON.parse(document.getElementById("hydroflow-backend-data").textContent);
 </script>
-<script src="{% static 'js/app.js' %}?v=profile-payment-20261021-1"></script>
+{% if active_page == "analytics" %}<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js"></script>{% endif %}
+<script src="{% static 'js/app.js' %}?v=perf-20261021-1"></script>
 </body>
 </html>
 

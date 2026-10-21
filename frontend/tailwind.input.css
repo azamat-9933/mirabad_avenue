@@ -1,0 +1,4 @@
+/* Input of npm run build:css; the output is static/css/tailwind.css. */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;

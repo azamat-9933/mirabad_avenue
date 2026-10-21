@@ -1,12 +1,13 @@
 from __future__ import annotations
 
+import hashlib
 import re
 from collections import defaultdict
 from datetime import datetime, timedelta
 from decimal import Decimal
 
 from django.contrib.auth import get_user_model
-from django.db.models import Case, DecimalField, F, Max, Prefetch, Q, Sum, Value, When, Window
+from django.db.models import Case, Count, DecimalField, F, Max, Prefetch, Q, Sum, Value, When, Window
 from django.db.models.functions import RowNumber, TruncMonth
 from django.urls import reverse
 from django.utils import timezone
@@ -980,6 +981,40 @@ def recent_account_transactions(limit: int = RECENT_TRANSACTIONS_PER_ACCOUNT):
     )
 
 
+def portal_data_version() -> str:
+    """A short code that changes whenever build_portal_data would show something different.
+
+    The pages poll it every few seconds instead of downloading the whole snapshot, and download the
+    snapshot only when it changes. Ledger and log rows are never edited, so their count and last id
+    are enough; residents, apartments, houses and the portal's own rows are hashed by the columns the
+    portal shows. A few cheap queries instead of the ~90 of the snapshot.
+    """
+    digest = hashlib.sha1()
+
+    def feed(rows):
+        for row in rows:
+            digest.update(repr(tuple(row)).encode())
+        digest.update(b"|")
+
+    User = get_user_model()
+    feed(Owner.objects.order_by("pk").values_list(
+        "pk", "fio", "phone", "apartment_id", "has_contract", "balance",
+        "telegram_id", "telegram_user", "telegram_status", "telegram_language",
+    ))
+    feed(Apartment.objects.order_by("pk").values_list("pk", "number", "area", "personal_account", "balance", "building_id"))
+    feed(Building.objects.order_by("pk").values_list("pk", "number", "address", "operator_id", "complex_id"))
+    feed(Complex.objects.order_by("pk").values_list("pk", "title", "address"))
+    feed(User.objects.order_by("pk").values_list("pk", "username", "first_name", "last_name", "is_active", "is_staff", "is_superuser"))
+    feed(PortalNotification.objects.order_by("pk").values_list("pk", "status", "pinned", "action_state"))
+    feed(SystemAlert.objects.order_by("pk").values_list("pk", "status", "assigned_to", "resolved_at"))
+    feed(ChecklistItem.objects.order_by("pk").values_list("pk", "done", "is_active", "title"))
+    for model in (Transaction, AuditEvent, HotWaterMeterReading):
+        feed([tuple(model.objects.aggregate(count=Count("pk"), last=Max("pk")).values())])
+    for model in (ChecklistNote, SupportTicket, PortalStatusOverride, WorkspaceProfile):
+        feed([tuple(model.objects.aggregate(count=Count("pk"), changed=Max("updated_at")).values())])
+    return digest.hexdigest()[:16]
+
+
 def build_portal_data(user=None) -> dict:
     """Return the exact data shape consumed by the current HydroFlow UI.
 
@@ -987,6 +1022,7 @@ def build_portal_data(user=None) -> dict:
     project: Complex, Building, Apartment, Owner, Invoice and Transaction.
     No static demo rows are produced here.
     """
+    data_version = portal_data_version()
     owners = list(
         Owner.objects.select_related(
             "apartment",
@@ -1051,6 +1087,8 @@ def build_portal_data(user=None) -> dict:
     return {
         "source": "mirabad_avenue_backend",
         "generatedAt": timezone.localtime().isoformat(),
+        # Taken before the rows above were read: a change made meanwhile shows on the next poll.
+        "dataVersion": data_version,
         "profile": _serialize_profile(user),
         "adminUsers": _serialize_admin_users(),
         "operators": _serialize_operators(),
