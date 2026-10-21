@@ -229,7 +229,7 @@ class PortalAuthenticationTests(TestCase):
 
 
 class PortalAssetTests(TestCase):
-    """The page loads built CSS and only the icon glyphs it uses, not the Tailwind Play CDN."""
+    """The page loads built CSS, fonts from our own server and only the icon glyphs it uses."""
 
     def test_base_template_uses_the_built_tailwind_css(self):
         base = (Path(settings.BASE_DIR) / "templates" / "base.html").read_text(encoding="utf-8")
@@ -237,11 +237,23 @@ class PortalAssetTests(TestCase):
         self.assertIn("css/tailwind.css", base)
         self.assertTrue((Path(settings.BASE_DIR) / "static" / "css" / "tailwind.css").is_file())
 
+    def test_pages_load_fonts_from_our_server(self):
+        root = Path(settings.BASE_DIR)
+        for template in ("base.html", "portal/login.html"):
+            text = (root / "templates" / template).read_text(encoding="utf-8")
+            self.assertNotIn("fonts.googleapis.com", text)
+            self.assertIn("css/fonts.css", text)
+        fonts_css = (root / "static" / "css" / "fonts.css").read_text(encoding="utf-8")
+        files = re.findall(r"url\(\.\./fonts/([\w.-]+)\?v=[0-9a-f]+\)", fonts_css)
+        self.assertIn("material-symbols-outlined.woff2", files)
+        self.assertNotIn("https://", fonts_css)
+        for name in files:
+            self.assertTrue((root / "static" / "fonts" / name).is_file(), name)
+
     def test_every_icon_written_in_templates_and_scripts_is_in_the_icon_font(self):
         root = Path(settings.BASE_DIR)
-        base = (root / "templates" / "base.html").read_text(encoding="utf-8")
-        names = re.search(r"icon_names=([a-z0-9_,]+)", base).group(1).split(",")
-        self.assertEqual(names, sorted(names))  # Google Fonts wants them in order
+        # frontend/fonts.mjs builds the icon font from this list.
+        names = (root / "frontend" / "material-symbols-icons.txt").read_text(encoding="utf-8").split()
         used = set()
         sources = list((root / "templates").glob("**/*.html")) + list((root / "static" / "js").glob("*.js"))
         for path in sources:
@@ -325,6 +337,53 @@ class PortalSnapshotTests(TestCase):
         row = response.json()["results"][0]
         self.assertEqual(row["units"], 1)
         self.assertEqual(row["baselineCollected"], 1000.0)
+
+    def test_snapshot_apartments_are_rebuilt_from_the_resident_rows(self):
+        """The snapshot sends [id, status] per apartment; this mirrors app.js expandApartmentRows."""
+        Apartment.objects.create(number="2", area=Decimal("40.00"), building=self.owner.apartment.building, author="test")
+        apply_balance_change(self.owner.id, Decimal("-500"), Transaction.TYPE_CASH)
+        snapshot = build_portal_data(self.user)
+        residents = {row["apartmentBackendId"]: row for row in snapshot["residents"]}
+        pairs = snapshot["complexes"][0]["buildingItems"][0]["apartments"]
+        full_rows = self.client.get(reverse("portal:api_list_complexes")).json()["results"][0]["buildingItems"][0]["apartments"]
+
+        rebuilt = []
+        for apartment_id, status in pairs:
+            resident = residents[apartment_id]
+            occupied = resident["ownerBackendId"] is not None
+            rebuilt.append({
+                "id": resident["id"],
+                "backendId": apartment_id,
+                "apartmentBackendId": apartment_id,
+                "ownerBackendId": resident["ownerBackendId"],
+                "complexId": resident["complexId"],
+                "complexBackendId": resident["complexBackendId"],
+                "buildingId": resident["buildingId"],
+                "buildingBackendId": resident["buildingBackendId"],
+                "unit": resident["apartmentNumber"],
+                "personalAccount": resident["personalAccount"],
+                "owner": {
+                    "name": resident["name"],
+                    "phone": resident["phone"],
+                    "email": "",
+                    "photo": "",
+                    "telegramUser": resident["telegramUser"],
+                    "telegramConnected": resident["telegramConnected"],
+                },
+                "balance": resident["balance"],
+                "status": status,
+                "rooms": "Apartment",
+                "area": resident["area"],
+                "charge": "",
+                "contract": resident["contract"],
+                "visit": "",
+                "lastPayment": resident["lastPayment"],
+                "occupancy": "Resident" if occupied else "Vacant",
+                "isOccupied": occupied,
+            })
+        self.assertEqual(rebuilt, full_rows)
+        self.assertEqual([row["status"] for row in rebuilt], ["Overdue", "Paid"])
+        self.assertEqual([row["occupancy"] for row in rebuilt], ["Resident", "Vacant"])
 
     def test_transaction_rows_keep_their_labels(self):
         flavours = [
@@ -563,11 +622,14 @@ class PortalDebtReportTests(TestCase):
         Owner.objects.filter(pk=self.payer.pk).update(
             telegram_status=Owner.TELEGRAM_CONNECTED, telegram_id="77", telegram_user="azamat_y"
         )
-        building = next(
-            item for item in build_portal_data(self.user)["complexes"][0]["buildingItems"] if item["number"] == "64A"
+        data = build_portal_data(self.user)
+        building = next(item for item in data["complexes"][0]["buildingItems"] if item["number"] == "64A")
+        # The house lists [id, status] pairs; app.js takes the window's owner from each apartment's resident row.
+        apartment_ids = {apartment_id for apartment_id, _status in building["apartments"]}
+        resident = next(
+            row for row in data["residents"] if row["apartmentBackendId"] in apartment_ids and row["apartmentNumber"] == "1"
         )
-        owner = next(item["owner"] for item in building["apartments"] if item["unit"] == "1")
-        self.assertEqual((owner["telegramUser"], owner["telegramConnected"]), ("azamat_y", True))
+        self.assertEqual((resident["telegramUser"], resident["telegramConnected"]), ("azamat_y", True))
 
     def test_houses_page_has_no_recent_alerts_panel(self):
         content = self.client.get(reverse("portal:residential")).content.decode()

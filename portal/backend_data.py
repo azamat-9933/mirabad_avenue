@@ -320,25 +320,16 @@ def serialize_resident(apartment, owner, last_payment_at=None) -> dict:
         "apartmentNumber": apartment.number,
         "personalAccount": apartment.personal_account,
         "building": str(building.number),
-        "buildingNumber": building.number,
         "complex": complex_obj.title,
-        "complexAddress": complex_obj.address or "",
         "phone": (owner.phone or "") if owner else "",
         "lastPayment": _date(last_payment_at),
-        "lastPaymentAt": _datetime(last_payment_at),
         "balance": balance,
         "status": "debtor" if balance < 0 else "paid",
-        "photo": "",
         "area": f"{apartment.area:g} m²",
-        "rooms": "Apartment",
-        "charge": "",
         "contract": "True" if has_contract else "False",
         "hasContract": has_contract,
-        "contractStatus": "True" if has_contract else "False",
-        "email": "",
         "telegramStatus": telegram_status,
         "telegramUser": str(owner.telegram_user or "").strip() if owner else "",
-        "telegramId": str(owner.telegram_id or "").strip() if owner else "",
         "telegramConnected": telegram_connected,
         "createdAt": _datetime(owner.created_at if owner else apartment.created_at),
     }
@@ -576,8 +567,6 @@ def serialize_complex(complex_obj, owner_for, payment_totals_for, override_maps,
             "risk": building_risk,
             "health": _health_from_split(building_debtors, building_paid),
             "tone": _residential_status_to_tone(building_risk),
-            "floors": "",
-            "entrance": "",
         })
 
     risk = _risk_from_split(debtor_count, paid_count, debt_total)
@@ -607,6 +596,18 @@ def serialize_complex(complex_obj, owner_for, payment_totals_for, override_maps,
         "buildingItems": building_rows,
     }
     return complex_row, resident_rows
+
+
+def snapshot_apartment_refs(complex_row) -> None:
+    """In the snapshot a house lists its apartments as ``[apartmentBackendId, status]`` pairs.
+
+    Every other field of an apartment row repeats the apartment's resident row, which made up a third
+    of the snapshot; app.js (expandApartmentRows) rebuilds the rows from the residents, so a field
+    added to apartment rows in serialize_complex must be added there too. /api/lists/complexes/
+    keeps the full rows.
+    """
+    for building in complex_row["buildingItems"]:
+        building["apartments"] = [[row["backendId"], row["status"]] for row in building["apartments"]]
 
 
 def hot_water_totals_by_complex() -> dict[int, float]:
@@ -1087,6 +1088,7 @@ def _build_shared_portal_data(data_version) -> dict:
             override_maps=override_maps,
             hot_water_by_complex=hot_water_by_complex,
         )
+        snapshot_apartment_refs(complex_row)
         complex_rows.append(complex_row)
         resident_rows.extend(complex_residents)
 

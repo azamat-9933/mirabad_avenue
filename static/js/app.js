@@ -1110,10 +1110,56 @@
         profile: {},
     };
 
+    // The snapshot lists a house's apartments as [apartmentBackendId, status] pairs: the rest of an
+    // apartment row repeats its resident row (portal/backend_data.py, snapshot_apartment_refs).
+    const expandApartmentRows = (complexes, residents) => {
+        const residentByApartment = new Map(residents.map((resident) => [resident.apartmentBackendId, resident]));
+        complexes.forEach((complex) => (complex.buildingItems || []).forEach((building) => {
+            building.apartments = (building.apartments || []).map((entry) => {
+                if (!Array.isArray(entry)) return entry;
+                const [apartmentId, status] = entry;
+                const resident = residentByApartment.get(apartmentId);
+                if (!resident) return null;
+                const occupied = resident.ownerBackendId !== null && resident.ownerBackendId !== undefined;
+                return {
+                    id: resident.id,
+                    backendId: apartmentId,
+                    apartmentBackendId: apartmentId,
+                    ownerBackendId: resident.ownerBackendId,
+                    complexId: resident.complexId,
+                    complexBackendId: resident.complexBackendId,
+                    buildingId: resident.buildingId,
+                    buildingBackendId: resident.buildingBackendId,
+                    unit: resident.apartmentNumber,
+                    personalAccount: resident.personalAccount,
+                    owner: {
+                        name: resident.name,
+                        phone: resident.phone,
+                        email: "",
+                        photo: "",
+                        telegramUser: resident.telegramUser,
+                        telegramConnected: resident.telegramConnected,
+                    },
+                    balance: resident.balance,
+                    status,
+                    rooms: "Apartment",
+                    area: resident.area,
+                    charge: "",
+                    contract: resident.contract,
+                    visit: "",
+                    lastPayment: resident.lastPayment,
+                    occupancy: occupied ? "Resident" : "Vacant",
+                    isOccupied: occupied,
+                };
+            }).filter(Boolean);
+        }));
+    };
+
     const applyBackendBillingData = (payload) => {
         if (!payload || !Array.isArray(payload.complexes) || !Array.isArray(payload.residents) || !Array.isArray(payload.transactions)) {
             return false;
         }
+        expandApartmentRows(payload.complexes, payload.residents);
         billingData.complexes.splice(0, billingData.complexes.length, ...payload.complexes);
         billingData.residents.splice(0, billingData.residents.length, ...payload.residents);
         billingData.transactions.splice(0, billingData.transactions.length, ...payload.transactions);

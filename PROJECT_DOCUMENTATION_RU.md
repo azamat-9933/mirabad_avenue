@@ -33,8 +33,9 @@
 - Tailwind 3.4.17: готовый файл `static/css/tailwind.css`, собранный из `frontend/` (см. 12.4); Play CDN, который
   собирал CSS в каждом браузере при каждой загрузке, больше не используется
 - Chart.js 4.5.1 через CDN, только на странице «Статистика»
-- Шрифт Inter (один variable-файл `wght@300..900`) и иконки Material Symbols через Google Fonts — только
-  используемые иконки (`icon_names`, ≈80 КБ вместо 1.1 МБ)
+- Шрифт Inter (variable `wght@300..900`) и иконки Material Symbols — с нашего сервера (`static/fonts/`,
+  `static/css/fonts.css`, собираются `frontend/fonts.mjs` из Google Fonts), в иконочном шрифте только
+  используемые иконки (≈80 КБ вместо 1.1 МБ), см. 12.4
 - Кастомный `static/js/app.js`, `static/css/app.css` и адаптивный слой `static/css/responsive.css`
 - Кастомный admin JS/CSS (`admin_custom.js`, `admin_custom.css`)
 
@@ -486,8 +487,15 @@ Top-level ключи snapshot (`GET /api/portal-data/`):
 Полную историю счета (окно истории жильца, экспорт транзакций) frontend и экспорт берут из `/api/lists/transactions/` и из БД.
 
 Ключевые схемы строк:
-- resident row: идентификаторы backend/slugs, контакты, баланс, telegram, contract.
-- complex row: здания, юниты, риск, debt, collected, объем ГВС (`waterM3`).
+- resident row: идентификаторы backend/slugs, контакты, баланс, telegram, contract. Поля, которые никто не
+  читал (`photo`, `email`, `charge`, `rooms`, `contractStatus`, `complexAddress`, `buildingNumber`,
+  `lastPaymentAt`, `telegramId`), убраны 2026-10-21.
+- complex row: здания (`buildingItems`), юниты, риск, debt, collected, объем ГВС (`waterM3`). В snapshot дом
+  перечисляет квартиры парами `[apartmentBackendId, status]` (`snapshot_apartment_refs`): остальные поля
+  строки квартиры повторяют строку жильца, и `app.js` (`expandApartmentRows` в `applyBackendBillingData`)
+  собирает строки из `residents`. Новое поле строки квартиры в `serialize_complex` нужно добавить и туда;
+  тест `test_snapshot_apartments_are_rebuilt_from_the_resident_rows` сверяет сборку с полными строками
+  `/api/lists/complexes/` (там квартиры по-прежнему полные).
 - transaction row: signed amount, payment type/method, before/after balances.
 
 Источник данных для snapshot: `portal/backend_data.py` (`build_portal_data`).
@@ -529,6 +537,10 @@ Snapshot встраивается в каждую страницу и возвр
 `telegram_bot.notifications`, а тот — aiogram, импорт которого на сервере занимает ≈4.4 с (pydantic строит
 схемы ≈600 типов). Раньше это ожидание доставалось первому запросу к каждому из 3 worker'ов после перезапуска
 (страница входа отвечала за ≈5 с); теперь оно проходит при старте, до первого запроса.
+
+Размер snapshot (2026-10-21, 953 квартиры): 1.38 МБ → 0.69 МБ, по сети (gzip) 93 → 55 КБ. Треть занимали
+квартиры внутри домов, повторявшие строки жильцов (теперь пары `[id, status]`), ещё ≈190 КБ — поля жильцов,
+которые никто не читал.
 
 Оставшееся ограничение: snapshot по-прежнему растет с числом квартир (строки жильцов и вложенные квартиры комплексов).
 
@@ -675,11 +687,20 @@ API пути, используемые frontend:
   После изменения классов: `cd frontend && npm install && npm run build:css` и закоммитить `static/css/tailwind.css`
   (Node на сервере не нужен). Файл подключается последним в `<head>` (после `extra_head`), как раньше стили
   Play CDN, поэтому утилиты по-прежнему перекрывают `app.css`.
-- Иконки: в `templates/base.html` в ссылке Material Symbols перечислены нужные иконки (`icon_names`, по алфавиту).
-  Новая иконка, которой нет в списке, показывается текстом её имени — добавьте имя в список;
+- Шрифты (2026-10-21) отдаёт наш сервер: `static/css/fonts.css` и `static/fonts/*.woff2` (Inter по алфавитам —
+  браузер качает только нужные, latin и cyrillic; иконки — один файл ≈80 КБ). Раньше страница ходила ещё на
+  два сервера Google (`fonts.googleapis.com`, `fonts.gstatic.com`). Оба файла собирает
+  `cd frontend && npm run build:fonts` (`frontend/fonts.mjs` скачивает их из Google Fonts; адреса шрифтов в
+  `fonts.css` содержат хеш содержимого `?v=`), затем — новый `?v=` у `fonts.css` в `base.html` и `login.html`.
+- Иконки: нужные перечислены в `frontend/material-symbols-icons.txt` (по одной в строке). Новая иконка, которой
+  нет в списке, показывается текстом её имени — добавьте имя и пересоберите `npm run build:fonts`;
   `portal.tests.PortalAssetTests` проверяет иконки, записанные в шаблонах и скриптах. Иконкам задано
   `text-transform: none !important`: в урезанном шрифте лигатуры только строчные, а иконка внутри метки с
   `uppercase` иначе превращалась в буквы.
+- Кэш статики на сервере: nginx отдаёт `/static/…?v=…` с кэшем на 1 год, без `?v=` — на 7 дней (`map $arg_v`
+  в `/etc/nginx/conf.d/mirabad-static-cache.conf`, `expires $mirabad_static_expires` в `location /static/`).
+  Поэтому после любого изменения CSS/JS/шрифта обязательно меняйте `?v=` в шаблоне: со старым `?v=` браузер
+  будет год брать файл из своего кэша.
 
 ---
 
@@ -734,7 +755,7 @@ Admin минимален: в нём только то, чем портал не 
 
 ## 14. Тесты и качество
 
-Запуск: `python manage.py test` — 231 тестов (нужен `.env` или `DEBUG=True`, см. 5.5).
+Запуск: `python manage.py test` — 233 тестов (нужен `.env` или `DEBUG=True`, см. 5.5).
 
 Наличие тестов:
 - `billing/tests.py` (34) — core биллинга: расчеты, `close_period`, `recalculate`, проводки в журнал, начисления пустой квартире и переход ее долга к новому владельцу.
