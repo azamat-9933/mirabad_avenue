@@ -365,7 +365,15 @@ class AdminBalanceEntryTests(TestCase):
     def _resident_page(self, apartment, typed, shown):
         return self.client.post(
             reverse("admin:main_app_owner_change", args=[self.owner.pk]),
-            {"fio": "Aziz Karimov", "phone": "", "apartment": str(apartment.pk), "balance": typed, "initial-balance": shown, "_save": "Save"},
+            {
+                "fio": "Aziz Karimov",
+                "phone": "",
+                "apartment": str(apartment.pk),
+                "telegram_status": Owner.TELEGRAM_NOT_CONNECTED,
+                "balance": typed,
+                "initial-balance": shown,
+                "_save": "Save",
+            },
         )
 
     def test_apartment_list_entry_goes_through_the_ledger_under_the_operator(self):
@@ -471,6 +479,77 @@ class AdminBalanceEntryTests(TestCase):
         self.assertEqual(self.client.get(reverse("admin:payments_transaction_change", args=[row.pk])).status_code, 200)
         self.assertEqual(self.client.get(reverse("admin:payments_transaction_add")).status_code, 403)
         self.assertContains(self.client.get(reverse("admin:portal_auditevent_changelist")), "Balance entered in admin")
+
+
+class OwnerTelegramEditTests(TestCase):
+    """The resident page: an operator corrects the Telegram link or removes it."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = get_user_model().objects.create_superuser(username="owner-admin", password="unused-password")
+        complex_obj = Complex.objects.create(title="Mirabad Avenue", address="", author="test")
+        building = Building.objects.create(number="64", complex=complex_obj, author="test")
+        cls.apartment = Apartment.objects.create(number="1", area=Decimal("40"), building=building, author="test")
+
+    def setUp(self):
+        self.client.force_login(self.user)
+        self.owner = Owner.objects.create(
+            fio="Aziz Karimov",
+            phone="",
+            apartment=self.apartment,
+            telegram_id="555",
+            telegram_user="aziz_k",
+            telegram_status=Owner.TELEGRAM_CONNECTED,
+            telegram_language="ru",
+        )
+
+    def _save(self, **telegram):
+        data = {
+            "fio": "Aziz Karimov",
+            "phone": "",
+            "apartment": str(self.apartment.pk),
+            "telegram_status": Owner.TELEGRAM_CONNECTED,
+            "telegram_id": "555",
+            "telegram_user": "aziz_k",
+            "telegram_language": "ru",
+            "_save": "Save",
+        }
+        data.update(telegram)
+        return self.client.post(reverse("admin:main_app_owner_change", args=[self.owner.pk]), data)
+
+    def _telegram(self):
+        self.owner.refresh_from_db()
+        return (self.owner.telegram_status, self.owner.telegram_id, self.owner.telegram_user, self.owner.telegram_language)
+
+    def test_the_resident_page_shows_editable_telegram_fields(self):
+        page = self.client.get(reverse("admin:main_app_owner_change", args=[self.owner.pk]))
+
+        for name in ("telegram_status", "telegram_id", "telegram_user", "telegram_language"):
+            self.assertContains(page, f'name="{name}"')
+
+    def test_not_connected_status_removes_the_link(self):
+        response = self._save(telegram_status=Owner.TELEGRAM_NOT_CONNECTED)
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(self._telegram(), (Owner.TELEGRAM_NOT_CONNECTED, None, None, ""))
+
+    def test_clearing_the_telegram_id_removes_the_link(self):
+        self._save(telegram_id="")
+
+        self.assertEqual(self._telegram(), (Owner.TELEGRAM_NOT_CONNECTED, None, None, ""))
+
+    def test_the_link_can_be_corrected(self):
+        response = self._save(telegram_id=" 777 ", telegram_user="@aziz_new", telegram_language="uz")
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(self._telegram(), (Owner.TELEGRAM_CONNECTED, "777", "aziz_new", "uz"))
+
+    def test_a_telegram_id_is_digits_only(self):
+        response = self._save(telegram_id="aziz")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Telegram ID is a number (digits only).")
+        self.assertEqual(self._telegram(), (Owner.TELEGRAM_CONNECTED, "555", "aziz_k", "ru"))
 
 
 class ImportAbonentsCommandTests(TestCase):

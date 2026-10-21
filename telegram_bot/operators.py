@@ -16,7 +16,7 @@ from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.utils import timezone
 
-from portal.models import AuditEvent, PortalNotification, WorkspaceProfile
+from portal.models import PortalNotification, WorkspaceProfile
 
 LINK_PREFIX = "op_"
 LINK_TOKEN_LIFETIME = timedelta(days=1)
@@ -127,14 +127,6 @@ def link_operator(token, chat_id, username) -> LinkResult:
         profile.telegram_link_requested_at = None
         profile.save()
         user = profile.user
-        AuditEvent.objects.create(
-            user=user,
-            actor=user.get_username(),
-            event_type=AuditEvent.TYPE_SYSTEM,
-            title="Operator Telegram connected",
-            message=f"{display_name(user)} connected Telegram{f' (@{profile.telegram_username})' if profile.telegram_username else ''}.",
-            metadata={"source": "telegram_bot", "chatId": chat_id},
-        )
     return LinkResult(linked=True, language=profile.telegram_language, name=display_name(user))
 
 

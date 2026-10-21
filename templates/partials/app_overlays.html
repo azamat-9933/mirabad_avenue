@@ -225,7 +225,7 @@
 <div class="px-6 py-5 border-b border-surface-container flex items-center justify-between">
 <div>
 <h2 class="text-lg font-black text-on-surface" id="audit-title" data-i18n-key="Audit log">Audit log</h2>
-<p class="text-xs text-on-surface-variant mt-1" data-i18n-key="Who did what: every operator action in the portal and Django admin, sign-ins included.">Who did what: every operator action in the portal and Django admin, sign-ins included.</p>
+<p class="text-xs text-on-surface-variant mt-1" data-i18n-key="Who did what: payments, balance changes, billing periods and Telegram links.">Who did what: payments, balance changes, billing periods and Telegram links.</p>
 </div>
 <button aria-label="Close audit log" class="p-2 rounded-lg hover:bg-surface-container transition-colors" data-close-overlay type="button">
 <span class="material-symbols-outlined">close</span>
@@ -250,16 +250,14 @@
 </label>
 <div class="audit-filter-row" data-audit-filters>
 <button class="is-active" data-audit-filter="all" data-i18n-key="All" type="button">All</button>
-<button data-audit-filter="export" data-i18n-key="Export" type="button">Export</button>
-<button data-audit-filter="reminder" data-i18n-key="Reminder" type="button">Reminder</button>
-<button data-audit-filter="alert" data-i18n-key="Alert" type="button">Alert</button>
-<button data-audit-filter="balance" data-i18n-key="Balance" type="button">Balance</button>
-<button data-audit-filter="billing" data-i18n-key="Billing" type="button">Billing</button>
-<button data-audit-filter="admin" data-i18n-key="Admin change" type="button">Admin change</button>
-<button data-audit-filter="auth" data-i18n-key="Sign-in" type="button">Sign-in</button>
+<button data-audit-filter="online_payment" data-i18n-key="Payment: Click / Payme" type="button">Payment: Click / Payme</button>
+<button data-audit-filter="operator_payment" data-i18n-key="Payment: operator" type="button">Payment: operator</button>
+<button data-audit-filter="balance" data-i18n-key="Balance change" type="button">Balance change</button>
+<button data-audit-filter="period_edit" data-i18n-key="Billing period: edited" type="button">Billing period: edited</button>
+<button data-audit-filter="period_status" data-i18n-key="Billing period: closed / opened" type="button">Billing period: closed / opened</button>
+<button data-audit-filter="telegram" data-i18n-key="Telegram connected" type="button">Telegram connected</button>
 </div>
 <div class="audit-action-row">
-<button data-audit-action="add-note" type="button"><span class="material-symbols-outlined">note_add</span><span data-i18n-key="Add audit note">Add audit note</span></button>
 <button data-audit-action="copy-latest" type="button"><span class="material-symbols-outlined">content_copy</span><span data-i18n-key="Copy latest">Copy latest</span></button>
 <button data-audit-action="export" type="button"><span class="material-symbols-outlined">download</span><span data-i18n-key="Export log">Export log</span></button>
 </div>

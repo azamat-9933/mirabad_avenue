@@ -97,13 +97,6 @@ def link_by_phone(*, telegram_id, username, phone, full_name, language) -> list[
     key = phone_key(phone)
     matched = [owner.pk for owner in Owner.objects.only("id", "phone") if key and phone_key(owner.phone) == key]
     if not matched:
-        AuditEvent.objects.create(
-            event_type=AuditEvent.TYPE_STATUS,
-            title="Telegram registration: phone not found",
-            message=f"{full_name} tried to register in the Telegram bot with {phone}; no resident has this phone.",
-            actor=BOT_ACTOR,
-            metadata={"telegram_id": str(telegram_id), "telegram_user": username or ""},
-        )
         return []
 
     with transaction.atomic():
@@ -116,7 +109,7 @@ def link_by_phone(*, telegram_id, username, phone, full_name, language) -> list[
         owners = list(_owners_with_accounts(Owner.objects.filter(pk__in=matched)))
         for owner in owners:
             AuditEvent.objects.create(
-                event_type=AuditEvent.TYPE_STATUS,
+                event_type=AuditEvent.TYPE_TELEGRAM,
                 title="Telegram connected",
                 message=f"{owner.fio} connected Telegram (registered in the bot as {full_name}, {phone}).",
                 actor=BOT_ACTOR,
@@ -220,7 +213,7 @@ def link_by_account(*, telegram_id, username, apartment_id, language) -> tuple[s
         owner.save(update_fields=["telegram_id", "telegram_user", "telegram_status", "telegram_language"])
         apartment = owner.apartment
         AuditEvent.objects.create(
-            event_type=AuditEvent.TYPE_STATUS,
+            event_type=AuditEvent.TYPE_TELEGRAM,
             title="Telegram connected",
             message=(
                 f"{owner.fio} connected Telegram by personal account {apartment.personal_account}"

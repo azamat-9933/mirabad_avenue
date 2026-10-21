@@ -256,7 +256,8 @@ class ClickAdvancedShopTests(TestCase):
         self.assertEqual(completed["params"]["balance"], "50000.00")
         self.owner.refresh_from_db()
         self.assertEqual(self.owner.balance, Decimal("50000"))
-        self.assertTrue(AuditEvent.objects.filter(title="Click payment received", owner=self.owner).exists())
+        event = AuditEvent.objects.get(title="Click payment received", owner=self.owner)
+        self.assertEqual(event.event_type, AuditEvent.TYPE_ONLINE_PAYMENT)
 
         again = self._complete(prepared["merchant_prepare_id"])
         self.assertEqual((again["error"], again["merchant_confirm_id"]), (-4, str(ledger.pk)))

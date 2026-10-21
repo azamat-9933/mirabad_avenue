@@ -579,8 +579,27 @@ class OwnerAdminForm(forms.ModelForm):
         self.fields["apartment"].widget = ApartmentSelect(attrs=self.fields["apartment"].widget.attrs)
         self.fields["apartment"].widget.choices = self.fields["apartment"].choices
 
+    def clean_telegram_id(self):
+        value = (self.cleaned_data.get("telegram_id") or "").strip()
+        if value and not value.isdigit():
+            raise forms.ValidationError("Telegram ID is a number (digits only).")
+        return value or None
+
+    def clean_telegram_user(self):
+        return (self.cleaned_data.get("telegram_user") or "").strip().lstrip("@") or None
+
+    def _clean_telegram(self, cleaned):
+        """Not connected, or no Telegram ID: the link is removed and every Telegram field is cleared."""
+        if "telegram_status" not in self.fields:
+            return
+        if cleaned.get("telegram_status") != Owner.TELEGRAM_CONNECTED or not cleaned.get("telegram_id"):
+            cleaned.update(
+                telegram_status=Owner.TELEGRAM_NOT_CONNECTED, telegram_id=None, telegram_user=None, telegram_language=""
+            )
+
     def clean(self):
         cleaned = super().clean()
+        self._clean_telegram(cleaned)
         apartment = cleaned.get("apartment")
         complex_obj = cleaned.get("complex_selector")
         building = cleaned.get("building_selector")
@@ -655,8 +674,10 @@ class OwnerAdmin(admin.ModelAdmin):
         return super().formfield_for_dbfield(db_field, request, **kwargs)
 
     def get_readonly_fields(self, request, obj=None):
-        fields = ("created_at", "balance_display") if obj else ("created_at_note", "balance_display")
-        return fields + self.TELEGRAM_FIELDS
+        # The bot links a resident; an operator can correct or remove the link of an existing one.
+        if obj:
+            return ("created_at", "balance_display")
+        return ("created_at_note", "balance_display") + self.TELEGRAM_FIELDS
 
     def save_model(self, request, obj, form, change):
         moved = change and form is not None and "apartment" in form.changed_data
@@ -716,8 +737,12 @@ class OwnerAdmin(admin.ModelAdmin):
                 {
                     "fields": self.TELEGRAM_FIELDS,
                     "description": (
-                        "Filled in by the Telegram bot when the resident registers there with this phone number. "
-                        "To unlink, use the \"Disconnect Telegram\" action in the residents list."
+                        "Filled in by the Telegram bot when the resident links their personal account there. "
+                        "To unlink, set the status to Not connected (or clear the Telegram ID) and save: every "
+                        "Telegram field is cleared and the bot asks them to register again. Several residents can "
+                        "also be unlinked at once with the \"Disconnect Telegram\" action in the residents list."
+                        if obj
+                        else "Filled in by the Telegram bot when the resident links their personal account there."
                     ),
                 },
             ),

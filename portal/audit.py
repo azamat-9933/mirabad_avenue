@@ -1,4 +1,4 @@
-"""Operator activity log: one entry point for writing AuditEvent rows and one rule for reading them."""
+"""Activity log of money and billing: one entry point for writing AuditEvent rows and one rule for reading them."""
 
 from contextvars import ContextVar
 
@@ -7,7 +7,7 @@ from django.conf import settings
 from .models import AuditEvent
 
 
-# The request being served, so signal handlers (admin LogEntry, auth) can attribute their events.
+# The request being served, so code without it at hand (the Click callback) still records the address.
 _current_request: ContextVar = ContextVar("audit_current_request", default=None)
 
 
@@ -44,7 +44,12 @@ def _authenticated_user(request):
 
 
 def record_event(request=None, *, user=None, actor=None, **fields):
-    """Append an audit entry attributed to the signed-in operator of ``request`` (or the current one)."""
+    """Append an audit entry attributed to the signed-in operator of ``request`` (or the current one).
+
+    Only the kinds the log keeps (AuditEvent.TYPE_CHOICES) are accepted.
+    """
+    if fields.get("event_type") not in AuditEvent.LOGGED_TYPES:
+        raise ValueError(f"The activity log does not keep {fields.get('event_type')!r} events.")
     request = request if request is not None else current_request()
     user = user or _authenticated_user(request)
     fields.setdefault("ip_address", client_ip(request))

@@ -669,13 +669,6 @@ def api_export_audit(request):
         rows = []
     generated = build_table_export(title, headers[lang], rows, "XLSX", f"audit-log-{timezone.localtime():%Y%m%d-%H%M}", lang)
     download = _encode_download(generated["filename"], generated["mime"], generated["content"])
-    record_event(
-        request,
-        event_type=AuditEvent.TYPE_EXPORT,
-        title="Audit log exported",
-        message=f"XLSX audit log exported with {len(rows)} rows.",
-        metadata={"source": "portal_audit_export", "format": "XLSX", "rowCount": len(rows), "language": lang},
-    )
     return JsonResponse({"ok": True, "download": download, "portalData": safe_portal_data(request)})
 
 
@@ -834,18 +827,6 @@ def _optional_instance(model, value):
         return model.objects.get(pk=value)
     except (model.DoesNotExist, ValueError, TypeError):
         return None
-
-
-def _owner_relations(owner_ids):
-    owners = list(
-        Owner.objects.select_related("apartment", "apartment__building", "apartment__building__complex")
-        .filter(pk__in=owner_ids)
-    )
-    primary = owners[0] if owners else None
-    apartment = primary.apartment if primary and primary.apartment_id else None
-    building = apartment.building if apartment and apartment.building_id else None
-    complex_obj = building.complex if building and building.complex_id else None
-    return owners, primary, apartment, building, complex_obj
 
 
 def _unique_ints(values):
@@ -1063,49 +1044,6 @@ def _render_export_payload(portal_data, context, export_format, source, language
 
 @extend_schema(request=OpenApiTypes.OBJECT, responses=OpenApiTypes.OBJECT)
 @api_view(["POST"])
-def api_audit_note(request):
-    payload = _json_payload(request)
-    message = str(payload.get("message") or "").strip()
-    title = str(payload.get("title") or "Audit note").strip() or "Audit note"
-    if not message:
-        return JsonResponse({"ok": False, "error": "Audit note text is required."}, status=400)
-
-    complex_obj = _optional_instance(Complex, payload.get("complex_id"))
-    building = _optional_instance(Building, payload.get("building_id"))
-    apartment = _optional_instance(Apartment, payload.get("apartment_id"))
-    owner = _optional_instance(Owner, payload.get("owner_id"))
-
-    if apartment and not building:
-        building = apartment.building
-    if owner and not apartment and owner.apartment_id:
-        apartment = owner.apartment
-    if apartment and not complex_obj:
-        complex_obj = apartment.building.complex
-    if building and not complex_obj:
-        complex_obj = building.complex
-
-    event = record_event(
-        request,
-        event_type=AuditEvent.TYPE_NOTE,
-        title=title,
-        message=message,
-        complex=complex_obj,
-        building=building,
-        apartment=apartment,
-        owner=owner,
-        metadata={"source": "portal_audit_note"},
-    )
-    return JsonResponse(
-        {
-            "ok": True,
-            "eventId": event.id,
-            "portalData": safe_portal_data(request),
-        }
-    )
-
-
-@extend_schema(request=OpenApiTypes.OBJECT, responses=OpenApiTypes.OBJECT)
-@api_view(["POST"])
 def api_checklist_note(request):
     payload = _json_payload(request)
     mode = str(payload.get("mode") or "create").strip().lower()
@@ -1122,13 +1060,6 @@ def api_checklist_note(request):
             done=False,
             created_by=_current_user_or_none(request),
         )
-        record_event(
-            request,
-            event_type=AuditEvent.TYPE_NOTE,
-            title="Checklist note added",
-            message=text,
-            metadata={"source": "portal_checklist_note", "noteId": note.id},
-        )
         return JsonResponse({"ok": True, "noteId": note.id, "portalData": safe_portal_data(request)})
 
     if not note:
@@ -1142,13 +1073,6 @@ def api_checklist_note(request):
     if mode == "delete":
         note_id = note.id
         note.delete()
-        record_event(
-            request,
-            event_type=AuditEvent.TYPE_NOTE,
-            title="Checklist note removed",
-            message=f"Checklist note #{note_id} was deleted.",
-            metadata={"source": "portal_checklist_note", "noteId": note_id},
-        )
         return JsonResponse({"ok": True, "noteId": note_id, "portalData": safe_portal_data(request)})
 
     return JsonResponse({"ok": False, "error": "Unknown checklist note mode."}, status=400)
@@ -1166,13 +1090,6 @@ def api_checklist_item(request):
             return JsonResponse({"ok": False, "error": "Checklist item was not found."}, status=404)
         item.done = not item.done
         item.save(update_fields=["done"])
-        record_event(
-            request,
-            event_type=AuditEvent.TYPE_NOTE,
-            title="Checklist item updated",
-            message=f"{item.title}: {'done' if item.done else 'open'}",
-            metadata={"source": "portal_checklist_item", "itemId": item.id, "done": item.done},
-        )
         return JsonResponse({"ok": True, "itemId": item.id, "done": item.done, "portalData": safe_portal_data(request)})
 
     if mode == "complete_visible":
@@ -1180,42 +1097,16 @@ def api_checklist_item(request):
         backend_ids = [int(str(item_id)) for item_id in raw_ids if str(item_id).isdigit()]
         if backend_ids:
             ChecklistItem.objects.filter(id__in=backend_ids).update(done=True)
-            record_event(
-                request,
-                event_type=AuditEvent.TYPE_NOTE,
-                title="Checklist items completed",
-                message=f"{len(backend_ids)} checklist items marked complete.",
-                metadata={"source": "portal_checklist_item", "itemIds": backend_ids, "mode": mode},
-            )
         return JsonResponse({"ok": True, "count": len(backend_ids), "portalData": safe_portal_data(request)})
 
     if mode == "reset_all":
         ChecklistItem.objects.update(done=False)
         ChecklistNote.objects.update(done=False)
-        record_event(
-            request,
-            event_type=AuditEvent.TYPE_NOTE,
-            title="Checklist reset",
-            message="Checklist items and notes were reset from the portal.",
-            metadata={"source": "portal_checklist_item", "mode": mode},
-        )
         return JsonResponse({"ok": True, "portalData": safe_portal_data(request)})
 
     if mode == "mark_reviewed":
         item_count = ChecklistItem.objects.filter(is_active=True, done=False).update(done=True)
         note_count = ChecklistNote.objects.filter(done=False).update(done=True)
-        record_event(
-            request,
-            event_type=AuditEvent.TYPE_NOTE,
-            title="Checklist reviewed",
-            message=f"Checklist reviewed: {item_count} tasks and {note_count} notes marked complete.",
-            metadata={
-                "source": "portal_checklist_item",
-                "mode": mode,
-                "itemCount": item_count,
-                "noteCount": note_count,
-            },
-        )
         return JsonResponse(
             {
                 "ok": True,
@@ -1270,17 +1161,6 @@ def api_support_ticket(request):
         building=building,
         apartment=apartment,
         owner=owner,
-    )
-    record_event(
-        request,
-        event_type=AuditEvent.TYPE_SYSTEM,
-        title="Support ticket created",
-        message=f"{ticket.title} was created from the portal support drawer.",
-        complex=complex_obj,
-        building=building,
-        apartment=apartment,
-        owner=owner,
-        metadata={"source": "portal_support_ticket", "ticketId": ticket.id},
     )
     return JsonResponse(
         {
@@ -1344,15 +1224,6 @@ def api_create_building(request):
         address=address,
         author=_actor(request),
     )
-    record_event(
-        request,
-        event_type=AuditEvent.TYPE_SYSTEM,
-        title="Building created",
-        message=f"House {building.number} was added to {complex_obj.title} from the portal.",
-        complex=complex_obj,
-        building=building,
-        metadata={"source": "portal_building_form"},
-    )
     return JsonResponse(
         {
             "ok": True,
@@ -1406,16 +1277,6 @@ def api_create_apartment(request):
         area=area,
         author=_actor(request),
     )
-    record_event(
-        request,
-        event_type=AuditEvent.TYPE_SYSTEM,
-        title="Apartment created",
-        message=f"Apartment {apartment.number} was added to house {building.number}.",
-        complex=building.complex,
-        building=building,
-        apartment=apartment,
-        metadata={"source": "portal_apartment_form"},
-    )
     return JsonResponse(
         {
             "ok": True,
@@ -1464,17 +1325,6 @@ def api_create_resident(request):
             apartment=apartment,
             has_contract=_to_bool(payload.get("has_contract")),
         )
-        record_event(
-            request,
-            event_type=AuditEvent.TYPE_SYSTEM,
-            title="Resident created",
-            message=f"{owner.fio} was added to apartment {apartment.number} from the portal.",
-            complex=apartment.building.complex,
-            building=apartment.building,
-            apartment=apartment,
-            owner=owner,
-            metadata={"source": "portal_resident_form"},
-        )
 
     return JsonResponse(
         {
@@ -1502,22 +1352,6 @@ def _notice_for(request, owner, language):
     return build_debt_notice(owner, language, _display_name(request.user))
 
 
-def _log_notice(request, owner, title, channel):
-    apartment = owner.apartment
-    debt = debt_of(owner)
-    record_event(
-        request,
-        event_type=AuditEvent.TYPE_REMINDER,
-        title=title,
-        message=f"Payment notice for {debt:,.2f} UZS ({channel}) for {owner.fio}.",
-        complex=apartment.building.complex,
-        building=apartment.building,
-        apartment=apartment,
-        owner=owner,
-        metadata={"channel": channel, "debt": str(debt)},
-    )
-
-
 @extend_schema(responses=OpenApiTypes.OBJECT)
 @api_view(["GET"])
 def api_billing_notice_preview(request):
@@ -1541,7 +1375,6 @@ def api_billing_notice_pdf(request):
 
     notice = _notice_for(request, owner, payload.get("language"))
     filename = f"notice-{owner.apartment.building.number}-{owner.apartment.number}-{timezone.localdate():%Y%m%d}.pdf"
-    _log_notice(request, owner, "Payment notice downloaded as PDF", "pdf")
     return JsonResponse({
         "ok": True,
         "download": {
@@ -1567,7 +1400,6 @@ def api_billing_notice_telegram(request):
     except NoticeNotSent as error:
         return JsonResponse({"ok": False, "error": str(error)}, status=error.status)
 
-    _log_notice(request, owner, "Billing notice sent to Telegram", "telegram")
     return JsonResponse({"ok": True, "sent": True, "ownerId": owner.id})
 
 
@@ -1623,7 +1455,8 @@ def api_create_payment(request):
         )
         record_event(
             request,
-            event_type=AuditEvent.TYPE_BALANCE,
+            # Money taken from the resident, or a balance lowered by hand.
+            event_type=AuditEvent.TYPE_OPERATOR_PAYMENT if operation == "credit" else AuditEvent.TYPE_BALANCE,
             title="Resident balance updated",
             message=(
                 f"{owner.fio}: {'credit' if operation == 'credit' else 'debit'} "
@@ -1660,53 +1493,9 @@ def api_create_payment(request):
 def api_resident_kit_action(request):
     payload = _json_payload(request)
     action = str(payload.get("action") or "").strip().lower()
-    visible_count = _int_or_zero(payload.get("visible_count"))
-    debtor_count = _int_or_zero(payload.get("debtor_count"))
-    owner_ids = []
-    for value in payload.get("owner_ids") or []:
-        try:
-            owner_ids.append(int(value))
-        except (TypeError, ValueError):
-            continue
-
-    owners, primary_owner, apartment, building, complex_obj = _owner_relations(owner_ids)
-    if not visible_count:
-        visible_count = len(owners)
-
-    if action == "move_in_checklist":
-        event_type = AuditEvent.TYPE_SYSTEM
-        title = "Move-in checklist opened"
-        message = f"Resident move-in checklist opened for {visible_count} visible residents."
-    elif action == "reminder_script":
-        event_type = AuditEvent.TYPE_REMINDER
-        title = "Reminder script prepared"
-        count = debtor_count or visible_count
-        message = f"Reminder script prepared for {count} residents with outstanding balance."
-    elif action == "contact_sheet":
-        event_type = AuditEvent.TYPE_EXPORT
-        title = "Resident contact sheet exported"
-        message = f"Resident contact sheet exported for {visible_count} visible residents."
-    else:
+    # The portal prepares these in the browser; the server only checks the action.
+    if action not in {"move_in_checklist", "reminder_script", "contact_sheet"}:
         return JsonResponse({"ok": False, "error": "Unknown resident kit action."}, status=400)
-
-    record_event(
-        request,
-        event_type=event_type,
-        title=title,
-        message=message,
-        complex=complex_obj,
-        building=building,
-        apartment=apartment,
-        owner=primary_owner,
-        metadata={
-            "source": "portal_resident_kit",
-            "action": action,
-            "visibleCount": visible_count,
-            "debtorCount": debtor_count,
-            "ownerIds": owner_ids[:50],
-        },
-    )
-
     return JsonResponse(
         {
             "ok": True,
@@ -1718,27 +1507,7 @@ def api_resident_kit_action(request):
 @extend_schema(request=OpenApiTypes.OBJECT, responses=OpenApiTypes.OBJECT)
 @api_view(["POST"])
 def api_usage_report_export(request):
-    payload = _json_payload(request)
-    export_format = str(payload.get("format") or "XLSX").strip().upper()
-    if export_format not in {"XLSX", "PDF"}:
-        export_format = "XLSX"
-    source = str(payload.get("source") or "Usage Report").strip() or "Usage Report"
-    row_count = _int_or_zero(payload.get("row_count"))
-    total_usage = _decimal_or_zero(payload.get("total_usage"))
-
-    record_event(
-        request,
-        event_type=AuditEvent.TYPE_EXPORT,
-        title="Usage report generated",
-        message=f"{export_format} usage report exported from {source}.",
-        metadata={
-            "source": "portal_usage_report",
-            "format": export_format,
-            "sourceLabel": source,
-            "rowCount": row_count,
-            "totalUsage": float(total_usage),
-        },
-    )
+    """The portal builds the usage report in the browser; the server only acknowledges it."""
     return JsonResponse({"ok": True, "portalData": safe_portal_data(request)})
 
 
@@ -1796,17 +1565,6 @@ def api_system_alerts_configure(request):
             notification.save(update_fields=update_fields)
 
         if alert:
-            record_event(
-                request,
-                event_type=AuditEvent.TYPE_ALERT,
-                title="System alert updated",
-                message=f"{alert.title} was {mode}d from the portal.",
-                complex=alert.complex,
-                building=alert.building,
-                apartment=alert.apartment,
-                owner=alert.owner,
-                metadata={"source": "portal_system_alerts", "mode": mode, "alertId": alert.id},
-            )
             return portal_response(
                 {
                     "alertId": alert.id,
@@ -1814,21 +1572,6 @@ def api_system_alerts_configure(request):
                 }
             )
 
-        record_event(
-            request,
-            event_type=AuditEvent.TYPE_ALERT,
-            title="Notification updated",
-            message=f"{notification.title} was {mode}d from the portal.",
-            complex=notification.complex,
-            building=notification.building,
-            apartment=notification.apartment,
-            owner=notification.owner,
-            metadata={
-                "source": "portal_system_alerts",
-                "mode": mode,
-                "notificationId": notification.id,
-            },
-        )
         return portal_response(
             {
                 "notificationId": notification.id,
@@ -1922,17 +1665,6 @@ def api_system_alerts_configure(request):
             "notification_id": notification.id,
         }
         alert.save(update_fields=["metadata"])
-        record_event(
-            request,
-            event_type=AuditEvent.TYPE_ALERT,
-            title="System alert created",
-            message=f"{alert.title} was created from the portal" + (f" for {assigned_to}." if assignee else "."),
-            complex=complex_obj,
-            building=building,
-            apartment=apartment,
-            owner=owner,
-            metadata={"source": "portal_system_alerts", "alertId": alert.id, "assigneeId": getattr(assignee, "id", None)},
-        )
 
     # After the commit: the alert exists whatever Telegram does; its delivery is recorded on it.
     if assignee:
@@ -1969,8 +1701,6 @@ def api_operator_telegram(request):
     mode = str(payload.get("mode") or "link").strip().lower()
     if mode == "unlink":
         telegram_operators.unlink_operator(user)
-        record_event(request, event_type=AuditEvent.TYPE_SYSTEM, title="Operator Telegram disconnected",
-                     message=f"{_display_name(user)} disconnected Telegram.", metadata={"source": "portal_profile"})
         return status_payload()
     if mode != "link":
         return JsonResponse({"ok": False, "error": "Unknown mode."}, status=400)
@@ -2017,27 +1747,12 @@ def api_export_report(request):
         except ValueError as error:
             return JsonResponse({"ok": False, "error": str(error)}, status=400)
         download = _encode_download(generated["filename"], generated["mime"], generated["content"])
-        row_count = generated.get("row_count", 0)
         context = report_type
     else:
         portal_data = safe_portal_data(request)
         rows = _portal_export_rows(portal_data, context, payload)
         download = _render_export_payload(portal_data, context, export_format, source, language, payload, rows=rows)
-        row_count = len(rows)
 
-    record_event(
-        request,
-        event_type=AuditEvent.TYPE_EXPORT,
-        title="Portal export generated",
-        message=f"{export_format} export generated from {source}.",
-        metadata={
-            "source": "portal_export_report",
-            "context": context,
-            "format": export_format,
-            "language": language,
-            "rowCount": row_count,
-        },
-    )
     if portal_data is None:
         portal_data = safe_portal_data(request)
     else:
@@ -2079,21 +1794,6 @@ def api_send_reminder(request):
         )
         created += 1
 
-    first_owner = targets[0]
-    apartment = first_owner.apartment if first_owner.apartment_id else None
-    building = apartment.building if apartment and apartment.building_id else None
-    complex_obj = building.complex if building and building.complex_id else None
-    record_event(
-        request,
-        event_type=AuditEvent.TYPE_REMINDER,
-        title="Reminder queued",
-        message=f"{created} reminder(s) were created from the portal.",
-        complex=complex_obj,
-        building=building,
-        apartment=apartment,
-        owner=first_owner,
-        metadata={"source": "portal_send_reminder", "count": created},
-    )
     return JsonResponse({"ok": True, "count": created, "portalData": safe_portal_data(request)})
 
 
@@ -2112,17 +1812,6 @@ def api_assign_technician(request):
         if note:
             alert.message = "\n".join(filter(None, [alert.message, note]))
         alert.save(update_fields=["assigned_to", "status", "message"])
-        record_event(
-            request,
-            event_type=AuditEvent.TYPE_ALERT,
-            title="Technician assigned",
-            message=f"{technician} assigned to alert {alert.title}.",
-            complex=alert.complex,
-            building=alert.building,
-            apartment=alert.apartment,
-            owner=alert.owner,
-            metadata={"source": "portal_assign_technician", "alertId": alert.id},
-        )
         return JsonResponse({"ok": True, "portalData": safe_portal_data(request)})
 
     notification = _optional_instance(PortalNotification, payload.get("notification_id"))
@@ -2130,17 +1819,6 @@ def api_assign_technician(request):
         notification.action_state = f"Assigned to {technician}"
         notification.status = PortalNotification.STATUS_READ
         notification.save(update_fields=["action_state", "status"])
-        record_event(
-            request,
-            event_type=AuditEvent.TYPE_ALERT,
-            title="Notification assigned",
-            message=f"{technician} assigned through notification center.",
-            complex=notification.complex,
-            building=notification.building,
-            apartment=notification.apartment,
-            owner=notification.owner,
-            metadata={"source": "portal_assign_technician", "notificationId": notification.id},
-        )
         return JsonResponse({"ok": True, "portalData": safe_portal_data(request)})
 
     owners = _collect_owner_targets(payload)
@@ -2177,17 +1855,6 @@ def api_assign_technician(request):
             apartment=apartment,
             owner=primary,
             created_by=_current_user_or_none(request),
-        )
-        record_event(
-            request,
-            event_type=AuditEvent.TYPE_SYSTEM,
-            title="Technician assigned",
-            message=f"{technician} assigned for resident {primary.fio}.",
-            complex=complex_obj,
-            building=building,
-            apartment=apartment,
-            owner=primary,
-            metadata={"source": "portal_assign_technician", "alertId": alert.id},
         )
         return JsonResponse({"ok": True, "portalData": safe_portal_data(request)})
 
@@ -2244,12 +1911,5 @@ def api_assign_status(request):
             )
             updated += 1
 
-    record_event(
-        request,
-        event_type=AuditEvent.TYPE_STATUS,
-        title="Status assigned",
-        message=f"{status_value} applied to {updated} row(s) in {context}.",
-        metadata={"source": "portal_assign_status", "context": context, "updated": updated},
-    )
     return JsonResponse({"ok": True, "updated": updated, "portalData": safe_portal_data(request)})
 

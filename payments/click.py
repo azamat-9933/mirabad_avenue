@@ -290,7 +290,7 @@ def _audit(held, ledger):
     owner = ledger.owner
     record_event(
         actor=CLICK_ACTOR,
-        event_type=AuditEvent.TYPE_BALANCE,
+        event_type=AuditEvent.TYPE_ONLINE_PAYMENT,
         title="Click payment received",
         message=(
             f"{owner.fio if owner else f'Apartment {apartment.number}'}: +{held.amount} UZS via Click "

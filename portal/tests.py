@@ -20,6 +20,7 @@ from billing.models import BillingPeriod, Charge, Expense, HeatingRecord, HotWat
 from main_app.models import Apartment, Building, Complex, Owner
 from payments.models import Transaction
 from payments.services import OPENING_BALANCE_TAG, apply_account_change, apply_balance_change
+from portal.audit import record_event
 from portal.backend_data import build_portal_data
 from portal.models import AuditEvent
 
@@ -796,7 +797,8 @@ class PortalBillingNoticeTests(TestCase):
         self.assertEqual(download["mime"], "application/pdf")
         self.assertTrue(base64.b64decode(download["content"]).startswith(b"%PDF"))
         self.assertTrue(download["filename"].endswith(".pdf"))
-        self.assertTrue(AuditEvent.objects.filter(title="Payment notice downloaded as PDF", owner=self.owner).exists())
+        # Notices are not money: the activity log does not keep them.
+        self.assertFalse(AuditEvent.objects.exists())
 
     def test_unknown_resident(self):
         response = self.client.get(reverse("portal:api_billing_notice_preview"), {"owner_id": 999999})
@@ -1170,7 +1172,7 @@ class OperatorRightsTests(TestCase):
 
 
 class OperatorActivityLogTests(TestCase):
-    """Every operator action is attributed to their user account; every operator (full rights) can read the log."""
+    """The log keeps payments, balance changes, billing period work and Telegram links, each with its operator."""
 
     password = "operator-test-password"
 
@@ -1188,87 +1190,50 @@ class OperatorActivityLogTests(TestCase):
     def _post_json(self, name, payload, **extra):
         return self.client.post(reverse(name), json.dumps(payload), content_type="application/json", **extra)
 
+    def _pay(self, amount="250000", operation="credit", **extra):
+        return self._post_json(
+            "portal:api_create_payment",
+            {"owner_id": self.owner.id, "amount": amount, "operation": operation, "channel": "cash"},
+            **extra,
+        )
+
     def test_cash_payment_is_logged_with_the_operator_account_and_ip(self):
         self.client.force_login(self.operator)
-        response = self._post_json(
-            "portal:api_create_payment",
-            {"owner_id": self.owner.id, "amount": "250000", "operation": "credit", "channel": "cash"},
-            REMOTE_ADDR="10.0.0.7",
-        )
+        response = self._pay(REMOTE_ADDR="10.0.0.7")
         self.assertEqual(response.status_code, 200)
-        event = AuditEvent.objects.get(event_type=AuditEvent.TYPE_BALANCE)
+        event = AuditEvent.objects.get()
+        self.assertEqual(event.event_type, AuditEvent.TYPE_OPERATOR_PAYMENT)
         self.assertEqual((event.user, event.actor, event.ip_address), (self.operator, "kassir1", "10.0.0.7"))
         self.assertEqual(event.owner_id, self.owner.id)
         self.assertEqual(event.metadata["transaction_id"], Transaction.objects.get().id)
         self.assertEqual(Transaction.objects.get().created_by, "kassir1")
 
-    def test_sign_in_sign_out_and_failed_attempts_are_logged(self):
+    def test_a_subtraction_is_a_balance_change(self):
+        self.client.force_login(self.operator)
+        self._pay(amount="50000", operation="debit")
+        self.assertEqual(AuditEvent.objects.get().event_type, AuditEvent.TYPE_BALANCE)
+
+    def test_sign_ins_admin_edits_notices_and_exports_are_not_logged(self):
+        apply_account_change(self.apartment.pk, Decimal("-150000"), Transaction.TYPE_MANUAL)
         self.client.post(reverse("portal:login"), {"username": "kassir1", "password": "wrong"})
         self.client.post(reverse("portal:login"), {"username": "kassir1", "password": self.password})
+        self._post_json("portal:api_billing_notice_pdf", {"owner_id": self.owner.id, "language": "uz"})
+        self._post_json("portal:api_export_audit", {})
         self.client.post(reverse("portal:api_logout"))
-        titles = list(AuditEvent.objects.filter(event_type=AuditEvent.TYPE_AUTH).order_by("id").values_list("title", "user__username"))
-        self.assertEqual(titles, [("Failed sign-in", None), ("Signed in", "kassir1"), ("Signed out", "kassir1")])
-        self.assertNotIn("wrong", json.dumps(list(AuditEvent.objects.values_list("message", "metadata"))))
-
-    def test_admin_edits_are_logged_with_the_changed_fields(self):
-        staff = get_user_model().objects.create_superuser(username="admin-operator", password=self.password)
-        self.client.force_login(staff)
-        url = reverse("admin:main_app_owner_change", args=[self.owner.id])
-        form = self.client.get(url).context["adminform"].form
-        data = {key: value for key, value in form.initial.items() if value is not None and key in form.fields}
-        data.update({"fio": "Mijoz Yangi", "phone": "+998900000000", "apartment": self.apartment.id})
-        data = {key: ("on" if value is True else value) for key, value in data.items() if value is not False}
-        response = self.client.post(url, data)
-        self.assertEqual(response.status_code, 302, getattr(response, "context", None) and response.context["adminform"].form.errors)
-
-        event = AuditEvent.objects.get(event_type=AuditEvent.TYPE_ADMIN)
-        self.assertEqual(event.user, staff)
-        self.assertEqual(event.owner_id, self.owner.id)
-        self.assertIn("Mijoz Yangi", event.message)
-        self.assertEqual(event.metadata["action"], "changed")
-
-    def _delete_selected(self, model_url, ids, confirm=True):
-        data = {"action": "delete_selected", "_selected_action": [str(pk) for pk in ids], "index": 0}
-        if confirm:
-            data["post"] = "yes"
-        return self.client.post(model_url, data, REMOTE_ADDR="10.0.0.9")
-
-    def test_bulk_admin_deletion_logs_every_object(self):
-        # Django bulk-creates the LogEntry rows of several deletions, which sends no post_save.
-        groups = [Group.objects.create(name=name) for name in ("Kassa", "Buxgalteriya", "Arxiv")]
-        self.client.force_login(self.head_admin)
-
-        self._delete_selected("/admin/auth/group/", [group.pk for group in groups[:2]], confirm=False)
-        self.assertFalse(AuditEvent.objects.filter(event_type=AuditEvent.TYPE_ADMIN).exists())
-
-        response = self._delete_selected("/admin/auth/group/", [group.pk for group in groups[:2]])
-        self.assertEqual(response.status_code, 302)
-        events = AuditEvent.objects.filter(event_type=AuditEvent.TYPE_ADMIN)
-        self.assertEqual(sorted(event.metadata["objectRepr"] for event in events), ["Buxgalteriya", "Kassa"])
-        for event in events:
-            self.assertEqual((event.user, event.ip_address, event.metadata["action"]), (self.head_admin, "10.0.0.9", "deleted"))
-            self.assertEqual(event.metadata["contentType"], "auth.group")
-        self.assertEqual(list(Group.objects.values_list("name", flat=True)), ["Arxiv"])
-
-    def test_single_admin_deletion_through_the_action_is_logged_once(self):
         group = Group.objects.create(name="Kassa")
         self.client.force_login(self.head_admin)
-        self._delete_selected("/admin/auth/group/", [group.pk])
-        event = AuditEvent.objects.get(event_type=AuditEvent.TYPE_ADMIN)
-        self.assertEqual((event.metadata["objectRepr"], event.metadata["objectId"]), ("Kassa", str(group.pk)))
+        self.client.post("/admin/auth/group/", {"action": "delete_selected", "_selected_action": [group.pk], "post": "yes"})
+        self.client.post(reverse("admin:auth_group_add"), {"name": "Arxiv"})
 
-    def test_payment_notice_is_logged_with_the_operator_account_and_ip(self):
-        apply_account_change(self.apartment.pk, Decimal("-150000"), Transaction.TYPE_MANUAL)
-        self.client.force_login(self.operator)
-        response = self._post_json(
-            "portal:api_billing_notice_pdf", {"owner_id": self.owner.id, "language": "uz"}, REMOTE_ADDR="10.0.0.8"
-        )
-        self.assertEqual(response.status_code, 200)
-        event = AuditEvent.objects.get(title="Payment notice downloaded as PDF")
-        self.assertEqual((event.user, event.actor, event.ip_address), (self.operator, "kassir1", "10.0.0.8"))
-        self.assertEqual(event.owner_id, self.owner.id)
+        self.assertFalse(Group.objects.filter(name="Kassa").exists())
+        self.assertTrue(Group.objects.filter(name="Arxiv").exists())
+        self.assertFalse(AuditEvent.objects.exists())
 
-    def test_billing_period_actions_are_logged(self):
+    def test_other_kinds_are_refused(self):
+        with self.assertRaises(ValueError):
+            record_event(actor="test", event_type="auth", title="Signed in", message="-")
+
+    def test_billing_period_work_is_logged_as_edits_and_status_changes(self):
         from billing.models import BillingPeriod
 
         self.client.force_login(self.operator)
@@ -1285,13 +1250,19 @@ class OperatorActivityLogTests(TestCase):
         self.client.post(url, {**base, "action": "set_status", "status": "closed"})
         self.client.post(url, {**base, "action": "set_status", "status": "open"})
 
-        events = AuditEvent.objects.filter(event_type=AuditEvent.TYPE_BILLING).order_by("id")
+        events = list(AuditEvent.objects.order_by("id").values_list("event_type", "title"))
         self.assertEqual(
-            [event.title for event in events],
-            ["Billing period created", "Expenses saved", "Heating table saved", "Billing period closed", "Billing period reopened"],
+            events,
+            [
+                (AuditEvent.TYPE_PERIOD_EDIT, "Billing period created"),
+                (AuditEvent.TYPE_PERIOD_EDIT, "Expenses saved"),
+                (AuditEvent.TYPE_PERIOD_EDIT, "Heating table saved"),
+                (AuditEvent.TYPE_PERIOD_STATUS, "Billing period closed"),
+                (AuditEvent.TYPE_PERIOD_STATUS, "Billing period reopened"),
+            ],
         )
-        self.assertTrue(all(event.user == self.operator for event in events))
-        self.assertEqual(events[2].building_id, self.building.id)
+        self.assertTrue(all(event.user == self.operator for event in AuditEvent.objects.all()))
+        self.assertEqual(AuditEvent.objects.get(title="Heating table saved").building_id, self.building.id)
 
     def test_failed_billing_action_leaves_no_log_entry(self):
         from billing.models import BillingPeriod
@@ -1302,7 +1273,7 @@ class OperatorActivityLogTests(TestCase):
         self.client.post(reverse("portal:billing_period_sheet", args=[period.pk]), {"action": "set_status", "status": "closed"})
         period.refresh_from_db()
         self.assertEqual(period.status, BillingPeriod.STATUS_DRAFT)
-        self.assertFalse(AuditEvent.objects.filter(event_type=AuditEvent.TYPE_BILLING).exists())
+        self.assertFalse(AuditEvent.objects.exists())
 
     def test_operators_read_the_log_unless_their_rights_were_narrowed(self):
         self.client.force_login(self.operator)
@@ -1318,39 +1289,75 @@ class OperatorActivityLogTests(TestCase):
         self.assertNotIn('id="audit-drawer"', page)
         self.assertEqual(self.client.get("/admin/portal/auditevent/").status_code, 302)
 
-    def test_head_admin_filters_the_log_by_operator(self):
+    def test_the_log_is_filtered_by_operator_and_category(self):
         self.client.force_login(self.operator)
-        self._post_json("portal:api_create_payment", {"owner_id": self.owner.id, "amount": "100", "operation": "credit"})
+        self._pay(amount="100")
+        self._pay(amount="40", operation="debit")
         self.client.force_login(self.other_operator)
-        self._post_json("portal:api_create_payment", {"owner_id": self.owner.id, "amount": "200", "operation": "credit"})
+        self._pay(amount="200")
 
         self.client.force_login(self.head_admin)
         page = self.client.get(reverse("portal:dashboard")).content.decode()
-        self.assertIn('id="audit-drawer"', page)
+        self.assertIn('data-audit-filter="operator_payment"', page)
         self.assertIn("Ali Valiyev (kassir1)", page)
-        rows = self.client.get(reverse("portal:api_list_audit"), {"user_id": self.operator.id, "type": "balance"}).json()["results"]
-        self.assertEqual([(row["actor"], row["actorName"]) for row in rows], [("kassir1", "Ali Valiyev")])
+        rows = self.client.get(
+            reverse("portal:api_list_audit"), {"user_id": self.operator.id, "type": AuditEvent.TYPE_OPERATOR_PAYMENT}
+        ).json()["results"]
+        self.assertEqual([(row["actor"], row["label"]) for row in rows], [("kassir1", "Payment: operator")])
         self.assertIn("100", rows[0]["message"])
+        balance = self.client.get(reverse("portal:api_list_audit"), {"type": AuditEvent.TYPE_BALANCE}).json()["results"]
+        self.assertEqual([row["actor"] for row in balance], ["kassir1"])
 
-    def test_log_is_read_only_in_the_admin(self):
+    def test_log_is_read_only_in_the_admin_and_split_into_categories(self):
         self.client.force_login(self.operator)
-        self._post_json("portal:api_audit_note", {"message": "test"})
-        event = AuditEvent.objects.get(event_type=AuditEvent.TYPE_NOTE)
-        # An operator reads it in admin too, but nobody can change or delete an entry.
-        self.assertContains(self.client.get("/admin/portal/auditevent/"), "Audit note")
-        self.client.force_login(self.head_admin)
+        self._pay()
+        event = AuditEvent.objects.get()
+        listing = self.client.get("/admin/portal/auditevent/", {"event_type__exact": AuditEvent.TYPE_OPERATOR_PAYMENT})
+        self.assertContains(listing, "Resident balance updated")
+        self.assertContains(listing, "Payment: Click / Payme")  # the category filter
+        other = self.client.get("/admin/portal/auditevent/", {"event_type__exact": AuditEvent.TYPE_TELEGRAM})
+        self.assertNotContains(other, "Resident balance updated")
         edit = self.client.post(f"/admin/portal/auditevent/{event.id}/change/", {"title": "edited"})
         delete = self.client.post(f"/admin/portal/auditevent/{event.id}/delete/", {"post": "yes"})
         self.assertEqual((edit.status_code, delete.status_code), (403, 403))
         event.refresh_from_db()
-        self.assertEqual(event.title, "Audit note")
+        self.assertEqual(event.title, "Resident balance updated")
 
     def test_deleting_an_operator_keeps_their_history(self):
         self.client.force_login(self.other_operator)
-        self._post_json("portal:api_audit_note", {"message": "keep me"})
+        self._pay(amount="777")
         self.other_operator.delete()
-        event = AuditEvent.objects.get(message="keep me")
+        event = AuditEvent.objects.get()
         self.assertEqual((event.user_id, event.actor), (None, "kassir2"))
+
+    def test_migration_sorts_old_rows_into_categories_and_drops_the_rest(self):
+        from importlib import import_module
+
+        from django.apps import apps as django_apps
+
+        categorize = import_module("portal.migrations.0007_audit_categories").categorize
+        old = {
+            ("balance", "Resident balance updated", "credit"): AuditEvent.TYPE_OPERATOR_PAYMENT,
+            ("balance", "Resident balance updated", "debit"): AuditEvent.TYPE_BALANCE,
+            ("balance", "Click payment received", "click"): AuditEvent.TYPE_ONLINE_PAYMENT,
+            ("billing", "Heating table saved", ""): AuditEvent.TYPE_PERIOD_EDIT,
+            ("billing", "Billing period closed", ""): AuditEvent.TYPE_PERIOD_STATUS,
+            ("status", "Telegram connected", ""): AuditEvent.TYPE_TELEGRAM,
+            ("status", "Telegram registration: phone not found", ""): None,
+            ("auth", "Signed in", ""): None,
+            ("admin", "Admin: House added", ""): None,
+            ("export", "Portal export generated", ""): None,
+        }
+        ids = {}
+        for (kind, title, detail), expected in old.items():
+            metadata = {"source": "click"} if detail == "click" else {"operation": detail} if detail else {}
+            event = AuditEvent.objects.create(event_type=kind, title=title, message="-", metadata=metadata)
+            ids[event.pk] = expected
+
+        categorize(django_apps, None)
+
+        kept = dict(AuditEvent.objects.values_list("pk", "event_type"))
+        self.assertEqual(kept, {pk: expected for pk, expected in ids.items() if expected})
 
 
 class PortalPagesAfterOperatorsReviewTests(TestCase):

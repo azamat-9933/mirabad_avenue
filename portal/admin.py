@@ -1,34 +1,10 @@
-from functools import wraps
-
 from django.contrib import admin
-from django.contrib.admin.actions import delete_selected as django_delete_selected
 
 from .models import AuditEvent, WorkspaceProfile
-from .signals import deletion_entry, deletions_logged_by_action, record_admin_deletion
 
 
-@wraps(django_delete_selected)
-def delete_selected(modeladmin, request, queryset):
-    """Django's "Delete selected" for every model, plus one activity-log entry per deleted object.
-
-    Django bulk-creates the LogEntry rows of a multi-object deletion, which sends no post_save, so the
-    LogEntry receiver alone would miss them. The entries are taken before the action deletes the objects.
-    """
-    entries = [deletion_entry(obj) for obj in queryset]
-    with deletions_logged_by_action():
-        response = django_delete_selected(modeladmin, request, queryset)
-    # None means the deletion was confirmed and done; a page means the confirmation or refusal page.
-    if response is None:
-        for entry in entries:
-            record_admin_deletion(request.user, entry)
-    return response
-
-
-admin.site.add_action(delete_selected, "delete_selected")
-
-
-# The operators' activity log, read-only: balance changes, payments, billing periods, exports,
-# sign-ins and admin edits — who, when, from which address.
+# The activity log, read-only and split into categories: payments (Click/Payme, operators), balance
+# changes, billing period work and Telegram links — who, when, from which address.
 @admin.register(AuditEvent)
 class AuditEventAdmin(admin.ModelAdmin):
     list_display = ("created_at", "actor", "event_type", "title", "short_message", "place", "ip_address")

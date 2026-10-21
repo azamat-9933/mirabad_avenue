@@ -296,10 +296,13 @@
         "Amount": { ru: "Сумма", uz: "Summa" },
         "Balance": { ru: "Баланс", uz: "Balans" },
         "Billing": { ru: "Биллинг", uz: "Billing" },
-        "Admin change": { ru: "Изменение в admin", uz: "Admin o'zgarishi" },
-        "Sign-in": { ru: "Вход", uz: "Kirish" },
+        "Payment: Click / Payme": { ru: "Оплата: Click / Payme", uz: "To'lov: Click / Payme" },
+        "Payment: operator": { ru: "Оплата через оператора", uz: "To'lov: operator orqali" },
+        "Balance change": { ru: "Изменение баланса", uz: "Balans o'zgarishi" },
+        "Billing period: edited": { ru: "Расчётный период: изменён", uz: "Hisob davri: tahrirlandi" },
+        "Billing period: closed / opened": { ru: "Расчётный период: закрыт / открыт", uz: "Hisob davri: yopildi / ochildi" },
         "All operators": { ru: "Все операторы", uz: "Barcha operatorlar" },
-        "Who did what: every operator action in the portal and Django admin, sign-ins included.": { ru: "Кто что сделал: все действия операторов в портале и Django admin, включая входы.", uz: "Kim nima qildi: portal va Django admin'dagi barcha operator amallari, kirishlar ham." },
+        "Who did what: payments, balance changes, billing periods and Telegram links.": { ru: "Кто что сделал: платежи, изменения баланса, расчётные периоды и подключения Telegram.", uz: "Kim nima qildi: to'lovlar, balans o'zgarishlari, hisob davrlari va Telegram ulanishlari." },
         "Operation": { ru: "Операция", uz: "Amal" },
         "Add funds": { ru: "Зачислить", uz: "Hisobga kiritish" },
         "Credit": { ru: "Зачислить", uz: "Hisobga kiritish" },
@@ -3613,16 +3616,12 @@
     };
     const renderAuditMarkup = (items = []) => {
         const iconForType = (type) => ({
-            export: "ios_share",
-            reminder: "notifications_active",
-            alert: "warning",
+            online_payment: "credit_card",
+            operator_payment: "payments",
             balance: "account_balance_wallet",
-            note: "edit_note",
-            status: "sell",
-            system: "settings_suggest",
-            billing: "receipt_long",
-            admin: "admin_panel_settings",
-            auth: "login",
+            period_edit: "edit_note",
+            period_status: "receipt_long",
+            telegram: "send",
         }[type] || "history");
         return items.map((event) => `
             <div class="audit-event" data-audit-event data-type="${escapeAttr(event.type || "system")}" data-audit-backend-id="${escapeAttr(event.backendId || "")}" data-audit-time="${escapeAttr(event.time || "")}" data-audit-label="${escapeAttr(event.label || event.type || "")}" data-audit-title="${escapeAttr(event.title || "")}" data-audit-message="${escapeAttr(event.message || event.title || "")}" data-audit-actor="${escapeAttr(event.actor || "")}" data-audit-complex="${escapeAttr(event.complexName || "")}" data-audit-building="${escapeAttr(event.buildingName || "")}" data-audit-apartment="${escapeAttr(event.apartmentNumber || "")}" data-audit-owner="${escapeAttr(event.ownerName || "")}" data-audit-admin-url="${escapeAttr(event.adminUrl || "")}">
@@ -9668,16 +9667,12 @@
         if (timeline.dataset.serverList === "audit") return;
         if (!events.length && !billingData.source) return;
         const iconForType = (type) => ({
-            export: "ios_share",
-            reminder: "notifications_active",
-            alert: "warning",
+            online_payment: "credit_card",
+            operator_payment: "payments",
             balance: "account_balance_wallet",
-            note: "edit_note",
-            status: "sell",
-            system: "settings_suggest",
-            billing: "receipt_long",
-            admin: "admin_panel_settings",
-            auth: "login",
+            period_edit: "edit_note",
+            period_status: "receipt_long",
+            telegram: "send",
         }[type] || "history");
         timeline.innerHTML = events.map((event) => `
             <div class="audit-event" data-audit-event data-type="${escapeAttr(event.type || "system")}" data-audit-backend-id="${escapeAttr(event.backendId || "")}" data-audit-time="${escapeAttr(event.time || "")}" data-audit-label="${escapeAttr(event.label || event.type || "")}" data-audit-title="${escapeAttr(event.title || "")}" data-audit-message="${escapeAttr(event.message || event.title || "")}" data-audit-actor="${escapeAttr(event.actor || "")}" data-audit-complex="${escapeAttr(event.complexName || "")}" data-audit-building="${escapeAttr(event.buildingName || "")}" data-audit-apartment="${escapeAttr(event.apartmentNumber || "")}" data-audit-owner="${escapeAttr(event.ownerName || "")}" data-audit-admin-url="${escapeAttr(event.adminUrl || "")}">
@@ -9752,27 +9747,6 @@
             search?.addEventListener("input", refreshAudit);
         }
 
-        drawer.querySelector("[data-audit-action='add-note']")?.addEventListener("click", async () => {
-            try {
-                const payload = await postPortalJson("/api/audit/note/", {
-                    title: "Audit note",
-                    message: "Manual audit note added from audit drawer.",
-                });
-                rehydrateFromPortalData(payload.portalData);
-                activeType = "all";
-                filters.forEach((filter) => filter.classList.toggle("is-active", filter.dataset.auditFilter === "all"));
-                if (isServerDriven) {
-                    writeListUrlState("audit", { page: 1, search: "" });
-                    await serverListControllers.audit?.refresh?.();
-                } else {
-                    renderBackendAuditEvents();
-                    refreshAudit();
-                }
-                toast(t("Audit note added"), t("Stored in backend audit trail."), "success");
-            } catch (error) {
-                toast(t("Audit note save failed"), error.message || t("Backend audit note was not saved."), "danger");
-            }
-        });
 
         drawer.querySelector("[data-audit-action='copy-latest']")?.addEventListener("click", async () => {
             const latest = getEvents().find((event) => !event.classList.contains("hidden")) || getEvents()[0];

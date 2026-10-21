@@ -104,7 +104,7 @@ class LinkServiceTests(ResidentsMixin, TestCase):
         self.assertEqual(accounts, [])
         self.owner.refresh_from_db()
         self.assertEqual(self.owner.telegram_status, Owner.TELEGRAM_NOT_CONNECTED)
-        self.assertTrue(AuditEvent.objects.filter(title="Telegram registration: phone not found").exists())
+        self.assertFalse(AuditEvent.objects.exists())
         self.assertEqual(services.registration(555), ("", []))
 
     def test_new_resident_starts_not_connected(self):
@@ -190,6 +190,7 @@ class BotConversationTests(ResidentsMixin, TestCase):
             ("555", "aziz_k", Owner.TELEGRAM_CONNECTED, "ru"),
         )
         event = AuditEvent.objects.get(title="Telegram connected")
+        self.assertEqual(event.event_type, AuditEvent.TYPE_TELEGRAM)
         self.assertIn("personal account 1383637891", event.message)
 
     def test_rejecting_the_apartment_asks_for_the_number_again(self):
@@ -404,7 +405,7 @@ class BillingNoticeTelegramTests(ResidentsMixin, TestCase):
                 self.url, {"owner_id": owner_id, "language": language}, content_type="application/json"
             )
 
-    def test_sends_the_notice_shown_in_the_window_and_logs_it(self):
+    def test_sends_the_notice_shown_in_the_window(self):
         response = self.post(self.owner.pk)
 
         self.assertEqual(response.status_code, 200)
@@ -418,8 +419,8 @@ class BillingNoticeTelegramTests(ResidentsMixin, TestCase):
         self.assertIn("<b>150 000 сум</b>", sent.text)
         self.assertIn("статей 140 и 141 Жилищного кодекса", sent.text)
         self.assertIn("Ответственный сотрудник: billing-desk", sent.text)
-        event = AuditEvent.objects.get(title="Billing notice sent to Telegram")
-        self.assertEqual((event.event_type, event.owner_id, event.actor), (AuditEvent.TYPE_REMINDER, self.owner.pk, "billing-desk"))
+        # Notices are not money: the activity log does not keep them.
+        self.assertFalse(AuditEvent.objects.exists())
 
     def test_resident_not_connected_to_telegram_is_refused(self):
         Owner.objects.filter(pk=self.owner.pk).update(telegram_status=Owner.TELEGRAM_NOT_CONNECTED)

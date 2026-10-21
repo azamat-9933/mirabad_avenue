@@ -92,10 +92,10 @@ def _day(raw, what: str) -> date | None:
     return value
 
 
-def _audit(request, period, title, message, building=None, **metadata):
+def _audit(request, period, title, message, building=None, kind=AuditEvent.TYPE_PERIOD_EDIT, **metadata):
     record_event(
         request,
-        event_type=AuditEvent.TYPE_BILLING,
+        event_type=kind,
         title=title,
         message=message,
         complex=building.complex if building else None,
@@ -165,6 +165,7 @@ def set_status(request, period, target: str):
             "Billing period recalculated" if was_reopened else "Billing period closed",
             f"Period {period.title} was {'recalculated and closed' if was_reopened else 'closed'}: "
             f"{len(charges)} charges, {total} UZS.",
+            kind=AuditEvent.TYPE_PERIOD_STATUS,
             fromStatus=BillingPeriod.STATUS_REOPENED if was_reopened else BillingPeriod.STATUS_DRAFT,
             toStatus=BillingPeriod.STATUS_CLOSED,
             chargeCount=len(charges),
@@ -185,6 +186,7 @@ def set_status(request, period, target: str):
             period,
             "Billing period reopened",
             f"Period {period.title} was reopened for corrections.",
+            kind=AuditEvent.TYPE_PERIOD_STATUS,
             fromStatus=BillingPeriod.STATUS_CLOSED,
             toStatus=BillingPeriod.STATUS_REOPENED,
         )

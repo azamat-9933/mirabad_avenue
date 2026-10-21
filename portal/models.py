@@ -255,37 +255,33 @@ class ChecklistNote(models.Model):
 
 
 class AuditEvent(models.Model):
-    """Operator activity log: who did what, when and from where, across the portal and Django admin.
+    """Activity log of money and billing: who did what, when and from where.
 
-    Rows are append-only. They are written through ``portal.audit.record_event`` (and the signals
-    in ``portal.signals``) and are read-only in admin; only users with ``portal.view_auditevent``
-    (superusers have it) can read them.
+    Only the kinds in TYPE_CHOICES are kept: payments (Click/Payme and those operators take),
+    balances changed by hand, billing period work and residents linking Telegram. Rows are
+    append-only, written through ``portal.audit.record_event`` and read-only in admin; users with
+    ``portal.view_auditevent`` (every operator is a superuser) can read them.
     """
 
-    TYPE_EXPORT = "export"
-    TYPE_REMINDER = "reminder"
-    TYPE_ALERT = "alert"
-    TYPE_BALANCE = "balance"
-    TYPE_NOTE = "note"
-    TYPE_STATUS = "status"
-    TYPE_SYSTEM = "system"
-    TYPE_BILLING = "billing"
-    TYPE_ADMIN = "admin"
-    TYPE_AUTH = "auth"
+    # What the log keeps (the owner's choice, 2026-10-21): money and balances, billing period work and
+    # residents linking Telegram. Sign-ins, exports, alerts, notes and the like are not logged.
+    TYPE_ONLINE_PAYMENT = "online_payment"  # Click (and Payme once it is connected)
+    TYPE_OPERATOR_PAYMENT = "operator_payment"  # cash, card or transfer taken by an operator
+    TYPE_BALANCE = "balance"  # a balance changed by hand: a subtraction, an entry in admin
+    TYPE_PERIOD_EDIT = "period_edit"  # a billing period created, its tables or costs saved, deleted
+    TYPE_PERIOD_STATUS = "period_status"  # a billing period closed, recalculated or reopened
+    TYPE_TELEGRAM = "telegram"  # a resident linked the bot
     TYPE_CHOICES = [
-        (TYPE_EXPORT, "Export"),
-        (TYPE_REMINDER, "Reminder"),
-        (TYPE_ALERT, "Alert"),
-        (TYPE_BALANCE, "Balance"),
-        (TYPE_NOTE, "Note"),
-        (TYPE_STATUS, "Status"),
-        (TYPE_SYSTEM, "System"),
-        (TYPE_BILLING, "Billing"),
-        (TYPE_ADMIN, "Admin change"),
-        (TYPE_AUTH, "Sign-in"),
+        (TYPE_ONLINE_PAYMENT, "Payment: Click / Payme"),
+        (TYPE_OPERATOR_PAYMENT, "Payment: operator"),
+        (TYPE_BALANCE, "Balance change"),
+        (TYPE_PERIOD_EDIT, "Billing period: edited"),
+        (TYPE_PERIOD_STATUS, "Billing period: closed / opened"),
+        (TYPE_TELEGRAM, "Telegram connected"),
     ]
+    LOGGED_TYPES = frozenset(value for value, _label in TYPE_CHOICES)
 
-    event_type = models.CharField(max_length=24, choices=TYPE_CHOICES, default=TYPE_SYSTEM)
+    event_type = models.CharField(max_length=24, choices=TYPE_CHOICES, verbose_name="Category")
     title = models.CharField(max_length=180)
     message = models.TextField()
     # The operator account. Kept as SET_NULL so deleting a user never deletes their history;
