@@ -56,5 +56,5 @@ def record_event(request=None, *, user=None, actor=None, **fields):
 
 
 def can_view_audit(user):
-    """The activity log is for the head administrator: superusers, or users granted the view permission."""
+    """Superusers (every operator account, see portal.accounts) or users granted the view permission."""
     return bool(getattr(user, "is_authenticated", False) and user.has_perm("portal.view_auditevent"))

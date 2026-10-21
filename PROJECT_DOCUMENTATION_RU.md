@@ -332,7 +332,7 @@ Proxy-модели (`Complex`, `Building`, `Apartment`, `Owner`) над `main_ap
 - UI-override статусов таблиц без изменения core-моделей.
 
 ### Журнал действий операторов (`AuditEvent`)
-Операторы — обычные пользователи Django (`auth.User`, свой `AUTH_USER_MODEL` не задан). Главный администратор — суперпользователь (или пользователь с правом `portal.view_auditevent`).
+Операторы — пользователи Django (`auth.User`, свой `AUTH_USER_MODEL` не задан). Платформой пользуются только операторы, и у каждого полные права: новая учётная запись сразу получает `is_staff` и `is_superuser` (`portal/accounts.py`, сигнал `pre_save` при создании), а миграция `portal.0006_operators_full_access` дала их всем активным учётным записям. Доступ отбирают отключением учётной записи (Active); права, сужённые вручную на странице пользователя, так и остаются (тогда журнал читает только пользователь с правом `portal.view_auditevent`).
 
 - Каждая запись привязана к пользователю: `user` (FK на `auth.User`, `SET_NULL` — при удалении оператора история остаётся), `actor` (username на момент действия), `ip_address`, `created_at`, связи с сектором/домом/квартирой/жильцом и `metadata` (детали: id транзакции, суммы, статусы «было → стало», изменённые поля).
 - Запись создаётся только через `portal.audit.record_event()`; пользователь и IP берутся из запроса (`portal.audit.AuditRequestMiddleware` даёт запрос и сигналам).
@@ -342,7 +342,7 @@ Proxy-модели (`Complex`, `Building`, `Apartment`, `Owner`) над `main_ap
   - любое добавление/изменение/удаление в Django admin (тип `admin`, сигнал на `LogEntry`, с перечнем изменённых полей);
   - массовое удаление в admin («Удалить выбранные»): Django создаёт `LogEntry` таких удалений через `bulk_create`, без сигнала, поэтому действие `delete_selected` для всех моделей заменено обёрткой (`portal/admin.py`), которая пишет запись на каждый удалённый объект (одиночное удаление этим действием тоже пишется один раз);
   - вход, выход и неудачные попытки входа (тип `auth`; сохраняется только введённый username, пароль никогда).
-- Чтение: только главный администратор. `GET /api/lists/audit/` и `POST /api/audit/export/` отвечают 403 остальным, `auditEvents` в snapshot для них пуст, кнопки и дровер журнала в портале не рендерятся.
+- Чтение: суперпользователи (то есть все операторы) и пользователи с `portal.view_auditevent`. `GET /api/lists/audit/` и `POST /api/audit/export/` отвечают 403 остальным, `auditEvents` в snapshot для них пуст, кнопки и дровер журнала в портале не рендерятся.
 - Журнал неизменяемый: в admin нельзя добавить, изменить или удалить запись (даже суперпользователю). Список в admin фильтруется по оператору, типу и дате.
 - Миграция `portal.0004_audit_operator` привязывает старые записи к пользователям по username.
 
@@ -355,7 +355,7 @@ Proxy-модели (`Complex`, `Building`, `Apartment`, `Owner`) над `main_ap
 - `billing`: `0001_initial`, `0002_apartment_accounts`, `0003_boiler_rooms`, `0004_heating_record_dates`, `0005_heatingrecord_days_given`, `0006_remove_unused_models`
 - `payments`: `0001_initial`, `0002_apartment_accounts`, `0003_click_transactions`
 - `properties`: `0001_initial`, `0002_remove_building_section`
-- `portal`: `0001_initial`, `0002_alter_workspaceprofile_organization_and_more`, `0003_remove_system_health`, `0004_audit_operator`, `0005_operator_alerts`
+- `portal`: `0001_initial`, `0002_alter_workspaceprofile_organization_and_more`, `0003_remove_system_health`, `0004_audit_operator`, `0005_operator_alerts`, `0006_operators_full_access`
 
 `main_app 0003/0004` сводят Telegram-статусы к двум: `0003` переводит старые значения (`connected`/`pending`/`review`/`not_linked`/пусто) в `connected`, если у жильца есть Telegram id или username либо статус «подключён», иначе в `not_linked` (так портал их и показывал); `0004` делает `telegram_status` полем с choices и default `not_linked` и добавляет `telegram_language`.
 
@@ -406,7 +406,7 @@ Proxy-модели (`Complex`, `Building`, `Apartment`, `Owner`) над `main_ap
 Фильтры:
 - `search`, `type`, `actor`, `user_id` (оператор), `district`, `period`, `period_from`, `period_to`,
 `complex_id`, `owner_id`, `ordering`.
-- Только для главного администратора (иначе 403). Строка содержит `actor`, `actorId`, `actorName`, `ipAddress`.
+- Только для тех, кто читает журнал (см. выше; иначе 403). Строка содержит `actor`, `actorId`, `actorName`, `ipAddress`.
 
 ### `GET /api/lists/complexes/`
 Фильтры:
@@ -416,7 +416,7 @@ Proxy-модели (`Complex`, `Building`, `Apartment`, `Owner`) над `main_ap
 
 ### Audit/checklist/support/session
 - `POST /api/audit/note/` — добавить `AuditEvent`.
-- `POST /api/audit/export/` — выгрузка журнала аудита в XLSX (только главный администратор; фильтр `user_id`, колонка IP).
+- `POST /api/audit/export/` — выгрузка журнала аудита в XLSX (только тем, кто читает журнал; фильтр `user_id`, колонка IP).
 - `POST /api/checklist/note/` — create/toggle checklist note.
 - `POST /api/checklist/item/` — отметить/сбросить пункты чеклиста.
 - `POST /api/support/ticket/` — создать `SupportTicket` + `AuditEvent`.
@@ -694,7 +694,7 @@ Admin минимален: в нём только то, чем портал не 
 
 ## 14. Тесты и качество
 
-Запуск: `python manage.py test` — 220 тестов (нужен `.env` или `DEBUG=True`, см. 5.5).
+Запуск: `python manage.py test` — 222 тестов (нужен `.env` или `DEBUG=True`, см. 5.5).
 
 Наличие тестов:
 - `billing/tests.py` (34) — core биллинга: расчеты, `close_period`, `recalculate`, проводки в журнал, начисления пустой квартире и переход ее долга к новому владельцу.

@@ -212,7 +212,10 @@ class PortalAuthenticationTests(TestCase):
 
     def test_admin_login_stays_reachable_and_admin_requires_staff(self):
         self.assertEqual(self.client.get(reverse("admin:login")).status_code, 200)
+        # Every operator account has full rights (portal.accounts); one narrowed by hand loses admin.
         self.client.force_login(self.user)
+        self.assertEqual(self.client.get(reverse("admin:index")).status_code, 200)
+        type(self.user).objects.filter(pk=self.user.pk).update(is_staff=False, is_superuser=False)
         response = self.client.get(reverse("admin:index"))
         self.assertRedirects(
             response,
@@ -1134,8 +1137,40 @@ class PortalInputValidationTests(TestCase):
         self.assertEqual(complex_row["waterM3"], 5.5)
 
 
+class OperatorRightsTests(TestCase):
+    """Only operators use the platform, and each of them has full rights in the portal and admin."""
+
+    def test_a_new_account_is_staff_and_superuser(self):
+        user = get_user_model().objects.create_user(username="kassir3", password="unused-password")
+
+        self.assertEqual((user.is_staff, user.is_superuser), (True, True))
+        # Rights narrowed later by hand stay narrowed.
+        user.is_superuser = False
+        user.save()
+        user.refresh_from_db()
+        self.assertFalse(user.is_superuser)
+
+    def test_migration_gives_every_active_account_full_rights(self):
+        from importlib import import_module
+
+        from django.apps import apps as django_apps
+
+        give = import_module("portal.migrations.0006_operators_full_access").give_operators_full_rights
+        User = get_user_model()
+        active = User.objects.create_user(username="old-operator", password="unused-password")
+        gone = User.objects.create_user(username="left", password="unused-password", is_active=False)
+        User.objects.update(is_staff=False, is_superuser=False)
+
+        give(django_apps, None)
+
+        active.refresh_from_db()
+        gone.refresh_from_db()
+        self.assertEqual((active.is_staff, active.is_superuser), (True, True))
+        self.assertEqual((gone.is_staff, gone.is_superuser), (False, False))
+
+
 class OperatorActivityLogTests(TestCase):
-    """Every operator action is attributed to their user account and visible only to the head administrator."""
+    """Every operator action is attributed to their user account; every operator (full rights) can read the log."""
 
     password = "operator-test-password"
 
@@ -1269,8 +1304,13 @@ class OperatorActivityLogTests(TestCase):
         self.assertEqual(period.status, BillingPeriod.STATUS_DRAFT)
         self.assertFalse(AuditEvent.objects.filter(event_type=AuditEvent.TYPE_BILLING).exists())
 
-    def test_operators_cannot_read_the_log(self):
+    def test_operators_read_the_log_unless_their_rights_were_narrowed(self):
         self.client.force_login(self.operator)
+        self.assertEqual(self.client.get(reverse("portal:api_list_audit")).status_code, 200)
+        self.assertIn('id="audit-drawer"', self.client.get(reverse("portal:dashboard")).content.decode())
+
+        type(self.operator).objects.filter(pk=self.operator.pk).update(is_staff=False, is_superuser=False)
+        self.operator.refresh_from_db()
         self.assertEqual(self.client.get(reverse("portal:api_list_audit")).status_code, 403)
         self.assertEqual(self._post_json("portal:api_export_audit", {}).status_code, 403)
         self.assertEqual(build_portal_data(self.operator)["auditEvents"], [])
@@ -1296,10 +1336,9 @@ class OperatorActivityLogTests(TestCase):
         self.client.force_login(self.operator)
         self._post_json("portal:api_audit_note", {"message": "test"})
         event = AuditEvent.objects.get(event_type=AuditEvent.TYPE_NOTE)
-        # Not staff: the admin sends them to its sign-in page.
-        self.assertEqual(self.client.get("/admin/portal/auditevent/").status_code, 302)
-        self.client.force_login(self.head_admin)
+        # An operator reads it in admin too, but nobody can change or delete an entry.
         self.assertContains(self.client.get("/admin/portal/auditevent/"), "Audit note")
+        self.client.force_login(self.head_admin)
         edit = self.client.post(f"/admin/portal/auditevent/{event.id}/change/", {"title": "edited"})
         delete = self.client.post(f"/admin/portal/auditevent/{event.id}/delete/", {"post": "yes"})
         self.assertEqual((edit.status_code, delete.status_code), (403, 403))
