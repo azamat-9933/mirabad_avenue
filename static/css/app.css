@@ -14586,13 +14586,50 @@ html.dark .command-item-icon,
 }
 
 .resident-command-profile-id-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
     border-radius: 14px;
     border: 1px solid rgba(79, 142, 247, 0.22);
     background: rgba(79, 142, 247, 0.09);
     padding: 10px 12px;
 }
 
-.resident-command-profile-id-card span {
+.resident-command-profile-id-copy {
+    min-width: 0;
+}
+
+/* Add payment for the resident shown, next to their ID. */
+.resident-command-profile-pay {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 40px;
+    padding: 0 14px;
+    border-radius: 12px;
+    border: 1px solid rgba(15, 155, 106, 0.35);
+    background: linear-gradient(135deg, #12A673, #0B8A5E);
+    color: #FFFFFF;
+    font-size: 13px;
+    font-weight: 900;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+    box-shadow: 0 8px 18px rgba(15, 155, 106, 0.22);
+    transition: transform 0.16s ease, box-shadow 0.16s ease;
+}
+
+.resident-command-profile-pay:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 12px 24px rgba(15, 155, 106, 0.3);
+}
+
+.resident-command-profile-pay .material-symbols-outlined {
+    font-size: 17px !important;
+}
+
+.resident-command-profile-id-copy span {
     display: block;
     font-size: 10px;
     font-weight: 900;
@@ -14601,7 +14638,7 @@ html.dark .command-item-icon,
     color: #59739A;
 }
 
-.resident-command-profile-id-card strong {
+.resident-command-profile-id-copy strong {
     display: block;
     margin-top: 4px;
     font-size: 18px;
@@ -14716,7 +14753,7 @@ html.dark .command-item-icon,
 }
 
 .resident-command-profile-panel.is-loading .resident-command-profile-field strong,
-.resident-command-profile-panel.is-loading .resident-command-profile-id-card strong,
+.resident-command-profile-panel.is-loading .resident-command-profile-id-copy strong,
 .resident-command-profile-panel.is-loading .resident-command-profile-balance [data-resident-profile-balance] {
     display: inline-block !important;
     color: transparent !important;
@@ -15015,59 +15052,6 @@ html.dark .command-item-icon,
     max-height: none;
     overflow-y: auto;
     padding-right: 2px;
-}
-
-.add-payment-result {
-    align-self: start;
-    border-radius: 16px;
-    border: 1px solid rgba(15, 23, 42, 0.08);
-    background: linear-gradient(145deg, rgba(255, 255, 255, 0.9), rgba(242, 248, 255, 0.82));
-    padding: 10px 11px;
-    text-align: left;
-    transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease;
-}
-
-.add-payment-result:hover,
-.add-payment-result.is-active {
-    transform: translateY(-1px);
-    border-color: rgba(79, 142, 247, 0.24);
-    box-shadow: 0 14px 28px rgba(79, 142, 247, 0.12);
-}
-
-.add-payment-result-top {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-}
-
-.add-payment-result-name {
-    color: #18212F;
-    font-size: 14px;
-    font-weight: 900;
-    line-height: 1.2;
-}
-
-.add-payment-result-balance {
-    font-size: 13.5px;
-    font-weight: 900;
-    white-space: nowrap;
-}
-
-.add-payment-result-balance.is-positive {
-    color: #0F9B6A;
-}
-
-.add-payment-result-balance.is-negative {
-    color: #D13232;
-}
-
-.add-payment-result-meta {
-    margin-top: 5px;
-    color: #66768A;
-    font-size: 11px;
-    font-weight: 700;
-    line-height: 1.45;
 }
 
 .add-payment-search-empty,
@@ -15515,8 +15499,6 @@ html.dark .add-payment-hero,
 
 html.dark .add-payment-hero h2,
 [data-theme="dark"] .add-payment-hero h2,
-html.dark .add-payment-result-name,
-[data-theme="dark"] .add-payment-result-name,
 html.dark .add-payment-search-empty strong,
 [data-theme="dark"] .add-payment-search-empty strong,
 html.dark .add-payment-placeholder strong,
@@ -15532,8 +15514,6 @@ html.dark .add-payment-resident-id-card strong,
 
 html.dark .add-payment-hero small,
 [data-theme="dark"] .add-payment-hero small,
-html.dark .add-payment-result-meta,
-[data-theme="dark"] .add-payment-result-meta,
 html.dark .add-payment-search-empty small,
 [data-theme="dark"] .add-payment-search-empty small,
 html.dark .add-payment-placeholder small,
@@ -15545,8 +15525,6 @@ html.dark .add-payment-submit-note,
 
 html.dark .add-payment-search-shell input,
 [data-theme="dark"] .add-payment-search-shell input,
-html.dark .add-payment-result,
-[data-theme="dark"] .add-payment-result,
 html.dark .add-payment-sheet,
 [data-theme="dark"] .add-payment-sheet,
 html.dark .add-payment-resident-sheet,
@@ -17882,19 +17860,19 @@ html.dark .resident-command-profile-id-card,
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
-html.dark .resident-command-profile-id-card span,
+html.dark .resident-command-profile-id-copy span,
 html.dark .resident-command-profile-field > span:first-child,
 html.dark .resident-command-profile-fallback,
-[data-theme="dark"] .resident-command-profile-id-card span,
+[data-theme="dark"] .resident-command-profile-id-copy span,
 [data-theme="dark"] .resident-command-profile-field > span:first-child,
 [data-theme="dark"] .resident-command-profile-fallback {
     color: #9AA6BD;
 }
 
-html.dark .resident-command-profile-id-card strong,
+html.dark .resident-command-profile-id-copy strong,
 html.dark .resident-command-profile-field strong,
 html.dark .resident-command-profile-action,
-[data-theme="dark"] .resident-command-profile-id-card strong,
+[data-theme="dark"] .resident-command-profile-id-copy strong,
 [data-theme="dark"] .resident-command-profile-field strong,
 [data-theme="dark"] .resident-command-profile-action {
     color: #F0F2F8;
@@ -17937,10 +17915,10 @@ html.dark .resident-command-profile-copy.is-copied,
 }
 
 html.dark .resident-command-profile-panel.is-loading .resident-command-profile-field strong,
-html.dark .resident-command-profile-panel.is-loading .resident-command-profile-id-card strong,
+html.dark .resident-command-profile-panel.is-loading .resident-command-profile-id-copy strong,
 html.dark .resident-command-profile-panel.is-loading .resident-command-profile-balance [data-resident-profile-balance],
 [data-theme="dark"] .resident-command-profile-panel.is-loading .resident-command-profile-field strong,
-[data-theme="dark"] .resident-command-profile-panel.is-loading .resident-command-profile-id-card strong,
+[data-theme="dark"] .resident-command-profile-panel.is-loading .resident-command-profile-id-copy strong,
 [data-theme="dark"] .resident-command-profile-panel.is-loading .resident-command-profile-balance [data-resident-profile-balance],
 html.dark .resident-command-profile-panel.is-loading .resident-command-profile-chip,
 [data-theme="dark"] .resident-command-profile-panel.is-loading .resident-command-profile-chip {
@@ -21600,7 +21578,6 @@ html.dark .resident-command-profile-icon,
 }
 
 html.dark .add-payment-search-shell input,
-html.dark .add-payment-result,
 html.dark .add-payment-sheet,
 html.dark .add-payment-resident-sheet,
 html.dark .add-payment-resident-field,
@@ -21609,7 +21586,6 @@ html.dark .add-payment-amount-field,
 html.dark .add-payment-toggle-group,
 html.dark .add-payment-resident-photo-shell,
 [data-theme="dark"] .add-payment-search-shell input,
-[data-theme="dark"] .add-payment-result,
 [data-theme="dark"] .add-payment-sheet,
 [data-theme="dark"] .add-payment-resident-sheet,
 [data-theme="dark"] .add-payment-resident-field,
@@ -22022,8 +21998,9 @@ html.dark .profile-telegram-disconnect,
     letter-spacing: 0;
 }
 
-/* The notice window search has its own clear button; hide the browser's second one. */
-[data-billing-notice-search]::-webkit-search-cancel-button {
+/* The notice and payment window searches have their own clear button; hide the browser's second one. */
+[data-billing-notice-search]::-webkit-search-cancel-button,
+[data-add-payment-search]::-webkit-search-cancel-button {
     -webkit-appearance: none;
     display: none;
 }
@@ -22115,6 +22092,17 @@ html.dark .profile-telegram-disconnect,
     font-weight: 900;
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
+}
+
+/* The payment window's search column is narrow: the whole name wraps instead of being cut. */
+.add-payment-search-results .billing-notice-result-copy strong {
+    white-space: normal;
+    line-height: 1.25;
+}
+
+/* A balance in credit (the payment window lists every resident, not only debtors). */
+.billing-notice-result-debt.is-positive {
+    color: #0F9B6A;
 }
 
 .billing-notice-result-empty {

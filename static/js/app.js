@@ -330,7 +330,7 @@
         "Payment will be saved and balances will refresh from backend data.": { ru: "Платёж будет сохранён, после чего балансы обновятся из backend-данных.", uz: "To'lov saqlanadi va keyin balanslar backend ma'lumotlaridan yangilanadi." },
         "Select a resident": { ru: "Выберите абонента", uz: "Abonentni tanlang" },
         "Choose a resident on the left to prepare a real payment operation.": { ru: "Выберите абонента слева, чтобы подготовить реальную платёжную операцию.", uz: "Haqiqiy to'lov amalini tayyorlash uchun chapdan abonentni tanlang." },
-        "Search by name, phone, Telegram, house or apartment...": { ru: "Поиск по имени, телефону, Telegram, дому или квартире...", uz: "Ism, telefon, Telegram, uy yoki xonadon bo'yicha qidiring..." },
+        "Search by name, phone, Telegram, house, apartment or personal account...": { ru: "Поиск по имени, телефону, Telegram, дому, квартире или лицевому счёту...", uz: "Ism, telefon, Telegram, uy, kvartira yoki abonent raqami bo'yicha qidirish..." },
         "Syncing backend data...": { ru: "Синхронизация backend-данных...", uz: "Backend ma'lumotlari sinxronlanmoqda..." },
         "Saving payment...": { ru: "Сохранение платежа...", uz: "To'lov saqlanmoqda..." },
         "Resident ID could not be resolved.": { ru: "Не удалось определить ID абонента.", uz: "Abonent ID aniqlanmadi." },
@@ -942,7 +942,7 @@
         "Search inside table...": { ru: "Поиск в таблице...", uz: "Jadvaldan qidirish..." },
         "Search audit events...": { ru: "Поиск событий аудита...", uz: "Audit hodisalarini qidirish..." },
         "Search residents...": { ru: "Поиск жильцов...", uz: "Yashovchilarni qidirish..." },
-        "Search by name, phone, Telegram, house or apartment...": { ru: "Поиск по имени, телефону, Telegram, дому или квартире...", uz: "Ism, telefon, Telegram, uy yoki xonadon bo'yicha qidiring..." },
+        "Search by name, phone, Telegram, house, apartment or personal account...": { ru: "Поиск по имени, телефону, Telegram, дому, квартире или лицевому счёту...", uz: "Ism, telefon, Telegram, uy, kvartira yoki abonent raqami bo'yicha qidirish..." },
         "Search district, house, apartment, resident...": { ru: "Поиск района, дома, квартиры, жильца...", uz: "Hudud, uy, xonadon, yashovchi..." },
         "Search residents, reports, alerts, actions...": { ru: "Поиск жителей, отчетов, уведомлений, действий...", uz: "Rezidentlar, hisobotlar, xabarlar, amallar..." },
         "Pressure drop detected, payment sync delayed...": { ru: "Падение давления, задержка синхронизации платежей...", uz: "Bosim pasaydi, to'lov sinxronizatsiyasi kechikdi..." },
@@ -8159,6 +8159,7 @@
         historyButton: residentProfileModal.querySelector("[data-resident-profile-history]"),
         editLink: residentProfileModal.querySelector("[data-resident-profile-edit]"),
         billingButton: residentProfileModal.querySelector("[data-resident-profile-billing-notice]"),
+        addPaymentButton: residentProfileModal.querySelector("[data-resident-profile-add-payment]"),
     } : null;
     const extractOwnerBackendId = (...values) => {
         for (const value of values) {
@@ -8354,6 +8355,16 @@
             if (!residentProfileState.resident) return;
             window.HydroFlowOpenResidentHistory?.(residentProfileState.resident);
         });
+        // Add payment for the resident shown: the payment window opens with them chosen.
+        residentProfileNodes.addPaymentButton?.addEventListener("click", () => {
+            if (!residentProfileState.resident) return;
+            const ownerBackendId = extractOwnerBackendId(
+                residentProfileState.resident.ownerBackendId,
+                residentProfileState.resident.backendId,
+                residentProfileState.resident.id
+            );
+            if (ownerBackendId) window.HydroFlowOpenAddPaymentForResident?.(ownerBackendId);
+        });
         residentProfileNodes.billingButton?.addEventListener("click", () => {
             if (!residentProfileState.resident) return;
             const ownerBackendId = extractOwnerBackendId(
@@ -8443,6 +8454,7 @@
         resident?.complex,
         resident?.apartment,
         resident?.apartmentNumber,
+        resident?.personalAccount,
     ].filter(Boolean).join(" "));
     const addPaymentResidentByOwnerId = (ownerBackendId) => {
         const ownerId = extractOwnerBackendId(ownerBackendId);
@@ -8568,21 +8580,24 @@
             const isPositiveBalance = Number(resident.balance || 0) >= 0;
             const residentOwnerId = extractOwnerBackendId(resident.ownerBackendId, resident.backendId, resident.id);
             const isSelected = ownerId && residentOwnerId === ownerId;
+            // The same card as the payment notice search: who, where, which account, the balance.
+            const meta = [
+                `ID ${residentOwnerId || "-"}`,
+                `${t("House")} ${resident.building || "-"}`,
+                `${t("Apartment")} ${resident.apartmentNumber || resident.apartment || "-"}`,
+                resident.personalAccount ? `${t("Personal account")} ${resident.personalAccount}` : "",
+            ].filter(Boolean).join(" · ");
             return `
-                <button class="add-payment-result ${isSelected ? "is-active" : ""}"
+                <button class="billing-notice-result ${isSelected ? "is-active" : ""}"
                     data-add-payment-select
                     data-owner-backend-id="${escapeAttr(residentOwnerId)}"
                     type="button">
-                    <div class="add-payment-result-top">
-                        <strong class="add-payment-result-name">${escapeHtml(resident.name || "Resident")}</strong>
-                        <span class="add-payment-result-balance ${isPositiveBalance ? "is-positive" : "is-negative"}">${escapeHtml(formatBillingUzs(resident.balance || 0))}</span>
-                    </div>
-                    <div class="add-payment-result-meta">${escapeHtml([
-                        resident.phone || "--",
-                        telegramHandleText(resident),
-                        resident.building || resident.complex || "--",
-                        resident.apartmentNumber || resident.apartment || "--",
-                    ].join(" · "))}</div>
+                    <span class="billing-notice-result-icon material-symbols-outlined" aria-hidden="true">person</span>
+                    <span class="billing-notice-result-copy">
+                        <strong>${escapeHtml(resident.name || "Resident")}</strong>
+                        <small>${escapeHtml(meta)}</small>
+                    </span>
+                    <span class="billing-notice-result-debt ${isPositiveBalance ? "is-positive" : ""}">${escapeHtml(formatBillingUzs(resident.balance || 0))}</span>
                 </button>
             `;
         }).join("");
