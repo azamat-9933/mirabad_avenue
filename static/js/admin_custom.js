@@ -417,9 +417,7 @@
         "Remove Uylar by selecting them and then select the \"Remove\" arrow button.": { en: "Remove buildings by selecting them and then clicking the \"Remove\" arrow button.", ru: "Выберите дома и затем нажмите кнопку-стрелку «Убрать».", uz: "Uylarni tanlab, so'ng \"Olib tashlash\" strelka tugmasini bosing." },
         "Hold down “Control”, or “Command” on a Mac, to select more than one.": { en: "Hold down “Control”, or “Command” on a Mac, to select more than one.", ru: "Удерживайте «Control», или «Command» на Mac, чтобы выбрать несколько элементов.", uz: "Bir nechta element tanlash uchun «Control» yoki Mac’da «Command» tugmasini bosib turing." },
         "Hold down 'Control', or 'Command' on a Mac, to select more than one.": { en: "Hold down 'Control', or 'Command' on a Mac, to select more than one.", ru: "Удерживайте 'Control', или 'Command' на Mac, чтобы выбрать несколько элементов.", uz: "Bir nechta element tanlash uchun 'Control' yoki Mac’da 'Command' tugmasini bosib turing." },
-        // Boiler rooms, the period's heating dates and its "Hisob-kitob" preview.
-        "Qozonxona": { en: "Boiler room", ru: "Котельная", uz: "Qozonxona" },
-        "Qozonxonalar": { en: "Boiler rooms", ru: "Котельные", uz: "Qozonxonalar" },
+        // The period's heating dates and its "Hisob-kitob" preview.
         "Isitish sanalari": { en: "Heating dates", ru: "Даты отопления", uz: "Isitish sanalari" },
         "Isitish boshlangan sana": { en: "Heated from", ru: "Начало отопления", uz: "Isitish boshlangan sana" },
         "Isitish tugagan sana": { en: "Heated until", ru: "Конец отопления", uz: "Isitish tugagan sana" },
@@ -445,9 +443,6 @@
         "Shu kundan boshlab isitish hisoblanadi. Bo'sh — bu davrda isitilmagan.": { en: "Heating is billed from this day. Empty — not heated this period.", ru: "Отопление начисляется с этого дня. Пусто — в этом периоде не отапливалась.", uz: "Shu kundan boshlab isitish hisoblanadi. Bo'sh — bu davrda isitilmagan." },
         "Isitilgan oxirgi kun. Bo'sh — davr oxirigacha.": { en: "Last heated day. Empty — until the period ends.", ru: "Последний день отопления. Пусто — до конца периода.", uz: "Isitilgan oxirgi kun. Bo'sh — davr oxirigacha." },
         "Bo'sh qolsa, o'tgan oydagi oxirgi ko'rsatkich olinadi.": { en: "If empty, last month's end reading is used.", ru: "Если пусто, берётся конечное показание прошлого месяца.", uz: "Bo'sh qolsa, o'tgan oydagi oxirgi ko'rsatkich olinadi." },
-        "Isitish xarajati uchun, agar uyda bir nechta qozonxona bo'lsa.": { en: "For a heating cost, when the house has several boiler rooms.", ru: "Для расхода на отопление, если в доме несколько котельных.", uz: "Isitish xarajati uchun, agar uyda bir nechta qozonxona bo'lsa." },
-        "Isitish gazi uchun, agar uyda bir nechta qozonxona bo'lsa.": { en: "For heating gas, when the house has several boiler rooms.", ru: "Для газа на отопление, если в доме несколько котельных.", uz: "Isitish gazi uchun, agar uyda bir nechta qozonxona bo'lsa." },
-        "Uyda bir nechta qozonxona bo'lsa: shu qozonxona isitadigan seksiyalar.": { en: "When the house has several boiler rooms: the sections this one heats.", ru: "Если в доме несколько котельных: секции, которые отапливает эта котельная.", uz: "Uyda bir nechta qozonxona bo'lsa: shu qozonxona isitadigan seksiyalar." },
         // Billing period state messages, shown after "<period name>: " (see translatePattern).
         "davr yopildi, hisoblar yaratildi.": { en: "period closed, charges created.", ru: "период закрыт, начисления созданы.", uz: "davr yopildi, hisoblar yaratildi." },
         "davr qayta ochildi.": { en: "period reopened.", ru: "период снова открыт.", uz: "davr qayta ochildi." },

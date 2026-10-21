@@ -61,29 +61,6 @@ class Building(models.Model):
         verbose_name_plural = "Houses"
 
 
-class BuildingSection(models.Model):
-    """
-    Bir uyning seksiyasi/kirish qismi.
-    Masalan: uy 66 da A1 va A5 seksiyalari alohida gaz hisoblagichlarga ega.
-    Agar uyda seksiya bo'lmasa, bu model ishlatilmaydi.
-    """
-    building = models.ForeignKey(
-        Building,
-        on_delete=models.CASCADE,
-        related_name="sections",
-        verbose_name="Uy",
-    )
-    name = models.CharField(max_length=50, verbose_name="Seksiya nomi")  # A1, A5, A7...
-
-    def __str__(self):
-        return f"{self.building} — {self.name}"
-
-    class Meta:
-        verbose_name = "Seksiya"
-        verbose_name_plural = "Seksiyalar"
-        unique_together = ("building", "name")
-
-
 class Apartment(models.Model):
     """Kvartira — har bir uydagi ayrim xona"""
     number = models.CharField(max_length=50, verbose_name="Kvartira raqami")
@@ -93,14 +70,6 @@ class Apartment(models.Model):
         on_delete=models.CASCADE,
         related_name="apartments",
         verbose_name="Uy",
-    )
-    section = models.ForeignKey(
-        BuildingSection,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="apartments",
-        verbose_name="Seksiya",
     )
     # The utility's abonent number for the unit; one per apartment, empty until it is known.
     personal_account = models.CharField(

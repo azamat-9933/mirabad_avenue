@@ -4,14 +4,13 @@ from collections import defaultdict
 from datetime import timedelta
 from decimal import Decimal, ROUND_HALF_UP
 
-from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models, transaction
 from django.db.models import Sum
 from django.utils import timezone
 from django.utils.dateparse import parse_date
 
-from properties.models import Apartment, Building, BuildingSection, Owner
+from properties.models import Apartment, Building, Owner
 
 from .calculation import group_thousands, heated_days, heating_range_days, previous_hot_water_readings
 
@@ -55,33 +54,6 @@ SERVICE_CHOICES = [
 
 # Invoice owner name for an apartment that had no owner when the period was billed.
 VACANT_OWNER_LABEL = "Egasi biriktirilmagan"
-
-
-class BoilerRoom(models.Model):
-    """A boiler room heating part of a building: heating costs and rates are counted per boiler room.
-
-    A building without boiler rooms is heated as a whole; with one, all its apartments belong to it;
-    with several, an apartment belongs to the boiler room serving its section.
-    """
-
-    building = models.ForeignKey(Building, on_delete=models.CASCADE, related_name="boiler_rooms", verbose_name="Uy")
-    name = models.CharField(max_length=50, verbose_name="Nomi", help_text="Masalan: A1")
-    sections = models.ManyToManyField(
-        BuildingSection,
-        blank=True,
-        related_name="boiler_rooms",
-        verbose_name="Seksiyalar",
-        help_text="Uyda bir nechta qozonxona bo'lsa: shu qozonxona isitadigan seksiyalar.",
-    )
-
-    class Meta:
-        verbose_name = "Qozonxona"
-        verbose_name_plural = "Qozonxonalar"
-        unique_together = ("building", "name")
-        ordering = ["building__number", "name"]
-
-    def __str__(self):
-        return f"{self.building.number} uy — {self.name}"
 
 
 class BillingPeriod(models.Model):
@@ -238,10 +210,7 @@ class BillingPeriod(models.Model):
         plan = plan or build_plan(self)
         created_services = 0
         updated_services = 0
-        services = {
-            (service.building_id, service.boiler_room_id, service.service_type): service
-            for service in self.services.all()
-        }
+        services = {(service.building_id, service.service_type): service for service in self.services.all()}
         synced = set()
         for zone in plan.zones:
             service = services.get(zone.key)
@@ -251,7 +220,6 @@ class BillingPeriod(models.Model):
                 service = BuildingService.objects.create(
                     period=self,
                     building=zone.building,
-                    boiler_room=zone.boiler_room,
                     service_type=zone.service_type,
                     is_from_inputs=True,
                 )
@@ -272,7 +240,7 @@ class BillingPeriod(models.Model):
                 service.sync_heating_usages(zone.rows)
             else:
                 service.sync_hot_water_readings(zone.rows)
-        # A service built from data that no longer exists (house removed, boiler room deleted) charges nothing.
+        # A service built from data that no longer exists (a house removed from the period) charges nothing.
         for service in services.values():
             if service.is_from_inputs and service.pk not in synced:
                 service.expense_items.all().delete()
@@ -289,7 +257,6 @@ class BillingPeriod(models.Model):
                 HeatingCalculationSummary.objects.create(
                     period=self,
                     building=service.building,
-                    section=None,
                     total_expenses=money(service.total_expense),
                     total_heated_area=service.total_volume,
                     cost_per_sqm=service.tariff,
@@ -298,7 +265,6 @@ class BillingPeriod(models.Model):
             HotWaterCalculationSummary.objects.create(
                 period=self,
                 building=service.building,
-                section=None,
                 total_expenses=money(service.total_expense),
                 total_consumption=service.total_volume,
                 tariff_per_m3=service.tariff,
@@ -428,7 +394,7 @@ class BillingPeriod(models.Model):
     def _charge_rows(self):
         """Charges of every service of the period: (service, owner, apartment, volume, tariff, amount)."""
         rows = []
-        for service in self.services.select_related("building", "boiler_room"):
+        for service in self.services.select_related("building"):
             rows.extend((service, *row) for row in self._build_service_charges(service))
         return rows
 
@@ -540,11 +506,6 @@ class BillingPeriod(models.Model):
                 created_by=author.get_username() if getattr(author, "pk", None) else "System",
             )
 
-            RecalculationLog.objects.create(
-                period=locked,
-                reason=reason,
-                author=author if getattr(author, "pk", None) else None,
-            )
             locked.status = self.STATUS_CLOSED
             locked.save(update_fields=["status"])
             self.status = locked.status
@@ -554,8 +515,6 @@ class BillingPeriod(models.Model):
 class BuildingService(models.Model):
     period = models.ForeignKey(BillingPeriod, on_delete=models.CASCADE, related_name="services")
     building = models.ForeignKey(Building, on_delete=models.CASCADE, related_name="billing_services")
-    # Heating of a building with boiler rooms is billed per boiler room; empty = the whole building.
-    boiler_room = models.ForeignKey(BoilerRoom, on_delete=models.PROTECT, null=True, blank=True, related_name="services")
     service_type = models.CharField(max_length=20, choices=SERVICE_CHOICES)
     # Built from the period's entered data (expenses, meters, connections) and refreshed from it on every close.
     is_from_inputs = models.BooleanField(default=False)
@@ -574,27 +533,17 @@ class BuildingService(models.Model):
         constraints = [
             models.UniqueConstraint(
                 fields=["period", "building", "service_type"],
-                condition=models.Q(boiler_room__isnull=True),
                 name="uniq_building_service_period_type",
-            ),
-            models.UniqueConstraint(
-                fields=["period", "boiler_room", "service_type"],
-                condition=models.Q(boiler_room__isnull=False),
-                name="uniq_boiler_room_service_period_type",
             ),
         ]
         ordering = ["period__start_date", "building__complex__title", "building__number", "service_type"]
 
     def __str__(self):
-        room = f" | {self.boiler_room.name}" if self.boiler_room_id else ""
-        return f"{self.period.title} | {self.building}{room} | {self.get_service_type_display()}"
+        return f"{self.period.title} | {self.building} | {self.get_service_type_display()}"
 
     @property
     def label(self):
-        place = f"{self.building.number} uy"
-        if self.boiler_room_id:
-            place += f", {self.boiler_room.name} qozonxona"
-        return f"{place} — {'isitish' if self.service_type == SERVICE_HEATING else 'issiq suv'}"
+        return f"{self.building.number} uy — {'isitish' if self.service_type == SERVICE_HEATING else 'issiq suv'}"
 
     def clean(self):
         super().clean()
@@ -789,116 +738,16 @@ class Charge(models.Model):
         return f"{self.owner or self.apartment} | {self.get_charge_type_display()} | {self.amount}"
 
 
-class Payment(models.Model):
-    METHOD_CASH = "cash"
-    METHOD_BANK = "bank"
-    METHOD_PAYME = "payme"
-    METHOD_CLICK = "click"
-    METHOD_MANUAL = "manual"
-    METHOD_CHOICES = [
-        (METHOD_CASH, "Cash"),
-        (METHOD_BANK, "Bank"),
-        (METHOD_PAYME, "Payme"),
-        (METHOD_CLICK, "Click"),
-        (METHOD_MANUAL, "Manual"),
-    ]
-
-    owner = models.ForeignKey(Owner, on_delete=models.CASCADE, related_name="billing_payments")
-    amount = models.DecimalField(max_digits=16, decimal_places=2)
-    method = models.CharField(max_length=20, choices=METHOD_CHOICES, default=METHOD_MANUAL)
-    external_id = models.CharField(max_length=255, blank=True)
-    comment = models.CharField(max_length=500, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    applied_at = models.DateTimeField(null=True, blank=True)
-    is_applied = models.BooleanField(default=False)
-
-    class Meta:
-        ordering = ["-created_at"]
-
-    def __str__(self):
-        return f"{self.owner} | {self.amount} | {self.get_method_display()}"
-
-    def clean(self):
-        super().clean()
-        if _decimal(self.amount) <= 0:
-            raise ValidationError({"amount": "Payment amount must be greater than zero."})
-
-    def apply(self):
-        # Imported here: payments.models imports billing.models.
-        from payments.models import Transaction
-        from payments.services import apply_balance_change
-
-        with transaction.atomic():
-            locked = Payment.objects.select_for_update().get(pk=self.pk)
-            if locked.is_applied:
-                raise ValidationError("Payment was already applied.")
-            # Cash/Payme/Click share their codes with Transaction types; bank and manual are manual entries.
-            direct_types = {self.METHOD_CASH, self.METHOD_PAYME, self.METHOD_CLICK}
-            description = f"[billing:payment] Billing payment #{locked.pk}"
-            if locked.comment:
-                description = f"{description}: {locked.comment}"
-            apply_balance_change(
-                locked.owner_id,
-                locked.amount,
-                locked.method if locked.method in direct_types else Transaction.TYPE_MANUAL,
-                description=description,
-                created_by="System",
-                external_id=locked.external_id,
-            )
-            locked.is_applied = True
-            locked.applied_at = timezone.now()
-            locked.save(update_fields=["is_applied", "applied_at"])
-            self.is_applied = locked.is_applied
-            self.applied_at = locked.applied_at
-            return self
-
-
-class RecalculationLog(models.Model):
-    period = models.ForeignKey(BillingPeriod, on_delete=models.CASCADE, related_name="recalculation_logs")
-    reason = models.TextField()
-    author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        ordering = ["-created_at"]
-
-    def __str__(self):
-        return f"{self.period.title} | {timezone.localtime(self.created_at):%d.%m.%Y %H:%M}"
-
-
 class Expense(models.Model):
     period = models.ForeignKey(BillingPeriod, on_delete=models.CASCADE, related_name="expenses", verbose_name="Davr")
     building = models.ForeignKey(Building, on_delete=models.CASCADE, related_name="expenses", verbose_name="Uy")
-    section = models.ForeignKey(
-        BuildingSection,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="expenses",
-        verbose_name="Seksiya",
-        help_text="Agar uyda seksiyalar bo'lsa (masalan 66-uy: A1, A5)",
-    )
     service_type = models.CharField(max_length=20, choices=SERVICE_CHOICES, verbose_name="Xizmat turi")
-    boiler_room = models.ForeignKey(
-        BoilerRoom,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="expenses",
-        verbose_name="Qozonxona",
-        help_text="Isitish xarajati uchun, agar uyda bir nechta qozonxona bo'lsa.",
-    )
     name = models.CharField(max_length=255, verbose_name="Xarajat nomi", help_text="Masalan: Qozonxona xizmati, Gaz sarfi...")
     amount = models.DecimalField(max_digits=16, decimal_places=2, verbose_name="Summa (so'm)")
 
     class Meta:
         verbose_name = "Xarajat"
         verbose_name_plural = "Xarajatlar"
-
-    def clean(self):
-        super().clean()
-        if self.boiler_room_id and self.building_id and self.boiler_room.building_id != self.building_id:
-            raise ValidationError({"boiler_room": "Qozonxona boshqa uyga tegishli."})
 
     def __str__(self):
         return f"{self.name} — {self.amount} so'm ({self.building})"
@@ -907,17 +756,7 @@ class Expense(models.Model):
 class GasMeterReading(models.Model):
     period = models.ForeignKey(BillingPeriod, on_delete=models.CASCADE, related_name="gas_meter_readings", verbose_name="Davr")
     building = models.ForeignKey(Building, on_delete=models.CASCADE, related_name="gas_meter_readings", verbose_name="Uy")
-    section = models.ForeignKey(BuildingSection, on_delete=models.SET_NULL, null=True, blank=True, related_name="gas_meter_readings", verbose_name="Seksiya")
     service_type = models.CharField(max_length=20, choices=SERVICE_CHOICES, verbose_name="Xizmat turi", help_text="Isitish uchun yoki GVS uchun gazh")
-    boiler_room = models.ForeignKey(
-        BoilerRoom,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="gas_meter_readings",
-        verbose_name="Qozonxona",
-        help_text="Isitish gazi uchun, agar uyda bir nechta qozonxona bo'lsa.",
-    )
     start_reading = models.DecimalField(
         max_digits=12,
         decimal_places=2,
@@ -933,19 +772,13 @@ class GasMeterReading(models.Model):
         verbose_name = "Gaz hisoblagich ko'rsatkichi"
         verbose_name_plural = "Gaz hisoblagich ko'rsatkichlari"
 
-    def clean(self):
-        super().clean()
-        if self.boiler_room_id and self.building_id and self.boiler_room.building_id != self.building_id:
-            raise ValidationError({"boiler_room": "Qozonxona boshqa uyga tegishli."})
-
     def previous_end_reading(self):
-        """The same meter's end reading in the latest earlier period (same house, boiler room and service)."""
+        """The same meter's end reading in the latest earlier period (same house and service)."""
         if not self.period_id or not self.building_id:
             return None
         return (
             GasMeterReading.objects.filter(
                 building_id=self.building_id,
-                boiler_room_id=self.boiler_room_id,
                 service_type=self.service_type,
                 period__start_date__lt=self.period.start_date,
             )
@@ -1149,7 +982,6 @@ class Invoice(models.Model):
 class HeatingCalculationSummary(models.Model):
     period = models.ForeignKey(BillingPeriod, on_delete=models.CASCADE, related_name="heating_summaries")
     building = models.ForeignKey(Building, on_delete=models.CASCADE, related_name="heating_summaries")
-    section = models.ForeignKey(BuildingSection, on_delete=models.SET_NULL, null=True, blank=True, related_name="heating_summaries")
     total_expenses = models.DecimalField(max_digits=16, decimal_places=2, verbose_name="Umumiy xarajatlar (so'm)")
     total_heated_area = models.DecimalField(max_digits=14, decimal_places=2, verbose_name="Umumiy qizdirilgan maydon (m²·kun)")
     cost_per_sqm = models.DecimalField(max_digits=12, decimal_places=4, verbose_name="1 m²·kun narxi (so'm)")
@@ -1166,7 +998,6 @@ class HeatingCalculationSummary(models.Model):
 class HotWaterCalculationSummary(models.Model):
     period = models.ForeignKey(BillingPeriod, on_delete=models.CASCADE, related_name="hot_water_summaries")
     building = models.ForeignKey(Building, on_delete=models.CASCADE, related_name="hot_water_summaries")
-    section = models.ForeignKey(BuildingSection, on_delete=models.SET_NULL, null=True, blank=True, related_name="hot_water_summaries")
     total_expenses = models.DecimalField(max_digits=16, decimal_places=2, verbose_name="Umumiy xarajatlar (so'm)")
     total_consumption = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Umumiy GVS sarfi (kub)")
     tariff_per_m3 = models.DecimalField(max_digits=12, decimal_places=4, verbose_name="1 kub tarifi (so'm)")

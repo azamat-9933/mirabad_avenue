@@ -26,7 +26,6 @@ from billing.models import (
     SERVICE_HEATING,
     SERVICE_HOT_WATER,
     BillingPeriod,
-    BoilerRoom,
     Charge,
     Expense,
     GasMeterReading,
@@ -46,7 +45,7 @@ PAGE_SIZE = 10
 MONTHS_UZ = ["Yanvar", "Fevral", "Mart", "Aprel", "May", "Iyun", "Iyul", "Avgust", "Sentabr", "Oktabr", "Noyabr", "Dekabr"]
 SERVICE_NAMES = {SERVICE_HEATING: "isitish", SERVICE_HOT_WATER: "issiq suv"}
 DEFAULT_GAS_PRICE = Decimal("1000")
-GAS_FIELDS = ("start", "end", "price", "room")
+GAS_FIELDS = ("start", "end", "price")
 
 
 def default_period_name(start: date) -> str:
@@ -311,14 +310,11 @@ class BillingPeriodSheetView(PortalPageView):
                     }
                 )
 
-        expenses, gas_rows, boiler_rooms = [], [], []
+        expenses, gas_rows = [], []
         gas_price_default, gas_previous_default = DEFAULT_GAS_PRICE, None
         if building:
-            boiler_rooms = list(BoilerRoom.objects.filter(building=building).order_by("name"))
             for expense in self.period.expenses.filter(building=building, service_type=sheet_type).order_by("pk"):
-                expenses.append(
-                    {"pk": expense.pk, "name": expense.name, "amount": _text(expense.amount), "room": expense.boiler_room_id}
-                )
+                expenses.append({"pk": expense.pk, "name": expense.name, "amount": _text(expense.amount)})
             gas_readings = self.period.gas_meter_readings.filter(building=building, service_type=sheet_type).select_related("period")
             for reading in gas_readings.order_by("pk"):
                 gas_rows.append(
@@ -330,7 +326,6 @@ class BillingPeriodSheetView(PortalPageView):
                         "price": _text(reading.price_per_m3),
                         "used": _text(reading.consumption),
                         "cost": _text(money(reading.total_gas_cost)),
-                        "room": reading.boiler_room_id,
                     }
                 )
             last_price = (
@@ -361,7 +356,6 @@ class BillingPeriodSheetView(PortalPageView):
                 "gas_rows": gas_rows,
                 "gas_price_default": _text(gas_price_default),
                 "gas_previous_default": _text(gas_previous_default),
-                "boiler_rooms": boiler_rooms if sheet_type == SERVICE_HEATING and len(boiler_rooms) > 1 else [],
                 "heating_url": self._sheet_url(building, SERVICE_HEATING),
                 "hot_water_url": self._sheet_url(building, SERVICE_HOT_WATER),
                 "house_links": [
@@ -525,16 +519,6 @@ class BillingPeriodSheetView(PortalPageView):
         messages.success(request, f"{building.number} uy: issiq suv jadvali saqlandi.")
 
     @staticmethod
-    def _room(raw, building, sheet_type, what):
-        raw = str(raw or "").strip()
-        if sheet_type != SERVICE_HEATING or not raw:
-            return None
-        room = BoilerRoom.objects.filter(pk=raw, building=building).first() if raw.isdigit() else None
-        if room is None:
-            raise ValidationError(f"{what}: qozonxona bu uyga tegishli emas.")
-        return room
-
-    @staticmethod
     def _new_rows(request, prefix: str, names) -> list[dict]:
         """The rows added in a window: {name: value} per row, from the repeated new_<name> fields."""
         columns = {name: request.POST.getlist(f"{prefix}{name}") for name in names}
@@ -546,42 +530,38 @@ class BillingPeriodSheetView(PortalPageView):
         period = self.period
         errors, kept, removed, added = [], [], [], []
 
-        def checked(name, raw_amount, raw_room):
+        def checked(name, raw_amount):
             amount = _number(raw_amount, f"«{name}»")
-            room = self._room(raw_room, building, sheet_type, f"«{name}»")
             if not name or not amount:
                 raise ValidationError(f"«{name or raw_amount}»: xarajat nomi va 0 dan katta summa kerak.")
-            return name[:255], money(amount), room
+            return name[:255], money(amount)
 
         for expense in period.expenses.filter(building=building, service_type=sheet_type):
             if request.POST.get(f"delete-{expense.pk}"):
                 removed.append(expense)
                 continue
             try:
-                expense.name, expense.amount, expense.boiler_room = checked(
+                expense.name, expense.amount = checked(
                     str(request.POST.get(f"name-{expense.pk}", expense.name) or "").strip(),
                     request.POST.get(f"amount-{expense.pk}", expense.amount),
-                    request.POST.get(f"room-{expense.pk}", expense.boiler_room_id or ""),
                 )
                 kept.append(expense)
             except ValidationError as exc:
                 errors.extend(exc.messages)
-        for row in self._new_rows(request, "new_", ("name", "amount", "room")):
+        for row in self._new_rows(request, "new_", ("name", "amount")):
             name = str(row["name"]).strip()
             if not name and not str(row["amount"]).strip():
                 continue  # an empty new row
             try:
-                name, amount, room = checked(name, row["amount"], row["room"])
-                added.append(
-                    Expense(period=period, building=building, service_type=sheet_type, name=name, amount=amount, boiler_room=room)
-                )
+                name, amount = checked(name, row["amount"])
+                added.append(Expense(period=period, building=building, service_type=sheet_type, name=name, amount=amount))
             except ValidationError as exc:
                 errors.extend(exc.messages)
         if errors:
             raise ValidationError(errors)
         for expense in removed:
             expense.delete()
-        Expense.objects.bulk_update(kept, ["name", "amount", "boiler_room"])
+        Expense.objects.bulk_update(kept, ["name", "amount"])
         Expense.objects.bulk_create(added)
         total = sum((expense.amount for expense in kept + added), Decimal("0"))
         _audit(
@@ -596,16 +576,15 @@ class BillingPeriodSheetView(PortalPageView):
         )
         messages.success(request, f"{building.number} uy, {SERVICE_NAMES[sheet_type]}: xarajatlar saqlandi.")
 
-    def _gas_meter(self, reading, values: dict, building, sheet_type):
-        """The gas meter with the typed start, end, price and boiler room, validated."""
+    def _gas_meter(self, reading, values: dict, building):
+        """The gas meter with the typed start, end and price, validated."""
         what = f"{building.number} uy, gaz hisoblagich"
         start = _number(values.get("start"), what)
         end = _number(values.get("end"), what)
         price = _number(values.get("price"), what)
-        room = self._room(values.get("room"), building, sheet_type, what)
         if end is None or not price:
             raise ValidationError(f"{what}: oxirgi ko'rsatkich va 1 m³ narxini kiriting.")
-        reading.start_reading, reading.end_reading, reading.price_per_m3, reading.boiler_room = start, end, price, room
+        reading.start_reading, reading.end_reading, reading.price_per_m3 = start, end, price
         effective = reading.effective_start_reading()
         if effective is None:
             raise ValidationError(f"{what}: boshlang'ich ko'rsatkich kiritilmagan va o'tgan oyda ham yo'q.")
@@ -625,7 +604,7 @@ class BillingPeriodSheetView(PortalPageView):
                 continue
             values = {name: request.POST.get(f"g{name}-{reading.pk}") for name in GAS_FIELDS}
             try:
-                kept.append(self._gas_meter(reading, values, building, sheet_type))
+                kept.append(self._gas_meter(reading, values, building))
             except ValidationError as exc:
                 errors.extend(exc.messages)
         for values in self._new_rows(request, "new_g", GAS_FIELDS):
@@ -633,7 +612,7 @@ class BillingPeriodSheetView(PortalPageView):
                 continue  # an empty new row
             reading = GasMeterReading(period=period, building=building, service_type=sheet_type)
             try:
-                added.append(self._gas_meter(reading, values, building, sheet_type))
+                added.append(self._gas_meter(reading, values, building))
             except ValidationError as exc:
                 errors.extend(exc.messages)
         if errors:

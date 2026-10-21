@@ -240,7 +240,6 @@
         <thead>
           <tr>
             <th class="bp-col-wide" data-pt="expense_name">Expense</th>
-            {% if boiler_rooms %}<th data-pt="boiler_room">Boiler room</th>{% endif %}
             <th class="bp-num" data-pt="amount">Amount</th>
             {% if not closed %}<th><span class="sr-only" data-pt="remove">Remove</span></th>{% endif %}
           </tr>
@@ -249,21 +248,17 @@
           {% for expense in expenses %}
             <tr>
               <td class="bp-col-wide"><input class="bp-input" name="name-{{ expense.pk }}" type="text" value="{{ expense.name }}" maxlength="255"{% if closed %} disabled{% endif %}/></td>
-              {% if boiler_rooms %}
-                <td><select class="bp-input" name="room-{{ expense.pk }}"{% if closed %} disabled{% endif %}><option value="">—</option>{% for room in boiler_rooms %}<option value="{{ room.pk }}"{% if room.pk == expense.room %} selected{% endif %}>{{ room.name }}</option>{% endfor %}</select></td>
-              {% endif %}
               <td class="bp-num"><input class="bp-input bp-input--number" inputmode="decimal" name="amount-{{ expense.pk }}" type="text" value="{{ expense.amount }}"{% if closed %} disabled{% endif %}/></td>
               {% if not closed %}<td class="bp-remove"><label title="Remove" data-pt-title="remove"><input name="delete-{{ expense.pk }}" type="checkbox" value="1" data-bp-remove/><span class="material-symbols-outlined" aria-hidden="true">delete</span></label></td>{% endif %}
             </tr>
           {% empty %}
-            <tr data-bp-empty-row><td class="bp-empty" colspan="4" data-pt="no_expenses">No expenses entered.</td></tr>
+            <tr data-bp-empty-row><td class="bp-empty" colspan="3" data-pt="no_expenses">No expenses entered.</td></tr>
           {% endfor %}
         </tbody>
       </table>
       <template data-bp-row-template>
         <tr>
           <td class="bp-col-wide"><input class="bp-input" name="new_name" type="text" maxlength="255"/></td>
-          {% if boiler_rooms %}<td><select class="bp-input" name="new_room"><option value="">—</option>{% for room in boiler_rooms %}<option value="{{ room.pk }}">{{ room.name }}</option>{% endfor %}</select></td>{% endif %}
           <td class="bp-num"><input class="bp-input bp-input--number" inputmode="decimal" name="new_amount" type="text"/></td>
           <td class="bp-remove"><button class="bp-icon-btn" data-bp-drop-row type="button" title="Remove" data-pt-title="remove"><span class="material-symbols-outlined" aria-hidden="true">close</span></button></td>
         </tr>
@@ -297,7 +292,6 @@
       <table data-skip-base-table-enhance="true" data-table-own-style class="bp-table bp-table--rows">
         <thead>
           <tr>
-            {% if boiler_rooms %}<th data-pt="boiler_room">Boiler room</th>{% endif %}
             <th class="bp-num" data-pt="gas_start">Start reading</th>
             <th class="bp-num" data-pt="gas_end">End reading</th>
             <th class="bp-num" data-pt="consumption">Used</th>
@@ -309,9 +303,6 @@
         <tbody data-bp-rows>
           {% for gas in gas_rows %}
             <tr data-bp-gas-row>
-              {% if boiler_rooms %}
-                <td><select class="bp-input" name="groom-{{ gas.pk }}"{% if closed %} disabled{% endif %}><option value="">—</option>{% for room in boiler_rooms %}<option value="{{ room.pk }}"{% if room.pk == gas.room %} selected{% endif %}>{{ room.name }}</option>{% endfor %}</select></td>
-              {% endif %}
               <td class="bp-num"><input class="bp-input bp-input--number" data-bp-gas-start inputmode="decimal" name="gstart-{{ gas.pk }}" placeholder="{{ gas.previous }}" title="Empty: last month's end reading" data-pt-title="previous_hint" type="text" value="{{ gas.start }}"{% if closed %} disabled{% endif %}/></td>
               <td class="bp-num"><input class="bp-input bp-input--number" data-bp-gas-end inputmode="decimal" name="gend-{{ gas.pk }}" type="text" value="{{ gas.end }}"{% if closed %} disabled{% endif %}/></td>
               <td class="bp-num" data-bp-gas-used>{{ gas.used }}</td>
@@ -320,13 +311,12 @@
               {% if not closed %}<td class="bp-remove"><label title="Remove" data-pt-title="remove"><input name="gdelete-{{ gas.pk }}" type="checkbox" value="1" data-bp-remove/><span class="material-symbols-outlined" aria-hidden="true">delete</span></label></td>{% endif %}
             </tr>
           {% empty %}
-            <tr data-bp-empty-row><td class="bp-empty" colspan="7" data-pt="no_gas">No gas meter entered.</td></tr>
+            <tr data-bp-empty-row><td class="bp-empty" colspan="6" data-pt="no_gas">No gas meter entered.</td></tr>
           {% endfor %}
         </tbody>
       </table>
       <template data-bp-row-template>
         <tr data-bp-gas-row>
-          {% if boiler_rooms %}<td><select class="bp-input" name="new_groom"><option value="">—</option>{% for room in boiler_rooms %}<option value="{{ room.pk }}">{{ room.name }}</option>{% endfor %}</select></td>{% endif %}
           <td class="bp-num"><input class="bp-input bp-input--number" data-bp-gas-start inputmode="decimal" name="new_gstart" placeholder="{{ gas_previous_default }}" type="text"/></td>
           <td class="bp-num"><input class="bp-input bp-input--number" data-bp-gas-end inputmode="decimal" name="new_gend" type="text"/></td>
           <td class="bp-num" data-bp-gas-used>—</td>

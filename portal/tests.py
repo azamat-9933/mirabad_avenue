@@ -16,7 +16,7 @@ from django.urls import reverse
 from django.utils import timezone
 from openpyxl import load_workbook
 
-from billing.models import BillingPeriod, Charge, Expense, HeatingRecord, HotWaterMeterReading, RecalculationLog
+from billing.models import BillingPeriod, Charge, Expense, HeatingRecord, HotWaterMeterReading
 from main_app.models import Apartment, Building, Complex, Owner
 from payments.models import Transaction
 from payments.services import OPENING_BALANCE_TAG, apply_account_change, apply_balance_change
@@ -973,7 +973,7 @@ class PortalBillingPeriodPagesTests(TestCase):
 
         period.refresh_from_db()
         self.assertEqual(period.status, BillingPeriod.STATUS_CLOSED)
-        self.assertTrue(RecalculationLog.objects.filter(period=period).exists())
+        self.assertTrue(AuditEvent.objects.filter(title="Billing period recalculated").exists())
         heating = Charge.objects.get(period=period, apartment=self.first, charge_type="heating", is_cancelled=False)
         self.assertGreater(heating.amount, Decimal("840851.77"))  # 31 days now instead of 30
 
@@ -1357,7 +1357,7 @@ class PortalPagesAfterOperatorsReviewTests(TestCase):
         self.assertEqual(
             registered,
             {
-                "auth.Group", "auth.User", "billing.BoilerRoom", "main_app.Apartment", "main_app.Building",
+                "auth.Group", "auth.User", "main_app.Apartment", "main_app.Building",
                 "main_app.Complex", "main_app.Owner", "payments.ClickTransaction", "payments.PaymeTransaction",
                 "portal.WorkspaceProfile",
             },

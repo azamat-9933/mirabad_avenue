@@ -300,7 +300,6 @@ def serialize_resident(apartment, owner, last_payment_at=None) -> dict:
     complex_obj = building.complex
     balance = _money(apartment.balance)
     has_contract = bool(owner and owner.has_contract)
-    section = apartment.section.name if apartment.section_id else ""
     telegram_status, telegram_connected = _telegram_state(owner)
     return {
         "id": _slug("owner", owner.id) if owner else _slug("apartment", apartment.id),
@@ -318,7 +317,6 @@ def serialize_resident(apartment, owner, last_payment_at=None) -> dict:
         "apartment": str(apartment.number),
         "apartmentNumber": apartment.number,
         "personalAccount": apartment.personal_account,
-        "section": section,
         "building": str(building.number),
         "buildingNumber": building.number,
         "complex": complex_obj.title,
@@ -335,7 +333,6 @@ def serialize_resident(apartment, owner, last_payment_at=None) -> dict:
         "contract": "True" if has_contract else "False",
         "hasContract": has_contract,
         "contractStatus": "True" if has_contract else "False",
-        "meter": section,
         "email": "",
         "telegramStatus": telegram_status,
         "telegramUser": str(owner.telegram_user or "").strip() if owner else "",
@@ -475,7 +472,7 @@ def transaction_override_map(transaction_ids=None) -> dict[int, str]:
 def serialize_complex(complex_obj, owner_for, payment_totals_for, override_maps, hot_water_by_complex) -> tuple[dict, list[dict]]:
     """Complex row with nested buildings/apartments, plus one resident row per apartment.
 
-    ``complex_obj`` must have buildings, their apartments and sections prefetched. ``owner_for(apartment)``
+    ``complex_obj`` must have buildings and their apartments prefetched. ``owner_for(apartment)``
     returns the apartment's owner or None; ``payment_totals_for(apartment)`` returns the account's
     ``(collected, last_payment_at)`` over its whole history (see ``account_payment_totals``). Debt/collected totals and risk are computed here; portal status overrides win over
     computed risk and apartment status.
@@ -548,7 +545,6 @@ def serialize_complex(complex_obj, owner_for, payment_totals_for, override_maps,
                 "rooms": "Apartment",
                 "area": resident["area"],
                 "charge": "",
-                "meter": resident["meter"],
                 "contract": resident["contract"],
                 "visit": "",
                 "lastPayment": resident["lastPayment"],
@@ -996,7 +992,6 @@ def build_portal_data(user=None) -> dict:
             "apartment",
             "apartment__building",
             "apartment__building__complex",
-            "apartment__section",
         )
     )
     owners_by_apartment = {owner.apartment_id: owner for owner in owners}
@@ -1013,9 +1008,8 @@ def build_portal_data(user=None) -> dict:
     buildings_qs = Building.objects.select_related("operator").prefetch_related(
         Prefetch(
             "apartments",
-            queryset=Apartment.objects.select_related("section").order_by("number"),
+            queryset=Apartment.objects.order_by("number"),
         ),
-        "sections",
     ).order_by("number")
     complexes = Complex.objects.prefetch_related(
         Prefetch("buildings", queryset=buildings_qs)

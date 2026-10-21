@@ -327,7 +327,6 @@ def api_list_residents(request):
     }
     queryset = Owner.objects.select_related(
         "apartment",
-        "apartment__section",
         "apartment__building",
         "apartment__building__complex",
     ).annotate(
@@ -688,10 +687,9 @@ def api_list_complexes(request):
     debt_status = _query_param(request, "debt_status", "").lower()
     district_value = _query_param(request, "district", "")
     ordering_raw = _query_param(request, "ordering", "complex")
-    apartment_queryset = Apartment.objects.select_related("section", "owner").order_by("number")
+    apartment_queryset = Apartment.objects.select_related("owner").order_by("number")
     building_queryset = Building.objects.select_related("operator").prefetch_related(
         Prefetch("apartments", queryset=apartment_queryset),
-        "sections",
     ).order_by("number")
     queryset = Complex.objects.prefetch_related(Prefetch("buildings", queryset=building_queryset))
     if district_value and district_value.lower() != "all":
@@ -1446,7 +1444,6 @@ def api_create_resident(request):
         apartment = Apartment.objects.select_related(
             "building",
             "building__complex",
-            "section",
         ).get(pk=apartment_id)
     except (Apartment.DoesNotExist, ValueError, TypeError):
         return JsonResponse({"ok": False, "error": "Selected apartment was not found."}, status=404)

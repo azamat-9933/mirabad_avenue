@@ -1,9 +1,8 @@
 """What a billing period charges, worked out from what operators enter for it.
 
-Heating: the costs of a boiler room (or of the whole building when it has no boiler rooms) are
-spread over area × heated days of the apartments heated in the period (HeatingRecord dates, entered
-for every period since heating changes from month to month). Hot water: the costs of a
-building are spread over its apartments' meter consumption. A meter's start reading defaults to its
+Heating: the costs of a building are spread over area × heated days of its apartments heated in
+the period (HeatingRecord dates, entered for every period since heating changes from month to
+month). Hot water: the costs of a building are spread over its apartments' meter consumption. A meter's start reading defaults to its
 reading at the end of the previous period. The admin preview and closing use the same plan, so the
 preview shows exactly what closing posts; errors name the house and apartment to fix.
 """
@@ -122,11 +121,10 @@ class Row:
 
 @dataclass
 class Zone:
-    """One tariff: a boiler room (or building) for heating, a building for hot water."""
+    """One tariff: a building's heating or its hot water."""
 
     service_type: str
     building: object
-    boiler_room: object | None = None
     costs: list = field(default_factory=list)  # (title, amount)
     rows: list = field(default_factory=list)
     errors: list = field(default_factory=list)
@@ -135,7 +133,7 @@ class Zone:
 
     @property
     def key(self) -> tuple:
-        return (self.building.pk, self.boiler_room.pk if self.boiler_room else None, self.service_type)
+        return (self.building.pk, self.service_type)
 
     @property
     def is_heating(self) -> bool:
@@ -145,10 +143,7 @@ class Zone:
 
     @property
     def label(self) -> str:
-        place = f"{self.building.number} uy"
-        if self.boiler_room:
-            place += f", {self.boiler_room.name} qozonxona"
-        return f"{place} — {'isitish' if self.is_heating else 'issiq suv'}"
+        return f"{self.building.number} uy — {'isitish' if self.is_heating else 'issiq suv'}"
 
     @property
     def total_cost(self) -> Decimal:
@@ -190,7 +185,6 @@ def build_plan(period) -> Plan:
     from .models import (
         SERVICE_HEATING,
         SERVICE_HOT_WATER,
-        BoilerRoom,
         HeatingRecord,
         HotWaterMeterReading,
         money,
@@ -205,25 +199,6 @@ def build_plan(period) -> Plan:
         apartments_by_building[apartment.building_id].append(apartment)
     for rows in apartments_by_building.values():
         rows.sort(key=lambda apartment: _natural_key(apartment.number))
-    rooms_by_building = defaultdict(list)
-    for room in BoilerRoom.objects.filter(building_id__in=building_ids).prefetch_related("sections").order_by("name"):
-        rooms_by_building[room.building_id].append(room)
-
-    def resolve_room(building, room, what):
-        """The boiler room a heating cost belongs to, or False with an error."""
-        rooms = rooms_by_building.get(building.pk, [])
-        if room is not None:
-            if room.building_id != building.pk:
-                errors.append(f"{building.number} uy, {what}: «{room.name}» qozonxona boshqa uyga tegishli.")
-                return False
-            return room
-        if len(rooms) > 1:
-            errors.append(
-                f"{building.number} uy, {what}: qaysi qozonxonaga tegishli ekani ko'rsatilmagan "
-                f"(uyda {len(rooms)} ta qozonxona bor)."
-            )
-            return False
-        return rooms[0] if rooms else None
 
     def gas_line(reading):
         """(title, amount) of a gas meter, or None with an error."""
@@ -242,29 +217,18 @@ def build_plan(period) -> Plan:
             )
             return None
         consumption = end - start
-        room = f" ({reading.boiler_room.name})" if reading.boiler_room_id else ""
-        title = f"Gaz{room}: {group_thousands(consumption)} m³ × {group_thousands(reading.price_per_m3)} so'm"
+        title = f"Gaz: {group_thousands(consumption)} m³ × {group_thousands(reading.price_per_m3)} so'm"
         return title[:255], money(consumption * reading.price_per_m3)
 
     # ── Costs ──
     costs = defaultdict(list)
     has_inputs = set()
-    for expense in period.expenses.select_related("building", "boiler_room").order_by("pk"):
-        room = None
-        if expense.service_type == SERVICE_HEATING:
-            room = resolve_room(expense.building, expense.boiler_room, f"isitish xarajati «{expense.name}»")
-            if room is False:
-                continue
-        key = (expense.building_id, room.pk if room else None, expense.service_type)
+    for expense in period.expenses.order_by("pk"):
+        key = (expense.building_id, expense.service_type)
         costs[key].append(((expense.name or "Xarajat")[:255], money(expense.amount)))
         has_inputs.add(key)
-    for reading in period.gas_meter_readings.select_related("building", "boiler_room").order_by("pk"):
-        room = None
-        if reading.service_type == SERVICE_HEATING:
-            room = resolve_room(reading.building, reading.boiler_room, "gaz hisoblagich (isitish)")
-            if room is False:
-                continue
-        key = (reading.building_id, room.pk if room else None, reading.service_type)
+    for reading in period.gas_meter_readings.select_related("building").order_by("pk"):
+        key = (reading.building_id, reading.service_type)
         has_inputs.add(key)
         line = gas_line(reading)
         if line:
@@ -282,42 +246,21 @@ def build_plan(period) -> Plan:
     for building in buildings:
         apartments = apartments_by_building.get(building.pk, [])
 
-        # ── Heating: per boiler room over the heated apartments' area × days ──
-        rooms = rooms_by_building.get(building.pk, [])
-        heating_zones = {
-            room.pk if room else None: Zone(SERVICE_HEATING, building, room)
-            for room in (rooms or [None])
-        }
-        room_by_section = {section.pk: room for room in rooms for section in room.sections.all()}
-        unassigned = []
+        # ── Heating: per building over the heated apartments' area × days ──
+        zone = Zone(SERVICE_HEATING, building)
+        zone.costs = costs.get(zone.key, [])
+        zone.has_inputs = zone.key in has_inputs
         for apartment in apartments:
             record = heating.get(apartment.pk)
             days = record.heated_days_in(period) if record else 0
-            if days <= 0:
-                continue
-            if len(rooms) > 1:
-                room = room_by_section.get(apartment.section_id)
-                if room is None:
-                    unassigned.append(apartment)
-                    continue
-            else:
-                room = rooms[0] if rooms else None
-            zone = heating_zones[room.pk if room else None]
-            zone.rows.append(Row(apartment, volume(apartment.area * days), days=days))
-        for zone in heating_zones.values():
-            zone.costs = costs.get(zone.key, [])
-            zone.has_inputs = zone.key in has_inputs
-            if zone.billable and zone.total_volume <= 0:
-                zone.errors.append(
-                    f"{zone.label}: xarajat {group_thousands(zone.total_cost)} so'm, lekin bu davrda isitilgan kvartira yo'q. "
-                    "Davrning «Isitish» jadvalida kvartiralarga sanalar va berilgan kunlarni kiriting."
-                )
-            zones.append(zone)
-        if unassigned and any(zone.billable for zone in heating_zones.values()):
-            errors.append(
-                f"{building.number} uy, isitish: kv {_numbers(unassigned)} qaysi qozonxonaga tegishli ekani aniqlanmadi — "
-                "kvartira seksiyasini qozonxonaga biriktiring."
+            if days > 0:
+                zone.rows.append(Row(apartment, volume(apartment.area * days), days=days))
+        if zone.billable and zone.total_volume <= 0:
+            zone.errors.append(
+                f"{zone.label}: xarajat {group_thousands(zone.total_cost)} so'm, lekin bu davrda isitilgan kvartira yo'q. "
+                "Davrning «Isitish» jadvalida kvartiralarga sanalar va berilgan kunlarni kiriting."
             )
+        zones.append(zone)
 
         # ── Hot water: per building over meter consumption ──
         zone = Zone(SERVICE_HOT_WATER, building)

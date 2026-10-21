@@ -1,7 +1,6 @@
 from main_app.models import (
     Apartment as LegacyApartment,
     Building as LegacyBuilding,
-    BuildingSection as LegacyBuildingSection,
     Complex as LegacyComplex,
     Owner as LegacyOwner,
 )
@@ -19,13 +18,6 @@ class Building(LegacyBuilding):
         proxy = True
         verbose_name = "House"
         verbose_name_plural = "Houses"
-
-
-class BuildingSection(LegacyBuildingSection):
-    class Meta:
-        proxy = True
-        verbose_name = "Seksiya"
-        verbose_name_plural = "Seksiyalar"
 
 
 class Apartment(LegacyApartment):

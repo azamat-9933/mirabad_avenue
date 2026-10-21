@@ -22,9 +22,7 @@ JAZZ_SETTINGS = {
     "hide_apps":  [],
     "hide_models": [
         "main_app.Complex",
-        "main_app.BuildingSection",
         "properties.Complex",
-        "properties.BuildingSection",
         "portal.SupportTicket",
         "portal.SystemAlert",
     ],
@@ -35,7 +33,6 @@ JAZZ_SETTINGS = {
         "main_app.Owner",
         "main_app.Apartment",
         "main_app.Building",
-        "billing",
         "payments",
         "portal",
         "auth",
@@ -46,12 +43,8 @@ JAZZ_SETTINGS = {
         # main_app
         "main_app.complex":         "fas fa-city",
         "main_app.building":        "fas fa-building",
-        "main_app.buildingsection": "fas fa-th-large",
         "main_app.apartment":       "fas fa-door-open",
         "main_app.owner":           "fas fa-user-circle",
-
-        # billing
-        "billing.boilerroom": "fas fa-fire",
 
         # payments
         "payments.paymetransaction": "fas fa-credit-card",

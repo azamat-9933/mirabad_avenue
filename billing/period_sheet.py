@@ -93,7 +93,6 @@ LABELS = {
     "gas_end": {"en": "End reading", "ru": "Конечное показание", "uz": "Oxirgi ko'rsatkich"},
     "gas_price": {"en": "Price per m³", "ru": "Цена за м³", "uz": "1 m³ narxi"},
     "gas_cost": {"en": "Cost", "ru": "Стоимость", "uz": "Qiymati"},
-    "boiler_room": {"en": "Boiler room", "ru": "Котельная", "uz": "Qozonxona"},
     "previous_hint": {
         "en": "Empty: last month's end reading",
         "ru": "Пусто: конечное показание прошлого месяца",

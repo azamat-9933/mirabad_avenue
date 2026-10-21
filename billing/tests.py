@@ -17,12 +17,11 @@ from billing.models import (
     HotWaterMeterReading,
     HotWaterReading,
     Invoice,
-    Payment,
-    RecalculationLog,
     ServiceExpense,
     money,
 )
 from payments.models import Transaction
+from payments.services import apply_account_change
 from portal.models import AuditEvent
 from properties.models import Apartment, Building, Complex, Owner
 
@@ -274,7 +273,6 @@ class BillingCoreModelTests(TestCase):
         cancelled = Charge.objects.filter(period=self.period, is_cancelled=True)
         self.assertEqual(active.count(), 2)
         self.assertEqual(cancelled.count(), 2)
-        self.assertTrue(RecalculationLog.objects.filter(period=self.period).exists())
         self.assertTrue(Invoice.objects.filter(period=self.period, is_recalculated=True).exists())
 
         self.owner_1.refresh_from_db()
@@ -299,7 +297,7 @@ class BillingCoreModelTests(TestCase):
 
         self.period.refresh_from_db()
         self.assertEqual(self.period.status, BillingPeriod.STATUS_CLOSED)
-        self.assertEqual(RecalculationLog.objects.get(period=self.period).reason, "Pump invoice corrected")
+        self.assertTrue(Transaction.objects.filter(description__contains="Pump invoice corrected").exists())
         self.assertEqual(Owner.objects.get(pk=self.owner_1.pk).balance, balance_after_close + Decimal("125.00"))
 
     def test_heating_record_validates_excluded_dates(self):
@@ -351,16 +349,6 @@ class BillingCoreModelTests(TestCase):
         with self.assertRaises(ValidationError) as caught:
             record.full_clean()
         self.assertIn("heated_from", caught.exception.message_dict)
-
-    def test_payment_apply_updates_balance_and_cannot_apply_twice(self):
-        payment = Payment.objects.create(owner=self.owner_1, amount=Decimal("250.00"), method=Payment.METHOD_MANUAL)
-        payment.apply()
-        self.owner_1.refresh_from_db()
-        self.assertEqual(self.owner_1.balance, Decimal("250.00"))
-        self.assertTrue(payment.is_applied)
-        self.assertIsNotNone(payment.applied_at)
-        with self.assertRaises(ValidationError):
-            payment.apply()
 
     def _assert_ledger_matches_balance(self, owner, opening_balance):
         owner.refresh_from_db()
@@ -454,8 +442,7 @@ class BillingCoreModelTests(TestCase):
         owner = Owner.objects.create(fio="New Resident", phone="+998901234569", apartment=vacant)
         self.assertEqual(owner.balance, debt)
 
-        payment = Payment.objects.create(owner=owner, amount=Decimal("100.00"), method=Payment.METHOD_CASH)
-        payment.apply()
+        apply_account_change(vacant.pk, Decimal("100.00"), Transaction.TYPE_CASH)
         owner.refresh_from_db()
         vacant.refresh_from_db()
         self.assertEqual(owner.balance, debt + Decimal("100.00"))
@@ -497,31 +484,6 @@ class BillingCoreModelTests(TestCase):
         self.assertEqual(rows[1].created_by, "billing-admin")
         self._assert_ledger_matches_balance(self.owner_2, Decimal("150000.00"))
 
-    def test_payment_apply_records_transaction(self):
-        payment = Payment.objects.create(
-            owner=self.owner_1,
-            amount=Decimal("250.00"),
-            method=Payment.METHOD_CLICK,
-            external_id="click-42",
-        )
-        payment.apply()
-
-        rows = self._assert_ledger_matches_balance(self.owner_1, Decimal("0.00"))
-        self.assertEqual(len(rows), 1)
-        self.assertEqual(rows[0].payment_type, Transaction.TYPE_CLICK)
-        self.assertEqual(rows[0].external_id, "click-42")
-
-        bank_payment = Payment.objects.create(owner=self.owner_1, amount=Decimal("100.00"), method=Payment.METHOD_BANK)
-        bank_payment.apply()
-        rows = self._assert_ledger_matches_balance(self.owner_1, Decimal("0.00"))
-        self.assertEqual(rows[-1].payment_type, Transaction.TYPE_MANUAL)
-        self.assertIsNone(rows[-1].external_id)
-
-    def test_payment_requires_positive_amount(self):
-        payment = Payment(owner=self.owner_1, amount=Decimal("0.00"))
-        with self.assertRaises(ValidationError):
-            payment.full_clean()
-
     def test_legacy_imports_and_portal_imports_resolve(self):
         from billing.models import HotWaterMeterReading, Invoice  # noqa: F401
         from payments.models import Transaction  # noqa: F401
@@ -538,10 +500,10 @@ class BillingCalculationRulesTests(TestCase):
         self.april = BillingPeriod.objects.create(name="April 2026", start_date=date(2026, 4, 1), end_date=date(2026, 4, 30))
         self.april.buildings.add(self.building)
 
-    def flat(self, number, area="50.00", heated_from=None, heated_until=None, section=None, days_given=None):
+    def flat(self, number, area="50.00", heated_from=None, heated_until=None, days_given=None):
         """An apartment of house 60 with its April heating row: heated from heated_from, or not heated."""
         apartment = Apartment.objects.create(
-            number=number, area=Decimal(area), building=self.building, author="test", section=section,
+            number=number, area=Decimal(area), building=self.building, author="test",
         )
         Owner.objects.create(fio=f"Owner {number}", phone=f"+9989000{number:0>5}", apartment=apartment)
         HeatingRecord.objects.create(
@@ -549,10 +511,10 @@ class BillingCalculationRulesTests(TestCase):
         )
         return apartment
 
-    def cost(self, service_type, amount, period=None, room=None):
+    def cost(self, service_type, amount, period=None):
         return Expense.objects.create(
             period=period or self.april, building=self.building, service_type=service_type,
-            name="Qozonxona xizmati", amount=Decimal(amount), boiler_room=room,
+            name="Qozonxona xizmati", amount=Decimal(amount),
         )
 
     def charged(self, period=None):
@@ -622,40 +584,6 @@ class BillingCalculationRulesTests(TestCase):
         self.assertEqual(first_charges, {"heating": Decimal("840851.77"), "hot_water": Decimal("598287.54")})
         first.refresh_from_db()
         self.assertEqual(first.balance, Decimal("-1439139.31"))
-
-    def test_each_boiler_room_spreads_its_own_costs_over_its_sections(self):
-        from billing.models import BoilerRoom
-        from properties.models import BuildingSection
-
-        a1 = BuildingSection.objects.create(building=self.building, name="A1")
-        a5 = BuildingSection.objects.create(building=self.building, name="A5")
-        room_a1 = BoilerRoom.objects.create(building=self.building, name="A1")
-        room_a1.sections.add(a1)
-        room_a5 = BoilerRoom.objects.create(building=self.building, name="A5")
-        room_a5.sections.add(a5)
-        self.flat("1", heated_from=date(2026, 4, 1), section=a1)
-        self.flat("2", heated_from=date(2026, 4, 1), section=a1, area="150.00")
-        self.flat("3", heated_from=date(2026, 4, 1), section=a5)
-        self.cost("heating", "1000", room=room_a1)
-        self.cost("heating", "3000", room=room_a5)
-
-        self.april.close_period()
-
-        self.assertEqual(self.charged(), {"1": Decimal("250.00"), "2": Decimal("750.00"), "3": Decimal("3000.00")})
-        self.assertEqual(BuildingService.objects.filter(period=self.april, service_type="heating").count(), 2)
-
-    def test_heating_cost_without_boiler_room_in_a_house_with_several_is_reported(self):
-        from billing.models import BoilerRoom
-
-        BoilerRoom.objects.create(building=self.building, name="A1")
-        BoilerRoom.objects.create(building=self.building, name="A5")
-        self.flat("1", heated_from=date(2026, 4, 1))
-        self.cost("heating", "1000")
-
-        with self.assertRaises(ValidationError) as caught:
-            self.april.close_period()
-        self.assertIn("qaysi qozonxonaga tegishli ekani ko'rsatilmagan", " ".join(caught.exception.messages))
-        self.assertFalse(Charge.objects.exists())
 
     def test_hot_water_start_reading_comes_from_the_previous_period(self):
         march = BillingPeriod.objects.create(name="March 2026", start_date=date(2026, 3, 1), end_date=date(2026, 3, 31))
