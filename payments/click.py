@@ -27,7 +27,7 @@ from django.utils import timezone
 
 from main_app.models import Apartment, Building, Owner
 from portal.audit import record_event
-from portal.models import AuditEvent
+from portal.models import AuditEvent, PortalStatusOverride
 
 from .models import ClickTransaction, Transaction
 from .services import apply_account_change
@@ -309,6 +309,85 @@ def _audit(held, ledger):
             "balance_after": str(ledger.balance_after),
         },
     )
+
+
+# ── a confirmed payment Click cancelled afterwards ────────────────────────────
+
+
+class PaymentNotCancellable(Exception):
+    """The payment cannot be taken back: it is not confirmed, or no reason was given."""
+
+
+def cancel_confirmed_payment(held_id, *, user, reason) -> Transaction:
+    """Take a confirmed Click payment back off the apartment account; returns the debit ledger row.
+
+    Click sends no request when it cancels a completed payment (in its cabinet or by payment/reversal),
+    so an operator does it from admin: the amount is debited, the attempt becomes cancelled (Check then
+    reports it failed and Compare leaves it out), the payment and the debit both get the portal status
+    "Cancelled" (the payment no longer counts as one; the journal shows the pair as a cancellation), and
+    the activity log records who did it and why.
+    """
+    reason = str(reason or "").strip()
+    if not reason:
+        raise PaymentNotCancellable("Write why the payment is cancelled.")
+    with transaction.atomic():
+        held = (
+            ClickTransaction.objects.select_for_update()
+            .select_related("apartment__building__complex")
+            .get(pk=held_id)
+        )
+        if held.state != ClickTransaction.STATE_CONFIRMED or held.transaction_id is None:
+            raise PaymentNotCancellable("Only a confirmed Click payment can be cancelled.")
+        operator = user.get_username()
+        debit = apply_account_change(
+            held.apartment_id,
+            -held.amount,
+            Transaction.TYPE_CLICK,
+            description=f"Click: payment {held.click_paydoc_id} cancelled, account {held.account}. {reason}",
+            created_by=operator,
+            external_id=f"click-cancel:{held.click_paydoc_id}",
+        )
+        held.state = ClickTransaction.STATE_CANCELLED
+        held.cancelled_at = timezone.now()
+        held.error_note = f"Cancelled by {operator}: {reason}"[:255]
+        held.save(update_fields=["state", "cancelled_at", "error_note"])
+        for ledger_id in (held.transaction_id, debit.id):
+            PortalStatusOverride.objects.update_or_create(
+                context=PortalStatusOverride.CONTEXT_TRANSACTIONS,
+                target_type=PortalStatusOverride.TARGET_TRANSACTION,
+                target_id=ledger_id,
+                defaults={
+                    "status_value": PortalStatusOverride.TRANSACTION_CANCELLED,
+                    "note": reason,
+                    "created_by": user,
+                },
+            )
+        apartment = held.apartment
+        owner = debit.owner
+        record_event(
+            user=user,
+            event_type=AuditEvent.TYPE_ONLINE_PAYMENT,
+            title="Click payment cancelled",
+            message=(
+                f"{owner.fio if owner else f'Apartment {apartment.number}'}: -{held.amount} UZS, Click payment "
+                f"{held.click_paydoc_id} (account {held.account}) cancelled. {reason}"
+            ),
+            complex=apartment.building.complex,
+            building=apartment.building,
+            apartment=apartment,
+            owner=owner,
+            metadata={
+                "source": "click",
+                "transaction_id": debit.id,
+                "cancelled_transaction_id": held.transaction_id,
+                "click_paydoc_id": held.click_paydoc_id,
+                "amount": str(debit.amount),
+                "balance_before": str(debit.balance_before),
+                "balance_after": str(debit.balance_after),
+                "reason": reason,
+            },
+        )
+    return debit
 
 
 def _locked(protocol, merchant_prepare_id, **match):

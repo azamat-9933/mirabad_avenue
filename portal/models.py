@@ -330,6 +330,9 @@ class PortalStatusOverride(models.Model):
     TARGET_BUILDING = "building"
     TARGET_APARTMENT = "apartment"
     TARGET_TRANSACTION = "transaction"
+    # A payment taken back (a Click payment Click cancelled after it was paid): no longer a payment.
+    TRANSACTION_CANCELLED = "Cancelled"
+
     TARGET_CHOICES = [
         (TARGET_COMPLEX, "Complex"),
         (TARGET_BUILDING, "Building"),

@@ -780,9 +780,18 @@ PAYMENT_CHANNELS = ("Payme", "Click", "Cash", "Card", "Card transfer")
 
 
 def account_payment_totals() -> dict[int, tuple[float, object]]:
-    """``{apartment_id: (collected, last_payment_at)}`` over each account's whole payment history."""
+    """``{apartment_id: (collected, last_payment_at)}`` over each account's whole payment history.
+
+    Payments taken back (portal status "Cancelled", see payments.click.cancel_confirmed_payment) are left out.
+    """
+    cancelled = PortalStatusOverride.objects.filter(
+        context=PortalStatusOverride.CONTEXT_TRANSACTIONS,
+        target_type=PortalStatusOverride.TARGET_TRANSACTION,
+        status_value=PortalStatusOverride.TRANSACTION_CANCELLED,
+    ).values("target_id")
     rows = (
         Transaction.objects.filter(incoming_payment_q(), apartment__isnull=False)
+        .exclude(pk__in=cancelled)
         .values("apartment_id")
         .annotate(collected=Sum("amount"), last_payment_at=Max("created_at"))
     )
@@ -830,11 +839,13 @@ def payment_summary(building_by_apartment: dict[int, int], status_overrides: dic
         months.add(month_key)
         if amount <= 0:
             continue
+        override = status_overrides.get(transaction_id)
+        if override == PortalStatusOverride.TRANSACTION_CANCELLED:
+            continue  # taken back off the account: not a payment in any figure
         channel = _payment_channel(payment_type, description)
         if channel:
             channels[channel][0] += amount
             channels[channel][1].add(apartment_id)
-        override = status_overrides.get(transaction_id)
         if override:
             successful = override.strip().lower() == "success"
         else:

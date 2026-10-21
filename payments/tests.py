@@ -14,7 +14,7 @@ from payments import click
 from payments.models import ClickTransaction, Transaction
 from payments.services import OPENING_BALANCE_TAG, apply_account_change, apply_balance_change
 from portal.backend_data import build_portal_data
-from portal.models import AuditEvent
+from portal.models import AuditEvent, PortalStatusOverride
 
 
 class BalanceLedgerTests(TestCase):
@@ -335,6 +335,87 @@ class ClickAdvancedShopTests(TestCase):
         )
         self.assertEqual(earlier["requests"], {})
         self.assertEqual(self._post({"action": 4, "service_id": 31, "from_date": "yesterday", "till_date": ""})["error"], -8)
+
+    def test_operator_cancels_a_paid_payment_in_admin(self):
+        operator = get_user_model().objects.create_superuser("kassir", password="unused-password")
+        prepared = self._prepare()
+        self._complete(prepared["merchant_prepare_id"])
+        held = ClickTransaction.objects.get(click_paydoc_id=101)
+        paid = held.transaction
+        change_url = reverse("admin:payments_clicktransaction_change", args=[held.pk])
+        cancel_url = reverse("admin:payments_clicktransaction_cancel", args=[held.pk])
+
+        self.assertEqual(self.client.post(cancel_url, {"reason": "x"}).status_code, 302)  # to the login page
+        self.client.force_login(operator)
+        self.assertContains(self.client.get(change_url), cancel_url)
+        page = self.client.get(cancel_url)
+        self.assertContains(page, "Cancel Click payment")
+        self.assertContains(page, "<strong>-150,000</strong>", html=False)  # the balance after cancelling
+        self.assertRedirects(self.client.post(cancel_url, {"reason": "  "}), cancel_url)
+        self.assertEqual(self._balance(), Decimal("50000"))
+
+        response = self.client.post(cancel_url, {"reason": "Click cancelled it in the cabinet"})
+
+        self.assertRedirects(response, change_url)
+        self.assertEqual(self._balance(), Decimal("-150000"))
+        held.refresh_from_db()
+        self.assertEqual(held.state, ClickTransaction.STATE_CANCELLED)
+        self.assertIsNotNone(held.cancelled_at)
+        self.assertEqual(held.error_note, "Cancelled by kassir: Click cancelled it in the cabinet")
+        self.assertEqual(held.transaction, paid)
+        debit = Transaction.objects.get(external_id="click-cancel:101")
+        self.assertEqual(
+            (debit.amount, debit.payment_type, debit.created_by, debit.owner, debit.balance_after),
+            (Decimal("-200000"), Transaction.TYPE_CLICK, "kassir", self.owner, Decimal("-150000")),
+        )
+        override = PortalStatusOverride.objects.get(
+            context=PortalStatusOverride.CONTEXT_TRANSACTIONS, target_type=PortalStatusOverride.TARGET_TRANSACTION, target_id=paid.pk
+        )
+        self.assertEqual((override.status_value, override.created_by), ("Cancelled", operator))
+        event = AuditEvent.objects.get(title="Click payment cancelled")
+        self.assertEqual((event.event_type, event.user, event.owner), (AuditEvent.TYPE_ONLINE_PAYMENT, operator, self.owner))
+        self.assertEqual(event.metadata["amount"], "-200000.00")
+
+        # Click's own view stays consistent: Check says failed, Compare leaves the payment out.
+        check = self._signed(3, {"account": "1391549302", "amount": 200000}, prepare_id=prepared["merchant_prepare_id"])
+        self.assertEqual(check["status"], 1)
+        today = timezone.localdate()
+        compare = self._post({
+            "action": 4,
+            "service_id": 31,
+            "from_date": f"{today:%Y-%m-%d} 00:00:00",
+            "till_date": f"{today + timedelta(days=1):%Y-%m-%d} 00:00:00",
+        })
+        self.assertEqual(compare["requests"], {})
+        # And the payment no longer counts as one: not in the figures, not as the resident's last payment.
+        data = build_portal_data(operator)
+        self.assertEqual(data["paymentSummary"]["channels"]["Click"]["amount"], 0)
+        self.assertEqual([row for row in data["paymentSummary"]["monthly"] if row["channel"] == "Click"], [])
+        self.assertEqual(data["residents"][0]["lastPayment"], "")
+        listed = {row["backendId"]: row["status"] for row in data["transactions"]}
+        self.assertEqual((listed[paid.pk], listed[debit.pk]), ("Cancelled", "Cancelled"))
+
+        # Once is all: the second try changes nothing.
+        self.assertRedirects(self.client.post(cancel_url, {"reason": "again"}), change_url)
+        self.assertEqual(Transaction.objects.filter(payment_type=Transaction.TYPE_CLICK).count(), 2)
+        self.assertEqual(self._balance(), Decimal("-150000"))
+        self.assertNotContains(self.client.get(change_url), cancel_url)
+
+    def test_only_a_paid_payment_can_be_cancelled(self):
+        operator = get_user_model().objects.create_superuser("kassir", password="unused-password")
+        self.client.force_login(operator)
+        held = ClickTransaction.objects.get(pk=self._prepare()["merchant_prepare_id"])
+        change_url = reverse("admin:payments_clicktransaction_change", args=[held.pk])
+        cancel_url = reverse("admin:payments_clicktransaction_cancel", args=[held.pk])
+
+        self.assertRedirects(self.client.get(cancel_url), change_url)
+        self.assertRedirects(self.client.post(cancel_url, {"reason": "by mistake"}), change_url)
+        held.refresh_from_db()
+        self.assertEqual(held.state, ClickTransaction.STATE_PREPARED)
+        self.assertEqual(self._balance(), Decimal("-150000"))
+        self.assertFalse(Transaction.objects.filter(payment_type=Transaction.TYPE_CLICK).exists())
+        with self.assertRaises(click.PaymentNotCancellable):
+            click.cancel_confirmed_payment(held.pk, user=operator, reason="by mistake")
 
     def test_malformed_requests(self):
         self.assertEqual(self._post({"action": 9, "service_id": 31})["error"], -3)

@@ -250,6 +250,7 @@
         "Telegram": { ru: "Telegram", uz: "Telegram" },
         "Connected": { ru: "Подключён", uz: "Ulangan" },
         "Pending": { ru: "Ожидает", uz: "Kutilmoqda" },
+        "Cancelled": { ru: "Отменён", uz: "Bekor qilingan" },
         "Not linked": { ru: "Не подключён", uz: "Ulanmagan" },
         // Telegram status of a resident ("Connected" is also the portal's backend status, "Подключено").
         "Linked": { ru: "Подключён", uz: "Ulangan" },
@@ -756,6 +757,7 @@
         "Scheduled": { ru: "Запланировано", uz: "Rejalashtirilgan" },
         "Planned": { ru: "В плане", uz: "Rejada" },
         "Pending": { ru: "Ожидает", uz: "Kutilmoqda" },
+        "Cancelled": { ru: "Отменён", uz: "Bekor qilingan" },
         "Location": { ru: "Локация", uz: "Joylashuv" },
         "Priority": { ru: "Приоритет", uz: "Ustuvorlik" },
         "Pump Replacement": { ru: "Замена насоса", uz: "Nasosni almashtirish" },
@@ -927,6 +929,8 @@
         "Last visit": { ru: "Последний визит", uz: "So'nggi tashrif" },
         "Transaction": { ru: "Транзакция", uz: "Tranzaksiya" },
         "Resident balance updated": { ru: "Баланс абонента обновлён", uz: "Abonent balansi yangilandi" },
+        "Click payment received": { ru: "Получен платёж Click", uz: "Click to'lovi qabul qilindi" },
+        "Click payment cancelled": { ru: "Платёж Click отменён", uz: "Click to'lovi bekor qilindi" },
         "Phone copied": { ru: "Номер скопирован", uz: "Telefon nusxalandi" },
         "No matching buildings or residents": { ru: "Дома или жильцы не найдены", uz: "Uylar yoki yashovchilar topilmadi" },
         "System Logs": { ru: "Системные логи", uz: "Tizim loglari" },
@@ -3281,7 +3285,7 @@
     const escapeAttr = (value) => escapeHtml(value ?? "");
     const tableStatusClass = (value = "") => {
         const key = String(value || "").toLowerCase();
-        if (key.includes("critical") || key.includes("overdue") || key.includes("failed")) return "is-critical";
+        if (key.includes("critical") || key.includes("overdue") || key.includes("failed") || key.includes("cancel")) return "is-critical";
         if (key.includes("pending") || key.includes("warning") || key.includes("planned") || key.includes("medium")) return "is-warning";
         if (key.includes("scheduled") || key.includes("upcoming") || key.includes("progress") || key.includes("review") || key.includes("active")) return "is-info";
         return "is-success";
@@ -5974,10 +5978,10 @@
     };
 
     const decorateStatusText = () => {
-        const statusWords = ["Operational", "Maintenance", "Critical", "Warning", "Info", "Pending", "Success", "Completed", "Upcoming", "Review", "Failed"];
+        const statusWords = ["Operational", "Maintenance", "Critical", "Warning", "Info", "Pending", "Success", "Completed", "Upcoming", "Review", "Failed", "Cancelled"];
         const toneForStatus = (status) => {
             const value = String(status || "").toLowerCase();
-            if (value.includes("critical") || value.includes("failed")) return "critical";
+            if (value.includes("critical") || value.includes("failed") || value.includes("cancel")) return "critical";
             if (value.includes("pending") || value.includes("maintenance") || value.includes("warning")) return "warning";
             if (value.includes("upcoming") || value.includes("review") || value.includes("info")) return "info";
             if (value.includes("completed") || value.includes("success") || value.includes("operational")) return "success";

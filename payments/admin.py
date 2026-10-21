@@ -1,7 +1,12 @@
-from django.contrib import admin
+from django.contrib import admin, messages
+from django.core.exceptions import PermissionDenied
 from django.db.models import Q
+from django.shortcuts import get_object_or_404, redirect
+from django.template.response import TemplateResponse
+from django.urls import path, reverse
 from django.utils.html import format_html
 
+from .click import PaymentNotCancellable, cancel_confirmed_payment
 from .models import ClickTransaction, PaymeTransaction, Transaction
 from .services import OPENING_BALANCE_TAG, incoming_payment_q, is_incoming_payment
 
@@ -233,13 +238,71 @@ class ClickTransactionAdmin(admin.ModelAdmin):
     ordering = ("-created_at",)
 
     def get_readonly_fields(self, request, obj=None):
-        return [field.name for field in self.model._meta.fields]
+        fields = [field.name for field in self.model._meta.fields]
+        # The cancel button right under the state.
+        fields.insert(fields.index("state") + 1, "cancel_action")
+        return fields
 
     def has_add_permission(self, request):
         return False
 
     def has_change_permission(self, request, obj=None):
         return False
+
+    @staticmethod
+    def _can_cancel(request):
+        # Taking money off an account is a ledger entry.
+        return request.user.has_perm("payments.add_transaction")
+
+    def get_urls(self):
+        return [
+            path(
+                "<path:object_id>/cancel-payment/",
+                self.admin_site.admin_view(self.cancel_payment_view),
+                name="payments_clicktransaction_cancel",
+            ),
+        ] + super().get_urls()
+
+    def cancel_payment_view(self, request, object_id):
+        """Click sends nothing when it cancels a paid payment: the operator takes the money back here."""
+        if not self._can_cancel(request):
+            raise PermissionDenied
+        held = get_object_or_404(ClickTransaction.objects.select_related("apartment__building"), pk=object_id)
+        change_url = reverse("admin:payments_clicktransaction_change", args=[held.pk])
+        if request.method == "POST":
+            try:
+                cancel_confirmed_payment(held.pk, user=request.user, reason=request.POST.get("reason"))
+            except PaymentNotCancellable as error:
+                messages.error(request, str(error))
+                return redirect(request.path if held.state == ClickTransaction.STATE_CONFIRMED else change_url)
+            messages.success(request, "The Click payment was cancelled and its amount was taken off the balance.")
+            return redirect(change_url)
+        if held.state != ClickTransaction.STATE_CONFIRMED:
+            messages.error(request, "Only a confirmed Click payment can be cancelled.")
+            return redirect(change_url)
+        balance = held.apartment.balance
+        context = {
+            **self.admin_site.each_context(request),
+            "opts": self.model._meta,
+            "object": held,
+            "title": "Cancel Click payment",
+            "owner": getattr(held.apartment, "owner", None),
+            "amount": admin_number(held.amount),
+            "balance": admin_number(balance),
+            "balance_after": admin_number(balance - held.amount),
+            "change_url": change_url,
+        }
+        return TemplateResponse(request, "admin/payments/clicktransaction/cancel_payment.html", context)
+
+    @admin.display(description="Cancellation")
+    def cancel_action(self, obj):
+        if obj is None or obj.state != ClickTransaction.STATE_CONFIRMED:
+            return "—"
+        return format_html(
+            '<a class="btn btn-sm btn-danger" href="{}">{}</a>',
+            reverse("admin:payments_clicktransaction_cancel", args=[obj.pk]),
+            "Cancel the payment",
+        )
 
     def has_delete_permission(self, request, obj=None):
         return False

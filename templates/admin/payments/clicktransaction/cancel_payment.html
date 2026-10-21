@@ -1,0 +1,50 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls %}
+{% comment %}Confirmation for ClickTransactionAdmin.cancel_payment_view. Texts are English: admin_custom.js translates them.{% endcomment %}
+
+{% block bodyclass %}{{ block.super }} app-{{ opts.app_label }} model-{{ opts.model_name }} delete-confirmation{% endblock %}
+
+{% block breadcrumbs %}
+<ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="{% url 'admin:index' %}">{% trans 'Home' %}</a></li>
+    <li class="breadcrumb-item"><a href="{% url 'admin:app_list' app_label=opts.app_label %}">{{ opts.app_config.verbose_name }}</a></li>
+    <li class="breadcrumb-item"><a href="{% url opts|admin_urlname:'changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a></li>
+    <li class="breadcrumb-item"><a href="{{ change_url }}">{{ object }}</a></li>
+    <li class="breadcrumb-item active">Cancel the payment</li>
+</ol>
+{% endblock %}
+
+{% block content_title %}Cancel Click payment{% endblock %}
+
+{% block content %}
+<div class="col-12 col-lg-8">
+    <div class="card card-danger card-outline">
+        <div class="card-header with-border">
+            <h4 class="card-title">Cancel Click payment</h4>
+        </div>
+        <div class="card-body">
+            <p>Click does not tell us when it cancels a payment after it was paid. Cancel it here only after Click has cancelled it.</p>
+            <p>The amount is taken off the apartment balance, the payment is marked cancelled and stops counting as a payment, and the activity log records you and the reason.</p>
+            <table class="table table-sm">
+                <tr><th>Click payment ID</th><td>{{ object.click_paydoc_id }}</td></tr>
+                <tr><th>Personal account</th><td>{{ object.account }}</td></tr>
+                <tr><th>Apartment</th><td>{{ object.apartment }}</td></tr>
+                <tr><th>Owner</th><td>{{ owner.fio|default:"—" }}</td></tr>
+                <tr><th>Paid at</th><td>{{ object.confirmed_at }}</td></tr>
+                <tr><th>Amount (UZS)</th><td><strong>{{ amount }}</strong></td></tr>
+                <tr><th>Balance now (UZS)</th><td>{{ balance }}</td></tr>
+                <tr><th>Balance after cancelling (UZS)</th><td><strong>{{ balance_after }}</strong></td></tr>
+            </table>
+            <form method="post">{% csrf_token %}
+                <div class="form-group">
+                    <label for="cancel-reason">Reason</label>
+                    <textarea class="form-control" id="cancel-reason" maxlength="200" name="reason" required rows="2"></textarea>
+                    <small class="form-text text-muted">Example: Click cancelled it in the cabinet at the resident's request.</small>
+                </div>
+                <button class="btn btn-danger" type="submit">Cancel the payment</button>
+                <a class="btn btn-default" href="{{ change_url }}">Back</a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
