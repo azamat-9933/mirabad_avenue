@@ -64,12 +64,17 @@ class BillingPeriod(models.Model):
     exposes `title` as an alias.
     """
 
+    # Draft (just created) -> In progress (a table was saved) -> Closed (charged to the accounts).
+    # Closed -> Reopened: the tables can be changed while the balances keep the charges of the last
+    # close; closing it again recalculates and posts only each apartment's difference.
     STATUS_DRAFT = "draft"
+    STATUS_IN_PROGRESS = "in_progress"
     STATUS_CLOSED = "closed"
     STATUS_REOPENED = "reopened"
     STATUS_OPEN = STATUS_DRAFT
     STATUS_CHOICES = [
         (STATUS_DRAFT, "Draft"),
+        (STATUS_IN_PROGRESS, "In progress"),
         (STATUS_CLOSED, "Closed"),
         (STATUS_REOPENED, "Reopened"),
     ]
@@ -444,7 +449,7 @@ class BillingPeriod(models.Model):
             return charge_rows
 
     def close_or_recalculate(self, author=None, reason=""):
-        """Close a draft period, or recalculate a reopened one, which closes it again."""
+        """Close a draft or in-progress period, or recalculate a reopened one, which closes it again."""
         if self.status == self.STATUS_REOPENED:
             return self.recalculate(reason or "Reopened period closed again.", author)
         return self.close_period()
@@ -455,6 +460,12 @@ class BillingPeriod(models.Model):
         self.status = self.STATUS_REOPENED
         self.save(update_fields=["status"])
         return self
+
+    def mark_in_progress(self):
+        """A draft whose tables were saved is being worked on; other statuses stay as they are."""
+        if self.status == self.STATUS_DRAFT:
+            self.status = self.STATUS_IN_PROGRESS
+            self.save(update_fields=["status"])
 
     def recalculate(self, reason, author):
         with transaction.atomic():

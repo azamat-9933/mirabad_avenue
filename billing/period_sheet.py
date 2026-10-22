@@ -39,6 +39,13 @@ LABELS = {
     "status": {"en": "Status", "ru": "Статус", "uz": "Holat"},
     "status_open": {"en": "Open", "ru": "Открыт", "uz": "Ochiq"},
     "status_closed": {"en": "Closed", "ru": "Закрыт", "uz": "Yopiq"},
+    "status_draft": {"en": "Draft", "ru": "Черновик", "uz": "Qoralama"},
+    "status_in_progress": {"en": "In progress", "ru": "В работе", "uz": "Jarayonda"},
+    "status_reopened": {"en": "Reopened", "ru": "Открыт повторно", "uz": "Qayta ochilgan"},
+    "close_slide": {"en": "Slide to close the period", "ru": "Сдвиньте, чтобы закрыть", "uz": "Yopish uchun suring"},
+    "close_title": {"en": "Close the period?", "ru": "Закрыть период?", "uz": "Davr yopilsinmi?"},
+    "close_yes": {"en": "Yes, close", "ru": "Да, закрыть", "uz": "Ha, yopish"},
+    "reopen": {"en": "Reopen", "ru": "Открыть повторно", "uz": "Qayta ochish"},
     "prev": {"en": "Prev", "ru": "Назад", "uz": "Oldingi"},
     "next": {"en": "Next", "ru": "Далее", "uz": "Keyingi"},
     "page": {"en": "Page", "ru": "Страница", "uz": "Sahifa"},
@@ -99,9 +106,30 @@ LABELS = {
         "uz": "Bo'sh: o'tgan oyning oxirgi ko'rsatkichi",
     },
     "closed_note": {
-        "en": "The period is closed and billed: its tables are read-only. Set the status to Open to change them.",
-        "ru": "Период закрыт и начислен: таблицы только для чтения. Чтобы изменить, переведите статус в «Открыт».",
-        "uz": "Davr yopilgan va hisoblar qo'yilgan: jadvallarni faqat ko'rish mumkin. O'zgartirish uchun holatni «Ochiq» qiling.",
+        "en": "The period is closed and billed: its tables are read-only. Press Reopen to change them.",
+        "ru": "Период закрыт и начислен: таблицы только для чтения. Чтобы изменить, нажмите «Открыть повторно».",
+        "uz": "Davr yopilgan va hisoblar qo'yilgan: jadvallarni faqat ko'rish mumkin. O'zgartirish uchun «Qayta ochish»ni bosing.",
+    },
+    "reopened_note": {
+        "en": "The period was reopened: residents' balances still hold the charges of its last close. Changes reach the "
+              "balances only when the period is closed again, and then only as each apartment's difference.",
+        "ru": "Период открыт повторно: в балансах жильцов остаются начисления последнего закрытия. Изменения попадут "
+              "в балансы только при повторном закрытии — и только разницей по каждой квартире.",
+        "uz": "Davr qayta ochilgan: abonentlar balansida oxirgi yopilishdagi hisoblar turibdi. O'zgarishlar balansga "
+              "faqat davr qayta yopilganda va har bir kvartira bo'yicha farq sifatida yoziladi.",
+    },
+    "reopen_confirm": {
+        "en": "Reopen the period? Balances stay as they are; when it is closed again, only the differences are posted.",
+        "ru": "Открыть период повторно? Балансы не изменятся; при повторном закрытии будет записана только разница.",
+        "uz": "Davr qayta ochilsinmi? Balanslar o'zgarmaydi; qayta yopilganda faqat farq yoziladi.",
+    },
+    "reclose_confirm": {
+        "en": "The table is saved and the period recalculated: each resident's balance changes only by the difference "
+              "from its last close.",
+        "ru": "Таблица сохранится, период будет пересчитан: баланс каждого жильца изменится только на разницу с "
+              "прошлым закрытием.",
+        "uz": "Jadval saqlanadi va davr qayta hisoblanadi: har bir abonent balansi faqat oldingi yopilishdan farqqa "
+              "o'zgaradi.",
     },
     "delete_confirm": {
         "en": "Delete this period with all its tables?",
@@ -109,9 +137,9 @@ LABELS = {
         "uz": "Bu davr barcha jadvallari bilan o'chirilsinmi?",
     },
     "close_confirm": {
-        "en": "Close the period? Every resident's account will be charged.",
-        "ru": "Закрыть период? Суммы будут списаны со счетов жильцов.",
-        "uz": "Davr yopilsinmi? Har bir abonent hisobidan summa yechiladi.",
+        "en": "The table is saved, then every resident's account is charged for the period.",
+        "ru": "Таблица сохранится, затем со счёта каждого жильца будут списаны суммы за период.",
+        "uz": "Jadval saqlanadi, so'ng har bir abonent hisobidan davr uchun summa yechiladi.",
     },
     "no_apartments": {"en": "No apartments in this house.", "ru": "В доме нет квартир.", "uz": "Uyda kvartira yo'q."},
     "no_houses": {"en": "No houses yet.", "ru": "Домов пока нет.", "uz": "Hali uy yo'q."},

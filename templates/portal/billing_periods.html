@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
 {% block title %}{{ page_title }}{% endblock %}
-{% block extra_head %}<link href="{% static 'css/billing_periods.css' %}?v=periods-20261020-1" rel="stylesheet"/>{% endblock %}
+{% block extra_head %}<link href="{% static 'css/billing_periods.css' %}?v=periods-20261022-1" rel="stylesheet"/>{% endblock %}
 {% block page_body %}
 {# Translated by billing_periods.js from the labels below; data-stat-synced keeps app.js from translating it too. #}
 <main class="app-main min-h-screen pt-16">
@@ -43,11 +43,7 @@
               <td>{{ row.period.start_date|date:"d.m.Y" }}</td>
               <td>{{ row.period.end_date|date:"d.m.Y" }}</td>
               <td>
-                {% if row.closed %}
-                  <span class="bp-status is-closed" data-pt="status_closed">Closed</span>
-                {% else %}
-                  <span class="bp-status is-open" data-pt="status_open">Open</span>
-                {% endif %}
+                <span class="bp-status is-{{ row.period.status }}" data-pt="status_{{ row.period.status }}">{{ row.period.get_status_display }}</span>
               </td>
               <td class="bp-action-cell">
                 <a class="bp-btn" href="{% url 'portal:billing_period_sheet' row.period.pk %}">
@@ -109,7 +105,7 @@
       </div>
       <label class="bp-field">
         <span data-pt="status">Status</span>
-        <select disabled><option data-pt="status_open" selected>Open</option></select>
+        <select disabled><option data-pt="status_draft" selected>Draft</option></select>
       </label>
       <div class="bp-field">
         <span data-pt="houses">Houses</span>
@@ -127,5 +123,5 @@
 </div>
 
 <script id="bp-labels" type="application/json">{{ labels_json }}</script>
-<script defer src="{% static 'js/billing_periods.js' %}?v=periods-20261020-1"></script>
+<script defer src="{% static 'js/billing_periods.js' %}?v=periods-20261022-1"></script>
 {% endblock %}

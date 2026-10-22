@@ -90,9 +90,11 @@
 
     // ── sheet page ──
     let dirty = false;
+    const saveButton = document.querySelector("[data-bp-save]");
     const markChanged = (row) => {
         dirty = true;
         row?.classList.add("is-changed");
+        saveButton?.classList.add("is-dirty");  // typed values not saved yet
     };
 
     const heatingTable = document.querySelector("[data-bp-heating]");
@@ -160,15 +162,84 @@
         });
     }
 
-    // Save also opens or closes the period as Status says; closing charges every resident, so it asks first.
-    const statusSwitch = document.querySelector("[data-bp-status-switch]");
-    document.querySelector("[data-bp-sheet-form]")?.addEventListener("submit", (event) => {
-        const target = statusSwitch?.querySelector("input[name='status']:checked")?.value;
-        if (target === "closed" && statusSwitch.dataset.initial !== "closed" && !window.confirm(t("close_confirm"))) {
-            event.preventDefault();
-            return;
-        }
+    // Save stores the table. Closing and reopening send the table too (with the hidden status), so
+    // what was typed is saved before the period closes.
+    const sheetForm = document.querySelector("[data-bp-sheet-form]");
+    const statusTarget = sheetForm?.querySelector("[data-bp-status-target]");
+    sheetForm?.addEventListener("submit", () => {
         dirty = false;  // leaving the sheet with typed, unsaved values asks first; saving does not
+    });
+    const submitWithStatus = (status) => {
+        if (!sheetForm || !statusTarget) return;
+        statusTarget.value = status;
+        dirty = false;
+        sheetForm.submit();
+    };
+
+    // Closing charges every resident: the handle has to be dragged all the way (a click on the track does
+    // nothing), then the window asks once more. Let go early, or cancel, and it slides back.
+    const closeSlider = document.querySelector("[data-bp-close-slider]");
+    if (closeSlider) {
+        const handle = closeSlider.querySelector("[data-bp-close-handle]");
+        const modal = document.getElementById("bp-close-modal");
+        let progress = 0;
+        let drag = null;
+        let confirmed = false;
+        const travel = () => Math.max(1, closeSlider.clientWidth - handle.offsetWidth - 4);
+        const show = (value, animate = false) => {
+            progress = Math.min(1, Math.max(0, value));
+            closeSlider.classList.toggle("is-animating", animate);
+            closeSlider.style.setProperty("--bp-close-progress", String(progress));
+            handle.setAttribute("aria-valuenow", String(Math.round(progress * 100)));
+        };
+        const ask = () => {
+            show(1, true);
+            document.querySelector("[data-bp-close-opener]")?.click();
+        };
+        handle.addEventListener("pointerdown", (event) => {
+            drag = { x: event.clientX, from: progress };
+            handle.setPointerCapture(event.pointerId);
+            closeSlider.classList.add("is-dragging");
+        });
+        handle.addEventListener("pointermove", (event) => {
+            if (drag) show(drag.from + (event.clientX - drag.x) / travel());
+        });
+        const release = () => {
+            if (!drag) return;
+            drag = null;
+            closeSlider.classList.remove("is-dragging");
+            if (progress >= 0.97) ask();
+            else show(0, true);
+        };
+        handle.addEventListener("pointerup", release);
+        handle.addEventListener("pointercancel", release);
+        handle.addEventListener("keydown", (event) => {
+            if (event.key === "ArrowRight") {
+                show(progress + 0.1, true);
+                if (progress >= 0.97) ask();
+            } else if (event.key === "ArrowLeft" || event.key === "Home") {
+                show(0, true);
+            } else {
+                return;
+            }
+            event.preventDefault();
+        });
+        modal?.querySelector("[data-bp-close-confirm]")?.addEventListener("click", (event) => {
+            confirmed = true;
+            event.currentTarget.disabled = true;
+            submitWithStatus("closed");
+        });
+        // Cancel, the cross, Esc or a click outside close the window: the handle slides back.
+        if (modal) {
+            new MutationObserver(() => {
+                if (modal.getAttribute("aria-hidden") === "true" && !confirmed) show(0, true);
+            }).observe(modal, { attributes: true, attributeFilter: ["aria-hidden"] });
+        }
+    }
+
+    // Reopening keeps the balances as they are; closing again posts only the differences.
+    document.querySelector("[data-bp-reopen]")?.addEventListener("click", () => {
+        if (window.confirm(t("reopen_confirm"))) submitWithStatus("open");
     });
     window.addEventListener("beforeunload", (event) => {
         if (!dirty) return;

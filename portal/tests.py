@@ -1122,6 +1122,63 @@ class PortalBillingPeriodPagesTests(TestCase):
         self.assertLess(self.rest.balance, rest_before)
         self.assertTrue(any("yopildi" in message for message in self._messages(response)))
 
+    def test_a_saved_table_puts_the_period_in_progress(self):
+        self._create()
+        period = BillingPeriod.objects.get()
+        record = HeatingRecord.objects.get(period=period, apartment=self.first)
+
+        self._sheet(period, action="save_heating", row=[record.pk], **{f"from-{record.pk}": "2025-13-01"})
+        period.refresh_from_db()
+        self.assertEqual(period.status, BillingPeriod.STATUS_DRAFT)  # refused: nothing was saved
+        self._sheet(period, action="save_expenses", new_name=["Холодная вода"], new_amount=["1 000"])
+        period.refresh_from_db()
+        self.assertEqual(period.status, BillingPeriod.STATUS_IN_PROGRESS)
+
+        page = self.client.get(reverse("portal:billing_period_sheet", args=[period.pk])).content.decode()
+        self.assertIn('data-pt="status_in_progress"', page)
+        # Save stores the table only; closing goes through the slider and its confirmation window.
+        self.assertIn("data-bp-save", page)
+        self.assertIn("data-bp-close-slider", page)
+        self.assertIn('id="bp-close-modal"', page)
+        self.assertIn("data-bp-status-target", page)
+        self.assertNotIn("data-bp-reopen", page)
+        listed = self.client.get(reverse("portal:billing_periods")).content.decode()
+        self.assertIn('data-pt="status_in_progress"', listed)
+
+    def test_a_reopened_period_keeps_the_balances_until_closed_again(self):
+        period = self._house_60_december()
+        self._sheet(period, action="set_status", status="closed")
+        self.assertEqual(AuditEvent.objects.get(title="Billing period closed").metadata["fromStatus"], "in_progress")
+        closed_page = self.client.get(reverse("portal:billing_period_sheet", args=[period.pk])).content.decode()
+        self.assertIn("data-bp-reopen", closed_page)
+        self.assertNotIn("data-bp-close-slider", closed_page)
+        self.first.refresh_from_db()
+        charged = self.first.balance
+
+        self._sheet(period, action="set_status", status="open")
+        record = HeatingRecord.objects.get(period=period, apartment=self.first)
+        self._sheet(
+            period, action="save_heating", row=[record.pk],
+            **{f"from-{record.pk}": "2025-12-01", f"until-{record.pk}": "", f"days-{record.pk}": "31"},
+        )
+
+        period.refresh_from_db()
+        self.first.refresh_from_db()
+        self.assertEqual(period.status, BillingPeriod.STATUS_REOPENED)
+        self.assertEqual(self.first.balance, charged)  # nothing reaches the balances before closing again
+        page = self.client.get(reverse("portal:billing_period_sheet", args=[period.pk])).content.decode()
+        self.assertIn('data-pt="reopened_note"', page)
+        self.assertIn('data-pt="reclose_confirm"', page)
+        self.assertNotIn('data-bp-confirm="delete_confirm"', page)  # a billed period is never deleted
+
+        self._sheet(period, action="set_status", status="closed")
+
+        self.first.refresh_from_db()
+        difference = Transaction.objects.get(apartment=self.first, description__contains="[billing:recalculation]")
+        self.assertLess(difference.amount, 0)  # 31 heated days instead of 30
+        self.assertEqual(self.first.balance, charged + difference.amount)
+        self.assertEqual(AuditEvent.objects.get(title="Billing period recalculated").metadata["fromStatus"], "reopened")
+
     def test_save_with_status_closed_keeps_the_table_when_the_period_cannot_close(self):
         self._create()
         period = BillingPeriod.objects.get()
@@ -1134,7 +1191,7 @@ class PortalBillingPeriodPagesTests(TestCase):
 
         period.refresh_from_db()
         record.refresh_from_db()
-        self.assertEqual(period.status, BillingPeriod.STATUS_DRAFT)  # no costs entered yet
+        self.assertEqual(period.status, BillingPeriod.STATUS_IN_PROGRESS)  # saved, but no costs entered yet
         self.assertEqual(record.days_given, 28)
         self.assertTrue(any("Davr yopilmadi" in message for message in self._messages(response)))
 

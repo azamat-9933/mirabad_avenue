@@ -118,6 +118,143 @@ html.dark .bp-modal {
     color: var(--bp-danger);
 }
 
+.bp-btn--danger-solid,
+.bp-btn--danger-solid:hover {
+    border-color: var(--bp-danger);
+    background: var(--bp-danger);
+    color: var(--bp-bg);
+}
+
+.bp-btn--danger-solid:hover {
+    filter: brightness(1.08);
+}
+
+/* Save: the sheet's main action, larger; marked while typed values are not saved yet. */
+.bp-btn--save {
+    position: relative;
+    min-height: 44px;
+    padding: 10px 22px;
+    font-size: 15px;
+    box-shadow: 0 6px 16px color-mix(in srgb, var(--bp-primary) 30%, transparent);
+}
+
+.bp-btn--save .material-symbols-outlined {
+    font-size: 20px;
+}
+
+.bp-btn--save.is-dirty {
+    animation: bp-save-pulse 1.6s ease-in-out infinite;
+}
+
+.bp-btn--save.is-dirty::after {
+    content: "";
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    width: 12px;
+    height: 12px;
+    border: 2px solid var(--bp-head);
+    border-radius: 50%;
+    background: var(--bp-accent);
+}
+
+@keyframes bp-save-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--bp-accent) 60%, transparent); }
+    50% { box-shadow: 0 0 0 7px color-mix(in srgb, var(--bp-accent) 0%, transparent); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .bp-btn--save.is-dirty {
+        animation: none;
+    }
+}
+
+/* Close: drag the handle to the end, then confirm in the window that opens. */
+.bp-close-slider {
+    --bp-close-progress: 0;
+    position: relative;
+    width: min(270px, 100%);
+    height: 44px;
+    border: 1px solid color-mix(in srgb, var(--bp-danger) 45%, transparent);
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--bp-danger) 7%, var(--bp-bg));
+    overflow: hidden;
+    user-select: none;
+}
+
+.bp-close-slider__fill {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: calc(40px + (100% - 42px) * var(--bp-close-progress));
+    background: color-mix(in srgb, var(--bp-danger) 22%, transparent);
+}
+
+.bp-close-slider__label {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 12px 0 46px;
+    color: var(--bp-danger);
+    font-size: 13px;
+    font-weight: 800;
+    white-space: nowrap;
+    opacity: calc(1 - var(--bp-close-progress) * 1.6);
+    pointer-events: none;
+}
+
+.bp-close-slider__handle {
+    position: absolute;
+    top: 2px;
+    left: calc(2px + (100% - 42px) * var(--bp-close-progress));
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border: 0;
+    border-radius: 50%;
+    background: var(--bp-danger);
+    color: var(--bp-bg);
+    cursor: grab;
+    touch-action: none;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+}
+
+.bp-close-slider__handle .material-symbols-outlined {
+    font-size: 20px;
+}
+
+.bp-close-slider__handle:focus-visible {
+    outline: 2px solid var(--bp-primary);
+    outline-offset: 2px;
+}
+
+.bp-close-slider.is-dragging .bp-close-slider__handle {
+    cursor: grabbing;
+}
+
+.bp-close-slider.is-animating .bp-close-slider__handle {
+    transition: left 0.25s ease;
+}
+
+.bp-close-slider.is-animating .bp-close-slider__fill {
+    transition: width 0.25s ease;
+}
+
+.bp-modal--confirm {
+    max-width: 460px;
+}
+
+.bp-confirm-text {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.55;
+}
+
 .bp-btn--danger:hover {
     border-color: var(--bp-danger);
     background: color-mix(in srgb, var(--bp-danger) 10%, transparent);
@@ -164,6 +301,22 @@ html.dark .bp-modal {
 .bp-status.is-closed {
     background: var(--bp-head);
     color: var(--bp-muted);
+}
+
+/* A period's status: Draft, In progress (a table saved), Closed (charged), Reopened (being corrected). */
+.bp-status.is-draft {
+    background: var(--bp-primary-soft);
+    color: var(--bp-text);
+}
+
+.bp-status.is-in_progress {
+    background: color-mix(in srgb, var(--bp-ok) 14%, transparent);
+    color: var(--bp-ok);
+}
+
+.bp-status.is-reopened {
+    background: var(--bp-accent-soft);
+    color: var(--bp-text);
 }
 
 .bp-messages {
@@ -596,74 +749,6 @@ html.dark .bp-modal .bp-table th {
 
 .bp-sheet__actions form {
     margin: 0;
-}
-
-/* Status: two segments, Open (green) and Closed; the choice is saved with the table. */
-.bp-status-switch {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    padding: 3px;
-    border: 1px solid var(--bp-line);
-    border-radius: 999px;
-    background: var(--bp-bg);
-}
-
-.bp-status-switch__label {
-    padding: 0 8px 0 10px;
-    color: var(--bp-muted);
-    font-size: 12px;
-    font-weight: 800;
-}
-
-.bp-status-switch__option {
-    position: relative;
-    margin: 0;
-    cursor: pointer;
-}
-
-.bp-status-switch__option input {
-    position: absolute;
-    opacity: 0;
-    pointer-events: none;
-}
-
-.bp-status-switch__option > span {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    min-height: 30px;
-    padding: 5px 13px;
-    border-radius: 999px;
-    color: var(--bp-muted);
-    font-size: 13px;
-    font-weight: 800;
-    line-height: 1;
-    transition: background 0.15s, color 0.15s;
-}
-
-.bp-status-switch__option .material-symbols-outlined {
-    font-size: 16px;
-}
-
-.bp-status-switch__option:hover > span {
-    background: var(--bp-head);
-    color: var(--bp-text);
-}
-
-.bp-status-switch__option.is-open input:checked + span {
-    background: color-mix(in srgb, var(--bp-ok) 16%, transparent);
-    color: var(--bp-ok);
-}
-
-.bp-status-switch__option.is-closed input:checked + span {
-    background: var(--bp-text);
-    color: var(--bp-bg);
-}
-
-.bp-status-switch__option input:focus-visible + span {
-    outline: 2px solid var(--bp-primary);
-    outline-offset: 1px;
 }
 
 .bp-inline {

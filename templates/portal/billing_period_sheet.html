@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
 {% block title %}{{ page_title }}{% endblock %}
-{% block extra_head %}<link href="{% static 'css/billing_periods.css' %}?v=periods-20261020-1" rel="stylesheet"/>{% endblock %}
+{% block extra_head %}<link href="{% static 'css/billing_periods.css' %}?v=periods-20261022-1" rel="stylesheet"/>{% endblock %}
 {% block page_body %}
 {# A period laid out like its Excel file: houses on the left, the heating / hot water tables as sheet tabs below. #}
 <main class="app-main min-h-screen pt-16">
@@ -31,7 +31,7 @@
         <h1 class="bp-sheet__title">
           {{ period.name }}
           <small>{{ period.start_date|date:"d.m.Y" }} – {{ period.end_date|date:"d.m.Y" }} · {{ period.total_days }} <span data-pt="days">Days</span>
-            · {% if closed %}<span class="bp-status is-closed" data-pt="status_closed">Closed</span>{% else %}<span class="bp-status is-open" data-pt="status_open">Open</span>{% endif %}</small>
+            · <span class="bp-status is-{{ period.status }}" data-pt="status_{{ period.status }}">{{ period.get_status_display }}</span></small>
         </h1>
         {% if building %}
           <div class="bp-sheet__toolbar-right">
@@ -58,6 +58,7 @@
           <p class="bp-empty" data-pt="no_houses">No houses yet.</p>
         {% else %}
           {% if closed %}<p class="bp-message bp-message--info" data-pt="closed_note">The period is closed and billed.</p>{% endif %}
+          {% if period.status == "reopened" %}<p class="bp-message bp-message--warning" data-pt="reopened_note">The period was reopened.</p>{% endif %}
           {% if sheet.errors %}
             <div class="bp-message bp-message--error">
               <strong data-pt="must_fix">Fix before closing:</strong>
@@ -82,6 +83,8 @@
             <input name="action" type="hidden" value="{% if sheet.is_heating %}save_heating{% else %}save_hot_water{% endif %}"/>
             <input name="building" type="hidden" value="{{ building.pk }}"/>
             <input name="sheet" type="hidden" value="{{ sheet_type }}"/>
+            {# Empty for Save; the slider sets "closed" and Reopen "open", sent together with the table. #}
+            <input data-bp-status-target name="status" type="hidden" value=""/>
             {% if sheet.is_heating %}
               <table data-skip-base-table-enhance="true" data-table-own-style class="bp-table bp-table--sheet" data-bp-heating data-period-start="{{ period.start_date|date:'Y-m-d' }}" data-period-end="{{ period.end_date|date:'Y-m-d' }}">
                 <thead>
@@ -176,21 +179,7 @@
       </div>
 
       <div class="bp-sheet__actions">
-        {% if building %}
-          {# Part of the sheet form: Save stores the table, then opens or closes the period. #}
-          <div class="bp-status-switch" data-bp-status-switch data-initial="{% if closed %}closed{% else %}open{% endif %}" role="radiogroup" aria-labelledby="bp-status-label">
-            <span class="bp-status-switch__label" data-pt="status" id="bp-status-label">Status</span>
-            <label class="bp-status-switch__option is-open">
-              <input form="bp-sheet-form" name="status" type="radio" value="open"{% if not closed %} checked{% endif %}/>
-              <span><span class="material-symbols-outlined" aria-hidden="true">lock_open</span><span data-pt="status_open">Open</span></span>
-            </label>
-            <label class="bp-status-switch__option is-closed">
-              <input form="bp-sheet-form" name="status" type="radio" value="closed"{% if closed %} checked{% endif %}/>
-              <span><span class="material-symbols-outlined" aria-hidden="true">lock</span><span data-pt="status_closed">Closed</span></span>
-            </label>
-          </div>
-        {% endif %}
-        {% if not closed %}
+        {% if period.status == "draft" or period.status == "in_progress" %}
           <form data-bp-confirm="delete_confirm" method="post">
             {% csrf_token %}
             <input name="action" type="hidden" value="delete"/>
@@ -202,12 +191,6 @@
             </button>
           </form>
         {% endif %}
-        {% if building %}
-          <button class="bp-btn bp-btn--primary" form="bp-sheet-form" type="submit">
-            <span class="material-symbols-outlined" aria-hidden="true">save</span>
-            <span data-pt="save">Save</span>
-          </button>
-        {% endif %}
         <form method="post">
           {% csrf_token %}
           <input name="action" type="hidden" value="refresh"/>
@@ -218,6 +201,25 @@
             <span data-pt="refresh">Refresh</span>
           </button>
         </form>
+        {% if building and not closed %}
+          <button class="bp-btn bp-btn--primary bp-btn--save" data-bp-save form="bp-sheet-form" type="submit">
+            <span class="material-symbols-outlined" aria-hidden="true">save</span>
+            <span data-pt="save">Save</span>
+          </button>
+          {# Closing charges every resident: the handle has to be dragged to the end, then confirmed. #}
+          <div class="bp-close-slider" data-bp-close-slider>
+            <span class="bp-close-slider__fill" aria-hidden="true"></span>
+            <span class="bp-close-slider__label" data-pt="close_slide">Slide to close the period</span>
+            <button aria-valuemax="100" aria-valuemin="0" aria-valuenow="0" class="bp-close-slider__handle" data-bp-close-handle data-pt-title="close_slide" role="slider" title="Slide to close the period" type="button">
+              <span class="material-symbols-outlined" aria-hidden="true">lock</span>
+            </button>
+          </div>
+        {% elif building %}
+          <button class="bp-btn" data-bp-reopen type="button">
+            <span class="material-symbols-outlined" aria-hidden="true">lock_open</span>
+            <span data-pt="reopen">Reopen</span>
+          </button>
+        {% endif %}
       </div>
       </div>
     </div>
@@ -341,6 +343,29 @@
 </div>
 {% endif %}
 
+{% if building and not closed %}
+<div aria-hidden="true" aria-labelledby="bp-close-title" class="app-modal fixed inset-0 z-[84] hidden items-center justify-center p-4 sm:p-6" data-stat-synced="true" id="bp-close-modal" role="dialog">
+  <div class="modal-panel bp-modal bp-modal--confirm">
+    <header class="bp-modal__head">
+      <h2 id="bp-close-title"><span data-pt="close_title">Close the period?</span> — {{ period.name }}</h2>
+      <button aria-label="Close" class="profile-drawer-close" data-close-overlay type="button"><span class="material-symbols-outlined">close</span></button>
+    </header>
+    <div class="bp-modal__body">
+      <p class="bp-confirm-text" data-pt="{% if period.status == 'reopened' %}reclose_confirm{% else %}close_confirm{% endif %}">The table is saved, then every resident's account is charged.</p>
+    </div>
+    <footer class="bp-modal__foot">
+      <span class="bp-grow"></span>
+      <button class="bp-btn" data-close-overlay data-pt="cancel" type="button">Cancel</button>
+      <button class="bp-btn bp-btn--danger-solid" data-bp-close-confirm type="button">
+        <span class="material-symbols-outlined" aria-hidden="true">lock</span>
+        <span data-pt="close_yes">Yes, close</span>
+      </button>
+    </footer>
+  </div>
+</div>
+<button aria-hidden="true" class="hidden" data-bp-close-opener data-modal-open="bp-close-modal" tabindex="-1" type="button"></button>
+{% endif %}
+
 <script id="bp-labels" type="application/json">{{ labels_json }}</script>
-<script defer src="{% static 'js/billing_periods.js' %}?v=periods-20261020-1"></script>
+<script defer src="{% static 'js/billing_periods.js' %}?v=periods-20261022-1"></script>
 {% endblock %}

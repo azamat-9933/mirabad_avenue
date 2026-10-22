@@ -46,6 +46,8 @@ MONTHS_UZ = ["Yanvar", "Fevral", "Mart", "Aprel", "May", "Iyun", "Iyul", "Avgust
 SERVICE_NAMES = {SERVICE_HEATING: "isitish", SERVICE_HOT_WATER: "issiq suv"}
 DEFAULT_GAS_PRICE = Decimal("1000")
 GAS_FIELDS = ("start", "end", "price")
+# Saving any of these puts a draft period In progress.
+SAVE_ACTIONS = ("save_heating", "save_hot_water", "save_expenses", "save_gas")
 
 
 def default_period_name(start: date) -> str:
@@ -156,7 +158,8 @@ def set_status(request, period, target: str):
         if is_closed(period):
             messages.info(request, "Davr allaqachon yopiq.")
             return
-        was_reopened = period.status == BillingPeriod.STATUS_REOPENED
+        previous = period.status
+        was_reopened = previous == BillingPeriod.STATUS_REOPENED
         charges = period.close_or_recalculate(author=request.user, reason="Portal: davr qayta yopildi.")
         total = sum((charge.amount for charge in charges), Decimal("0"))
         _audit(
@@ -166,7 +169,7 @@ def set_status(request, period, target: str):
             f"Period {period.title} was {'recalculated and closed' if was_reopened else 'closed'}: "
             f"{len(charges)} charges, {total} UZS.",
             kind=AuditEvent.TYPE_PERIOD_STATUS,
-            fromStatus=BillingPeriod.STATUS_REOPENED if was_reopened else BillingPeriod.STATUS_DRAFT,
+            fromStatus=previous,
             toStatus=BillingPeriod.STATUS_CLOSED,
             chargeCount=len(charges),
             chargeTotal=str(total),
@@ -395,6 +398,8 @@ class BillingPeriodSheetView(PortalPageView):
             # The change and its activity-log entry commit together or not at all.
             with transaction.atomic():
                 handler(request, building, sheet_type)
+                if action in SAVE_ACTIONS:
+                    self.period.mark_in_progress()
         except ValidationError as exc:
             for problem in exc.messages:
                 messages.error(request, problem)
@@ -412,6 +417,7 @@ class BillingPeriodSheetView(PortalPageView):
             try:
                 with transaction.atomic():
                     handler(request, building, sheet_type)
+                    self.period.mark_in_progress()
             except ValidationError as exc:
                 for problem in exc.messages:
                     messages.error(request, problem)
@@ -427,12 +433,12 @@ class BillingPeriodSheetView(PortalPageView):
                 for problem in exc.messages:
                     messages.error(request, problem)
         elif is_closed(self.period):
-            messages.info(request, "Davr yopiq: jadvallarni o'zgartirish uchun holatni «Ochiq» qilib saqlang.")
+            messages.info(request, "Davr yopiq: jadvallarni o'zgartirish uchun «Qayta ochish» tugmasini bosing.")
         return redirect(self._sheet_url(building, sheet_type))
 
     def _ensure_editable(self, building):
         if is_closed(self.period):
-            raise ValidationError("Davr yopilgan: o'zgartirish uchun avval holatni «Ochiq» qiling.")
+            raise ValidationError("Davr yopilgan: o'zgartirish uchun avval «Qayta ochish» tugmasini bosing.")
         if building is None:
             raise ValidationError("Davrda uy yo'q.")
 
