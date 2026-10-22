@@ -1,4 +1,6 @@
+from django import forms
 from django.contrib import admin
+from django.utils import timezone
 
 from .models import AuditEvent, WorkspaceProfile
 
@@ -52,14 +54,27 @@ class AuditEventAdmin(admin.ModelAdmin):
         return obj.building.number if obj.building_id else "—"
 
 
+class WorkspaceProfileAdminForm(forms.ModelForm):
+    class Meta:
+        model = WorkspaceProfile
+        fields = "__all__"
+        labels = {"telegram_chat_id": "Telegram ID", "telegram_username": "Telegram user"}
+        help_texts = {"telegram_chat_id": "Filled in by the Telegram bot when the operator links Telegram from the portal profile. To unlink, clear the Telegram ID and save: every Telegram field is cleared and alerts stop going there."}
+
+    def clean_telegram_username(self):
+        return (self.cleaned_data.get("telegram_username") or "").strip().lstrip("@")
+
+
 @admin.register(WorkspaceProfile)
 class WorkspaceProfileAdmin(admin.ModelAdmin):
+    form = WorkspaceProfileAdminForm
     list_display = ("user", "workspace_name", "role_label", "status", "telegram_connected", "updated_at")
     list_filter = ("status", "session_status", "two_factor_enabled", "workspace_name")
     search_fields = ("user__username", "user__email", "user__first_name", "user__last_name", "workspace_name", "organization", "telegram_username")
     autocomplete_fields = ("user",)
-    # The operator links Telegram from the portal profile through the bot; admin can only disconnect it.
-    readonly_fields = ("telegram_chat_id", "telegram_username", "telegram_language", "telegram_linked_at")
+    # The operator links Telegram from the portal profile through the bot; admin can correct the link or
+    # remove it (clear the Telegram ID), here or with the list action.
+    readonly_fields = ("telegram_language", "telegram_linked_at")
     actions = ["disconnect_telegram"]
     fieldsets = (
         ("User", {"fields": ("user", "role_label", "status")}),
@@ -72,6 +87,19 @@ class WorkspaceProfileAdmin(admin.ModelAdmin):
     @admin.display(boolean=True, description="Telegram")
     def telegram_connected(self, obj):
         return bool(obj.telegram_chat_id)
+
+    def save_model(self, request, obj, form, change):
+        if "telegram_chat_id" in form.changed_data:
+            if obj.telegram_chat_id:
+                obj.telegram_linked_at = timezone.now()
+            else:
+                # Unlinked: nothing of the old account stays, a pending link included
+                # (as telegram_bot.operators.unlink_operator does).
+                obj.telegram_username = ""
+                obj.telegram_linked_at = None
+                obj.telegram_link_token = ""
+                obj.telegram_link_requested_at = None
+        super().save_model(request, obj, form, change)
 
     @admin.action(description="Disconnect Telegram")
     def disconnect_telegram(self, request, queryset):

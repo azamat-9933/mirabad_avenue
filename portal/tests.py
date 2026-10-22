@@ -24,7 +24,8 @@ from payments.models import Transaction
 from payments.services import OPENING_BALANCE_TAG, apply_account_change, apply_balance_change
 from portal.audit import record_event
 from portal.backend_data import build_portal_data
-from portal.models import AuditEvent
+from portal.models import AuditEvent, WorkspaceProfile
+from telegram_bot.operators import operator_chat
 
 
 PORTAL_PAGES = [
@@ -1257,6 +1258,70 @@ class PortalInputValidationTests(TestCase):
         )
         complex_row = build_portal_data(self.user)["complexes"][0]
         self.assertEqual(complex_row["waterM3"], 5.5)
+
+
+class WorkspaceProfileAdminTests(TestCase):
+    """The operator's Telegram link can be corrected or removed on the profile page in admin."""
+
+    def setUp(self):
+        self.operator = get_user_model().objects.create_user("azamat", password="unused-password")
+        self.linked_at = timezone.now() - timedelta(days=3)
+        self.profile, _created = WorkspaceProfile.objects.get_or_create(user=self.operator)
+        WorkspaceProfile.objects.filter(pk=self.profile.pk).update(
+            telegram_chat_id=777,
+            telegram_username="azamat_y",
+            telegram_linked_at=self.linked_at,
+            telegram_link_token="pending-token",
+            telegram_link_requested_at=timezone.now(),
+        )
+        self.profile.refresh_from_db()
+        self.client.force_login(get_user_model().objects.create_superuser("boss", password="unused-password"))
+        self.url = reverse("admin:portal_workspaceprofile_change", args=[self.profile.pk])
+
+    def _save(self, **changes):
+        profile = self.profile
+        data = {
+            "user": profile.user_id,
+            "role_label": profile.role_label,
+            "status": profile.status,
+            "workspace_name": profile.workspace_name,
+            "organization": profile.organization,
+            "access_level": profile.access_level,
+            "timezone_name": profile.timezone_name,
+            "two_factor_enabled": "on",
+            "session_status": profile.session_status,
+            "note": profile.note,
+            "telegram_chat_id": profile.telegram_chat_id or "",
+            "telegram_username": profile.telegram_username,
+            **changes,
+        }
+        response = self.client.post(self.url, data)
+        self.assertRedirects(response, reverse("admin:portal_workspaceprofile_changelist"))
+        self.profile.refresh_from_db()
+
+    def test_clearing_the_telegram_id_unlinks_the_operator(self):
+        self.assertContains(self.client.get(self.url), 'name="telegram_chat_id"')
+
+        self._save(telegram_chat_id="")
+
+        profile = self.profile
+        self.assertEqual(
+            (profile.telegram_chat_id, profile.telegram_username, profile.telegram_linked_at,
+             profile.telegram_link_token, profile.telegram_link_requested_at),
+            (None, "", None, "", None),
+        )
+        self.assertIsNone(operator_chat(self.operator)[0])
+
+    def test_other_edits_keep_the_link_and_a_new_id_links_it_anew(self):
+        self._save(note="Night shift")
+        self.assertEqual((self.profile.telegram_chat_id, self.profile.telegram_linked_at), (777, self.linked_at))
+        self.assertEqual(self.profile.telegram_link_token, "pending-token")
+
+        self._save(telegram_chat_id="888", telegram_username="@azamat_new")
+
+        self.assertEqual((self.profile.telegram_chat_id, self.profile.telegram_username), (888, "azamat_new"))
+        self.assertGreater(self.profile.telegram_linked_at, self.linked_at)
+        self.assertEqual(operator_chat(self.operator)[0], 888)
 
 
 class OperatorRightsTests(TestCase):
