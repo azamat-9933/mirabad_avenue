@@ -1,3 +1,4 @@
+import base64
 import json
 from datetime import date, timedelta
 from decimal import Decimal
@@ -11,7 +12,7 @@ from django.utils import timezone
 from billing.models import BillingPeriod, BuildingService, HeatingApartmentUsage, ServiceExpense
 from main_app.models import Apartment, Building, Complex, Owner
 from payments import click
-from payments.models import ClickTransaction, Transaction
+from payments.models import ClickTransaction, PaymeTransaction, Transaction
 from payments.services import OPENING_BALANCE_TAG, apply_account_change, apply_balance_change
 from portal.backend_data import build_portal_data
 from portal.models import AuditEvent, PortalStatusOverride
@@ -499,3 +500,236 @@ class ClickShopApiTests(TestCase):
     def test_masked_name_keeps_company_names(self):
         self.assertEqual(click.masked_name("TO‘RAYEV LAZIZBEK KAMOLIDDIN O‘G‘LI"), "TO‘RAYEV L. K.")
         self.assertEqual(click.masked_name('ООО "BAYCE TRADE"'), 'ООО "BAYCE TRADE"')
+
+
+PAYME_TEST_SETTINGS = {
+    "PAYME_KEY": "test-key",
+    "PAYME_ACCOUNT_FIELD": "account",
+    "PAYME_MIN_AMOUNT": "1000",
+    "PAYME_MAX_AMOUNT": "100000000",
+    "PAYME_FISCAL_IKPU": "",
+}
+PAYME_TIME = 1761110400000  # Payme's clock (ms) when it created the transaction
+
+
+@override_settings(**PAYME_TEST_SETTINGS)
+class PaymeMerchantApiTests(TestCase):
+    """Payme Merchant API: the payer types the personal account, sees whose it is and the debt, pays; Payme
+    may cancel before or after paying, and a cancelled payment is taken back off the account."""
+
+    @classmethod
+    def setUpTestData(cls):
+        complex_obj = Complex.objects.create(title="Mirabad Avenue", address="", author="test")
+        cls.building = Building.objects.create(number="60V", complex=complex_obj, author="test")
+        cls.apartment = Apartment.objects.create(
+            number="1", area=Decimal("187.01"), building=cls.building, personal_account="1391549302", author="test"
+        )
+        cls.owner = Owner.objects.create(fio="KORMILITSIN ANDREY YUREVICH", phone="", apartment=cls.apartment)
+        apply_account_change(cls.apartment.pk, Decimal("-150000"), Transaction.TYPE_CHARGE, description="December")
+
+    def _call(self, method, params, key="test-key", request_id=7):
+        token = base64.b64encode(f"Paycom:{key}".encode()).decode()
+        response = self.client.post(
+            reverse("payments:payme"),
+            data=json.dumps({"jsonrpc": "2.0", "id": request_id, "method": method, "params": params}),
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Basic {token}",
+        )
+        self.assertEqual(response.status_code, 200)
+        answer = response.json()
+        self.assertEqual(answer["id"], request_id)
+        return answer
+
+    def _create(self, payme_id="6718a1b2c3d4e5f607182930", amount=20_000_000, account="1391549302", time=PAYME_TIME):
+        return self._call(
+            "CreateTransaction", {"id": payme_id, "time": time, "amount": amount, "account": {"account": account}}
+        )
+
+    def _perform(self, payme_id="6718a1b2c3d4e5f607182930"):
+        return self._call("PerformTransaction", {"id": payme_id})
+
+    def _cancel(self, payme_id="6718a1b2c3d4e5f607182930", reason=5):
+        return self._call("CancelTransaction", {"id": payme_id, "reason": reason})
+
+    def _balance(self):
+        self.apartment.refresh_from_db()
+        return self.apartment.balance
+
+    def test_requests_need_the_key_and_a_proper_body(self):
+        self.assertEqual(self._call("CheckTransaction", {"id": "x"}, key="wrong")["error"]["code"], -32504)
+        with self.settings(PAYME_KEY=""):
+            self.assertEqual(self._call("CheckTransaction", {"id": "x"}, key="")["error"]["code"], -32504)
+        url = reverse("payments:payme")
+        no_header = self.client.post(url, data=json.dumps({"id": 1, "method": "CheckTransaction", "params": {}}),
+                                     content_type="application/json").json()
+        self.assertEqual(no_header["error"]["code"], -32504)
+        not_post = self.client.get(url)
+        self.assertEqual((not_post.status_code, not_post.json()["error"]["code"]), (200, -32300))
+        self.assertEqual(self.client.post(url, data="{", content_type="application/json").json()["error"]["code"], -32700)
+        unknown = self._call("ChargeEverything", {})
+        self.assertEqual((unknown["error"]["code"], unknown["error"]["data"]), (-32601, "ChargeEverything"))
+        self.assertEqual(self._call("CheckTransaction", None)["error"]["code"], -32600)
+
+    def test_check_perform_shows_whose_account_it_is_and_the_debt(self):
+        answer = self._call("CheckPerformTransaction", {"amount": 20_000_000, "account": {"account": "1391549302"}})
+
+        self.assertEqual(answer["result"], {
+            "allow": True,
+            "additional": {
+                "account": "1391549302",
+                "full_name": "KORMILITSIN A. Y.",
+                "house_num": "60V",
+                "apart_num": "1",
+                "balance": "-150000.00",
+                "debt": "150000.00",
+            },
+        })
+        unknown = self._call("CheckPerformTransaction", {"amount": 20_000_000, "account": {"account": "1"}})
+        self.assertEqual(unknown["error"]["code"], -31050)
+        self.assertEqual(unknown["error"]["data"], "account")
+        self.assertEqual(set(unknown["error"]["message"]), {"ru", "uz", "en"})
+        # Less than 1 000 UZS, a fraction of a tiyin, no sum: refused.
+        for amount in (99_900, 1.5, None):
+            answer = self._call("CheckPerformTransaction", {"amount": amount, "account": {"account": "1391549302"}})
+            self.assertEqual(answer["error"]["code"], -31001, amount)
+
+    def test_check_perform_sends_the_receipt_once_the_ikpu_is_set(self):
+        with self.settings(PAYME_FISCAL_IKPU="10305008002000000", PAYME_FISCAL_PACKAGE_CODE="1545643"):
+            answer = self._call("CheckPerformTransaction", {"amount": 500_000, "account": {"account": "1391549302"}})
+        self.assertEqual(answer["result"]["detail"], {
+            "receipt_type": 0,
+            "items": [{
+                "title": "Коммунальные услуги",
+                "price": 500_000,
+                "count": 1,
+                "code": "10305008002000000",
+                "package_code": "1545643",
+                "vat_percent": 0,
+            }],
+        })
+
+    def test_create_and_perform_put_the_money_on_the_account_once(self):
+        created = self._create()["result"]
+        self.assertEqual(created["state"], 1)
+        self.assertEqual(self._create()["result"], created)  # Payme may repeat the call
+        self.assertEqual(self._balance(), Decimal("-150000"))
+
+        performed = self._perform()["result"]
+
+        self.assertEqual((performed["state"], performed["transaction"]), (2, created["transaction"]))
+        self.assertEqual(self._balance(), Decimal("50000"))
+        ledger = Transaction.objects.get(payment_type=Transaction.TYPE_PAYME)
+        self.assertEqual(
+            (ledger.amount, ledger.external_id, ledger.owner, ledger.created_by),
+            (Decimal("200000"), "payme:6718a1b2c3d4e5f607182930", self.owner, "Payme"),
+        )
+        event = AuditEvent.objects.get(title="Payme payment received")
+        self.assertEqual((event.event_type, event.owner), (AuditEvent.TYPE_ONLINE_PAYMENT, self.owner))
+        self.assertEqual(self._perform()["result"], performed)
+        self.assertEqual(Transaction.objects.filter(payment_type=Transaction.TYPE_PAYME).count(), 1)
+        self.assertEqual(self._create()["error"]["code"], -31008)
+        checked = self._call("CheckTransaction", {"id": "6718a1b2c3d4e5f607182930"})["result"]
+        self.assertEqual(checked, {
+            "create_time": created["create_time"],
+            "perform_time": performed["perform_time"],
+            "cancel_time": 0,
+            "transaction": created["transaction"],
+            "state": 2,
+            "reason": None,
+        })
+        # The payment shows on the statistics under Payme.
+        channels = build_portal_data(None)["paymentSummary"]["channels"]
+        self.assertEqual(channels["Payme"]["amount"], 200000)
+
+    def test_an_account_takes_several_payments_at_once(self):
+        first = self._create(payme_id="6718a1b2c3d4e5f600000001", amount=100_000)["result"]
+        second = self._create(payme_id="6718a1b2c3d4e5f600000002", amount=100_000)["result"]
+        self.assertEqual((first["state"], second["state"]), (1, 1))
+        self.assertNotEqual(first["transaction"], second["transaction"])
+
+    def test_create_refuses_unknown_accounts_and_bad_sums(self):
+        self.assertEqual(self._create(account="0000000000")["error"]["code"], -31050)
+        self.assertEqual(self._create(amount=50_000)["error"]["code"], -31001)
+        self.assertFalse(PaymeTransaction.objects.exists())
+
+    def test_cancel_before_perform_holds_no_money(self):
+        self._create()
+        cancelled = self._cancel(reason=3)["result"]
+
+        self.assertEqual(cancelled["state"], -1)
+        self.assertGreater(cancelled["cancel_time"], 0)
+        self.assertEqual(self._cancel(reason=3)["result"], cancelled)
+        self.assertEqual(self._perform()["error"]["code"], -31008)
+        self.assertEqual(self._balance(), Decimal("-150000"))
+        self.assertFalse(Transaction.objects.filter(payment_type=Transaction.TYPE_PAYME).exists())
+        held = PaymeTransaction.objects.get()
+        self.assertEqual((held.state, held.reason), (-1, 3))
+
+    def test_cancel_after_perform_takes_the_money_back(self):
+        self._create()
+        self._perform()
+        paid = Transaction.objects.get(external_id="payme:6718a1b2c3d4e5f607182930")
+
+        cancelled = self._cancel(reason=5)["result"]
+
+        self.assertEqual(cancelled["state"], -2)
+        self.assertEqual(self._balance(), Decimal("-150000"))
+        debit = Transaction.objects.get(external_id="payme-cancel:6718a1b2c3d4e5f607182930")
+        self.assertEqual((debit.amount, debit.payment_type, debit.created_by), (Decimal("-200000"), Transaction.TYPE_PAYME, "Payme"))
+        statuses = set(
+            PortalStatusOverride.objects.filter(target_id__in=[paid.pk, debit.pk]).values_list("status_value", flat=True)
+        )
+        self.assertEqual(statuses, {"Cancelled"})
+        event = AuditEvent.objects.get(title="Payme payment cancelled")
+        self.assertEqual(event.metadata["amount"], "-200000.00")
+        # Once is all, and the payment no longer counts as one.
+        self.assertEqual(self._cancel(reason=5)["result"], cancelled)
+        self.assertEqual(Transaction.objects.filter(payment_type=Transaction.TYPE_PAYME).count(), 2)
+        self.assertEqual(self._perform()["error"]["code"], -31008)
+        self.assertEqual(build_portal_data(None)["paymentSummary"]["channels"]["Payme"]["amount"], 0)
+        checked = self._call("CheckTransaction", {"id": "6718a1b2c3d4e5f607182930"})["result"]
+        self.assertEqual((checked["state"], checked["reason"], checked["cancel_time"]), (-2, 5, cancelled["cancel_time"]))
+
+    def test_a_transaction_not_performed_in_12_hours_is_cancelled(self):
+        self._create()
+        PaymeTransaction.objects.update(created_at=timezone.now() - timedelta(hours=12, minutes=1))
+
+        self.assertEqual(self._perform()["error"]["code"], -31008)
+        held = PaymeTransaction.objects.get()
+        self.assertEqual((held.state, held.reason), (-1, 4))
+        self.assertEqual(self._create()["error"]["code"], -31008)
+        self.assertEqual(self._balance(), Decimal("-150000"))
+
+    def test_unknown_transactions(self):
+        for method in ("PerformTransaction", "CheckTransaction"):
+            self.assertEqual(self._call(method, {"id": "000000000000000000000000"})["error"]["code"], -31003)
+        self.assertEqual(self._cancel(payme_id="000000000000000000000000")["error"]["code"], -31003)
+
+    def test_statement_lists_the_transactions_created_in_the_period(self):
+        self._create(payme_id="6718a1b2c3d4e5f600000001", time=PAYME_TIME)
+        self._perform(payme_id="6718a1b2c3d4e5f600000001")
+        self._create(payme_id="6718a1b2c3d4e5f600000002", time=PAYME_TIME + 60_000)
+
+        answer = self._call("GetStatement", {"from": PAYME_TIME, "to": PAYME_TIME + 1})["result"]
+
+        self.assertEqual(len(answer["transactions"]), 1)
+        row = answer["transactions"][0]
+        self.assertEqual(
+            (row["id"], row["time"], row["amount"], row["account"], row["state"]),
+            ("6718a1b2c3d4e5f600000001", PAYME_TIME, 20_000_000, {"account": "1391549302"}, 2),
+        )
+        self.assertEqual(len(self._call("GetStatement", {"from": PAYME_TIME, "to": PAYME_TIME + 60_000})["result"]["transactions"]), 2)
+        self.assertEqual(self._call("GetStatement", {"from": 0, "to": 1})["result"], {"transactions": []})
+
+    def test_fiscal_data_is_kept_with_the_transaction(self):
+        self._create()
+        fiscal = {"receipt_id": 121, "status_code": 0, "fiscal_sign": "800031554082", "qr_code_url": "https://ofd.example/1"}
+
+        answer = self._call("SetFiscalData", {"id": "6718a1b2c3d4e5f607182930", "type": "PERFORM", "fiscal_data": fiscal})
+
+        self.assertEqual(answer["result"], {"success": True})
+        self.assertEqual(PaymeTransaction.objects.get().raw_payload["fiscal_perform"], fiscal)
+        missing = self._call("SetFiscalData", {"id": "000000000000000000000000", "type": "PERFORM", "fiscal_data": fiscal})
+        self.assertEqual(missing["error"]["code"], -32001)
+        wrong = self._call("SetFiscalData", {"id": "6718a1b2c3d4e5f607182930", "type": "REFUND", "fiscal_data": fiscal})
+        self.assertEqual(wrong["error"]["code"], -32602)

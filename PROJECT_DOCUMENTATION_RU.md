@@ -169,7 +169,8 @@ Root (`config/urls.py`):
 - `/admin/` — Django admin.
 - `/main-app/` — подключен, но в `main_app/urls.py` маршрутов нет.
 - `/backend-billing/` — подключен, но в `billing/urls.py` маршрутов нет.
-- `/backend-payments/` — подключен, но в `payments/urls.py` маршрутов нет.
+- `/backend-payments/` — callback'и платёжных систем (`payments/urls.py`): `click/`, `click/shop/` (Click, см. 7.4)
+  и `payme/` (Payme Merchant API).
 - `/` — `portal.urls` (основной пользовательский интерфейс + API).
 
 Portal page routes:
@@ -304,8 +305,36 @@ Proxy-модели (`Complex`, `Building`, `Apartment`, `Owner`) над `main_ap
 - Блокировка строки реально работает на PostgreSQL; на SQLite `select_for_update` игнорируется (запись сериализуется самой БД).
 - Записи, созданные до этого изменения, журналом не восстанавливаются — старая история может не объяснять баланс полностью.
 
-### `PaymeTransaction`
-Хранение callback/технических данных Payme.
+### `PaymeTransaction` и приём платежей Payme (`payments/payme.py`, 2026-10-22)
+Одна транзакция Payme Business: `payme_id` (24 символа, id Payme), `payme_time` (когда её создал Payme, мс —
+по нему отбирает GetStatement), введённый лицевой счёт `account_id`, квартира (PROTECT), сумма в тийинах,
+`state` 1 создана → 2 проведена (деньги на счёте квартиры: `Transaction.TYPE_PAYME`,
+`external_id=payme:<payme_id>`) или −1 отменена до проведения / −2 после, `reason` — причина отмены Payme
+(1–3 и 10 — сбои Payme, 4 — таймаут, 5 — возврат), запросы Payme в `raw_payload`. В админке — только просмотр.
+
+- `POST /backend-payments/payme/` — Merchant API (JSON-RPC, все методы на одном адресе, ответ всегда HTTP 200).
+  Каждый запрос несёт `Authorization: Basic base64("Paycom:" + PAYME_KEY)`; пока `PAYME_KEY` пуст, любой запрос
+  отклоняется (−32504). Для песочницы (test.paycom.uz) в `PAYME_KEY` ставится тестовый ключ кассы, для
+  реальных платежей — боевой.
+- CheckPerformTransaction: квартира по `account.<PAYME_ACCOUNT_FIELD>` (по умолчанию `account`, лицевой счёт;
+  нет — −31050, `data` = имя поля), сумма от `PAYME_MIN_AMOUNT` до `PAYME_MAX_AMOUNT` сум (иначе −31001). В
+  `additional` — то же, что Click показывает в getInfo: `account`, `full_name` (фамилия и инициалы), `house_num`,
+  `apart_num`, `balance`, `debt`. Если задан `PAYME_FISCAL_IKPU`, добавляется `detail` для фискализации Payme
+  (одна позиция на всю сумму: `PAYME_FISCAL_TITLE`, ИКПУ, `PAYME_FISCAL_PACKAGE_CODE`, `PAYME_FISCAL_VAT_PERCENT`).
+- CreateTransaction: счёт накопительный — у одного лицевого счёта может быть сколько угодно транзакций;
+  повтор с тем же id возвращает ту же транзакцию; созданная и не проведённая за 12 часов
+  (43 200 000 мс) отменяется с причиной 4, ответ −31008.
+- PerformTransaction зачисляет деньги один раз (повтор возвращает тот же результат), пишет событие журнала
+  «Payme payment received» и отправляет жильцу квитанцию в Telegram.
+- CancelTransaction: созданная → −1; проведённая → −2, и сумма списывается с баланса квартиры
+  (`external_id=payme-cancel:<payme_id>`, исполнитель «Payme»); платёж и списание получают статус портала
+  «Cancelled» (как отмена Click в admin) и больше не считаются оплатой; событие «Payme payment cancelled».
+  Ошибку −31007 («нельзя отменить») не возвращаем: пополнение баланса можно вернуть всегда.
+- CheckTransaction, GetStatement (`from ≤ payme_time ≤ to`, по возрастанию), SetFiscalData (чек, который
+  зарегистрировал Payme, сохраняется в `raw_payload` как `fiscal_perform` / `fiscal_cancel`).
+- nginx пускает к `/backend-payments/` только адреса Click: для Payme нужен свой `location /backend-payments/payme/`
+  с адресами серверов Payme.
+- Тесты `PaymeMerchantApiTests` (`payments/tests.py`) повторяют сценарии песочницы Payme.
 
 ### `ClickTransaction` и приём платежей Click (`payments/click.py`)
 Одна попытка оплаты Click: `prepared` → `confirmed` (деньги на счёте квартиры через `apply_account_change`, `Transaction.TYPE_CLICK`, `external_id=click:<click_paydoc_id>`) или `cancelled`. Поля: протокол, `click_trans_id` (SHOP API) / `attempt_trans_id` (Advanced), `click_paydoc_id`, `service_id`, введённый лицевой счёт, квартира (PROTECT), сумма, ссылка на запись журнала, запросы Prepare/Complete. В админке — только просмотр.
@@ -767,7 +796,7 @@ Admin минимален: в нём только то, чем портал не 
 
 ## 14. Тесты и качество
 
-Запуск: `python manage.py test` — 235 тестов (нужен `.env` или `DEBUG=True`, см. 5.5).
+Запуск: `python manage.py test` — 247 тестов (нужен `.env` или `DEBUG=True`, см. 5.5).
 
 Наличие тестов:
 - `billing/tests.py` (34) — core биллинга: расчеты, `close_period`, `recalculate`, проводки в журнал, начисления пустой квартире и переход ее долга к новому владельцу.

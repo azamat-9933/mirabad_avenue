@@ -27,10 +27,10 @@ from django.utils import timezone
 
 from main_app.models import Apartment, Building, Owner
 from portal.audit import record_event
-from portal.models import AuditEvent, PortalStatusOverride
+from portal.models import AuditEvent
 
 from .models import ClickTransaction, Transaction
-from .services import apply_account_change
+from .services import apply_account_change, mark_ledger_cancelled
 
 logger = logging.getLogger(__name__)
 
@@ -351,17 +351,7 @@ def cancel_confirmed_payment(held_id, *, user, reason) -> Transaction:
         held.cancelled_at = timezone.now()
         held.error_note = f"Cancelled by {operator}: {reason}"[:255]
         held.save(update_fields=["state", "cancelled_at", "error_note"])
-        for ledger_id in (held.transaction_id, debit.id):
-            PortalStatusOverride.objects.update_or_create(
-                context=PortalStatusOverride.CONTEXT_TRANSACTIONS,
-                target_type=PortalStatusOverride.TARGET_TRANSACTION,
-                target_id=ledger_id,
-                defaults={
-                    "status_value": PortalStatusOverride.TRANSACTION_CANCELLED,
-                    "note": reason,
-                    "created_by": user,
-                },
-            )
+        mark_ledger_cancelled([held.transaction_id, debit.id], note=reason, user=user)
         apartment = held.apartment
         owner = debit.owner
         record_event(

@@ -164,12 +164,14 @@ class TransactionAdmin(admin.ModelAdmin):
         return obj.created_by or "—"
 
 
-# Payme's technical log.
+# Payme's transactions (Merchant API): created, then performed (the money is the ledger entry) or
+# cancelled; Payme itself cancels a performed one (state -2), which takes the money back.
 @admin.register(PaymeTransaction)
 class PaymeTransactionAdmin(admin.ModelAdmin):
     list_display  = (
         "payme_id",
         "account_id",
+        "apartment",
         "amount_sum_display",
         "state_badge",
         "created_at",
@@ -177,11 +179,12 @@ class PaymeTransactionAdmin(admin.ModelAdmin):
         "cancelled_at",
     )
     list_filter   = ("state",)
-    search_fields = ("payme_id", "account_id")
+    search_fields = ("payme_id", "account_id", "apartment__personal_account")
     date_hierarchy = "created_at"
+    list_select_related = ("apartment__building",)
     readonly_fields = (
-        "payme_id", "account_id",
-        "amount_tiyin", "state",
+        "payme_id", "payme_time", "account_id", "apartment",
+        "amount_tiyin", "state", "reason",
         "raw_payload",
         "created_at", "performed_at", "cancelled_at",
         "transaction",
@@ -192,6 +195,9 @@ class PaymeTransactionAdmin(admin.ModelAdmin):
         return False
 
     def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
         return False
 
     @admin.display(description="Summa")

@@ -272,3 +272,19 @@ CLICK_ACCOUNT_PARAM = os.getenv('CLICK_ACCOUNT_PARAM', '').strip() or 'account'
 CLICK_ALLOWED_IPS = env_list('CLICK_ALLOWED_IPS', [])
 CLICK_MIN_AMOUNT = os.getenv('CLICK_MIN_AMOUNT', '').strip() or '1000'
 CLICK_MAX_AMOUNT = os.getenv('CLICK_MAX_AMOUNT', '').strip() or '100000000'
+
+# Payme Business (payments/payme.py, Merchant API): the cash desk ID and key from business.paycom.uz.
+# While PAYME_KEY is empty every request is refused, so nothing can be paid before it is set. The
+# sandbox (test.paycom.uz) needs the cash desk's test key here, real payments the production key.
+PAYME_MERCHANT_ID = os.getenv('PAYME_MERCHANT_ID', '').strip()
+PAYME_KEY = os.getenv('PAYME_KEY', '').strip()
+# The cash desk's account field that holds the personal account (Лицевой счёт).
+PAYME_ACCOUNT_FIELD = os.getenv('PAYME_ACCOUNT_FIELD', '').strip() or 'account'
+PAYME_MIN_AMOUNT = os.getenv('PAYME_MIN_AMOUNT', '').strip() or '1000'
+PAYME_MAX_AMOUNT = os.getenv('PAYME_MAX_AMOUNT', '').strip() or '100000000'
+# Receipt data for Payme's fiscalization ("detail" in CheckPerformTransaction), sent only once
+# the IKPU code is set.
+PAYME_FISCAL_IKPU = os.getenv('PAYME_FISCAL_IKPU', '').strip()
+PAYME_FISCAL_PACKAGE_CODE = os.getenv('PAYME_FISCAL_PACKAGE_CODE', '').strip()
+PAYME_FISCAL_VAT_PERCENT = int(os.getenv('PAYME_FISCAL_VAT_PERCENT', '').strip() or 0)
+PAYME_FISCAL_TITLE = os.getenv('PAYME_FISCAL_TITLE', '').strip() or 'Коммунальные услуги'

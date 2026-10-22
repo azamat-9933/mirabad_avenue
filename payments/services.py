@@ -64,6 +64,25 @@ def apply_balance_change(owner_id, amount, payment_type, **kwargs):
     return apply_account_change(apartment_id, amount, payment_type, **kwargs)
 
 
+def mark_ledger_cancelled(ledger_ids, *, note="", user=None) -> None:
+    """Give ledger rows the portal status "Cancelled": a payment taken back (and the debit that took it
+    back) no longer counts as a payment in any figure the portal shows."""
+    # Imported here: portal modules import this one.
+    from portal.models import PortalStatusOverride
+
+    for ledger_id in ledger_ids:
+        PortalStatusOverride.objects.update_or_create(
+            context=PortalStatusOverride.CONTEXT_TRANSACTIONS,
+            target_type=PortalStatusOverride.TARGET_TRANSACTION,
+            target_id=ledger_id,
+            defaults={
+                "status_value": PortalStatusOverride.TRANSACTION_CANCELLED,
+                "note": note,
+                "created_by": user,
+            },
+        )
+
+
 def is_incoming_payment(item: Transaction) -> bool:
     """True for money actually received; billing charges and opening balances are not payments."""
     if item.amount <= 0 or item.payment_type == Transaction.TYPE_CHARGE:

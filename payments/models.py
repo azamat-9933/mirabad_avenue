@@ -117,9 +117,21 @@ class Transaction(models.Model):
 class PaymeTransaction(models.Model):
     """
     Payme to'lov tizimi bilan integratsiya uchun.
-    Payme callback ma'lumotlarini saqlaydi.
-    (Integrasiya keyinroq qo'shiladi)
+    One Payme Business transaction (Merchant API, payments/payme.py): created (1), then performed
+    (2: the money is the ``transaction`` ledger row) or cancelled (-1; -2 after it was performed, when
+    the money was taken back off the account).
     """
+    STATE_CREATED = 1
+    STATE_PERFORMED = 2
+    STATE_CANCELLED = -1
+    STATE_CANCELLED_AFTER_PERFORM = -2
+    STATE_CHOICES = [
+        (STATE_CREATED, _("Created")),
+        (STATE_PERFORMED, _("Performed")),
+        (STATE_CANCELLED, _("Cancelled")),
+        (STATE_CANCELLED_AFTER_PERFORM, _("Cancelled after payment")),
+    ]
+
     transaction = models.OneToOneField(
         Transaction,
         on_delete=models.CASCADE,
@@ -127,13 +139,25 @@ class PaymeTransaction(models.Model):
         blank=True,
         related_name="payme_data",
     )
-    payme_id = models.CharField(max_length=255, unique=True)
+    payme_id = models.CharField(max_length=255, unique=True, verbose_name=_("Payme transaction ID"))
+    # When Payme created it (ms since 1970, Payme's clock): GetStatement selects by it.
+    payme_time = models.BigIntegerField(default=0, db_index=True, verbose_name=_("Created in Payme (ms)"))
     account_id = models.CharField(
         max_length=255,
-        verbose_name=_("Account (Owner ID)"),
+        verbose_name=_("Account entered in Payme"),
+    )
+    apartment = models.ForeignKey(
+        Apartment,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="payme_transactions",
+        verbose_name=_("Apartment"),
     )
     amount_tiyin = models.BigIntegerField(verbose_name=_("Amount (tiyin)"))
-    state = models.IntegerField(default=0, verbose_name=_("State"))
+    state = models.IntegerField(choices=STATE_CHOICES, default=STATE_CREATED, verbose_name=_("State"))
+    # Payme's cancel reason: 1-3 and 10 Payme's failures, 4 timeout, 5 refund.
+    reason = models.SmallIntegerField(null=True, blank=True, verbose_name=_("Cancel reason"))
     raw_payload = models.JSONField(
         default=dict,
         verbose_name=_("Raw payload from Payme"),

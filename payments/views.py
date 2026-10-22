@@ -1,5 +1,6 @@
-"""Click's callbacks. Click signs its requests instead of signing in, so these views need no
-session or CSRF token; the signature check in payments.click is what lets a request through."""
+"""Click's and Payme's callbacks. They sign their requests (Click) or send a key (Payme) instead of
+signing in, so these views need no session or CSRF token; payments.click and payments.payme check
+the signature and the key before anything else."""
 import json
 
 from django.conf import settings
@@ -10,7 +11,7 @@ from django.views.decorators.http import require_POST
 
 from portal.audit import client_ip
 
-from . import click
+from . import click, payme
 
 
 def _from_click(request) -> bool:
@@ -51,3 +52,16 @@ def click_shop(request):
     if not _from_click(request):
         return _refused()
     return _answer(click.handle_shop(request.POST))
+
+
+@csrf_exempt
+@login_not_required
+def payme_merchant(request):
+    """Payme Merchant API: every method on one URL (JSON-RPC), always answered with HTTP 200."""
+    if request.method != "POST":
+        return _answer(payme.error_body(payme.NOT_POST))
+    try:
+        payload = json.loads(request.body.decode("utf-8") or "null")
+    except (UnicodeDecodeError, ValueError):
+        payload = None
+    return _answer(payme.handle(payload, request.META.get("HTTP_AUTHORIZATION", "")))
