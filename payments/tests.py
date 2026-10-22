@@ -11,7 +11,7 @@ from django.utils import timezone
 
 from billing.models import BillingPeriod, BuildingService, HeatingApartmentUsage, ServiceExpense
 from main_app.models import Apartment, Building, Complex, Owner
-from payments import click
+from payments import click, payme
 from payments.models import ClickTransaction, PaymeTransaction, Transaction
 from payments.services import OPENING_BALANCE_TAG, apply_account_change, apply_balance_change
 from portal.backend_data import build_portal_data
@@ -716,6 +716,11 @@ class PaymeMerchantApiTests(TestCase):
         self.assertEqual((held.state, held.reason), (-1, 4))
         self.assertEqual(self._create()["error"]["code"], -31008)
         self.assertEqual(self._balance(), Decimal("-150000"))
+
+    def test_the_row_lock_leaves_the_apartment_join_alone(self):
+        # PostgreSQL refuses FOR UPDATE across the outer join to the (nullable) apartment; SQLite ignores
+        # locks, so the query itself is checked. Production answered PerformTransaction with -32400.
+        self.assertEqual(payme.locked_rows().query.select_for_update_of, ("self",))
 
     def test_unknown_transactions(self):
         for method in ("PerformTransaction", "CheckTransaction"):

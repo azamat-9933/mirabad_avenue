@@ -340,7 +340,10 @@ Proxy-модели (`Complex`, `Building`, `Apartment`, `Owner`) над `main_ap
   `PAYME_SANDBOX=False`.
 - nginx: `location /backend-payments/payme/` пускает только адреса Payme 185.234.113.1–185.234.113.15
   (`allow 185.234.113.0/28`, developer.help.paycom.uz → «Схема взаимодействия»); `/backend-payments/` — только Click.
-- Тесты `PaymeMerchantApiTests` (`payments/tests.py`) повторяют сценарии песочницы Payme.
+- Тесты `PaymeMerchantApiTests` (`payments/tests.py`) повторяют сценарии песочницы Payme. Тесты идут на SQLite, который
+  не знает блокировок строк; PostgreSQL не даёт FOR UPDATE на nullable-стороне outer join (квартира в
+  `PaymeTransaction` необязательна), поэтому `payme.locked_rows()` блокирует только строку транзакции
+  (`select_for_update(of=("self",))`) — без этого PerformTransaction в песочнице получал −32400.
 
 ### `ClickTransaction` и приём платежей Click (`payments/click.py`)
 Одна попытка оплаты Click: `prepared` → `confirmed` (деньги на счёте квартиры через `apply_account_change`, `Transaction.TYPE_CLICK`, `external_id=click:<click_paydoc_id>`) или `cancelled`. Поля: протокол, `click_trans_id` (SHOP API) / `attempt_trans_id` (Advanced), `click_paydoc_id`, `service_id`, введённый лицевой счёт, квартира (PROTECT), сумма, ссылка на запись журнала, запросы Prepare/Complete. В админке — только просмотр.
@@ -805,7 +808,7 @@ Admin минимален: в нём только то, чем портал не 
 
 ## 14. Тесты и качество
 
-Запуск: `python manage.py test` — 250 тестов (нужен `.env` или `DEBUG=True`, см. 5.5).
+Запуск: `python manage.py test` — 251 тестов (нужен `.env` или `DEBUG=True`, см. 5.5).
 
 Наличие тестов:
 - `billing/tests.py` (34) — core биллинга: расчеты, `close_period`, `recalculate`, проводки в журнал, начисления пустой квартире и переход ее долга к новому владельцу.

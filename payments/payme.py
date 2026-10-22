@@ -174,13 +174,14 @@ def _report(held) -> dict:
     }
 
 
+def locked_rows():
+    """Transactions to change, locked: only their own row. The apartment is nullable, so it joins as an
+    outer join, and PostgreSQL refuses FOR UPDATE on the nullable side of one."""
+    return PaymeTransaction.objects.select_for_update(of=("self",)).select_related("apartment__building__complex")
+
+
 def _locked(payme_id):
-    held = (
-        PaymeTransaction.objects.select_for_update()
-        .select_related("apartment__building__complex")
-        .filter(payme_id=payme_id)
-        .first()
-    )
+    held = locked_rows().filter(payme_id=payme_id).first()
     if held is None:
         raise PaymeError(TRANSACTION_NOT_FOUND)
     return held
