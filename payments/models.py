@@ -158,6 +158,8 @@ class PaymeTransaction(models.Model):
     state = models.IntegerField(choices=STATE_CHOICES, default=STATE_CREATED, verbose_name=_("State"))
     # Payme's cancel reason: 1-3 and 10 Payme's failures, 4 timeout, 5 refund.
     reason = models.SmallIntegerField(null=True, blank=True, verbose_name=_("Cancel reason"))
+    # Created while PAYME_SANDBOX was on: Payme's checks only, it never moves money.
+    sandbox = models.BooleanField(default=False, verbose_name=_("Sandbox (test)"))
     raw_payload = models.JSONField(
         default=dict,
         verbose_name=_("Raw payload from Payme"),

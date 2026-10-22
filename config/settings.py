@@ -278,6 +278,9 @@ CLICK_MAX_AMOUNT = os.getenv('CLICK_MAX_AMOUNT', '').strip() or '100000000'
 # sandbox (test.paycom.uz) needs the cash desk's test key here, real payments the production key.
 PAYME_MERCHANT_ID = os.getenv('PAYME_MERCHANT_ID', '').strip()
 PAYME_KEY = os.getenv('PAYME_KEY', '').strip()
+# On while PAYME_KEY is the test key (Payme's sandbox, test.paycom.uz, calls this same server): its
+# transactions are answered and kept, but no balance, ledger, activity log or Telegram is touched.
+PAYME_SANDBOX = env_bool('PAYME_SANDBOX', False)
 # The cash desk's account field that holds the personal account (Лицевой счёт).
 PAYME_ACCOUNT_FIELD = os.getenv('PAYME_ACCOUNT_FIELD', '').strip() or 'account'
 PAYME_MIN_AMOUNT = os.getenv('PAYME_MIN_AMOUNT', '').strip() or '1000'

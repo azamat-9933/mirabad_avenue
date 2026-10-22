@@ -332,8 +332,14 @@ Proxy-модели (`Complex`, `Building`, `Apartment`, `Owner`) над `main_ap
   Ошибку −31007 («нельзя отменить») не возвращаем: пополнение баланса можно вернуть всегда.
 - CheckTransaction, GetStatement (`from ≤ payme_time ≤ to`, по возрастанию), SetFiscalData (чек, который
   зарегистрировал Payme, сохраняется в `raw_payload` как `fiscal_perform` / `fiscal_cancel`).
-- nginx пускает к `/backend-payments/` только адреса Click: для Payme нужен свой `location /backend-payments/payme/`
-  с адресами серверов Payme.
+- Песочница: пока в `PAYME_KEY` тестовый ключ, на сервере стоит `PAYME_SANDBOX=True`. Транзакции, созданные в
+  этом режиме (`PaymeTransaction.sandbox`), проходят те же состояния и сохраняются (Payme проверяет протокол), но
+  не трогают баланс, журнал, журнал действий и Telegram — флаг берётся у самой транзакции, не у текущей
+  настройки. Песочница Payme шлёт запросы на этот же сервер и с настоящими лицевыми счетами. После проверки:
+  удалить их (`PaymeTransaction.objects.filter(sandbox=True).delete()`), поставить боевой ключ и
+  `PAYME_SANDBOX=False`.
+- nginx: `location /backend-payments/payme/` пускает только адреса Payme 185.234.113.1–185.234.113.15
+  (`allow 185.234.113.0/28`, developer.help.paycom.uz → «Схема взаимодействия»); `/backend-payments/` — только Click.
 - Тесты `PaymeMerchantApiTests` (`payments/tests.py`) повторяют сценарии песочницы Payme.
 
 ### `ClickTransaction` и приём платежей Click (`payments/click.py`)
@@ -799,7 +805,7 @@ Admin минимален: в нём только то, чем портал не 
 
 ## 14. Тесты и качество
 
-Запуск: `python manage.py test` — 249 тестов (нужен `.env` или `DEBUG=True`, см. 5.5).
+Запуск: `python manage.py test` — 250 тестов (нужен `.env` или `DEBUG=True`, см. 5.5).
 
 Наличие тестов:
 - `billing/tests.py` (34) — core биллинга: расчеты, `close_period`, `recalculate`, проводки в журнал, начисления пустой квартире и переход ее долга к новому владельцу.

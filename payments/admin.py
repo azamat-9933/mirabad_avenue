@@ -174,17 +174,18 @@ class PaymeTransactionAdmin(admin.ModelAdmin):
         "apartment",
         "amount_sum_display",
         "state_badge",
+        "sandbox",
         "created_at",
         "performed_at",
         "cancelled_at",
     )
-    list_filter   = ("state",)
+    list_filter   = ("state", "sandbox")
     search_fields = ("payme_id", "account_id", "apartment__personal_account")
     date_hierarchy = "created_at"
     list_select_related = ("apartment__building",)
     readonly_fields = (
         "payme_id", "payme_time", "account_id", "apartment",
-        "amount_tiyin", "state", "reason",
+        "amount_tiyin", "state", "reason", "sandbox",
         "raw_payload",
         "created_at", "performed_at", "cancelled_at",
         "transaction",

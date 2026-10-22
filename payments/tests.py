@@ -690,6 +690,23 @@ class PaymeMerchantApiTests(TestCase):
         checked = self._call("CheckTransaction", {"id": "6718a1b2c3d4e5f607182930"})["result"]
         self.assertEqual((checked["state"], checked["reason"], checked["cancel_time"]), (-2, 5, cancelled["cancel_time"]))
 
+    def test_sandbox_transactions_never_move_money(self):
+        with self.settings(PAYME_SANDBOX=True):
+            self._create()
+            self.assertEqual(self._perform()["result"]["state"], 2)
+            self.assertEqual(self._cancel(reason=5)["result"]["state"], -2)
+            self._create(payme_id="6718a1b2c3d4e5f600000002")
+
+        # Created in sandbox mode, it stays a sandbox one after the mode is switched off.
+        self.assertEqual(self._perform(payme_id="6718a1b2c3d4e5f600000002")["result"]["state"], 2)
+        self.assertEqual(set(PaymeTransaction.objects.values_list("sandbox", flat=True)), {True})
+        self.assertFalse(PaymeTransaction.objects.filter(transaction__isnull=False).exists())
+        self.assertEqual(self._balance(), Decimal("-150000"))
+        self.assertFalse(Transaction.objects.filter(payment_type=Transaction.TYPE_PAYME).exists())
+        self.assertFalse(AuditEvent.objects.filter(title__startswith="Payme").exists())
+        statement = self._call("GetStatement", {"from": PAYME_TIME, "to": PAYME_TIME})["result"]["transactions"]
+        self.assertEqual([row["state"] for row in statement], [-2, 2])
+
     def test_a_transaction_not_performed_in_12_hours_is_cancelled(self):
         self._create()
         PaymeTransaction.objects.update(created_at=timezone.now() - timedelta(hours=12, minutes=1))

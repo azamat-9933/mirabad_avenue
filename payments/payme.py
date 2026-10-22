@@ -9,6 +9,8 @@ Payme calls, in order:
 * CancelTransaction: state -1, or -2 after PerformTransaction, when the money is taken back off the account.
 
 CheckTransaction and GetStatement report what we hold; SetFiscalData keeps the receipt Payme registered.
+A transaction created while PAYME_SANDBOX is on (the test key, Payme's sandbox) goes through the same
+states but never touches the balance, the ledger, the activity log or Telegram.
 Every request carries ``Authorization: Basic base64("Paycom:" + PAYME_KEY)``; while the key is empty
 every request is refused. Answers are always HTTP 200: Payme reads any other status as an error.
 https://developer.help.paycom.uz/metody-merchant-api/
@@ -252,6 +254,7 @@ def create_transaction(params):
                         account_id=account,
                         apartment=apartment,
                         amount_tiyin=amount,
+                        sandbox=settings.PAYME_SANDBOX,
                         raw_payload={"create": params},
                     )
             except IntegrityError:  # the same Payme transaction, created by a parallel request
@@ -271,6 +274,11 @@ def perform_transaction(params):
         if held.state == PaymeTransaction.STATE_CREATED:
             if _expired(held):
                 _cancel(held, REASON_TIMEOUT, params)
+            elif held.sandbox:
+                held.state = PaymeTransaction.STATE_PERFORMED
+                held.performed_at = timezone.now()
+                _keep(held, "perform", params)
+                held.save(update_fields=["state", "performed_at", "raw_payload"])
             else:
                 ledger = apply_account_change(
                     held.apartment_id,
@@ -302,6 +310,12 @@ def cancel_transaction(params):
         held = _locked(payme_id)
         if held.state == PaymeTransaction.STATE_CREATED:
             _cancel(held, reason, params)
+        elif held.state == PaymeTransaction.STATE_PERFORMED and held.sandbox:
+            held.state = PaymeTransaction.STATE_CANCELLED_AFTER_PERFORM
+            held.reason = reason
+            held.cancelled_at = timezone.now()
+            _keep(held, "cancel", params)
+            held.save(update_fields=["state", "reason", "cancelled_at", "raw_payload"])
         elif held.state == PaymeTransaction.STATE_PERFORMED:
             # A refund: the money paid is taken back off the apartment account.
             debit = apply_account_change(
