@@ -19271,38 +19271,33 @@ html.dark .notification-group-label[data-notification-group="pinned"],
     vertical-align: middle;
 }
 
-.residential-performance-table th:first-child,
-.residential-performance-table td:first-child {
-    width: 52px;
-    padding-left: 0.55rem !important;
-    padding-right: 0.35rem !important;
+/* The table has no checkbox column: House (an owner on apartment rows), Apartments, Area, Debt status,
+   Actions. Every column has its share and they add up to 100%, so the fixed layout is the same in every
+   browser (Safari kept the old 52px checkbox width for the first one, and the owner's name ran over the
+   apartment number). */
+.residential-performance-table th:nth-child(1),
+.residential-performance-table td:nth-child(1) {
+    width: 28%;
 }
 
-/* Beside the checkbox, the columns share the width evenly enough that the house or owner name
-   no longer takes most of the row. */
 .residential-performance-table th:nth-child(2),
 .residential-performance-table td:nth-child(2) {
-    width: 24%;
+    width: 16%;
 }
 
 .residential-performance-table th:nth-child(3),
 .residential-performance-table td:nth-child(3) {
-    width: 16%;
+    width: 15%;
 }
 
 .residential-performance-table th:nth-child(4),
 .residential-performance-table td:nth-child(4) {
-    width: 16%;
+    width: 19%;
 }
 
 .residential-performance-table th:nth-child(5),
 .residential-performance-table td:nth-child(5) {
-    width: 20%;
-}
-
-.residential-performance-table th:nth-child(6),
-.residential-performance-table td:nth-child(6) {
-    width: 24%;
+    width: 22%;
 }
 
 .residential-performance-table .table-filter-heading-inner {
