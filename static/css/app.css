@@ -19257,10 +19257,12 @@ html.dark .notification-group-label[data-notification-group="pinned"],
     max-width: 100%;
 }
 
+/* Automatic layout: a column is never narrower than what is in it. With a fixed layout Safari squeezed
+   the first column to about 50px and the house or owner name ran over the next column. */
 .residential-performance-table {
     width: 100% !important;
     min-width: 0 !important;
-    table-layout: fixed;
+    table-layout: auto;
 }
 
 .residential-performance-table th,
@@ -19272,17 +19274,21 @@ html.dark .notification-group-label[data-notification-group="pinned"],
 }
 
 /* The table has no checkbox column: House (an owner on apartment rows), Apartments, Area, Debt status,
-   Actions. Every column has its share and they add up to 100%, so the fixed layout is the same in every
-   browser (Safari kept the old 52px checkbox width for the first one, and the owner's name ran over the
-   apartment number). */
+   Actions. The shares (100% in all) are the preferred widths; the house or owner name keeps room for
+   a few words per line. */
 .residential-performance-table th:nth-child(1),
 .residential-performance-table td:nth-child(1) {
-    width: 28%;
+    width: 26%;
+}
+
+.residential-performance-table td:nth-child(1) .residential-nested-name,
+.residential-performance-table td:nth-child(1) .residential-owner-cell {
+    min-width: 170px;
 }
 
 .residential-performance-table th:nth-child(2),
 .residential-performance-table td:nth-child(2) {
-    width: 16%;
+    width: 15%;
 }
 
 .residential-performance-table th:nth-child(3),
@@ -19292,12 +19298,12 @@ html.dark .notification-group-label[data-notification-group="pinned"],
 
 .residential-performance-table th:nth-child(4),
 .residential-performance-table td:nth-child(4) {
-    width: 19%;
+    width: 20%;
 }
 
 .residential-performance-table th:nth-child(5),
 .residential-performance-table td:nth-child(5) {
-    width: 22%;
+    width: 24%;
 }
 
 .residential-performance-table .table-filter-heading-inner {
@@ -19362,8 +19368,10 @@ html.dark .notification-group-label[data-notification-group="pinned"],
     overflow: visible;
 }
 
+/* On a narrow table the button goes under the debt split instead of widening the column. */
 .residential-action-cell {
     display: inline-flex;
+    flex-wrap: wrap;
     align-items: center;
     justify-content: flex-end;
     gap: 4px;

@@ -1097,8 +1097,9 @@ aside[data-sidebar] .sidebar-brand-rail-mark {
     container-name: residential-table;
 }
 
-/* Narrow: each house / apartment row becomes a card. */
-@container residential-table (max-width: 639.98px) {
+/* Narrow: each house / apartment row becomes a card. Below 700px the five columns no longer fit their
+   content (the table lays out automatically, so it would be cut on the right). */
+@container residential-table (max-width: 699.98px) {
     .residential-table-fit,
     .residential-table-fit.table-workspace {
         overflow: visible !important;
@@ -1215,7 +1216,7 @@ aside[data-sidebar] .sidebar-brand-rail-mark {
 }
 
 /* Tablet widths: name and actions on top, the three facts on one line below. */
-@container residential-table (min-width: 480px) and (max-width: 639.98px) {
+@container residential-table (min-width: 480px) and (max-width: 699.98px) {
     .residential-performance-table tbody tr {
         grid-template-columns: 28px minmax(0, 1.25fr) minmax(0, 1fr) minmax(0, 1.35fr);
         grid-template-areas:
