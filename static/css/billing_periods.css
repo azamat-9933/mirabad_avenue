@@ -245,6 +245,29 @@ html.dark .bp-modal {
     transition: width 0.25s ease;
 }
 
+/* Delete period: quiet, at the top, away from Save; it opens a window that wants the period's name. */
+.bp-btn--quiet-danger {
+    border-color: transparent;
+    background: transparent;
+    color: var(--bp-danger);
+    font-size: 12px;
+}
+
+.bp-btn--quiet-danger:hover {
+    border-color: color-mix(in srgb, var(--bp-danger) 45%, transparent);
+    background: color-mix(in srgb, var(--bp-danger) 8%, transparent);
+}
+
+.bp-delete-name {
+    width: 100%;
+    margin-top: 10px;
+}
+
+.bp-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
 .bp-modal--confirm {
     max-width: 460px;
 }

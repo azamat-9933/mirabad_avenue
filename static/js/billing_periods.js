@@ -283,6 +283,79 @@
         });
     });
 
+    // Deleting a period: the button works only once the period's name is typed (the server checks it too).
+    document.querySelectorAll("[data-bp-delete-form]").forEach((form) => {
+        const name = form.querySelector("[data-bp-delete-name]");
+        const confirm = form.querySelector("[data-bp-delete-confirm]");
+        name?.addEventListener("input", () => {
+            confirm.disabled = name.value.trim() !== form.dataset.periodName;
+        });
+    });
+
+    // Moving through a table from the keyboard, as in Excel: Enter and the down / up arrows go along the
+    // column; Space, Tab and the right arrow at the end of a value go to the next cell (on to the next
+    // row), the left arrow at its start to the previous one. A cell selects its value when entered, so
+    // typing replaces it. Date cells keep their own arrows and Space.
+    const keyTable = document.querySelector("[data-bp-heating], [data-bp-hot-water]");
+    if (keyTable) {
+        const rows = Array.from(keyTable.querySelectorAll("[data-bp-row]"));
+        const cellsOf = (row) => Array.from(row.querySelectorAll("input.bp-input:not([disabled])"));
+        const isText = (input) => input.type !== "date";
+        const enter = (cell) => {
+            if (!cell) return false;
+            cell.focus();
+            if (isText(cell)) cell.select();
+            return true;
+        };
+        const along = (input, step) => {
+            const row = input.closest("[data-bp-row]");
+            const column = cellsOf(row).indexOf(input);
+            const next = rows[rows.indexOf(row) + step];
+            return enter(next && cellsOf(next)[column]);
+        };
+        const across = (input, step) => {
+            const cells = rows.flatMap(cellsOf);
+            return enter(cells[cells.indexOf(input) + step]);
+        };
+        keyTable.addEventListener("focusin", (event) => {
+            if (event.target.matches("input.bp-input") && isText(event.target)) event.target.select();
+        });
+        keyTable.addEventListener("keydown", (event) => {
+            const input = event.target.closest("input.bp-input");
+            if (!input || event.altKey || event.ctrlKey || event.metaKey) return;
+            const text = isText(input);
+            const length = input.value.length;
+            const all = text && input.selectionStart === 0 && input.selectionEnd === length;
+            const atEnd = text && (all || input.selectionStart === length);
+            const atStart = text && (all || input.selectionEnd === 0);
+            let handled = false;
+            if (event.key === "Enter") {
+                along(input, event.shiftKey ? -1 : 1);
+                handled = true;  // Enter never sends the form from a cell: Save does
+            } else if (text && event.key === "ArrowDown") {
+                handled = along(input, 1);
+            } else if (text && event.key === "ArrowUp") {
+                handled = along(input, -1);
+            } else if (text && event.key === " ") {
+                handled = across(input, 1);
+            } else if (event.key === "ArrowRight" && atEnd) {
+                handled = across(input, 1);
+            } else if (event.key === "ArrowLeft" && atStart) {
+                handled = across(input, -1);
+            }
+            if (handled) event.preventDefault();
+        });
+    }
+
+    // Ctrl+S (Cmd+S) saves the table.
+    document.addEventListener("keydown", (event) => {
+        if (!(event.ctrlKey || event.metaKey) || event.key.toLowerCase() !== "s") return;
+        const save = document.querySelector("[data-bp-save]");
+        if (!save) return;
+        event.preventDefault();
+        save.click();
+    });
+
     // Deleting a period asks first.
     document.querySelectorAll("[data-bp-confirm]").forEach((form) => {
         form.addEventListener("submit", (event) => {

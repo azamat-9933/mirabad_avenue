@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
 {% block title %}{{ page_title }}{% endblock %}
-{% block extra_head %}<link href="{% static 'css/billing_periods.css' %}?v=periods-20261022-1" rel="stylesheet"/>{% endblock %}
+{% block extra_head %}<link href="{% static 'css/billing_periods.css' %}?v=periods-20261104-1" rel="stylesheet"/>{% endblock %}
 {% block page_body %}
 {# A period laid out like its Excel file: houses on the left, the heating / hot water tables as sheet tabs below. #}
 <main class="app-main min-h-screen pt-16">
@@ -27,6 +27,13 @@
             <span class="material-symbols-outlined" aria-hidden="true">download</span>
             <span data-pt="export">Export</span>
           </a>
+          {% if deletable %}
+            {# Away from Save and Refresh, and only after the period's name is typed (bp-delete-modal). #}
+            <button class="bp-btn bp-btn--quiet-danger" data-modal-open="bp-delete-modal" type="button">
+              <span class="material-symbols-outlined" aria-hidden="true">delete</span>
+              <span data-pt="delete_period">Delete period</span>
+            </button>
+          {% endif %}
         </div>
         <h1 class="bp-sheet__title">
           {{ period.name }}
@@ -105,7 +112,7 @@
                 <tbody>
                   {% for row in rows %}
                     <tr data-bp-row data-area="{{ row.area_raw }}">
-                      <td class="bp-num">{{ row.no }}<input name="row" type="hidden" value="{{ row.pk }}"/></td>
+                      <td class="bp-num">{{ row.no }}<input name="row" type="hidden" value="{{ row.pk }}"/><input name="orig-{{ row.pk }}" type="hidden" value="{{ row.orig }}"/><input name="ver-{{ row.pk }}" type="hidden" value="{{ row.ver }}"/></td>
                       <td class="bp-name">{{ row.owner|default:"—" }}</td>
                       <td class="bp-account">{{ row.account|default:"—" }}</td>
                       <td class="bp-strong">{{ row.apt }}</td>
@@ -146,7 +153,7 @@
                 <tbody>
                   {% for row in rows %}
                     <tr data-bp-row>
-                      <td class="bp-num">{{ row.no }}<input name="row" type="hidden" value="{{ row.pk }}"/></td>
+                      <td class="bp-num">{{ row.no }}<input name="row" type="hidden" value="{{ row.pk }}"/><input name="orig-{{ row.pk }}" type="hidden" value="{{ row.orig }}"/><input name="ver-{{ row.pk }}" type="hidden" value="{{ row.ver }}"/></td>
                       <td class="bp-name">{{ row.owner|default:"—" }}</td>
                       <td class="bp-account">{{ row.account|default:"—" }}</td>
                       <td class="bp-strong">{{ row.apt }}</td>
@@ -179,18 +186,6 @@
       </div>
 
       <div class="bp-sheet__actions">
-        {% if period.status == "draft" or period.status == "in_progress" %}
-          <form data-bp-confirm="delete_confirm" method="post">
-            {% csrf_token %}
-            <input name="action" type="hidden" value="delete"/>
-            <input name="building" type="hidden" value="{{ building.pk|default:'' }}"/>
-            <input name="sheet" type="hidden" value="{{ sheet_type }}"/>
-            <button class="bp-btn bp-btn--danger" type="submit">
-              <span class="material-symbols-outlined" aria-hidden="true">delete</span>
-              <span data-pt="delete">Delete</span>
-            </button>
-          </form>
-        {% endif %}
         <form method="post">
           {% csrf_token %}
           <input name="action" type="hidden" value="refresh"/>
@@ -249,7 +244,7 @@
         <tbody data-bp-rows>
           {% for expense in expenses %}
             <tr>
-              <td class="bp-col-wide"><input class="bp-input" name="name-{{ expense.pk }}" type="text" value="{{ expense.name }}" maxlength="255"{% if closed %} disabled{% endif %}/></td>
+              <td class="bp-col-wide"><input name="eorig-{{ expense.pk }}" type="hidden" value="{{ expense.orig }}"/><input name="ever-{{ expense.pk }}" type="hidden" value="{{ expense.ver }}"/><input class="bp-input" name="name-{{ expense.pk }}" type="text" value="{{ expense.name }}" maxlength="255"{% if closed %} disabled{% endif %}/></td>
               <td class="bp-num"><input class="bp-input bp-input--number" inputmode="decimal" name="amount-{{ expense.pk }}" type="text" value="{{ expense.amount }}"{% if closed %} disabled{% endif %}/></td>
               {% if not closed %}<td class="bp-remove"><label title="Remove" data-pt-title="remove"><input name="delete-{{ expense.pk }}" type="checkbox" value="1" data-bp-remove/><span class="material-symbols-outlined" aria-hidden="true">delete</span></label></td>{% endif %}
             </tr>
@@ -305,7 +300,7 @@
         <tbody data-bp-rows>
           {% for gas in gas_rows %}
             <tr data-bp-gas-row>
-              <td class="bp-num"><input class="bp-input bp-input--number" data-bp-gas-start inputmode="decimal" name="gstart-{{ gas.pk }}" placeholder="{{ gas.previous }}" title="Empty: last month's end reading" data-pt-title="previous_hint" type="text" value="{{ gas.start }}"{% if closed %} disabled{% endif %}/></td>
+              <td class="bp-num"><input name="gorig-{{ gas.pk }}" type="hidden" value="{{ gas.orig }}"/><input name="gver-{{ gas.pk }}" type="hidden" value="{{ gas.ver }}"/><input class="bp-input bp-input--number" data-bp-gas-start inputmode="decimal" name="gstart-{{ gas.pk }}" placeholder="{{ gas.previous }}" title="Empty: last month's end reading" data-pt-title="previous_hint" type="text" value="{{ gas.start }}"{% if closed %} disabled{% endif %}/></td>
               <td class="bp-num"><input class="bp-input bp-input--number" data-bp-gas-end inputmode="decimal" name="gend-{{ gas.pk }}" type="text" value="{{ gas.end }}"{% if closed %} disabled{% endif %}/></td>
               <td class="bp-num" data-bp-gas-used>{{ gas.used }}</td>
               <td class="bp-num"><input class="bp-input bp-input--number" data-bp-gas-price inputmode="decimal" name="gprice-{{ gas.pk }}" type="text" value="{{ gas.price }}"{% if closed %} disabled{% endif %}/></td>
@@ -366,6 +361,34 @@
 <button aria-hidden="true" class="hidden" data-bp-close-opener data-modal-open="bp-close-modal" tabindex="-1" type="button"></button>
 {% endif %}
 
+{% if deletable %}
+<div aria-hidden="true" aria-labelledby="bp-delete-title" class="app-modal fixed inset-0 z-[84] hidden items-center justify-center p-4 sm:p-6" data-stat-synced="true" id="bp-delete-modal" role="dialog">
+  <form class="modal-panel bp-modal bp-modal--confirm" data-bp-delete-form data-period-name="{{ period.name }}" method="post">
+    {% csrf_token %}
+    <input name="action" type="hidden" value="delete"/>
+    <input name="building" type="hidden" value="{{ building.pk|default:'' }}"/>
+    <input name="sheet" type="hidden" value="{{ sheet_type }}"/>
+    <header class="bp-modal__head">
+      <h2 id="bp-delete-title"><span data-pt="delete_title">Delete the period?</span> — {{ period.name }}</h2>
+      <button aria-label="Close" class="profile-drawer-close" data-close-overlay type="button"><span class="material-symbols-outlined">close</span></button>
+    </header>
+    <div class="bp-modal__body">
+      <p class="bp-confirm-text" data-pt="delete_warning">The period is deleted with all its tables. Type its name to confirm:</p>
+      <p class="bp-confirm-text"><strong>{{ period.name }}</strong></p>
+      <input autocomplete="off" class="bp-input bp-delete-name" data-bp-delete-name name="confirm_name" type="text"/>
+    </div>
+    <footer class="bp-modal__foot">
+      <span class="bp-grow"></span>
+      <button class="bp-btn" data-close-overlay data-pt="cancel" type="button">Cancel</button>
+      <button class="bp-btn bp-btn--danger-solid" data-bp-delete-confirm disabled type="submit">
+        <span class="material-symbols-outlined" aria-hidden="true">delete</span>
+        <span data-pt="delete">Delete</span>
+      </button>
+    </footer>
+  </form>
+</div>
+{% endif %}
+
 <script id="bp-labels" type="application/json">{{ labels_json }}</script>
-<script defer src="{% static 'js/billing_periods.js' %}?v=periods-20261022-1"></script>
+<script defer src="{% static 'js/billing_periods.js' %}?v=periods-20261104-1"></script>
 {% endblock %}

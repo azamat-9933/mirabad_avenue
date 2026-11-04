@@ -8,6 +8,7 @@ charges every apartment account.
 from __future__ import annotations
 
 import calendar
+import hashlib
 from datetime import date, timedelta
 from decimal import Decimal, InvalidOperation
 from urllib.parse import urlencode
@@ -15,7 +16,7 @@ from urllib.parse import urlencode
 from django.contrib import messages
 from django.core.exceptions import ValidationError
 from django.core.paginator import Paginator
-from django.db import transaction
+from django.db import connection, transaction
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
@@ -48,6 +49,12 @@ DEFAULT_GAS_PRICE = Decimal("1000")
 GAS_FIELDS = ("start", "end", "price")
 # Saving any of these puts a draft period In progress.
 SAVE_ACTIONS = ("save_heating", "save_hot_water", "save_expenses", "save_gas")
+# PostgreSQL advisory lock taken while a period is created, so two operators pressing Create at once
+# cannot both pass the overlap check.
+PERIOD_CREATE_LOCK = 7_020_001
+
+# How a row's save went: left as it was, written, or not written because someone else saved it first.
+ROW_UNCHANGED, ROW_CHANGED, ROW_CONFLICT = range(3)
 
 
 def default_period_name(start: date) -> str:
@@ -110,6 +117,70 @@ def _text(value) -> str:
     return "" if value is None else group_thousands(value)
 
 
+# Several operators fill in one period at the same time, often the same house. Each row of a table is
+# drawn with the values it showed (orig-<pk>) and a fingerprint of what the database held (ver-<pk>).
+# A save writes only the rows the operator changed, and not a row someone else saved in between: the
+# whole house used to be written back with the page's values, so the later save wiped the earlier one.
+
+
+def _row_token(*values) -> str:
+    text = "|".join("" if value is None else str(value) for value in values)
+    return hashlib.sha1(text.encode("utf-8")).hexdigest()[:12]
+
+
+def heating_token(record) -> str:
+    return _row_token(record.heated_from, record.heated_until, record.days_given, record.excluded_dates)
+
+
+def hot_water_token(reading) -> str:
+    return _row_token(reading.start_reading, reading.end_reading)
+
+
+def expense_token(expense) -> str:
+    return _row_token(expense.name, expense.amount)
+
+
+def gas_token(reading) -> str:
+    return _row_token(reading.start_reading, reading.end_reading, reading.price_per_m3)
+
+
+def _typed(request, prefix, pk, names) -> str:
+    """The row's fields as they were sent, in the same form as its orig- value."""
+    return "|".join(str(request.POST.get(f"{prefix}{name}-{pk}") or "").strip() for name in names)
+
+
+def _row_change(request, pk, typed, orig_name, ver_name, token) -> int:
+    """Did this operator change the row, and did someone else save it since their page was drawn?
+
+    A page drawn before rows carried these fields sends neither: its rows count as changed, as before.
+    """
+    original = request.POST.get(f"{orig_name}-{pk}")
+    if original is None:
+        return ROW_CHANGED
+    if typed == original.strip():
+        return ROW_UNCHANGED
+    return ROW_CHANGED if request.POST.get(f"{ver_name}-{pk}") == token else ROW_CONFLICT
+
+
+def _report_saved(request, what, changed, conflicts):
+    if changed:
+        messages.success(request, f"{what} saqlandi: {changed} ta qator.")
+    elif not conflicts:
+        messages.info(request, f"{what}: o'zgarish yo'q, saqlanadigan yangi qiymat kiritilmagan.")
+    if conflicts:
+        messages.warning(
+            request,
+            f"{', '.join(conflicts)}: siz sahifani ochganingizdan keyin bu qatorlarni boshqa operator saqlagan, "
+            "shuning uchun sizning qiymatlaringiz yozilmadi. Jadval yangilandi: tekshirib, kerak bo'lsa qayta kiriting.",
+        )
+
+
+def _lock_period_creation():
+    if connection.vendor == "postgresql":
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT pg_advisory_xact_lock(%s)", [PERIOD_CREATE_LOCK])
+
+
 def create_period(request, name: str, start_raw: str, end_raw: str) -> BillingPeriod:
     """A new open period for every house, with its heating and hot water rows for every apartment."""
     errors = []
@@ -135,6 +206,12 @@ def create_period(request, name: str, start_raw: str, end_raw: str) -> BillingPe
             errors.append(f"Bu sanalar boshqa davr bilan kesishadi: {names}.")
     if errors:
         raise ValidationError(list(dict.fromkeys(errors)))
+    _lock_period_creation()
+    # Checked again under the lock: another operator may have created the same month meanwhile.
+    overlapping = BillingPeriod.objects.filter(start_date__lte=end, end_date__gte=start).order_by("start_date")
+    if overlapping:
+        names = ", ".join(f"{period.name} ({period.start_date:%d.%m.%Y}–{period.end_date:%d.%m.%Y})" for period in overlapping)
+        raise ValidationError(f"Bu sanalar boshqa davr bilan kesishadi: {names}.")
 
     period = BillingPeriod.objects.create(name=name, start_date=start, end_date=end, status=BillingPeriod.STATUS_DRAFT)
     buildings = list(Building.objects.all())
@@ -246,8 +323,19 @@ class BillingPeriodSheetView(PortalPageView):
     active_page = "billing_period"
 
     def dispatch(self, request, *args, **kwargs):
-        self.period = get_object_or_404(BillingPeriod, pk=kwargs["pk"])
+        self.period = BillingPeriod.objects.filter(pk=kwargs["pk"]).first()
+        if self.period is None:
+            return self._period_gone(request)
         return super().dispatch(request, *args, **kwargs)
+
+    @staticmethod
+    def _period_gone(request):
+        """The period was deleted, perhaps by another operator while this page was open."""
+        if request.method == "POST":
+            messages.error(request, "Bu davr o'chirilgan: siz yuborgan qiymatlar saqlanmadi.")
+        else:
+            messages.error(request, "Davr topilmadi: u o'chirilgan bo'lishi mumkin.")
+        return redirect("portal:billing_periods")
 
     # ── which house and which table ──
 
@@ -280,6 +368,11 @@ class BillingPeriodSheetView(PortalPageView):
         if sheet and sheet.is_heating:
             for number, row in enumerate(sheet.rows, start=1):
                 pk = row.record.pk
+                shown = (
+                    row.heated_from.isoformat() if row.heated_from else "",
+                    row.heated_until.isoformat() if row.heated_until else "",
+                    str(row.days) if row.heated_from else "",
+                )
                 rows.append(
                     {
                         "no": number,
@@ -289,10 +382,12 @@ class BillingPeriodSheetView(PortalPageView):
                         "account": row.apartment.personal_account,
                         "area": _text(row.apartment.area),
                         "area_raw": str(row.apartment.area),
-                        "from": value(f"from-{pk}", row.heated_from.isoformat() if row.heated_from else ""),
-                        "until": value(f"until-{pk}", row.heated_until.isoformat() if row.heated_until else ""),
+                        "from": value(f"from-{pk}", shown[0]),
+                        "until": value(f"until-{pk}", shown[1]),
                         "range_days": row.range_days,
-                        "days": value(f"days-{pk}", str(row.days) if row.heated_from else ""),
+                        "days": value(f"days-{pk}", shown[2]),
+                        "orig": value(f"orig-{pk}", "|".join(shown)),
+                        "ver": value(f"ver-{pk}", heating_token(row.record)),
                         "heated_area": _text(row.heated_area),
                         "amount": _text(row.amount),
                     }
@@ -310,6 +405,8 @@ class BillingPeriodSheetView(PortalPageView):
                         "start": value(f"start-{pk}", _text(row.start_reading)),
                         "previous": _text(row.previous_reading),
                         "end": value(f"end-{pk}", _text(row.end_reading)),
+                        "orig": value(f"orig-{pk}", f"{_text(row.start_reading)}|{_text(row.end_reading)}"),
+                        "ver": value(f"ver-{pk}", hot_water_token(row.reading)),
                         "consumption": _text(row.consumption) if row.consumption is not None else "—",
                         "amount": _text(row.amount),
                     }
@@ -319,7 +416,15 @@ class BillingPeriodSheetView(PortalPageView):
         gas_price_default, gas_previous_default = DEFAULT_GAS_PRICE, None
         if building:
             for expense in self.period.expenses.filter(building=building, service_type=sheet_type).order_by("pk"):
-                expenses.append({"pk": expense.pk, "name": expense.name, "amount": _text(expense.amount)})
+                expenses.append(
+                    {
+                        "pk": expense.pk,
+                        "name": expense.name,
+                        "amount": _text(expense.amount),
+                        "orig": f"{expense.name}|{_text(expense.amount)}",
+                        "ver": expense_token(expense),
+                    }
+                )
             gas_readings = self.period.gas_meter_readings.filter(building=building, service_type=sheet_type).select_related("period")
             for reading in gas_readings.order_by("pk"):
                 gas_rows.append(
@@ -331,6 +436,8 @@ class BillingPeriodSheetView(PortalPageView):
                         "price": _text(reading.price_per_m3),
                         "used": _text(reading.consumption),
                         "cost": _text(money(reading.total_gas_cost)),
+                        "orig": "|".join(_text(item) for item in (reading.start_reading, reading.end_reading, reading.price_per_m3)),
+                        "ver": gas_token(reading),
                     }
                 )
             last_price = (
@@ -348,6 +455,7 @@ class BillingPeriodSheetView(PortalPageView):
             {
                 "period": self.period,
                 "closed": is_closed(self.period),
+                "deletable": self.period.status in (BillingPeriod.STATUS_DRAFT, BillingPeriod.STATUS_IN_PROGRESS),
                 "building": building,
                 "sheet_type": sheet_type,
                 "sheet": sheet,
@@ -377,6 +485,12 @@ class BillingPeriodSheetView(PortalPageView):
     # ── actions ──
 
     def post(self, request, *args, **kwargs):
+        try:
+            return self._post(request)
+        except BillingPeriod.DoesNotExist:  # deleted while this request was on its way
+            return self._period_gone(request)
+
+    def _post(self, request):
         action = str(request.POST.get("action") or "")
         handlers = {
             "save_heating": self._save_heating,
@@ -437,6 +551,9 @@ class BillingPeriodSheetView(PortalPageView):
         return redirect(self._sheet_url(building, sheet_type))
 
     def _ensure_editable(self, building):
+        # Locked until the save commits: a close or a delete by another operator waits for it, and a save
+        # that comes after them sees the new status, not the one its page was drawn with.
+        self.period = BillingPeriod.objects.select_for_update().get(pk=self.period.pk)
         if is_closed(self.period):
             raise ValidationError("Davr yopilgan: o'zgartirish uchun avval «Qayta ochish» tugmasini bosing.")
         if building is None:
@@ -450,12 +567,20 @@ class BillingPeriodSheetView(PortalPageView):
         self._ensure_editable(building)
         period = self.period
         records = list(
-            HeatingRecord.objects.filter(period=period, apartment__building=building, pk__in=self._row_ids(request))
+            HeatingRecord.objects.select_for_update(of=("self",))
+            .filter(period=period, apartment__building=building, pk__in=self._row_ids(request))
             .select_related("apartment")
         )
-        errors = []
+        errors, changed, conflicts = [], [], []
         for record in records:
             what = f"{building.number} uy, kv {record.apartment.number}"
+            typed = _typed(request, "", record.pk, ("from", "until", "days"))
+            state = _row_change(request, record.pk, typed, "orig", "ver", heating_token(record))
+            if state == ROW_UNCHANGED:
+                continue
+            if state == ROW_CONFLICT:
+                conflicts.append(f"kv {record.apartment.number}")
+                continue
             days_raw = str(request.POST.get(f"days-{record.pk}") or "").strip()
             try:
                 heated_from = _day(request.POST.get(f"from-{record.pk}"), what)
@@ -476,30 +601,41 @@ class BillingPeriodSheetView(PortalPageView):
                 record.clean()
             except ValidationError as exc:
                 errors.extend(f"{what}: {message}" for message in exc.messages)
+                continue
+            changed.append(record)
         if errors:
             raise ValidationError(errors)
-        HeatingRecord.objects.bulk_update(records, ["heated_from", "heated_until", "days_given", "excluded_dates"])
-        _audit(
-            request,
-            period,
-            "Heating table saved",
-            f"Heating table of house {building.number} saved: {len(records)} apartments.",
-            building=building,
-            rows=len(records),
-        )
-        messages.success(request, f"{building.number} uy: isitish jadvali saqlandi.")
+        if changed:
+            HeatingRecord.objects.bulk_update(changed, ["heated_from", "heated_until", "days_given", "excluded_dates"])
+            _audit(
+                request,
+                period,
+                "Heating table saved",
+                f"Heating table of house {building.number} saved: {len(changed)} apartments.",
+                building=building,
+                rows=len(changed),
+            )
+        _report_saved(request, f"{building.number} uy: isitish jadvali", len(changed), conflicts)
 
     def _save_hot_water(self, request, building, sheet_type):
         self._ensure_editable(building)
         period = self.period
         readings = list(
-            HotWaterMeterReading.objects.filter(period=period, apartment__building=building, pk__in=self._row_ids(request))
+            HotWaterMeterReading.objects.select_for_update(of=("self",))
+            .filter(period=period, apartment__building=building, pk__in=self._row_ids(request))
             .select_related("apartment")
         )
         previous = previous_hot_water_readings([reading.apartment_id for reading in readings], period)
-        errors = []
+        errors, changed, conflicts = [], [], []
         for reading in readings:
             what = f"{building.number} uy, kv {reading.apartment.number}"
+            typed = _typed(request, "", reading.pk, ("start", "end"))
+            state = _row_change(request, reading.pk, typed, "orig", "ver", hot_water_token(reading))
+            if state == ROW_UNCHANGED:
+                continue
+            if state == ROW_CONFLICT:
+                conflicts.append(f"kv {reading.apartment.number}")
+                continue
             try:
                 start = _number(request.POST.get(f"start-{reading.pk}"), what)
                 end = _number(request.POST.get(f"end-{reading.pk}"), what)
@@ -513,18 +649,20 @@ class BillingPeriodSheetView(PortalPageView):
                 )
                 continue
             reading.start_reading, reading.end_reading = start, end
+            changed.append(reading)
         if errors:
             raise ValidationError(errors)
-        HotWaterMeterReading.objects.bulk_update(readings, ["start_reading", "end_reading"])
-        _audit(
-            request,
-            period,
-            "Hot water table saved",
-            f"Hot water table of house {building.number} saved: {len(readings)} apartments.",
-            building=building,
-            rows=len(readings),
-        )
-        messages.success(request, f"{building.number} uy: issiq suv jadvali saqlandi.")
+        if changed:
+            HotWaterMeterReading.objects.bulk_update(changed, ["start_reading", "end_reading"])
+            _audit(
+                request,
+                period,
+                "Hot water table saved",
+                f"Hot water table of house {building.number} saved: {len(changed)} apartments.",
+                building=building,
+                rows=len(changed),
+            )
+        _report_saved(request, f"{building.number} uy: issiq suv jadvali", len(changed), conflicts)
 
     @staticmethod
     def _new_rows(request, prefix: str, names) -> list[dict]:
@@ -536,7 +674,7 @@ class BillingPeriodSheetView(PortalPageView):
     def _save_expenses(self, request, building, sheet_type):
         self._ensure_editable(building)
         period = self.period
-        errors, kept, removed, added = [], [], [], []
+        errors, kept, changed, removed, added, conflicts = [], [], [], [], [], []
 
         def checked(name, raw_amount):
             amount = _number(raw_amount, f"«{name}»")
@@ -544,16 +682,26 @@ class BillingPeriodSheetView(PortalPageView):
                 raise ValidationError(f"«{name or raw_amount}»: xarajat nomi va 0 dan katta summa kerak.")
             return name[:255], money(amount)
 
-        for expense in period.expenses.filter(building=building, service_type=sheet_type):
+        for expense in period.expenses.select_for_update().filter(building=building, service_type=sheet_type):
             if request.POST.get(f"delete-{expense.pk}"):
                 removed.append(expense)
                 continue
+            kept.append(expense)
+            if f"name-{expense.pk}" not in request.POST:
+                continue  # added by another operator after this window was opened
+            typed = _typed(request, "", expense.pk, ("name", "amount"))
+            state = _row_change(request, expense.pk, typed, "eorig", "ever", expense_token(expense))
+            if state == ROW_UNCHANGED:
+                continue
+            if state == ROW_CONFLICT:
+                conflicts.append(f"«{expense.name}»")
+                continue
             try:
                 expense.name, expense.amount = checked(
-                    str(request.POST.get(f"name-{expense.pk}", expense.name) or "").strip(),
-                    request.POST.get(f"amount-{expense.pk}", expense.amount),
+                    str(request.POST.get(f"name-{expense.pk}") or "").strip(),
+                    request.POST.get(f"amount-{expense.pk}"),
                 )
-                kept.append(expense)
+                changed.append(expense)
             except ValidationError as exc:
                 errors.extend(exc.messages)
         for row in self._new_rows(request, "new_", ("name", "amount")):
@@ -569,20 +717,23 @@ class BillingPeriodSheetView(PortalPageView):
             raise ValidationError(errors)
         for expense in removed:
             expense.delete()
-        Expense.objects.bulk_update(kept, ["name", "amount"])
+        Expense.objects.bulk_update(changed, ["name", "amount"])
         Expense.objects.bulk_create(added)
         total = sum((expense.amount for expense in kept + added), Decimal("0"))
-        _audit(
-            request,
-            period,
-            "Expenses saved",
-            f"{SERVICE_NAMES[sheet_type]} expenses of house {building.number}: {len(kept) + len(added)} rows, {total} UZS "
-            f"({len(added)} added, {len(removed)} removed).",
-            building=building,
-            serviceType=sheet_type,
-            total=str(total),
+        if changed or removed or added:
+            _audit(
+                request,
+                period,
+                "Expenses saved",
+                f"{SERVICE_NAMES[sheet_type]} expenses of house {building.number}: {len(kept) + len(added)} rows, {total} UZS "
+                f"({len(added)} added, {len(removed)} removed).",
+                building=building,
+                serviceType=sheet_type,
+                total=str(total),
+            )
+        _report_saved(
+            request, f"{building.number} uy, {SERVICE_NAMES[sheet_type]}: xarajatlar", len(changed) + len(removed) + len(added), conflicts
         )
-        messages.success(request, f"{building.number} uy, {SERVICE_NAMES[sheet_type]}: xarajatlar saqlandi.")
 
     def _gas_meter(self, reading, values: dict, building):
         """The gas meter with the typed start, end and price, validated."""
@@ -605,14 +756,28 @@ class BillingPeriodSheetView(PortalPageView):
     def _save_gas(self, request, building, sheet_type):
         self._ensure_editable(building)
         period = self.period
-        errors, kept, removed, added = [], [], [], []
-        for reading in period.gas_meter_readings.filter(building=building, service_type=sheet_type).select_related("period"):
+        errors, changed, removed, added, conflicts = [], [], [], [], []
+        readings = (
+            period.gas_meter_readings.select_for_update(of=("self",))
+            .filter(building=building, service_type=sheet_type)
+            .select_related("period")
+        )
+        for reading in readings:
             if request.POST.get(f"gdelete-{reading.pk}"):
                 removed.append(reading)
                 continue
+            if f"gend-{reading.pk}" not in request.POST:
+                continue  # added by another operator after this window was opened
+            typed = _typed(request, "g", reading.pk, GAS_FIELDS)
+            state = _row_change(request, reading.pk, typed, "gorig", "gver", gas_token(reading))
+            if state == ROW_UNCHANGED:
+                continue
+            if state == ROW_CONFLICT:
+                conflicts.append(f"gaz hisoblagich {group_thousands(reading.end_reading)}")
+                continue
             values = {name: request.POST.get(f"g{name}-{reading.pk}") for name in GAS_FIELDS}
             try:
-                kept.append(self._gas_meter(reading, values, building))
+                changed.append(self._gas_meter(reading, values, building))
             except ValidationError as exc:
                 errors.extend(exc.messages)
         for values in self._new_rows(request, "new_g", GAS_FIELDS):
@@ -627,18 +792,21 @@ class BillingPeriodSheetView(PortalPageView):
             raise ValidationError(errors)
         for reading in removed:
             reading.delete()
-        for reading in kept + added:
+        for reading in changed + added:
             reading.save()
-        _audit(
-            request,
-            period,
-            "Gas meters saved",
-            f"{SERVICE_NAMES[sheet_type]} gas meters of house {building.number}: {len(kept) + len(added)} rows "
-            f"({len(added)} added, {len(removed)} removed).",
-            building=building,
-            serviceType=sheet_type,
+        if changed or removed or added:
+            _audit(
+                request,
+                period,
+                "Gas meters saved",
+                f"{SERVICE_NAMES[sheet_type]} gas meters of house {building.number}: {len(changed) + len(added)} rows "
+                f"({len(added)} added, {len(removed)} removed).",
+                building=building,
+                serviceType=sheet_type,
+            )
+        _report_saved(
+            request, f"{building.number} uy, {SERVICE_NAMES[sheet_type]}: gaz hisoblagich", len(changed) + len(removed) + len(added), conflicts
         )
-        messages.success(request, f"{building.number} uy, {SERVICE_NAMES[sheet_type]}: gaz hisoblagich saqlandi.")
 
     def _set_status(self, request, building, sheet_type):
         set_status(request, self.period, str(request.POST.get("status") or ""))
@@ -668,9 +836,13 @@ class BillingPeriodSheetView(PortalPageView):
         )
 
     def _delete(self, request, building, sheet_type):
-        period = self.period
-        if is_closed(period) or Charge.objects.filter(period=period).exists() or Invoice.objects.filter(period=period).exists():
+        # Locked, so a save by another operator finishes first; the period's name has to be typed.
+        period = self.period = BillingPeriod.objects.select_for_update().get(pk=self.period.pk)
+        billed = Charge.objects.filter(period=period).exists() or Invoice.objects.filter(period=period).exists()
+        if period.status not in (BillingPeriod.STATUS_DRAFT, BillingPeriod.STATUS_IN_PROGRESS) or billed:
             raise ValidationError("Hisoblar qo'yilgan davrni o'chirib bo'lmaydi: u abonent balanslariga yozilgan.")
+        if str(request.POST.get("confirm_name") or "").strip() != period.name:
+            raise ValidationError(f"Davr o'chirilmadi: tasdiqlash uchun uning nomini aniq yozing — «{period.name}».")
         _audit(
             request,
             period,

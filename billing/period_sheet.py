@@ -46,6 +46,16 @@ LABELS = {
     "close_title": {"en": "Close the period?", "ru": "Закрыть период?", "uz": "Davr yopilsinmi?"},
     "close_yes": {"en": "Yes, close", "ru": "Да, закрыть", "uz": "Ha, yopish"},
     "reopen": {"en": "Reopen", "ru": "Открыть повторно", "uz": "Qayta ochish"},
+    "delete_period": {"en": "Delete period", "ru": "Удалить период", "uz": "Davrni o'chirish"},
+    "delete_title": {"en": "Delete the period?", "ru": "Удалить период?", "uz": "Davr o'chirilsinmi?"},
+    "delete_warning": {
+        "en": "The period is deleted with all its tables: heating, hot water, expenses and gas meters, for every "
+              "house. This cannot be undone. To confirm, type the period's name:",
+        "ru": "Период удалится со всеми таблицами всех домов: отопление, ГВС, расходы и газовые счётчики. "
+              "Отменить это нельзя. Для подтверждения введите название периода:",
+        "uz": "Davr barcha uylarning jadvallari bilan o'chiriladi: isitish, issiq suv, xarajatlar va gaz "
+              "hisoblagichlari. Buni qaytarib bo'lmaydi. Tasdiqlash uchun davr nomini yozing:",
+    },
     "prev": {"en": "Prev", "ru": "Назад", "uz": "Oldingi"},
     "next": {"en": "Next", "ru": "Далее", "uz": "Keyingi"},
     "page": {"en": "Page", "ru": "Страница", "uz": "Sahifa"},

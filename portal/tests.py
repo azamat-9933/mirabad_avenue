@@ -3,6 +3,7 @@ import base64
 import gzip
 import io
 import json
+import html
 import re
 from datetime import timedelta
 from decimal import Decimal
@@ -1210,14 +1211,152 @@ class PortalBillingPeriodPagesTests(TestCase):
         self._create(name="2026-Yanvar", start="2026-01-01", end="2026-01-31")
         draft = BillingPeriod.objects.get(name="2026-Yanvar")
 
-        refused = self._sheet(billed, action="delete")
-        deleted = self._sheet(draft, action="delete")
+        refused = self._sheet(billed, action="delete", confirm_name=billed.name)
+        # The name has to be typed exactly.
+        no_name = self._sheet(draft, action="delete")
+        wrong_name = self._sheet(draft, action="delete", confirm_name="2026-Yanvar " + "x")
+        self.assertTrue(BillingPeriod.objects.filter(pk=draft.pk).exists())
+        self.assertTrue(any("nomini aniq yozing" in message for message in self._messages(no_name)))
+        self.assertTrue(any("nomini aniq yozing" in message for message in self._messages(wrong_name)))
+        deleted = self._sheet(draft, action="delete", confirm_name=" 2026-Yanvar ")
 
         self.assertTrue(BillingPeriod.objects.filter(pk=billed.pk).exists())
         self.assertTrue(any("o'chirib bo'lmaydi" in message for message in self._messages(refused)))
         self.assertFalse(BillingPeriod.objects.filter(pk=draft.pk).exists())
         self.assertFalse(HeatingRecord.objects.filter(period_id=draft.pk).exists())
         self.assertRedirects(deleted, reverse("portal:billing_periods"))
+
+    # ── several operators at once: forms sent as a browser sends them ──
+
+    def _form(self, period, form_id, **query):
+        """The fields a browser would send from the form (#form_id) of the sheet page as it is now."""
+        query.setdefault("building", self.house_60.pk)
+        page = self.client.get(reverse("portal:billing_period_sheet", args=[period.pk]), query).content.decode()
+        start = page.index(f'id="{form_id}"')
+        part = page[page.rindex("<form", 0, start + 200) if "<form" in page[start - 300:start + 200] else start:]
+        part = part[: part.index("</form>")]
+        part = re.sub(r"<template.*?</template>", "", part, flags=re.S)
+        fields = {}
+        for tag in re.findall(r"<input\b[^>]*>", part):
+            name = re.search(r'\bname="([^"]*)"', tag)
+            if not name or 'type="checkbox"' in tag:
+                continue
+            value = re.search(r'\bvalue="([^"]*)"', tag)
+            fields.setdefault(html.unescape(name.group(1)), []).append(html.unescape(value.group(1)) if value else "")
+        return fields
+
+    def _send(self, period, fields, **changes):
+        data = {**fields, **{key: [value] for key, value in changes.items()}}
+        return self.client.post(reverse("portal:billing_period_sheet", args=[period.pk]), data, follow=True)
+
+    def _hot_water(self, period, apartment):
+        return HotWaterMeterReading.objects.get(period=period, apartment=apartment)
+
+    def test_two_operators_on_one_house_keep_each_others_readings(self):
+        self._create()
+        period = BillingPeriod.objects.get()
+        first, rest = self._hot_water(period, self.first), self._hot_water(period, self.rest)
+        operator_a = self._form(period, "bp-sheet-form", sheet="hot_water")
+        operator_b = self._form(period, "bp-sheet-form", sheet="hot_water")
+
+        self._send(period, operator_a, **{f"start-{first.pk}": "10", f"end-{first.pk}": "25,5"})
+        # B's page still shows apartment 1 empty; B fills in apartment 2 only.
+        saved = self._send(period, operator_b, **{f"start-{rest.pk}": "0", f"end-{rest.pk}": "7"})
+
+        first.refresh_from_db()
+        rest.refresh_from_db()
+        self.assertEqual((first.start_reading, first.end_reading), (Decimal("10"), Decimal("25.5")))
+        self.assertEqual((rest.start_reading, rest.end_reading), (Decimal("0"), Decimal("7")))
+        self.assertTrue(any("saqlandi: 1 ta qator" in message for message in self._messages(saved)))
+
+    def test_the_same_reading_typed_by_two_operators_keeps_the_first_and_warns_the_second(self):
+        self._create()
+        period = BillingPeriod.objects.get()
+        first = self._hot_water(period, self.first)
+        operator_a = self._form(period, "bp-sheet-form", sheet="hot_water")
+        operator_b = self._form(period, "bp-sheet-form", sheet="hot_water")
+        self._send(period, operator_a, **{f"start-{first.pk}": "10", f"end-{first.pk}": "20"})
+
+        late = self._send(period, operator_b, **{f"start-{first.pk}": "10", f"end-{first.pk}": "99"})
+
+        first.refresh_from_db()
+        self.assertEqual(first.end_reading, Decimal("20"))
+        self.assertTrue(any("kv 1: siz sahifani ochganingizdan keyin" in message for message in self._messages(late)))
+        # Once their page shows the saved value, the second operator can change it on purpose.
+        again = self._form(period, "bp-sheet-form", sheet="hot_water")
+        self._send(period, again, **{f"end-{first.pk}": "99"})
+        first.refresh_from_db()
+        self.assertEqual(first.end_reading, Decimal("99"))
+
+    def test_saving_an_untouched_page_writes_nothing(self):
+        self._create()
+        period = BillingPeriod.objects.get()
+        first = self._hot_water(period, self.first)
+        stale = self._form(period, "bp-sheet-form", sheet="hot_water")
+        fresh = self._form(period, "bp-sheet-form", sheet="hot_water")
+        self._send(period, fresh, **{f"start-{first.pk}": "3", f"end-{first.pk}": "4"})
+
+        nothing = self._send(period, stale)
+
+        first.refresh_from_db()
+        self.assertEqual((first.start_reading, first.end_reading), (Decimal("3"), Decimal("4")))
+        self.assertTrue(any("o'zgarish yo'q" in message for message in self._messages(nothing)))
+
+    def test_two_operators_on_the_heating_table_keep_each_others_days(self):
+        self._create()
+        period = BillingPeriod.objects.get()
+        first = HeatingRecord.objects.get(period=period, apartment=self.first)
+        rest = HeatingRecord.objects.get(period=period, apartment=self.rest)
+        operator_a = self._form(period, "bp-sheet-form")
+        operator_b = self._form(period, "bp-sheet-form")
+
+        self._send(period, operator_a, **{f"days-{first.pk}": "20"})
+        self._send(period, operator_b, **{f"days-{rest.pk}": "5"})
+
+        first.refresh_from_db()
+        rest.refresh_from_db()
+        self.assertEqual((first.days_given, rest.days_given), (20, 5))
+
+    def test_stale_expense_and_gas_windows_keep_what_others_added(self):
+        self._create()
+        period = BillingPeriod.objects.get()
+        self._sheet(period, action="save_expenses", new_name=["Вода"], new_amount=["1 000"])
+        water = period.expenses.get()
+        expenses_a = self._form(period, "bp-expenses-modal")
+        expenses_b = self._form(period, "bp-expenses-modal")
+        gas_b = self._form(period, "bp-gas-modal")
+
+        self._send(period, expenses_a, **{f"amount-{water.pk}": "2 000"})
+        self._sheet(period, action="save_gas", new_gstart=["100"], new_gend=["150"], new_gprice=["1 000"])
+        # B's windows were opened before: the expense they did not touch and the gas meter they never saw stay.
+        self._send(period, expenses_b, new_name="Свет", new_amount="500")
+        gas_saved = self._send(period, gas_b, new_gstart="150", new_gend="160", new_gprice="1 000")
+
+        water.refresh_from_db()
+        self.assertEqual(water.amount, Decimal("2000"))
+        self.assertEqual(sorted(period.expenses.values_list("name", flat=True)), ["Вода", "Свет"])
+        self.assertEqual(period.gas_meter_readings.count(), 2)
+        self.assertFalse(any("kiriting" in message for message in self._messages(gas_saved)))
+
+    def test_saving_into_a_period_deleted_meanwhile_goes_back_to_the_list(self):
+        self._create()
+        period = BillingPeriod.objects.get()
+        first = self._hot_water(period, self.first)
+        page = self._form(period, "bp-sheet-form", sheet="hot_water")
+        self._sheet(period, action="delete", confirm_name=period.name)
+
+        late = self._send(period, page, **{f"end-{first.pk}": "5"})
+
+        self.assertRedirects(late, reverse("portal:billing_periods"))
+        self.assertTrue(any("o'chirilgan" in message for message in self._messages(late)))
+
+    def test_a_period_page_offers_delete_only_behind_its_name(self):
+        self._create()
+        period = BillingPeriod.objects.get()
+        page = self.client.get(reverse("portal:billing_period_sheet", args=[period.pk])).content.decode()
+        self.assertIn('id="bp-delete-modal"', page)
+        self.assertIn(f'data-period-name="{period.name}"', page)
+        self.assertNotIn('data-bp-confirm="delete_confirm"', page)
 
     def test_refresh_adds_apartments_and_houses_created_after_the_period(self):
         self._create()
