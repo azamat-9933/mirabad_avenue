@@ -13,6 +13,7 @@ from django.db.models.functions import RowNumber, TruncMonth
 from django.urls import reverse
 from django.utils import timezone
 
+from billing.calculation import _natural_key
 from billing.models import HotWaterMeterReading
 from main_app.models import DEFAULT_SECTOR_NAME
 from properties.models import Apartment, Building, Complex, Owner
@@ -482,13 +483,14 @@ def serialize_complex(complex_obj, owner_for, payment_totals_for, override_maps,
     unit_total = 0
     total_area = 0.0
 
-    for building in complex_obj.buildings.all():
+    # Numbers are text ("60V", "12A"): order them as numbers, so 2 comes before 10.
+    for building in sorted(complex_obj.buildings.all(), key=lambda item: _natural_key(item.number)):
         apartment_rows = []
         building_debtors = 0
         building_paid = 0
         building_debt = 0.0
         building_collected = 0.0
-        apartments = list(building.apartments.all())
+        apartments = sorted(building.apartments.all(), key=lambda item: _natural_key(item.number))
         unit_total += len(apartments)
         building_total_area = sum(_money(apartment.area) for apartment in apartments)
         total_area += building_total_area

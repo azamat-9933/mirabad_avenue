@@ -4475,7 +4475,8 @@
             const updateVisibleRows = () => {
                 const rows = currentRows();
                 const query = search?.value.trim().toLowerCase() || "";
-                filteredRows = rows.filter((row) => row.dataset.globalFilterHidden !== "true" && (!query || row.textContent.toLowerCase().includes(query)));
+                // A house the smart search found (by one of its apartments) stays shown above them.
+                filteredRows = rows.filter((row) => row.dataset.globalFilterHidden !== "true" && (!query || row.classList.contains("residential-smart-match") || row.textContent.toLowerCase().includes(query)));
                 const maxPage = Math.max(1, Math.ceil(filteredRows.length / pageSize));
                 page = Math.min(page, maxPage);
                 rows.forEach((row) => row.classList.add("hidden"));
@@ -4621,6 +4622,19 @@
                         });
                         header.dataset.sortDirection = direction;
                         if (sortIcon) sortIcon.textContent = direction === "asc" ? "arrow_upward" : "arrow_downward";
+                        if (isResidentialHouseTable && table.classList.contains("residential-house-tab-mode")) {
+                            // One house is open as a tab: its apartments are sorted under its row.
+                            const column = Array.from(headRow.cells).filter((cell) => !cell.querySelector("[data-select-all]")).indexOf(header);
+                            const key = ["sortName", "sortUnits", "sortArea", "sortDebt"][column];
+                            if (!key) return;
+                            const sign = direction === "asc" ? 1 : -1;
+                            const apartments = Array.from(body.querySelectorAll("[data-drill-row='apartment']"));
+                            apartments.sort((a, b) => sign * (key === "sortName"
+                                ? String(a.dataset.sortName || "").localeCompare(String(b.dataset.sortName || ""), undefined, { numeric: true, sensitivity: "base" })
+                                : Number(a.dataset[key] || 0) - Number(b.dataset[key] || 0)));
+                            body.querySelector("[data-drill-row='building']")?.after(...apartments);
+                            return;
+                        }
                         if (isResidentialHouseTable) {
                             body.querySelectorAll(".residential-drill-row[data-drill-row='apartment']").forEach((row) => row.remove());
                             body.querySelectorAll("[data-drill-row='building']").forEach((row) => {
@@ -5566,6 +5580,11 @@
             row.dataset.parentBuilding = `${districtId}-${buildingIndex}`;
             row.dataset.backendId = String(apartment.apartmentBackendId || "");
             row.dataset.backendType = "apartment";
+            row.dataset.sortName = apartment.owner.name;
+            // The server sends a house's apartments in number order (1, 2, … 10).
+            row.dataset.sortUnits = String(unitIndex);
+            row.dataset.sortArea = String(Number(apartment.area) || 0);
+            row.dataset.sortDebt = String(-apartment.balance);
             row.innerHTML = `
                 ${makeSelectCell(`Select apartment ${apartment.unit}`)}
                 <td class="px-6 py-4">${renderOwner(apartment.owner)}</td>
@@ -5573,6 +5592,8 @@
                 <td class="px-6 py-4"><p class="text-sm font-bold text-on-surface">${escapeHtml(apartment.area)}</p><p class="text-xs text-on-surface-variant" data-i18n-key="Area (m²)">Area (m²)</p></td>
                 <td class="px-6 py-4"><p class="text-sm font-bold ${apartment.balance < 0 ? "text-error" : "text-on-surface"}">${formatUzs(apartment.balance)}</p><span class="residential-risk-pill ${apartment.status === "Overdue" ? "is-critical" : "is-paid"}" data-i18n-key="${attr(apartment.status)}">${escapeHtml(apartment.status)}</span></td>
                 <td class="px-6 py-4 text-right">
+                    <div class="residential-apartment-actions">
+                    ${apartment.ownerBackendId ? `<button class="residential-pay-button" data-residential-add-payment data-owner-backend-id="${attr(apartment.ownerBackendId)}" data-i18n-key="Add payment" type="button">Add payment</button>` : ""}
                     <button class="residential-detail-button" data-apartment-details
                         data-title="Apartment ${attr(apartment.unit)}"
                         data-subtitle="${attr(building)} · ${attr(district.complex)}"
@@ -5594,6 +5615,7 @@
                         data-complex-backend-id="${attr(apartment.complexBackendId || "")}"
                         data-i18n-key="Details"
                         type="button">Details</button>
+                    </div>
                 </td>
             `;
             return row;
@@ -5620,13 +5642,35 @@
         };
         const getDistrictRows = () => Array.from(table.querySelectorAll("[data-drill-row='district']"));
         const isRootSectorRow = (row) => row?.dataset?.districtId === SINGLE_SECTOR_ID;
+        const clearColumnSort = () => {
+            table.querySelectorAll("thead [data-sort-direction]").forEach((cell) => {
+                delete cell.dataset.sortDirection;
+                const icon = cell.querySelector(".table-sort-heading-icon");
+                if (icon) icon.textContent = "unfold_more";
+            });
+        };
         const expandDistrict = (row) => {
-            const district = districts[row.dataset.districtId];
+            const districtId = row.dataset.districtId;
+            const district = districts[districtId];
             if (!district) return;
-            removeRows(`[data-parent-district="${row.dataset.districtId}"]`);
+            removeRows(`[data-parent-district="${districtId}"]`);
             const fragment = document.createDocumentFragment();
-            for (let index = 1; index <= district.count; index += 1) {
-                fragment.appendChild(renderBuildingRow(row.dataset.districtId, index));
+            const tabbed = isRootSectorRow(row) && houseTabsOn();
+            table.classList.toggle("residential-house-tab-mode", tabbed);
+            if (tabbed) {
+                // The house chosen in the tabs heads the table and all its apartments follow.
+                const houseRow = renderBuildingRow(districtId, selectedHouse);
+                houseRow.classList.add("is-expanded");
+                houseRow.setAttribute("aria-expanded", "true");
+                fragment.appendChild(houseRow);
+                for (let index = 1; index <= unitsForBuilding(district, selectedHouse); index += 1) {
+                    fragment.appendChild(renderApartmentRow(districtId, selectedHouse, index));
+                }
+                clearColumnSort();
+            } else {
+                for (let index = 1; index <= district.count; index += 1) {
+                    fragment.appendChild(renderBuildingRow(districtId, index));
+                }
             }
             row.after(fragment);
             row.classList.add("is-expanded");
@@ -5701,7 +5745,7 @@
             body.appendChild(row);
         };
         const resetSmartSearch = () => {
-            table.classList.remove("residential-smart-search-active");
+            table.classList.remove("residential-smart-search-active", "residential-house-tab-mode");
             removeRows("[data-drill-child='true'], [data-smart-empty='true']");
             getDistrictRows().forEach((row) => {
                 row.classList.remove("is-expanded", "residential-smart-match");
@@ -5713,6 +5757,7 @@
             if (!searchInput) return;
             const query = searchInput.value.trim().toLowerCase();
             resetSmartSearch();
+            renderHouseTabs();
             if (!query) {
                 const rootSectorRow = getDistrictRows()[0];
                 if (rootSectorRow && !rootSectorRow.classList.contains("is-expanded")) {
@@ -5795,6 +5840,127 @@
             window.HydroFlowSyncLocale?.();
         };
 
+        // Houses as tabs: one house and all its apartments at a time. A search still looks through every
+        // house, and picking a tab clears it. The house is kept in the address (?house=64) and the browser.
+        const rootDistrict = districts[SINGLE_SECTOR_ID];
+        const houseCount = rootDistrict.buildingItems.length;
+        const houseStorageKey = "hydroflow-residential-house";
+        const houseLabelAt = (index) => {
+            const realBuilding = rootDistrict.buildingItems[index - 1];
+            return normalizeBuildingLabel(realBuilding?.number || buildingName(rootDistrict, index), index);
+        };
+        const houseIndexFor = (label) => {
+            const wanted = String(label || "").trim().toLowerCase();
+            for (let index = 1; index <= houseCount; index += 1) {
+                if (houseLabelAt(index).toLowerCase() === wanted) return index;
+            }
+            return 1;
+        };
+        const rememberedHouse = () => {
+            const fromAddress = new URLSearchParams(window.location.search).get("house");
+            if (fromAddress) return fromAddress;
+            try {
+                return storage.getItem(houseStorageKey) || "";
+            } catch {
+                return "";
+            }
+        };
+        let selectedHouse = houseIndexFor(rememberedHouse());
+        const performanceCard = table.closest("[data-residential-performance-card]");
+        let houseTabs = performanceCard?.querySelector("[data-residential-house-tabs]") || null;
+        if (!houseTabs && performanceCard) {
+            houseTabs = document.createElement("div");
+            houseTabs.className = "residential-house-tabs";
+            houseTabs.dataset.residentialHouseTabs = "";
+            houseTabs.setAttribute("role", "tablist");
+            houseTabs.setAttribute("aria-label", "Houses");
+            (table.closest(".residential-table-fit") || table).before(houseTabs);
+        }
+        const houseTabsOn = () => Boolean(houseTabs) && houseCount > 0;
+        const renderHouseTabs = () => {
+            if (!houseTabs) return;
+            houseTabs.hidden = houseCount < 2;
+            const labels = Array.from({ length: houseCount }, (_, offset) => houseLabelAt(offset + 1));
+            if (houseTabs.dataset.labels !== labels.join("|")) {
+                houseTabs.dataset.labels = labels.join("|");
+                houseTabs.innerHTML = labels.map((label, offset) => (
+                    `<button class="residential-house-tab" data-house-tab="${offset + 1}" role="tab" type="button">${escapeHtml(label)}</button>`
+                )).join("");
+            }
+            const searching = Boolean(searchInput?.value.trim());
+            houseTabs.classList.toggle("is-searching", searching);
+            houseTabs.querySelectorAll("[data-house-tab]").forEach((tab) => {
+                const current = Number(tab.dataset.houseTab) === selectedHouse;
+                tab.classList.toggle("is-active", current && !searching);
+                tab.setAttribute("aria-selected", String(current && !searching));
+                tab.tabIndex = current ? 0 : -1;
+            });
+            // On a phone the strip scrolls: keep the chosen house in sight.
+            const active = houseTabs.querySelector(".residential-house-tab.is-active");
+            if (active && houseTabs.scrollWidth > houseTabs.clientWidth) {
+                const strip = houseTabs.getBoundingClientRect();
+                const box = active.getBoundingClientRect();
+                if (box.left < strip.left || box.right > strip.right) {
+                    houseTabs.scrollLeft += box.left - strip.left - (strip.width - box.width) / 2;
+                }
+            }
+        };
+        const showSelectedHouse = () => {
+            resetSmartSearch();
+            const rootRow = getDistrictRows()[0];
+            if (rootRow) expandDistrict(rootRow);
+            refreshResidentialTableControls();
+            renderHouseTabs();
+        };
+        const selectHouse = (index) => {
+            if (!index || index > houseCount) return;
+            selectedHouse = index;
+            const label = houseLabelAt(index);
+            try {
+                storage.setItem(houseStorageKey, label);
+                const address = new URL(window.location.href);
+                address.searchParams.set("house", label);
+                window.history.replaceState(window.history.state, "", address);
+            } catch {
+                // The house still opens; it is only not remembered.
+            }
+            if (searchInput?.value.trim()) {
+                searchInput.value = "";
+                // The table controls and the smart search both listen; the search then opens this house.
+                searchInput.dispatchEvent(new Event("input", { bubbles: true }));
+                return;
+            }
+            showSelectedHouse();
+        };
+        listen(houseTabs, "click", (event) => {
+            const tab = event.target.closest("[data-house-tab]");
+            if (tab) selectHouse(Number(tab.dataset.houseTab));
+        });
+        listen(houseTabs, "keydown", (event) => {
+            const tab = event.target.closest("[data-house-tab]");
+            if (!tab || !houseCount) return;
+            const current = Number(tab.dataset.houseTab);
+            const next = {
+                ArrowRight: (current % houseCount) + 1,
+                ArrowLeft: ((current + houseCount - 2) % houseCount) + 1,
+                Home: 1,
+                End: houseCount,
+            }[event.key];
+            if (!next) return;
+            event.preventDefault();
+            selectHouse(next);
+            houseTabs.querySelector(`[data-house-tab="${next}"]`)?.focus();
+        });
+
+        // "Add payment" in an apartment row: the payment window opens with its resident chosen.
+        listen(table, "click", (event) => {
+            const button = event.target.closest("[data-residential-add-payment]");
+            if (!button) return;
+            event.preventDefault();
+            event.stopPropagation();
+            window.HydroFlowOpenAddPaymentForResident?.(button.dataset.ownerBackendId || "");
+        }, true);
+
         listen(table, "click", (event) => {
             if (event.target.closest(".residential-drill-chevron")) return;
             const trigger = event.target.closest("[data-building-summary-open]");
@@ -5811,6 +5977,8 @@
             if (event.target.closest("button, a, input, label, select")) return;
             const building = event.target.closest("[data-drill-row='building']");
             if (building) {
+                // A house open as a tab stays open; another house is picked in the tabs.
+                if (table.classList.contains("residential-house-tab-mode")) return;
                 building.classList.contains("is-expanded") ? collapseBuilding(building) : expandBuilding(building);
                 return;
             }
@@ -5835,8 +6003,12 @@
             row.click();
         });
 
+        renderHouseTabs();
         const rootSectorRow = getDistrictRows()[0];
-        if (rootSectorRow && !rootSectorRow.classList.contains("is-expanded")) {
+        if (searchInput?.value.trim()) {
+            // A refresh while searching keeps the search results.
+            runSmartSearch();
+        } else if (rootSectorRow && !rootSectorRow.classList.contains("is-expanded")) {
             expandDistrict(rootSectorRow);
         }
         refreshResidentialTableControls();

@@ -19368,6 +19368,124 @@ html.dark .notification-group-label[data-notification-group="pinned"],
     overflow: visible;
 }
 
+/* Houses as tabs above the table (60 | 60V | 62 …); the strip scrolls sideways on a phone. */
+.residential-house-tabs {
+    display: flex;
+    gap: 6px;
+    padding: 12px 24px;
+    overflow-x: auto;
+    scrollbar-width: thin;
+    border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+.residential-house-tabs[hidden] {
+    display: none;
+}
+
+.residential-house-tab {
+    flex: 0 0 auto;
+    min-width: 56px;
+    min-height: 36px;
+    padding: 0 14px;
+    border: 1px solid rgba(79, 142, 247, 0.18);
+    border-radius: 10px;
+    background: rgba(79, 142, 247, 0.06);
+    color: #35507A;
+    font-size: 13px;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    transition: background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.residential-house-tab:hover {
+    background: rgba(79, 142, 247, 0.12);
+}
+
+.residential-house-tab:focus-visible {
+    outline: 2px solid #4F8EF7;
+    outline-offset: 2px;
+}
+
+.residential-house-tab.is-active {
+    border-color: #2F67D8;
+    background: #2F67D8;
+    color: #FFFFFF;
+    box-shadow: 0 8px 18px rgba(47, 103, 216, 0.22);
+}
+
+/* A house open as a tab is not folded: no chevron and no "Apartments" button. */
+.residential-house-tab-mode .residential-building-row .residential-drill-chevron,
+.residential-house-tab-mode .residential-building-row .residential-open-button {
+    display: none !important;
+}
+
+.residential-house-tab-mode .residential-building-row {
+    cursor: default;
+}
+
+.residential-apartment-actions {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 6px;
+}
+
+.residential-pay-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 30px;
+    padding: 0 12px;
+    border: 1px solid rgba(16, 150, 100, 0.28);
+    border-radius: 10px;
+    background: linear-gradient(180deg, rgba(222, 248, 234, 0.98), rgba(196, 238, 216, 0.96));
+    color: #0E7A4E;
+    font-size: 10px;
+    font-weight: 850;
+    line-height: 1;
+    white-space: nowrap;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.76), 0 8px 18px rgba(16, 150, 100, 0.14);
+    transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+.residential-pay-button:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.03);
+}
+
+.residential-pay-button:active {
+    transform: translateY(0) scale(0.98);
+}
+
+html.dark .residential-house-tabs,
+[data-theme="dark"] .residential-house-tabs {
+    border-bottom-color: rgba(255, 255, 255, 0.06);
+}
+
+html.dark .residential-house-tab,
+[data-theme="dark"] .residential-house-tab {
+    border-color: rgba(255, 255, 255, 0.10);
+    background: rgba(255, 255, 255, 0.04);
+    color: #C9D3E6;
+}
+
+html.dark .residential-house-tab.is-active,
+[data-theme="dark"] .residential-house-tab.is-active {
+    border-color: #4F8EF7;
+    background: #3B74E0;
+    color: #FFFFFF;
+}
+
+html.dark .residential-pay-button,
+[data-theme="dark"] .residential-pay-button {
+    border-color: rgba(52, 211, 153, 0.30);
+    background: rgba(16, 185, 129, 0.14);
+    color: #7EE2B8;
+    box-shadow: none;
+}
+
 /* On a narrow table the button goes under the debt split instead of widening the column. */
 .residential-action-cell {
     display: inline-flex;

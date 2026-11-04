@@ -387,6 +387,22 @@ class PortalSnapshotTests(TestCase):
         self.assertEqual([row["status"] for row in rebuilt], ["Overdue", "Paid"])
         self.assertEqual([row["occupancy"] for row in rebuilt], ["Resident", "Vacant"])
 
+    def test_houses_and_apartments_come_in_number_order(self):
+        building = self.owner.apartment.building
+        for number in ("10", "2", "11", "20", "3A", "3"):
+            Apartment.objects.create(number=number, area=Decimal("40.00"), building=building, author="test")
+        for number in ("64V", "60", "62", "60V"):
+            Building.objects.create(number=number, complex=building.complex, author="test")
+        snapshot = build_portal_data(self.user)
+        listed = self.client.get(reverse("portal:api_list_complexes")).json()["results"][0]
+        residents = {row["apartmentBackendId"]: row["apartmentNumber"] for row in snapshot["residents"]}
+
+        houses = [item["number"] for item in listed["buildingItems"]]
+        units = [residents[apartment_id] for apartment_id, _ in snapshot["complexes"][0]["buildingItems"][3]["apartments"]]
+        self.assertEqual(houses, ["60", "60V", "62", "64", "64V"])
+        self.assertEqual(units, ["1", "2", "3", "3A", "10", "11", "20"])
+        self.assertEqual([row["unit"] for row in listed["buildingItems"][3]["apartments"]], units)
+
     def test_transaction_rows_keep_their_labels(self):
         flavours = [
             (Transaction.TYPE_CASH, "1000", "", "Utility Payment", "Cash", "Success"),
