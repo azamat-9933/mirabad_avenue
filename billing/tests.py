@@ -1,3 +1,5 @@
+import html
+import re
 from datetime import date
 from decimal import Decimal
 
@@ -5,6 +7,7 @@ from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
 from django.test import TestCase
+from django.urls import reverse
 
 from billing.models import (
     BillingPeriod,
@@ -668,3 +671,206 @@ class BillingCalculationRulesTests(TestCase):
         self.assertEqual(self.charged(), {"1": Decimal("500.00")})
         first.refresh_from_db()
         self.assertEqual(first.balance, Decimal("-500.00"))
+
+
+class BillingPeriodAdminTests(TestCase):
+    """A period and its tables edited in admin, with the forms sent as a browser sends them."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.admin_user = get_user_model().objects.create_superuser("period-admin", "", "unused-password")
+        complex_obj = Complex.objects.create(title="Mirabad Avenue", address="", author="test")
+        cls.house = Building.objects.create(number="64", complex=complex_obj, author="test")
+        cls.first = Apartment.objects.create(number="1", area=Decimal("50.00"), building=cls.house, author="test")
+        cls.tenth = Apartment.objects.create(number="10", area=Decimal("60.00"), building=cls.house, author="test")
+        cls.second = Apartment.objects.create(number="2", area=Decimal("40.00"), building=cls.house, author="test")
+        Owner.objects.create(fio="Aliyev Vali", phone="+998901112233", apartment=cls.first)
+
+    def setUp(self):
+        self.client.force_login(self.admin_user)
+        self.period = BillingPeriod.objects.create(name="2026-Oktabr", start_date=date(2026, 10, 1), end_date=date(2026, 10, 31))
+        self.period.buildings.add(self.house)
+        self.period.sync_default_records()
+
+    def _list(self, model):
+        return reverse(f"admin:billing_{model}_changelist") + f"?period__id__exact={self.period.pk}"
+
+    def _page_form(self, url, form_id):
+        """The fields a browser sends from the form #form_id of the page as it is now."""
+        page = self.client.get(url).content.decode()
+        anchor = page.index(f'id="{form_id}"')
+        part = page[page.rindex("<form", 0, anchor):page.index("</form>", anchor)]
+        fields = {}
+        for tag in re.findall(r"<input\b[^>]*>", part):
+            name = re.search(r'\bname="([^"]*)"', tag)
+            if not name or re.search(r'\btype="(checkbox|submit|button)"', tag) or re.search(r"\bdisabled\b", tag):
+                continue  # a browser does not send disabled fields
+            value = re.search(r'\bvalue="([^"]*)"', tag)
+            fields[html.unescape(name.group(1))] = html.unescape(value.group(1)) if value else ""
+        for name, body in re.findall(r'<textarea\b[^>]*\bname="([^"]*)"[^>]*>(.*?)</textarea>', part, re.S):
+            fields[html.unescape(name)] = html.unescape(body).removeprefix("\n")
+        for name, body in re.findall(r'<select\b[^>]*\bname="([^"]*)"[^>]*>(.*?)</select>', part, re.S):
+            chosen = re.search(r'<option\b[^>]*value="([^"]*)"[^>]*\bselected\b', body)
+            fields[html.unescape(name)] = html.unescape(chosen.group(1)) if chosen else ""
+        return fields
+
+    @staticmethod
+    def _row(fields, pk):
+        """The prefix of the list row of object pk: form-3-."""
+        return next(name[: -len("id")] for name, value in fields.items() if name.endswith("-id") and value == str(pk))
+
+    def _save_list(self, url, fields, **changes):
+        return self.client.post(url, {**fields, **changes, "_save": "Save"})
+
+    def _reading(self, apartment):
+        return HotWaterMeterReading.objects.get(period=self.period, apartment=apartment)
+
+    def test_the_period_and_its_tables_open_in_admin(self):
+        for model in ("billingperiod", "heatingrecord", "hotwatermeterreading", "expense", "gasmeterreading"):
+            with self.subTest(model=model):
+                self.assertEqual(self.client.get(reverse(f"admin:billing_{model}_changelist")).status_code, 200)
+        page = self.client.get(reverse("admin:billing_billingperiod_change", args=[self.period.pk])).content.decode()
+        self.assertIn(reverse("portal:billing_period_sheet", args=[self.period.pk]), page)
+        self.assertIn(self._list("hotwatermeterreading").replace("&", "&amp;"), page)
+        # Apartments in number order: 1, 2, 10.
+        listing = self.client.get(self._list("hotwatermeterreading")).content.decode()
+        order = [int(pk) for pk in dict.fromkeys(re.findall(r"/admin/billing/hotwatermeterreading/(\d+)/change/", listing))]
+        self.assertEqual(order, [self._reading(apartment).pk for apartment in (self.first, self.second, self.tenth)])
+
+    def test_a_row_saved_by_someone_else_after_the_list_opened_is_kept(self):
+        url = self._list("hotwatermeterreading")
+        page = self._page_form(url, "changelist-form")
+        first, second = self._reading(self.first), self._reading(self.second)
+        # An operator saves apartment 1 on the portal; the admin's list still shows it empty.
+        HotWaterMeterReading.objects.filter(pk=first.pk).update(start_reading=Decimal("10"), end_reading=Decimal("25"))
+
+        row = self._row(page, second.pk)
+        response = self._save_list(url, page, **{f"{row}start_reading": "0", f"{row}end_reading": "7"})
+
+        self.assertEqual(response.status_code, 302)
+        first.refresh_from_db()
+        second.refresh_from_db()
+        self.assertEqual((first.start_reading, first.end_reading), (Decimal("10"), Decimal("25")))
+        self.assertEqual((second.start_reading, second.end_reading), (Decimal("0"), Decimal("7")))
+        self.period.refresh_from_db()
+        self.assertEqual(self.period.status, BillingPeriod.STATUS_IN_PROGRESS)
+        event = AuditEvent.objects.get(metadata__source="admin_billing_period")
+        self.assertEqual((event.event_type, event.title, event.apartment), (AuditEvent.TYPE_PERIOD_EDIT, "Hot water reading edited in admin", self.second))
+        self.assertIn("→ 7", event.message)
+
+    def test_a_row_changed_on_both_sides_keeps_the_first_save_and_says_why(self):
+        url = self._list("hotwatermeterreading")
+        page = self._page_form(url, "changelist-form")
+        first = self._reading(self.first)
+        HotWaterMeterReading.objects.filter(pk=first.pk).update(end_reading=Decimal("20"))
+
+        late = self._save_list(url, page, **{f"{self._row(page, first.pk)}end_reading": "99"})
+
+        self.assertEqual(late.status_code, 200)
+        self.assertContains(late, "boshqa foydalanuvchi saqlagan")
+        first.refresh_from_db()
+        self.assertEqual(first.end_reading, Decimal("20"))
+        # With the list opened again the admin changes it on purpose.
+        again = self._page_form(url, "changelist-form")
+        self.assertEqual(self._save_list(url, again, **{f"{self._row(again, first.pk)}end_reading": "99"}).status_code, 302)
+        first.refresh_from_db()
+        self.assertEqual(first.end_reading, Decimal("99"))
+
+    def test_an_end_reading_below_the_start_is_refused(self):
+        url = self._list("hotwatermeterreading")
+        page = self._page_form(url, "changelist-form")
+        row = self._row(page, self._reading(self.first).pk)
+
+        response = self._save_list(url, page, **{f"{row}start_reading": "10", f"{row}end_reading": "5"})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "kichik")
+        self.assertIsNone(self._reading(self.first).end_reading)
+
+    def test_a_closed_period_is_read_only(self):
+        BillingPeriod.objects.filter(pk=self.period.pk).update(status=BillingPeriod.STATUS_CLOSED)
+        url = self._list("hotwatermeterreading")
+        reading = self._reading(self.first)
+        self.assertRegex(self.client.get(url).content.decode(), r'name="form-\d+-end_reading"[^>]*\bdisabled')
+
+        page = self._page_form(url, "changelist-form")
+        self._save_list(url, page, **{f"{self._row(page, reading.pk)}end_reading": "50"})  # sent anyway
+
+        reading.refresh_from_db()
+        self.assertIsNone(reading.end_reading)
+        change = reverse("admin:billing_hotwatermeterreading_change", args=[reading.pk])
+        self.assertEqual(self.client.get(change).status_code, 200)  # shown, not editable
+        self.assertEqual(self.client.post(change, {"end_reading": "50"}).status_code, 403)
+        period_change = reverse("admin:billing_billingperiod_change", args=[self.period.pk])
+        self.assertEqual(self.client.post(period_change, {"name": "x"}).status_code, 403)
+
+    def test_heating_days_are_checked_and_stored_as_the_portal_stores_them(self):
+        url = self._list("heatingrecord")
+        page = self._page_form(url, "changelist-form")
+        record = HeatingRecord.objects.get(period=self.period, apartment=self.first)
+        row = self._row(page, record.pk)
+
+        too_many = self._save_list(url, page, **{f"{row}days_given": "40"})
+        self.assertEqual(too_many.status_code, 200)
+        self.assertContains(too_many, "kunlardan")
+
+        saved = self._save_list(url, page, **{f"{row}heated_from": "2026-10-05", f"{row}heated_until": "2026-10-31", f"{row}days_given": "20"})
+        self.assertEqual(saved.status_code, 302)
+        record.refresh_from_db()
+        # The period's last day means "to the end".
+        self.assertEqual((record.heated_from, record.heated_until, record.days_given), (date(2026, 10, 5), None, 20))
+
+    def test_new_period_dates_move_whole_period_heating_and_refuse_overlaps(self):
+        BillingPeriod.objects.create(name="2026-Noyabr", start_date=date(2026, 11, 1), end_date=date(2026, 11, 30))
+        custom = HeatingRecord.objects.get(period=self.period, apartment=self.second)
+        HeatingRecord.objects.filter(pk=custom.pk).update(heated_from=date(2026, 10, 3), heated_until=date(2026, 10, 20))
+        url = reverse("admin:billing_billingperiod_change", args=[self.period.pk])
+        page = self._page_form(url, "billingperiod_form")
+
+        overlap = self.client.post(url, {**page, "end_date": "2026-11-05", "_save": "Save"})
+        self.assertContains(overlap, "ustma-ust")
+        cuts_a_row = self.client.post(url, {**page, "start_date": "2026-10-04", "_save": "Save"})
+        self.assertContains(cuts_a_row, "isitish qatori")
+        moved = self.client.post(url, {**page, "name": "2026-Oktabr (tuzatilgan)", "start_date": "2026-10-02", "_save": "Save"})
+
+        self.assertEqual(moved.status_code, 302)
+        self.period.refresh_from_db()
+        self.assertEqual((self.period.name, self.period.start_date), ("2026-Oktabr (tuzatilgan)", date(2026, 10, 2)))
+        whole = HeatingRecord.objects.get(period=self.period, apartment=self.first)
+        custom.refresh_from_db()
+        self.assertEqual(whole.heated_from, date(2026, 10, 2))  # was the old first day
+        self.assertEqual(custom.heated_from, date(2026, 10, 3))  # its own date stays
+        event = AuditEvent.objects.get(title="Billing period edited in admin")
+        self.assertEqual(event.metadata["heatingRowsMoved"], 2)
+
+    def test_expenses_are_added_only_to_a_period_that_is_not_closed(self):
+        closed = BillingPeriod.objects.create(
+            name="2026-Sentabr", start_date=date(2026, 9, 1), end_date=date(2026, 9, 30), status=BillingPeriod.STATUS_CLOSED
+        )
+        add = reverse("admin:billing_expense_add")
+        choices = re.search(r'<select[^>]*name="period".*?</select>', self.client.get(add).content.decode(), re.S).group(0)
+        self.assertIn(f'value="{self.period.pk}"', choices)
+        self.assertNotIn(f'value="{closed.pk}"', choices)
+        data = {"period": self.period.pk, "building": self.house.pk, "service_type": "heating", "name": "Gaz", "_save": "Save"}
+
+        self.assertContains(self.client.post(add, {**data, "amount": "0"}), "0 dan katta")
+        self.assertEqual(self.client.post(add, {**data, "period": closed.pk, "amount": "100"}).status_code, 200)
+        self.assertEqual(self.client.post(add, {**data, "amount": "1500000"}).status_code, 302)
+
+        expense = Expense.objects.get()
+        self.assertEqual((expense.period, expense.amount), (self.period, Decimal("1500000")))
+        self.period.refresh_from_db()
+        self.assertEqual(self.period.status, BillingPeriod.STATUS_IN_PROGRESS)
+        self.assertTrue(AuditEvent.objects.filter(title="Expense added in admin", building=self.house).exists())
+
+    def test_a_gas_meter_below_last_month_is_refused(self):
+        september = BillingPeriod.objects.create(name="2026-Sentabr", start_date=date(2026, 9, 1), end_date=date(2026, 9, 30))
+        GasMeterReading.objects.create(
+            period=september, building=self.house, service_type="heating", end_reading=Decimal("100"), price_per_m3=Decimal("1000")
+        )
+        add = reverse("admin:billing_gasmeterreading_add")
+        data = {"period": self.period.pk, "building": self.house.pk, "service_type": "heating", "price_per_m3": "1000", "_save": "Save"}
+
+        self.assertContains(self.client.post(add, {**data, "end_reading": "50"}), "kichik")
+        self.assertEqual(self.client.post(add, {**data, "end_reading": "150"}).status_code, 302)
+        self.assertEqual(GasMeterReading.objects.get(period=self.period).consumption, Decimal("50"))

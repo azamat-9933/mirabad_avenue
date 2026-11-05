@@ -35,6 +35,12 @@ JAZZ_SETTINGS = {
         "main_app.Building",
         "payments",
         "payments.Transaction",
+        "billing",
+        "billing.BillingPeriod",
+        "billing.HeatingRecord",
+        "billing.HotWaterMeterReading",
+        "billing.Expense",
+        "billing.GasMeterReading",
         "portal",
         "portal.AuditEvent",
         "auth",
@@ -51,6 +57,13 @@ JAZZ_SETTINGS = {
         # payments
         "payments.transaction": "fas fa-receipt",
         "payments.paymetransaction": "fas fa-credit-card",
+
+        # billing: a period and its tables (created and closed on the portal)
+        "billing.billingperiod": "fas fa-calendar-alt",
+        "billing.heatingrecord": "fas fa-fire",
+        "billing.hotwatermeterreading": "fas fa-tint",
+        "billing.expense": "fas fa-coins",
+        "billing.gasmeterreading": "fas fa-burn",
 
         # portal
         "portal.workspaceprofile": "fas fa-id-badge",

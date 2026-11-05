@@ -1806,6 +1806,10 @@ class PortalPagesAfterOperatorsReviewTests(TestCase):
                 "auth.Group", "auth.User", "main_app.Apartment", "main_app.Building",
                 "main_app.Complex", "main_app.Owner", "payments.ClickTransaction", "payments.PaymeTransaction",
                 "payments.Transaction", "portal.AuditEvent", "portal.WorkspaceProfile",
+                # A period and its tables can be corrected in admin (2026-11-05); they are still
+                # created, closed and deleted on the portal.
+                "billing.BillingPeriod", "billing.HeatingRecord", "billing.HotWaterMeterReading",
+                "billing.Expense", "billing.GasMeterReading",
             },
         )
         page = self.client.get(reverse("admin:main_app_building_change", args=[self.building.pk]))

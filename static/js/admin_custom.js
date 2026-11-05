@@ -510,6 +510,15 @@
         "davr yopildi, hisoblar yaratildi.": { en: "period closed, charges created.", ru: "период закрыт, начисления созданы.", uz: "davr yopildi, hisoblar yaratildi." },
         "davr qayta ochildi.": { en: "period reopened.", ru: "период снова открыт.", uz: "davr qayta ochildi." },
         "yopiq davrni faqat administrator ochishi mumkin.": { en: "only an administrator can reopen a closed period.", ru: "закрытый период может открыть только администратор.", uz: "yopiq davrni faqat administrator ochishi mumkin." },
+        // A billing period and its tables, edited in admin (billing/admin.py).
+        "Area (m²)": { en: "Area (m²)", ru: "Площадь (м²)", uz: "Maydon (m²)" },
+        "Berilgan kunlar": { en: "Days given", ru: "Дней дано", uz: "Berilgan kunlar" },
+        "Heated days": { en: "Heated days", ru: "Дней отопления", uz: "Isitilgan kunlar" },
+        "Start used": { en: "Start used", ru: "Начальное в расчёте", uz: "Hisobdagi boshlang'ich" },
+        "Consumption": { en: "Consumption", ru: "Расход", uz: "Sarf" },
+        "Tables": { en: "Tables", ru: "Таблицы", uz: "Jadvallar" },
+        "Portalda ochish": { en: "Open on the portal", ru: "Открыть на портале", uz: "Portalda ochish" },
+        "End date must be greater than or equal to start date.": { en: "End date must be greater than or equal to start date.", ru: "Дата окончания не может быть раньше даты начала.", uz: "Tugash sanasi boshlanish sanasidan oldin bo'lishi mumkin emas." },
     };
     const PERIOD_STATE_MESSAGES = new Set(["davr yopildi, hisoblar yaratildi.", "davr qayta ochildi.", "yopiq davrni faqat administrator ochishi mumkin."]);
 
