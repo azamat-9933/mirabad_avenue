@@ -3411,7 +3411,7 @@
         if (!table) return null;
         table.dataset.serverPagination = "true";
         table.dataset.serverList = config.name;
-        const workspace = table.closest(".table-workspace") || table.closest(".overflow-x-auto") || table;
+        const workspace = table.closest(".table-workspace") || table.closest(".overflow-x-auto") || table.closest(".billing-table-scroll") || table;
         let tools = workspace.previousElementSibling?.classList?.contains("table-tools") ? workspace.previousElementSibling : null;
         let pagination = workspace.nextElementSibling?.classList?.contains("table-pagination") ? workspace.nextElementSibling : null;
         let thead = table.querySelector("thead");
@@ -3491,17 +3491,20 @@
         tools?.querySelector("[data-table-action='reminders']")?.addEventListener("click", () => {
             document.querySelector("[data-modal-open='notifications-drawer'], [data-drawer-open='notifications-drawer']")?.click();
         });
-        pagination?.querySelector("[data-prev-page]")?.addEventListener("click", () => {
-            const state = readListUrlState(config.name, { page: "1" });
-            writeListUrlState(config.name, { page: Math.max(1, Number(state.page || 1) - 1) });
-            config.load();
-        });
-        pagination?.querySelector("[data-next-page]")?.addEventListener("click", () => {
+        const goToPage = async (step) => {
             const state = readListUrlState(config.name, { page: "1" });
             const totalPages = Number(pagination?.dataset.totalPages || 1);
-            writeListUrlState(config.name, { page: Math.min(totalPages, Number(state.page || 1) + 1) });
-            config.load();
-        });
+            writeListUrlState(config.name, { page: Math.min(totalPages, Math.max(1, Number(state.page || 1) + step)) });
+            await config.load();
+            // A new page starts at the top of its card (below the fixed top bar), not where the long one was scrolled to.
+            const card = table.closest("section") || table;
+            if (card.getBoundingClientRect().top < 80) {
+                card.style.scrollMarginTop = "80px";
+                card.scrollIntoView({ block: "start", behavior: "smooth" });
+            }
+        };
+        pagination?.querySelector("[data-prev-page]")?.addEventListener("click", () => goToPage(-1));
+        pagination?.querySelector("[data-next-page]")?.addEventListener("click", () => goToPage(1));
         return {
             table,
             workspace,
@@ -3516,8 +3519,14 @@
                 if (searchInput) searchInput.value = readListUrlState(config.name, { search: "" }).search;
                 if (pagination) {
                     pagination.dataset.totalPages = String(meta.pages || 1);
+                    pagination.classList.toggle("hidden", Number(meta.pages || 1) <= 1);
                     const pageLabel = pagination.querySelector("[data-page-label]");
-                    if (pageLabel) pageLabel.textContent = `Page ${meta.page} of ${meta.pages}`;
+                    if (pageLabel) {
+                        // The language switcher writes the label from these numbers, not from its old text.
+                        pageLabel.dataset.pageCurrent = String(meta.page || 1);
+                        pageLabel.dataset.pageTotal = String(meta.pages || 1);
+                        pageLabel.textContent = `Page ${meta.page} of ${meta.pages}`;
+                    }
                     const prev = pagination.querySelector("[data-prev-page]");
                     const next = pagination.querySelector("[data-next-page]");
                     if (prev) prev.disabled = Number(meta.page || 1) <= 1;
@@ -4071,10 +4080,11 @@
                 const state = readListUrlState("transactions", { page: "1", search: "", ordering: "" });
                 const { state: globalState, params } = currentGlobalListFilters();
                 const status = globalState.status === "paid" ? "success" : globalState.status === "debtor" ? "pending" : "";
+                // Every payment and ledger entry (all kinds), newest first, a page at a time.
                 const payload = await fetchServerList("/api/lists/transactions/", {
                     ...params,
                     page: state.page,
-                    page_size: 6,
+                    page_size: 50,
                     search: state.search,
                     ordering: state.ordering,
                     status,

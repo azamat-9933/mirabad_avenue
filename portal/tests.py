@@ -403,6 +403,25 @@ class PortalSnapshotTests(TestCase):
         self.assertEqual(units, ["1", "2", "3", "3A", "10", "11", "20"])
         self.assertEqual([row["unit"] for row in listed["buildingItems"][3]["apartments"]], units)
 
+    def test_billing_page_lists_every_entry_fifty_at_a_time(self):
+        page = self.client.get(reverse("portal:billing")).content.decode()
+        self.assertIn("data-transactions-pager", page)
+        kinds = [Transaction.TYPE_CASH, Transaction.TYPE_CLICK, Transaction.TYPE_PAYME, Transaction.TYPE_MANUAL, Transaction.TYPE_CHARGE]
+        for index in range(120):
+            amount = Decimal("-400") if kinds[index % 5] == Transaction.TYPE_CHARGE else Decimal("1000")
+            apply_balance_change(self.owner.id, amount, kinds[index % 5])
+
+        url = reverse("portal:api_list_transactions")
+        first = self.client.get(url, {"page_size": 50}).json()
+        last = self.client.get(url, {"page_size": 50, "page": 3}).json()
+
+        self.assertEqual((first["total"], first["pages"], len(first["results"]), len(last["results"])), (120, 3, 50, 20))
+        listed = {row["backendId"] for number in (1, 2, 3) for row in self.client.get(url, {"page_size": 50, "page": number}).json()["results"]}
+        self.assertEqual(listed, set(Transaction.objects.values_list("id", flat=True)))
+        self.assertEqual(
+            set(Transaction.objects.filter(id__in=listed).values_list("payment_type", flat=True)), set(kinds)
+        )
+
     def test_transaction_rows_keep_their_labels(self):
         flavours = [
             (Transaction.TYPE_CASH, "1000", "", "Utility Payment", "Cash", "Success"),

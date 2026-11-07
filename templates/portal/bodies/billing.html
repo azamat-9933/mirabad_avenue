@@ -101,6 +101,14 @@
 <tbody></tbody>
 </table>
 </div>
+<!-- Every payment and ledger entry, 50 per page (app.js setupServerLists, /api/lists/transactions/). -->
+<div class="table-pagination px-6 py-4 hidden" data-transactions-pager>
+<span class="text-xs font-bold text-on-surface-variant" data-page-label>Page 1 of 1</span>
+<div class="flex gap-2">
+<button class="table-tool-button" data-prev-page data-i18n-key="Previous" type="button">Previous</button>
+<button class="table-tool-button" data-next-page data-i18n-key="Next" type="button">Next</button>
+</div>
+</div>
 </section>
 </div>
 
