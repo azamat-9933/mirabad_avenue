@@ -422,6 +422,29 @@ class PortalSnapshotTests(TestCase):
             set(Transaction.objects.filter(id__in=listed).values_list("payment_type", flat=True)), set(kinds)
         )
 
+    def test_payments_log_shows_the_personal_account_and_the_apartment(self):
+        page = self.client.get(reverse("portal:billing")).content.decode()
+        log = page[page.index('data-server-list="transactions"'):]
+        headers = re.findall(r'table-filter-heading-text" data-i18n-key="([^"]+)"', log[: log.index("</table>")])
+        self.assertEqual(headers[:3], ["Personal account", "FIO", "House / apartment"])
+        Apartment.objects.filter(pk=self.owner.apartment_id).update(personal_account="1391000002")
+        other = Apartment.objects.create(
+            number="10", area=Decimal("40.00"), building=self.owner.apartment.building, author="test", personal_account="1391000001"
+        )
+        other_owner = Owner.objects.create(fio="Second Resident", phone="+998900000001", apartment=other)
+        apply_balance_change(self.owner.id, Decimal("1000"), Transaction.TYPE_CASH)
+        apply_balance_change(other_owner.id, Decimal("2000"), Transaction.TYPE_CLICK)
+        url = reverse("portal:api_list_transactions")
+
+        by_account = self.client.get(url, {"ordering": "personal_account"}).json()["results"]
+        by_place = self.client.get(url, {"ordering": "-apartment"}).json()["results"]
+
+        self.assertEqual(
+            [(row["personalAccount"], row["buildingNumber"], row["apartment"]) for row in by_account],
+            [("1391000001", "64", "10"), ("1391000002", "64", "1")],
+        )
+        self.assertEqual([row["apartment"] for row in by_place], ["10", "1"])
+
     def test_transaction_rows_keep_their_labels(self):
         flavours = [
             (Transaction.TYPE_CASH, "1000", "", "Utility Payment", "Cash", "Success"),

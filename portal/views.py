@@ -419,6 +419,8 @@ def api_list_transactions(request):
     ordering_raw = _query_param(request, "ordering", "-created_at")
     allowed_ordering = {
         "id": "id",
+        "personal_account": "apartment__personal_account",
+        "apartment": ("apartment__building__number", "apartment__number"),
         "created_at": "created_at",
         "resident": "apartment__owner__fio",
         "operator": "created_by",

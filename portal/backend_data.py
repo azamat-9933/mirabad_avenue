@@ -356,6 +356,8 @@ def serialize_transaction(transaction, apartment, owner, labels=None, status_ove
         "residentId": _slug("owner", owner.id) if owner else _slug("apartment", apartment.id),
         "residentName": owner.fio if owner else "Unassigned owner",
         "apartment": apartment.number,
+        "buildingNumber": building.number,
+        "personalAccount": apartment.personal_account or "",
         "complexId": _slug("complex", complex_obj.id),
         "buildingId": _slug("building", building.id),
         "type": _transaction_type(transaction, labels),

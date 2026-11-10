@@ -4032,9 +4032,9 @@
         if (transactionTable) {
             const transactionChrome = prepareServerTableChrome(transactionTable, {
                 name: "transactions",
-                sortMap: ["id", "resident", "created_at", "operator", "method", "amount", "balance", "status"],
+                sortMap: ["personal_account", "resident", "apartment", "created_at", "operator", "method", "amount", "balance", "status"],
                 defaultOrdering: "-created_at",
-                defaultSortDirection: { id: "desc", resident: "asc", created_at: "desc", operator: "asc", method: "asc", amount: "desc", balance: "desc", status: "desc" },
+                defaultSortDirection: { personal_account: "asc", apartment: "asc", id: "desc", resident: "asc", created_at: "desc", operator: "asc", method: "asc", amount: "desc", balance: "desc", status: "desc" },
                 load: () => loadTransactions(),
             });
             const renderTransactions = (items = []) => {
@@ -4060,12 +4060,13 @@
                             data-apartment-backend-id="${escapeAttr(item.apartmentBackendId || "")}"
                             data-building-backend-id="${escapeAttr(item.buildingBackendId || "")}"
                             data-complex-backend-id="${escapeAttr(item.complexBackendId || "")}">
-                            <td class="px-6 py-4">
-                                <p class="font-bold text-primary text-sm">${escapeHtml(String(item.backendId || item.id || ""))}</p>
+                            <td class="px-6 py-4"><span class="table-cell-label" data-i18n-key="Personal account">Personal account</span>
+                                <p class="font-bold text-primary text-sm">${escapeHtml(item.personalAccount || "—")}</p>
                             </td>
                             <td class="px-6 py-4">
                                 <p class="font-bold text-primary text-sm">${escapeHtml(item.residentName || "Resident")}</p>
                             </td>
+                            <td class="px-6 py-4 text-sm font-bold text-on-surface"><span class="table-cell-label" data-i18n-key="House / apartment">House / apartment</span>${escapeHtml(`${item.buildingNumber || "—"} / ${item.apartment || "—"}`)}</td>
                             <td class="px-6 py-4 text-xs text-on-surface-variant"><span class="table-cell-label" data-i18n-key="Date time">Date time</span>${escapeHtml(item.createdAt || item.date)}</td>
                             <td class="px-6 py-4 text-xs font-medium text-on-surface-variant"><span class="table-cell-label" data-i18n-key="Operator">Operator</span>${escapeHtml(item.createdBy || t("System"))}</td>
                             <td class="px-6 py-4 text-xs font-medium text-on-surface-variant"><span class="table-cell-label" data-i18n-key="Payment method">Payment method</span>${escapeHtml(item.method || item.type || "Payment")}</td>

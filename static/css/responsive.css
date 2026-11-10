@@ -885,8 +885,8 @@ aside[data-sidebar] .sidebar-brand-rail-mark {
 
 .billing-transactions-table th:first-child,
 .billing-transactions-table td:first-child {
-    width: 5rem !important;
-    min-width: 5rem;
+    width: 7rem !important;
+    min-width: 7rem;
 }
 
 /* The leading filter glyph is decoration; dropping it gives the name column room. */
@@ -906,13 +906,13 @@ aside[data-sidebar] .sidebar-brand-rail-mark {
 
     .billing-transactions-table th:first-child,
     .billing-transactions-table td:first-child {
-        width: 3.5rem !important;
-        min-width: 3.5rem;
+        width: 6.5rem !important;
+        min-width: 6.5rem;
     }
 }
 
 /* Wide enough for a table: it fits the card without sideways scrolling. The filter glyph goes
-   (the sort arrow stays), cells are tighter and date, operator and method may wrap. */
+   (the sort arrow stays), cells are tighter, headers, date, operator and method may wrap. */
 @container billing-tx (min-width: 640px) {
     .billing-transactions-table .table-filter-heading-icon {
         display: none !important;
@@ -929,23 +929,49 @@ aside[data-sidebar] .sidebar-brand-rail-mark {
 
     .billing-transactions-table th,
     .billing-transactions-table td {
-        padding-left: 8px !important;
-        padding-right: 8px !important;
+        padding-left: 6px !important;
+        padding-right: 6px !important;
+    }
+
+    /* Nine columns beside the payment channels: header labels may wrap and sit closer (app.css pads
+       every stable table header 16px through .table-stable thead th). With room to spare nothing wraps. */
+    .billing-transactions-table thead th {
+        padding-left: 4px !important;
+        padding-right: 4px !important;
+        white-space: normal;
+    }
+
+    .billing-transactions-table .table-filter-heading-inner {
+        height: auto !important;
+        min-height: 28px;
+        padding-top: 3px !important;
+        padding-bottom: 3px !important;
+        line-height: 1.15 !important;
+        white-space: normal;
+        text-align: left;
+    }
+
+    .billing-transactions-table .table-filter-heading-text {
+        white-space: normal !important;
     }
 
     .billing-transactions-table th:first-child,
     .billing-transactions-table td:first-child {
-        width: 3.25rem !important;
-        min-width: 3.25rem;
+        width: auto !important;
+        min-width: 0 !important;
+    }
+
+    .billing-transactions-table td:first-child {
+        white-space: nowrap;
     }
 
     .billing-transactions-table td:nth-child(2) {
-        min-width: 120px;
+        min-width: 110px;
     }
 
-    .billing-transactions-table td:nth-child(3),
     .billing-transactions-table td:nth-child(4),
-    .billing-transactions-table td:nth-child(5) {
+    .billing-transactions-table td:nth-child(5),
+    .billing-transactions-table td:nth-child(6) {
         white-space: normal;
     }
 }
@@ -968,9 +994,9 @@ aside[data-sidebar] .sidebar-brand-rail-mark {
         grid-template-areas:
             "id status"
             "name name"
-            "date operator"
-            "method amount"
-            "balance balance";
+            "place date"
+            "operator method"
+            "amount balance";
         gap: 10px 16px;
         padding: 14px 16px;
     }
@@ -992,36 +1018,35 @@ aside[data-sidebar] .sidebar-brand-rail-mark {
         align-self: center;
     }
 
-    .billing-transaction-row > td:nth-child(1) p::before {
-        content: "#";
-        opacity: 0.6;
-    }
-
     .billing-transaction-row > td:nth-child(2) {
         grid-area: name;
     }
 
     .billing-transaction-row > td:nth-child(3) {
-        grid-area: date;
+        grid-area: place;
     }
 
     .billing-transaction-row > td:nth-child(4) {
-        grid-area: operator;
+        grid-area: date;
     }
 
     .billing-transaction-row > td:nth-child(5) {
-        grid-area: method;
+        grid-area: operator;
     }
 
     .billing-transaction-row > td:nth-child(6) {
-        grid-area: amount;
+        grid-area: method;
     }
 
     .billing-transaction-row > td:nth-child(7) {
-        grid-area: balance;
+        grid-area: amount;
     }
 
     .billing-transaction-row > td:nth-child(8) {
+        grid-area: balance;
+    }
+
+    .billing-transaction-row > td:nth-child(9) {
         grid-area: status;
         justify-self: end;
     }
@@ -1042,10 +1067,10 @@ aside[data-sidebar] .sidebar-brand-rail-mark {
 /* Tablet widths: one summary line plus one line of four facts. */
 @container billing-tx (min-width: 480px) and (max-width: 639.98px) {
     .billing-transactions-table tbody tr.billing-transaction-row {
-        grid-template-columns: 56px repeat(5, minmax(0, 1fr));
+        grid-template-columns: 96px repeat(6, minmax(0, 1fr));
         grid-template-areas:
-            "id name name name name status"
-            "id date operator method amount balance";
+            "id name name name name name status"
+            "id place date operator method amount balance";
         column-gap: 16px;
     }
 
