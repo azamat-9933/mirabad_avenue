@@ -412,6 +412,7 @@ def api_list_transactions(request):
     search = _query_param(request, "search", "")
     status_value = _query_param(request, "status", "").lower()
     payment_type = _query_param(request, "payment_type", "").lower()
+    kind = _query_param(request, "kind", "").lower()
     district_value = _query_param(request, "district", "")
     period_value = _query_param(request, "period", "all").lower()
     period_from = _query_param(request, "period_from", "")
@@ -472,6 +473,16 @@ def api_list_transactions(request):
         queryset = queryset.filter(apartment_id=apartment_id)
     if payment_type:
         queryset = queryset.filter(payment_type=payment_type)
+    if kind in {"payment", "debit"}:
+        # The payments page's two buttons: money received (cash, card, transfer, Click, Payme), or money
+        # taken off the balance (billing period charges, operators' subtractions). A cancelled payment
+        # and the debit that took it back cancel out: they show only in the full log.
+        cancelled = PortalStatusOverride.objects.filter(
+            context=PortalStatusOverride.CONTEXT_TRANSACTIONS,
+            target_type=PortalStatusOverride.TARGET_TRANSACTION,
+            status_value=PortalStatusOverride.TRANSACTION_CANCELLED,
+        ).values_list("target_id", flat=True)
+        queryset = queryset.filter(incoming_payment_q() if kind == "payment" else Q(amount__lt=0)).exclude(pk__in=cancelled)
     queryset = _apply_related_district_filter(
         queryset,
         district_value,

@@ -8425,6 +8425,17 @@ html.dark .resident-filter-shell {
     color: color-mix(in srgb, #B91C1C 82%, #ffffff 18%);
 }
 
+/* The payments page's log filter: money received (green), money taken off the balance (red). */
+.resident-filter-button[data-transactions-kind="payment"] {
+    --resident-filter-accent: #0F9F6E;
+    color: color-mix(in srgb, #0F9F6E 82%, #ffffff 18%);
+}
+
+.resident-filter-button[data-transactions-kind="debit"] {
+    --resident-filter-accent: #B91C1C;
+    color: color-mix(in srgb, #B91C1C 82%, #ffffff 18%);
+}
+
 .resident-filter-button[data-resident-filter="paid"] {
     --resident-filter-accent: #0F9F6E;
     color: color-mix(in srgb, #0F9F6E 82%, #ffffff 18%);

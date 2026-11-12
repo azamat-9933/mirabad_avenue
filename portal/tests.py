@@ -445,6 +445,28 @@ class PortalSnapshotTests(TestCase):
         )
         self.assertEqual([row["apartment"] for row in by_place], ["10", "1"])
 
+    def test_payments_log_filters_money_received_and_money_taken_off(self):
+        from payments.services import mark_ledger_cancelled
+
+        page = self.client.get(reverse("portal:billing")).content.decode()
+        self.assertIn('data-transactions-kind="payment"', page)
+        self.assertIn('data-transactions-kind="debit"', page)
+        change = lambda amount, kind, description="": apply_balance_change(self.owner.id, Decimal(amount), kind, description=description).id  # noqa: E731
+        cash = change("1000", Transaction.TYPE_CASH)
+        click = change("500", Transaction.TYPE_CLICK)
+        opening = change("300", Transaction.TYPE_MANUAL, f"{OPENING_BALANCE_TAG} x")
+        charge = change("-400", Transaction.TYPE_CHARGE, "[billing:period-charge] x")
+        subtraction = change("-200", Transaction.TYPE_MANUAL, "[portal:balance-debit] x")
+        payme = change("700", Transaction.TYPE_PAYME)
+        payme_back = change("-700", Transaction.TYPE_MANUAL, "Payme payment cancelled")
+        mark_ledger_cancelled([payme, payme_back], note="test")
+        url = reverse("portal:api_list_transactions")
+        listed = lambda **query: {row["backendId"] for row in self.client.get(url, {"page_size": 50, **query}).json()["results"]}  # noqa: E731
+
+        self.assertEqual(listed(kind="payment"), {cash, click})
+        self.assertEqual(listed(kind="debit"), {charge, subtraction})
+        self.assertEqual(listed(), {cash, click, opening, charge, subtraction, payme, payme_back})
+
     def test_transaction_rows_keep_their_labels(self):
         flavours = [
             (Transaction.TYPE_CASH, "1000", "", "Utility Payment", "Cash", "Success"),

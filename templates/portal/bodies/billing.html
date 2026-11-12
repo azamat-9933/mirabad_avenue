@@ -32,6 +32,14 @@
 </div>
 </section>
 
+<!-- Show only money received, or only money taken off the balance; pressed again, the whole log. -->
+<div class="billing-kind-filter">
+<div class="resident-filter-shell" role="group" aria-label="Filter the transaction log" data-transactions-kind-filter>
+<button aria-pressed="false" class="resident-filter-button" data-transactions-kind="payment" type="button"><span class="resident-filter-button__label" data-i18n-key="Incoming payments">Incoming payments</span></button>
+<button aria-pressed="false" class="resident-filter-button" data-transactions-kind="debit" type="button"><span class="resident-filter-button__label" data-i18n-key="Balance debits">Balance debits</span></button>
+</div>
+</div>
+
 <section class="bg-white rounded-xl shadow-sm border border-outline-variant/30 overflow-hidden" data-billing-transactions-card>
 <div class="px-6 py-4 border-b border-surface-container-low flex flex-wrap justify-between items-center gap-x-4 gap-y-2">
 <h3 class="font-bold text-on-surface">Recent Transaction Log</h3>

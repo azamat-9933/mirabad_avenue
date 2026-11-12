@@ -541,6 +541,8 @@
         "Optimal flow across all residential sectors": { ru: "Оптимальный поток по всем жилым секторам", uz: "Barcha turar joy sektorlarida optimal oqim" },
         "System Diagnostics": { ru: "Диагностика системы", uz: "Tizim diagnostikasi" },
         "Recent Transaction Log": { ru: "Последние транзакции", uz: "So'nggi tranzaksiyalar" },
+        "Incoming payments": { ru: "Оплаты", uz: "To'lovlar" },
+        "Balance debits": { ru: "Списания", uz: "Yechib olinganlar" },
         "View All": { ru: "Смотреть все", uz: "Hammasini ko'rish" },
         "Resident directory": { ru: "Каталог жильцов", uz: "Yashovchilar katalogi" },
         "No residents available": { ru: "Нет доступных жильцов", uz: "Mavjud yashovchilar yo'q" },
@@ -4077,8 +4079,23 @@
                     `;
                 }).join("");
             };
+            // Two buttons above the log: money received, or money taken off the balance; the pressed one
+            // pressed again shows every entry. The choice is kept in the address (transactions_kind).
+            const kindButtons = Array.from(document.querySelectorAll("[data-transactions-kind]"));
+            const syncKindButtons = (kind) => kindButtons.forEach((button) => {
+                const active = button.dataset.transactionsKind === kind;
+                button.classList.toggle("is-active", active);
+                button.setAttribute("aria-pressed", String(active));
+            });
+            kindButtons.forEach((button) => button.addEventListener("click", () => {
+                playSound("soft-click");
+                const current = readListUrlState("transactions", { kind: "" }).kind;
+                const next = current === button.dataset.transactionsKind ? "" : button.dataset.transactionsKind;
+                writeListUrlState("transactions", { kind: next, page: 1 });
+                loadTransactions();
+            }));
             const loadTransactions = async () => {
-                const state = readListUrlState("transactions", { page: "1", search: "", ordering: "" });
+                const state = readListUrlState("transactions", { page: "1", search: "", ordering: "", kind: "" });
                 const { state: globalState, params } = currentGlobalListFilters();
                 const status = globalState.status === "paid" ? "success" : globalState.status === "debtor" ? "pending" : "";
                 // Every payment and ledger entry (all kinds), newest first, a page at a time.
@@ -4089,7 +4106,9 @@
                     search: state.search,
                     ordering: state.ordering,
                     status,
+                    kind: state.kind,
                 });
+                syncKindButtons(state.kind);
                 transactionChrome.body.innerHTML = renderTransactions(payload.results || []);
                 transactionChrome.syncMeta(payload);
             };
