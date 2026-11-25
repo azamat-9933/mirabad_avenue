@@ -6082,8 +6082,18 @@
             const localizeHouseText = (value) => String(value || "").replace(/\bHouse\b/gi, houseLabel);
             // Recent activity: ledger entries of the apartment account (kind and signed amount; a balance
             // change has no status) and the resident's audit events by their translated title and who
-            // did it. The backend's audit messages are English free text, so they are not shown, and
-            // "Resident balance updated" is skipped: it repeats the ledger entry of the same payment.
+            // did it. The backend's audit messages are English free text, so they are not shown, and events
+            // that repeat a ledger entry of the same money (an operator, Click or Payme payment, its
+            // cancellation, a balance entered in admin) are skipped: one Payme payment used to take two of
+            // the three lines, so a third payment made minutes earlier dropped out of the list.
+            const ledgerEventTitles = new Set([
+                "Resident balance updated",
+                "Payme payment received",
+                "Payme payment cancelled",
+                "Click payment received",
+                "Click payment cancelled",
+                "Balance entered in admin",
+            ]);
             const realActivity = [
                 ...(Array.isArray(billingData.transactions) ? billingData.transactions : [])
                     .filter((item) => String(item.apartmentBackendId || "") === apartmentId || String(item.ownerBackendId || "") === ownerId)
@@ -6096,12 +6106,13 @@
                         };
                     }),
                 ...(Array.isArray(billingData.auditEvents) ? billingData.auditEvents : [])
-                    .filter((item) => item.ownerId === ownerSlug && item.title !== "Resident balance updated")
+                    .filter((item) => item.ownerId === ownerSlug && !ledgerEventTitles.has(item.title))
                     .map((item) => ({
                         time: item.time || "",
                         text: [t(item.title || item.label || "Audit event"), item.actor].filter(Boolean).join(" · "),
                     })),
-            ].sort((a, b) => transactionDateValue(b.time) - transactionDateValue(a.time)).slice(0, 3);
+            // The snapshot keeps an account's five latest ledger entries: all of them fit.
+            ].sort((a, b) => transactionDateValue(b.time) - transactionDateValue(a.time)).slice(0, 5);
             set("[data-apartment-title]", localizeApartmentTitle(data.title));
             set("[data-apartment-subtitle]", localizeHouseText(data.subtitle));
             set("[data-apartment-owner]", data.owner);
