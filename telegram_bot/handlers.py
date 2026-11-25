@@ -4,16 +4,17 @@
 Confirm links the apartment's resident to the Telegram account; one Telegram user may add several
 apartments, each with its own account and balance. Before registering, the user may instead share
 their own contact: residents whose phone is on file are linked at once. A registered user gets the
-main menu: balances, payment history, adding another account, language.
+main menu: balances, payment history (latest entries, or the whole history as a PDF per account), adding
+another account, language.
 """
 import re
 from html import escape
 
 from aiogram import F, Router
-from aiogram.enums import ChatType
+from aiogram.enums import ChatAction, ChatType
 from aiogram.filters import CommandObject, CommandStart, StateFilter
 from aiogram.fsm.context import FSMContext
-from aiogram.types import Message, ReplyKeyboardRemove
+from aiogram.types import BufferedInputFile, Message, ReplyKeyboardRemove
 from asgiref.sync import sync_to_async
 
 from . import operators, services
@@ -30,6 +31,7 @@ from .texts import (
     button_action,
     format_accounts,
     format_history,
+    history_pdf_caption,
     language_from_button,
     t,
 )
@@ -189,6 +191,17 @@ async def show_history(message: Message, language):
         await message.answer(format_history(item, language), reply_markup=generate_main_menu_buttons(language))
 
 
+async def send_history_pdf(message: Message, language):
+    """The whole history of each followed apartment account as a PDF, one document per account."""
+    await message.bot.send_chat_action(message.chat.id, ChatAction.UPLOAD_DOCUMENT)
+    for document in await sync_to_async(services.history_documents)(message.from_user.id, language):
+        await message.answer_document(
+            BufferedInputFile(document.content, filename=document.filename),
+            caption=history_pdf_caption(document.account, language),
+            reply_markup=generate_main_menu_buttons(language),
+        )
+
+
 async def change_language(message: Message, state: FSMContext):
     language = language_from_button(message.text)
     if language is None:
@@ -215,6 +228,9 @@ async def other_messages(message: Message, state: FSMContext):
         return
     if action == "history":
         await show_history(message, language)
+        return
+    if action == "history_pdf":
+        await send_history_pdf(message, language)
         return
     if action == "add_account":
         await ask_account(message, state, language, registered=True)

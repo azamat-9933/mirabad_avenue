@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 from aiogram.client.session.base import BaseSession
 from aiogram.exceptions import TelegramForbiddenError
-from aiogram.methods import SendMessage
+from aiogram.methods import SendDocument, SendMessage
 from aiogram.types import Chat, Contact, Message, Update, User
 from asgiref.sync import async_to_sync
 from django.contrib.auth import get_user_model
@@ -117,8 +117,17 @@ class RecordingSession(BaseSession):
     def __init__(self):
         super().__init__()
         self.sent = []
+        self.documents = []
 
     async def make_request(self, bot, method, timeout=None):
+        if isinstance(method, SendDocument):
+            self.documents.append(method)
+            return Message(
+                message_id=1000 + len(self.documents),
+                date=datetime.now(UTC),
+                chat=Chat(id=method.chat_id, type="private"),
+                caption=method.caption,
+            )
         if isinstance(method, SendMessage):
             self.sent.append(method)
             return Message(
@@ -266,6 +275,39 @@ class BotConversationTests(ResidentsMixin, TestCase):
                 f"{today} — Начисление: −150 000 сум. Баланс: долг 150 000 сум"
             ],
         )
+
+    def test_history_pdf_sends_the_users_own_accounts_and_names_the_period_of_a_charge(self):
+        from billing.models import BillingPeriod, Invoice
+
+        Owner.objects.filter(pk=self.owner.pk).update(
+            telegram_id=str(self.USER_ID), telegram_status=Owner.TELEGRAM_CONNECTED, telegram_language="ru"
+        )
+        neighbour = Apartment.objects.create(
+            number="9", area=Decimal("40"), building=self.building, personal_account="1383000009", author="t"
+        )
+        Owner.objects.create(
+            fio="Other Resident", phone="", apartment=neighbour, telegram_id="999", telegram_status=Owner.TELEGRAM_CONNECTED
+        )
+        period = BillingPeriod.objects.create(
+            name="2026-Noyabr", start_date=datetime(2026, 11, 1).date(), end_date=datetime(2026, 11, 30).date()
+        )
+        invoice = Invoice.objects.create(
+            period=period, apartment=self.apartment, owner_snapshot="Aziz Karimov", total_amount=Decimal("150000")
+        )
+        apply_account_change(
+            self.apartment.pk, Decimal("-150000"), Transaction.TYPE_CHARGE,
+            description="[billing:period-charge] Charges for billing period 2026-Noyabr.", invoice_id=invoice.pk,
+        )
+
+        self.assertIn("Начисление (2026-Noyabr): −150 000 сум", self.send(MESSAGES["ru"]["button_history"])[0])
+        self.send(MESSAGES["ru"]["button_history_pdf"])
+
+        # Only the user's own account: the neighbour's is followed from another Telegram account.
+        self.assertEqual(len(self.session.documents), 1)
+        document = self.session.documents[0]
+        self.assertEqual(document.caption, "📄 Дом 64, кв. 1 (л/с 1383637891): полная история баланса")
+        self.assertIn("1383637891", document.document.filename)
+        self.assertTrue(document.document.data.startswith(b"%PDF"))
 
     def test_lookups_are_limited(self):
         self.until_account_question("🇬🇧 English", "en")

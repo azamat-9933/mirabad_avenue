@@ -15,6 +15,7 @@ from django.core.cache import cache
 from django.db import transaction
 from django.utils import timezone
 
+from billing.history import charge_details
 from main_app.models import Apartment, Owner
 from payments.click import masked_name
 from payments.models import Transaction
@@ -148,6 +149,8 @@ class HistoryEntry:
     kind: str
     amount: Decimal
     balance_after: Decimal
+    # A period's charge: the period's name (2026-Oktabr).
+    period: str = ""
 
 
 @dataclass(frozen=True)
@@ -248,15 +251,42 @@ def history(telegram_id, limit=HISTORY_ROWS) -> list[AccountHistory]:
     )
     result = []
     for owner, account in zip(owners, _accounts(owners)):
-        rows = Transaction.objects.filter(apartment_id=owner.apartment_id).order_by("-created_at", "-id")[:limit]
+        rows = list(Transaction.objects.filter(apartment_id=owner.apartment_id).order_by("-created_at", "-id")[:limit])
+        details = charge_details(rows)
         entries = [
             HistoryEntry(
                 date=timezone.localtime(row.created_at).date(),
                 kind=_entry_kind(row),
                 amount=row.amount,
                 balance_after=row.balance_after,
+                period=details[row.pk].period if row.pk in details else "",
             )
             for row in rows
         ]
         result.append(AccountHistory(account=account, entries=entries))
     return result
+
+
+@dataclass(frozen=True)
+class HistoryDocument:
+    account: Account
+    filename: str
+    content: bytes
+
+
+def history_documents(telegram_id, language) -> list[HistoryDocument]:
+    """The whole history of every apartment the user follows, one PDF each: what each charge was for,
+    payments, balances; nobody else's name and no operator's login (the report's resident view)."""
+    # Imported here: the report module loads reportlab and openpyxl, which the rest of the bot does not need.
+    from portal.report_exports import account_history_document
+
+    owners = list(
+        _owners_with_accounts(
+            Owner.objects.filter(telegram_id=str(telegram_id), telegram_status=Owner.TELEGRAM_CONNECTED)
+        )
+    )
+    documents = []
+    for owner, account in zip(owners, _accounts(owners)):
+        rendered = account_history_document(owner.apartment, language)
+        documents.append(HistoryDocument(account=account, filename=rendered["filename"], content=rendered["content"]))
+    return documents

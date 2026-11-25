@@ -85,6 +85,8 @@ MESSAGES = {
         "button_reject": "❌ Rad etish",
         "button_balance": "💰 Balans",
         "button_history": "📜 To'lovlar tarixi",
+        "button_history_pdf": "📄 Tarix (PDF)",
+        "history_pdf_caption": "📄 Uy {house}, kvartira {apartment}{account}: to'liq balans tarixi",
         "button_add_account": "➕ Hisob qo'shish",
         "button_language": "🌐 Tilni o'zgartirish",
         "button_back": "↩️ Orqaga",
@@ -157,6 +159,8 @@ MESSAGES = {
         "button_reject": "❌ Отклонить",
         "button_balance": "💰 Баланс",
         "button_history": "📜 История платежей",
+        "button_history_pdf": "📄 История (PDF)",
+        "history_pdf_caption": "📄 Дом {house}, кв. {apartment}{account}: полная история баланса",
         "button_add_account": "➕ Добавить лицевой счёт",
         "button_language": "🌐 Сменить язык",
         "button_back": "↩️ Назад",
@@ -229,6 +233,8 @@ MESSAGES = {
         "button_reject": "❌ Reject",
         "button_balance": "💰 Balance",
         "button_history": "📜 Payment history",
+        "button_history_pdf": "📄 History (PDF)",
+        "history_pdf_caption": "📄 House {house}, apt {apartment}{account}: full balance history",
         "button_add_account": "➕ Add an account",
         "button_language": "🌐 Change language",
         "button_back": "↩️ Back",
@@ -236,7 +242,7 @@ MESSAGES = {
 }
 
 # Reply buttons arrive as plain text; this maps any language's label back to its action.
-BUTTON_ACTIONS = ("confirm", "reject", "balance", "history", "add_account", "language", "back")
+BUTTON_ACTIONS = ("confirm", "reject", "balance", "history", "history_pdf", "add_account", "language", "back")
 _ACTION_BY_LABEL = {
     MESSAGES[language][f"button_{action}"]: action for language in MESSAGES for action in BUTTON_ACTIONS
 }
@@ -318,15 +324,27 @@ def format_history(item, language) -> str:
         lines.append(t(language, "history_empty"))
     template = t(language, "history_line")
     for entry in item.entries:
+        kind = t(language, f"kind_{entry.kind}")
+        if entry.period:  # a period's charge: which month it was for
+            kind = f"{kind} ({_html(entry.period)})"
         lines.append(
             template.format(
                 date=entry.date.strftime("%d.%m.%Y"),
-                kind=t(language, f"kind_{entry.kind}"),
+                kind=kind,
                 amount=format_signed(entry.amount, language),
                 balance=format_balance(entry.balance_after, language),
             )
         )
     return "\n".join(lines)
+
+
+def history_pdf_caption(account, language) -> str:
+    """The caption of the history PDF of one apartment account (services.Account)."""
+    return t(language, "history_pdf_caption").format(
+        house=_html(account.house),
+        apartment=_html(account.apartment),
+        account=_account_part(account.account, language),
+    )
 
 
 def payment_received_text(*, house, apartment, account, amount, method, balance, language) -> str:

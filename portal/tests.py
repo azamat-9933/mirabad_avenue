@@ -683,14 +683,18 @@ class PortalDebtReportTests(TestCase):
         sheets = self._workbook({"report_type": "account_history", "apartment_backend_ids": [self.payer.apartment_id]})
         rows = sheets["История баланса"]
         self.assertEqual(rows[0][0], "История баланса: Дом 64A, Квартира 1")
-        self.assertEqual(rows[1][0], "Владелец: Azamat Yaxyoyev")
-        header = rows.index(("ID", "Дата и время", "Абонент", "Операция", "Оператор", "Сумма (UZS)", "Баланс до", "Баланс после"))
-        # Oldest first: the charge, then the transfer; the balance runs from one entry to the next.
+        self.assertTrue(rows[1][0].startswith("Лицевой счет: "))
+        self.assertEqual(rows[2][0], "Владелец: Azamat Yaxyoyev")
+        header = rows.index(
+            ("ID", "Дата и время", "Абонент", "Операция", "Подробности", "Оператор", "Сумма (UZS)", "Баланс до", "Баланс после")
+        )
+        # Oldest first: the charge, then the transfer; the balance runs from one entry to the next. Neither
+        # belongs to a billing period here, so there are no details.
         self.assertEqual(
             [row[3:] for row in rows[header + 1:]],
             [
-                ("Начисление за месяц", "Система", -100000, 0, -100000),
-                ("Перевод на карту", "desk", 400000, -100000, 300000),
+                ("Начисление за месяц", None, "Система", -100000, 0, -100000),
+                ("Перевод на карту", None, "desk", 400000, -100000, 300000),
             ],
         )
 

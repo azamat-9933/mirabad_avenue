@@ -6,6 +6,7 @@ from datetime import date, datetime, timedelta
 from decimal import Decimal
 from io import BytesIO
 
+from billing.history import charge_details
 from billing.models import (
     BillingPeriod,
     HeatingCalculationSummary,
@@ -158,6 +159,22 @@ REPORT_TEXT = {
     "current_owner": {"en": "Owner", "ru": "Владелец", "uz": "Egasi"},
     "current_balance": {"en": "Current balance", "ru": "Текущий баланс", "uz": "Joriy balans"},
     "entries": {"en": "Entries", "ru": "Записей", "uz": "Yozuvlar"},
+    "details": {"en": "Details", "ru": "Подробности", "uz": "Tafsilotlar"},
+    "personal_account": {"en": "Personal account", "ru": "Лицевой счет", "uz": "Abonent raqami"},
+    "charge_for": {"en": "For {period} ({dates})", "ru": "За {period} ({dates})", "uz": "{period} uchun ({dates})"},
+    "recalculation_of": {
+        "en": "Recalculation of {period} ({dates})",
+        "ru": "Перерасчёт за {period} ({dates})",
+        "uz": "{period} qayta hisoblandi ({dates})",
+    },
+    "heating_short": {"en": "Heating", "ru": "Отопление", "uz": "Isitish"},
+    "hot_water_short": {"en": "Hot water", "ru": "ГВС", "uz": "Issiq suv"},
+    "was": {"en": "was", "ru": "было", "uz": "avval"},
+    "opening_balance_detail": {
+        "en": "Balance carried over from the previous records",
+        "ru": "Остаток, перенесённый из прежнего учёта",
+        "uz": "Avvalgi hisobdan o'tkazilgan qoldiq",
+    },
 }
 
 
@@ -853,7 +870,13 @@ def _build_pdf(
             table_rows.append([_pdf_cell(_t("no_rows", language), cell_style)] + [_pdf_cell("", cell_style) for _ in sheet["headers"][1:]])
 
         col_count = max(1, len(sheet["headers"]))
-        table = Table(table_rows, colWidths=[available_width / col_count] * col_count, repeatRows=1)
+        # The sheet's column widths, as in the workbook: a long text column gets the room it needs.
+        widths = sheet.get("widths") or []
+        if len(widths) == col_count and all(width > 0 for width in widths):
+            col_widths = [available_width * width / sum(widths) for width in widths]
+        else:
+            col_widths = [available_width / col_count] * col_count
+        table = Table(table_rows, colWidths=col_widths, repeatRows=1)
         table.setStyle(
             TableStyle(
                 [
@@ -1518,27 +1541,69 @@ def _account_history_apartment(filters):
     return None
 
 
-def _build_account_history_report(apartment, language):
-    """Every ledger entry of the apartment account, oldest first, with the balance before and after."""
+def _charge_detail_text(detail, language) -> str:
+    """For 2026-Oktabr (01.10.2026–31.10.2026): Heating 120 000 UZS; Hot water 35 000 UZS (was 30 000)."""
+    dates = f"{detail.start:%d.%m.%Y}–{detail.end:%d.%m.%Y}"
+    head = _t("recalculation_of" if detail.recalculation else "charge_for", language).format(period=detail.period, dates=dates)
+    parts = []
+    for key, now, before in (
+        ("heating_short", detail.heating, detail.heating_before),
+        ("hot_water_short", detail.hot_water, detail.hot_water_before),
+    ):
+        if now is None or (not now and not before):
+            continue
+        text = f"{_t(key, language)} {_money_text(now)} UZS"
+        if before is not None and before != now:
+            text += f" ({_t('was', language)} {_money_text(before)})"
+        parts.append(text)
+    return f"{head}: {'; '.join(parts)}" if parts else head
+
+
+def _entry_detail_text(item, details, language) -> str:
+    detail = details.get(item.pk)
+    if detail is not None:
+        return _charge_detail_text(detail, language)
+    if OPENING_BALANCE_TAG in (item.description or ""):
+        return _t("opening_balance_detail", language)
+    return ""
+
+
+def _build_account_history_report(apartment, language, audience="staff"):
+    """Every ledger entry of the apartment account, oldest first: what it was (a charge: for which period,
+    how much heating and how much hot water), the amount and the balance after it.
+
+    "staff" (the portal's Export) also shows the entry id, who held the account then and who made the
+    entry; "resident" (the PDF the bot sends the resident) leaves those out: no earlier owner's name, no
+    operator's login.
+    """
     language = _lang(language)
-    entries = Transaction.objects.filter(apartment=apartment).select_related("owner").order_by("created_at", "id")
-    rows = [
-        [
-            _text_cell(str(item.pk)),
-            _text_cell(timezone.localtime(item.created_at).strftime("%d.%m.%Y %H:%M")),
-            # Who held the account at the time; entries made while the apartment was vacant have nobody.
-            _text_cell(item.owner.fio if item.owner_id else _t("no_owner", language)),
-            _text_cell(_transaction_type_text(item, language)),
-            _text_cell(item.created_by or _t("system", language)),
-            _money_cell(item.amount),
-            _money_cell(item.balance_before),
-            _money_cell(item.balance_after),
-        ]
-        for item in entries
-    ]
+    entries = list(Transaction.objects.filter(apartment=apartment).select_related("owner").order_by("created_at", "id"))
+    details = charge_details(entries)
+    staff = audience != "resident"
+    rows = []
+    for item in entries:
+        when = _text_cell(timezone.localtime(item.created_at).strftime("%d.%m.%Y %H:%M"))
+        operation = _text_cell(_transaction_type_text(item, language))
+        detail = _text_cell(_entry_detail_text(item, details, language))
+        if staff:
+            rows.append([
+                _text_cell(str(item.pk)),
+                when,
+                # Who held the account at the time; entries made while the apartment was vacant have nobody.
+                _text_cell(item.owner.fio if item.owner_id else _t("no_owner", language)),
+                operation,
+                detail,
+                _text_cell(item.created_by or _t("system", language)),
+                _money_cell(item.amount),
+                _money_cell(item.balance_before),
+                _money_cell(item.balance_after),
+            ])
+        else:
+            rows.append([when, operation, detail, _money_cell(item.amount), _money_cell(item.balance_after)])
     owner = getattr(apartment, "owner", None)
     title = f"{_t('balance_history', language)}: {_t('house_group', language).format(house=apartment.building.number)}, {_t('apartment', language)} {apartment.number}"
     scope_rows = [
+        (_t("personal_account", language), apartment.personal_account or "—"),
         (_t("current_owner", language), owner.fio if owner else _t("no_owner", language)),
         (_t("current_balance", language), f"{_money_text(apartment.balance)} UZS"),
         (_t("entries", language), str(len(rows))),
@@ -1554,15 +1619,22 @@ def _build_account_history_report(apartment, language):
             _t("date_time", language),
             _t("resident", language),
             _t("operation", language),
+            _t("details", language),
             _t("operator", language),
             _t("amount", language),
             _t("balance_before", language),
+            _t("balance_after", language),
+        ] if staff else [
+            _t("date_time", language),
+            _t("operation", language),
+            _t("details", language),
+            _t("amount", language),
             _t("balance_after", language),
         ],
         "rows": rows,
         "row_kinds": [None] * len(rows),
         "scope_rows": scope_rows,
-        "widths": [10, 18, 32, 24, 18, 18, 18, 18],
+        "widths": [8, 16, 28, 20, 52, 14, 16, 16, 16] if staff else [18, 22, 70, 20, 20],
         "row_count": len(rows),
     }
 
@@ -1612,6 +1684,15 @@ def _render_sheets(report_type, sheets, export_format, language, filename):
         "sheet_count": len(sheets),
         "row_count": row_count,
     }
+
+
+def account_history_document(apartment, language, audience="resident", export_format="PDF") -> dict:
+    """One apartment account's whole history as a file: what the bot sends a resident."""
+    language = _lang(language)
+    sheet = _build_account_history_report(apartment, language, audience=audience)
+    name = apartment.personal_account or f"{apartment.building.number}-{apartment.number}"
+    filename = re.sub(r"[^\w.-]", "_", f"balance-history-{name}-{timezone.localtime():%Y%m%d}")
+    return _render_sheets(REPORT_TYPE_ACCOUNT_HISTORY, [sheet], export_format, language, filename)
 
 
 def build_report_payload(payload, language: str, export_format: str):

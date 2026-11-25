@@ -34,6 +34,7 @@ def generate_main_menu_buttons(language):
     builder = ReplyKeyboardBuilder()
     builder.button(text=t(language, "button_balance"))
     builder.button(text=t(language, "button_history"))
+    builder.button(text=t(language, "button_history_pdf"))
     builder.button(text=t(language, "button_add_account"))
     builder.button(text=t(language, "button_language"))
     builder.adjust(2)

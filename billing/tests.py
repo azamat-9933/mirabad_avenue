@@ -487,6 +487,50 @@ class BillingCoreModelTests(TestCase):
         self.assertEqual(rows[1].created_by, "billing-admin")
         self._assert_ledger_matches_balance(self.owner_2, Decimal("150000.00"))
 
+    def test_history_tells_the_period_and_the_service_of_each_charge(self):
+        from billing.history import charge_details
+        from portal.report_exports import _build_account_history_report, account_history_document
+
+        heating = BuildingService.objects.create(period=self.period, building=self.building, service_type="heating")
+        ServiceExpense.objects.create(service=heating, title="Boiler", amount=Decimal("4900.00"))
+        HeatingApartmentUsage.objects.create(service=heating, apartment=self.apartment_1, days_provided=10)
+        HeatingApartmentUsage.objects.create(service=heating, apartment=self.apartment_2, days_provided=10)
+        hot_water = BuildingService.objects.create(period=self.period, building=self.building, service_type="hot_water")
+        ServiceExpense.objects.create(service=hot_water, title="Pump", amount=Decimal("750.00"))
+        HotWaterReading.objects.create(service=hot_water, apartment=self.apartment_1, start_value=0, end_value=5)
+        HotWaterReading.objects.create(service=hot_water, apartment=self.apartment_2, start_value=0, end_value=5)
+        self.period.close_period()
+        ServiceExpense.objects.filter(service=hot_water).update(amount=Decimal("500.00"))
+        self.period.reopen_period()
+        self.period.recalculate(reason="Pump cost corrected", author=None)
+
+        entries = list(Transaction.objects.filter(apartment=self.apartment_1).order_by("created_at", "id"))
+        details = charge_details(entries)
+        closed, recalculated = (details[entry.pk] for entry in entries)
+
+        self.assertEqual(
+            (closed.period, closed.recalculation, closed.heating, closed.hot_water),
+            ("April 2026", False, Decimal("3123.51"), Decimal("375.00")),
+        )
+        self.assertEqual(
+            (recalculated.recalculation, recalculated.heating, recalculated.hot_water,
+             recalculated.heating_before, recalculated.hot_water_before),
+            (True, Decimal("3123.51"), Decimal("250.00"), Decimal("3123.51"), Decimal("375.00")),
+        )
+        staff = _build_account_history_report(self.apartment_1, "ru")
+        column = staff["headers"].index("Подробности")
+        self.assertEqual(
+            [row[column]["value"] for row in staff["rows"]],
+            [
+                "За April 2026 (01.04.2026–30.04.2026): Отопление 3 123.51 UZS; ГВС 375.00 UZS",
+                "Перерасчёт за April 2026 (01.04.2026–30.04.2026): Отопление 3 123.51 UZS; ГВС 250.00 UZS (было 375.00)",
+            ],
+        )
+        # The resident's own copy (the bot's PDF): no entry ids, other residents' names or operators.
+        resident = _build_account_history_report(self.apartment_1, "ru", audience="resident")
+        self.assertEqual(resident["headers"], ["Дата и время", "Операция", "Подробности", "Сумма (UZS)", "Баланс после"])
+        self.assertTrue(account_history_document(self.apartment_1, "ru")["content"].startswith(b"%PDF"))
+
     def test_legacy_imports_and_portal_imports_resolve(self):
         from billing.models import HotWaterMeterReading, Invoice  # noqa: F401
         from payments.models import Transaction  # noqa: F401
